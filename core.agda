@@ -385,7 +385,7 @@ module core where
   data _,_⊢_::_ : (Γ : ·ctx) (Δ : ·ctx) (e' : ë) (t : τ̇) → Set where
 
   -- value
-  data _value : ë → Set where
+  data _val : ë → Set where
 
   -- indeterminate
   data _indet : ë → Set where
