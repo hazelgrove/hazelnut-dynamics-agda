@@ -1,5 +1,6 @@
 open import Nat
 open import Prelude
+open import contexts
 
 module core where
   -- types
@@ -114,88 +115,54 @@ module core where
     MPHole  : ⦇⦈ ▸pro (⦇⦈ ⊗ ⦇⦈)
     MPPlus  : {t1 t2 : τ̇} → (t1 ⊗ t2) ▸pro (t1 ⊗ t2)
 
-
-  ---- contexts
-
-  -- variables are named with naturals in ė. therefore we represent
-  -- contexts as functions from names for variables (nats) to possible
-  -- bindings.
-  ·ctx : Set
-  ·ctx = Nat → Maybe τ̇
-
-  -- convenient shorthand for the (unique up to fun. ext.) empty context
-  ∅ : ·ctx
-  ∅ _ = None
-
-  -- add a new binding to the context, clobbering anything that might have
-  -- been there before.
-  _,,_ : ·ctx → (Nat × τ̇) → ·ctx
-  (Γ ,, (x , t)) y with natEQ x y
-  (Γ ,, (x , t)) .x | Inl refl = Some t
-  (Γ ,, (x , t)) y  | Inr neq  = Γ y
-
-  -- membership, or presence, in a context
-  _∈_ : (p : Nat × τ̇) → (Γ : ·ctx) → Set
-  (x , t) ∈ Γ = (Γ x) == Some t
-
-  -- apartness for contexts, so that we can follow barendregt's convention
-  _#_ : (n : Nat) → (Γ : ·ctx) → Set
-  x # Γ = (Γ x) == None
-
-  -- without: remove a variable from a context
-  _/_ : ·ctx → Nat → ·ctx
-  (Γ / x) y with natEQ x y
-  (Γ / x) .x | Inl refl = None
-  (Γ / x) y  | Inr neq  = Γ y
-
   -- bidirectional type checking judgements for ė
   mutual
     -- synthesis
-    data _⊢_=>_ : (Γ : ·ctx) → (e : ė) → (t : τ̇) → Set where
-      SAsc    : {Γ : ·ctx} {e : ė} {t : τ̇} →
+    data _⊢_=>_ : (Γ : τ̇ ctx) → (e : ė) → (t : τ̇) → Set where
+      SAsc    : {Γ : τ̇ ctx} {e : ė} {t : τ̇} →
                  Γ ⊢ e <= t →
                  Γ ⊢ (e ·: t) => t
-      SVar    : {Γ : ·ctx} {t : τ̇} {n : Nat} →
+      SVar    : {Γ : τ̇ ctx} {t : τ̇} {n : Nat} →
                  (n , t) ∈ Γ →
                  Γ ⊢ X n => t
-      SAp     : {Γ : ·ctx} {e1 e2 : ė} {t t' t2 : τ̇} →
+      SAp     : {Γ : τ̇ ctx} {e1 e2 : ė} {t t' t2 : τ̇} →
                  Γ ⊢ e1 => t →
                  t ▸arr (t2 ==> t') →
                  Γ ⊢ e2 <= t2 →
                  Γ ⊢ (e1 ∘ e2) => t'
-      SNum    :  {Γ : ·ctx} {n : Nat} →
+      SNum    :  {Γ : τ̇ ctx} {n : Nat} →
                  Γ ⊢ N n => num
-      SPlus   : {Γ : ·ctx} {e1 e2 : ė}  →
+      SPlus   : {Γ : τ̇ ctx} {e1 e2 : ė}  →
                  Γ ⊢ e1 <= num →
                  Γ ⊢ e2 <= num →
                  Γ ⊢ (e1 ·+ e2) => num
-      SEHole  : {Γ : ·ctx} {u : Nat} → Γ ⊢ ⦇⦈[ u ] => ⦇⦈ -- todo: uniqueness of n?
-      SNEHole : {Γ : ·ctx} {e : ė} {t : τ̇} {u : Nat} → -- todo: uniqueness of n?
+      SEHole  : {Γ : τ̇ ctx} {u : Nat} → Γ ⊢ ⦇⦈[ u ] => ⦇⦈ -- todo: uniqueness of n?
+      SNEHole : {Γ : τ̇ ctx} {e : ė} {t : τ̇} {u : Nat} → -- todo: uniqueness of n?
                  Γ ⊢ e => t →
                  Γ ⊢ ⦇ e ⦈[ u ] => ⦇⦈
 
     --todo: add rules for products
 
     -- analysis
-    data _⊢_<=_ : (Γ : ·ctx) → (e : ė) → (t : τ̇) → Set where
-      ASubsume : {Γ : ·ctx} {e : ė} {t t' : τ̇} →
+    data _⊢_<=_ : (Γ : τ̇ ctx) → (e : ė) → (t : τ̇) → Set where
+      ASubsume : {Γ : τ̇ ctx} {e : ė} {t t' : τ̇} →
                  Γ ⊢ e => t' →
                  t ~ t' →
                  Γ ⊢ e <= t
-      ALam : {Γ : ·ctx} {e : ė} {t t1 t2 : τ̇} {x : Nat} →
+      ALam : {Γ : τ̇ ctx} {e : ė} {t t1 t2 : τ̇} {x : Nat} →
                  x # Γ →
                  t ▸arr (t1 ==> t2) →
                  (Γ ,, (x , t1)) ⊢ e <= t2 →
                  Γ ⊢ (·λ x e) <= t
-      AInl : {Γ : ·ctx} {e : ė} {t+ t1 t2 : τ̇} →
+      AInl : {Γ : τ̇ ctx} {e : ė} {t+ t1 t2 : τ̇} →
                  t+ ▸sum (t1 ⊕ t2) →
                  Γ ⊢ e <= t1 →
                  Γ ⊢ inl e <= t+
-      AInr : {Γ : ·ctx} {e : ė} {t+ t1 t2 : τ̇} →
+      AInr : {Γ : τ̇ ctx} {e : ė} {t+ t1 t2 : τ̇} →
                  t+ ▸sum (t1 ⊕ t2) →
                  Γ ⊢ e <= t2 →
                  Γ ⊢ inr e <= t+
-      ACase : {Γ : ·ctx} {e e1 e2 : ė} {t t+ t1 t2 : τ̇} {x y : Nat} →
+      ACase : {Γ : τ̇ ctx} {e e1 e2 : ė} {t t+ t1 t2 : τ̇} {x y : Nat} →
                  x # Γ →
                  y # Γ →
                  t+ ▸sum (t1 ⊕ t2) →
@@ -203,8 +170,6 @@ module core where
                  (Γ ,, (x , t1)) ⊢ e1 <= t →
                  (Γ ,, (y , t2)) ⊢ e2 <= t →
                  Γ ⊢ case e x e1 y e2 <= t
-
-
 
   -- those types without holes anywhere
   tcomplete : τ̇ → Set
@@ -233,12 +198,12 @@ module core where
 
   -- expansion
   mutual
-    data _⊢_⇒_~>_⊣_ : (Γ : ·ctx) (e : ė) (t : τ̇) (e' : ë) (Δ : ·ctx) → Set where
+    data _⊢_⇒_~>_⊣_ : (Γ : τ̇ ctx) (e : ė) (t : τ̇) (e' : ë) (Δ : (τ̇ ctx × τ̇) ctx) → Set where
 
-    data _⊢_⇐_~>_::_⊣_ : (Γ : ·ctx) (e : ė) (t : τ̇) (e' : ë) (t' : τ̇)(Δ : ·ctx) → Set where
+    data _⊢_⇐_~>_::_⊣_ : (Γ : τ̇ ctx) (e : ė) (t : τ̇) (e' : ë) (t' : τ̇)(Δ : (τ̇ ctx × τ̇) ctx) → Set where
 
   -- type assignment
-  data _,_⊢_::_ : (Γ : ·ctx) (Δ : ·ctx) (e' : ë) (t : τ̇) → Set where
+  data _,_⊢_::_ : (Γ : τ̇ ctx) (Δ : (τ̇ ctx × τ̇) ctx) (e' : ë) (t : τ̇) → Set where
 
   -- value
   data _val : ë → Set where
@@ -247,7 +212,7 @@ module core where
   data _indet : ë → Set where
 
   -- error
-  data _err[_] : ë → ·ctx → Set where -- todo not a context
+  data _err[_] : ë → τ̇ ctx → Set where -- todo not a context
 
   -- final
   data _final : ë → Set where

@@ -2,9 +2,9 @@ open import List
 open import Nat
 open import Prelude
 
+open import contexts
 open import core
 open import lemmas-consistency
-open import lemmas-contexts
 open import lemmas-matching
 open import synth-unicity
 
