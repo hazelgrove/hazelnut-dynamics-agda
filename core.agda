@@ -28,7 +28,7 @@ module core where
     fst    : ė → ė
     snd    : ė → ė
 
-  data subst : Set where -- todo
+  data subst : Set where -- todo; reuse contexts? do we need access to an enumeration of the domain?
 
   -- expressions without ascriptions but with casts
   data ë : Set where
