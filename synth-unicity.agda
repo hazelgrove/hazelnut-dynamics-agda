@@ -1,12 +1,12 @@
 open import Prelude
 open import core
-open import lemmas-contexts
+open import contexts
 
 module synth-unicity where
   -- synthesis only produces equal types. note that there is no need for an
   -- analagous theorem for analytic positions because we think of
   -- the type as an input
-  synthunicity : {Γ : ·ctx} {e : ė} {t t' : τ̇} →
+  synthunicity : {Γ : tctx} {e : ė} {t t' : τ̇} →
                   (Γ ⊢ e => t)
                 → (Γ ⊢ e => t')
                 → t == t'

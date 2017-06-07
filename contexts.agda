@@ -2,7 +2,7 @@ open import Prelude
 open import List
 open import Nat
 
-module lemmas-contexts where
+module contexts where
   -- variables are named with naturals in ė. therefore we represent
   -- contexts as functions from names for variables (nats) to possible
   -- bindings.

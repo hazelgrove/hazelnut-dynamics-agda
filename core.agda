@@ -115,54 +115,61 @@ module core where
     MPHole  : ⦇⦈ ▸pro (⦇⦈ ⊗ ⦇⦈)
     MPPlus  : {t1 t2 : τ̇} → (t1 ⊗ t2) ▸pro (t1 ⊗ t2)
 
+  -- aliases for type and hole contexts
+  tctx : Set
+  tctx = τ̇ ctx
+
+  hctx : Set
+  hctx = (τ̇ ctx × τ̇) ctx
+
   -- bidirectional type checking judgements for ė
   mutual
     -- synthesis
-    data _⊢_=>_ : (Γ : τ̇ ctx) → (e : ė) → (t : τ̇) → Set where
-      SAsc    : {Γ : τ̇ ctx} {e : ė} {t : τ̇} →
+    data _⊢_=>_ : (Γ : tctx) → (e : ė) → (t : τ̇) → Set where
+      SAsc    : {Γ : tctx} {e : ė} {t : τ̇} →
                  Γ ⊢ e <= t →
                  Γ ⊢ (e ·: t) => t
-      SVar    : {Γ : τ̇ ctx} {t : τ̇} {n : Nat} →
+      SVar    : {Γ : tctx} {t : τ̇} {n : Nat} →
                  (n , t) ∈ Γ →
                  Γ ⊢ X n => t
-      SAp     : {Γ : τ̇ ctx} {e1 e2 : ė} {t t' t2 : τ̇} →
+      SAp     : {Γ : tctx} {e1 e2 : ė} {t t' t2 : τ̇} →
                  Γ ⊢ e1 => t →
                  t ▸arr (t2 ==> t') →
                  Γ ⊢ e2 <= t2 →
                  Γ ⊢ (e1 ∘ e2) => t'
-      SNum    :  {Γ : τ̇ ctx} {n : Nat} →
+      SNum    :  {Γ : tctx} {n : Nat} →
                  Γ ⊢ N n => num
-      SPlus   : {Γ : τ̇ ctx} {e1 e2 : ė}  →
+      SPlus   : {Γ : tctx} {e1 e2 : ė}  →
                  Γ ⊢ e1 <= num →
                  Γ ⊢ e2 <= num →
                  Γ ⊢ (e1 ·+ e2) => num
-      SEHole  : {Γ : τ̇ ctx} {u : Nat} → Γ ⊢ ⦇⦈[ u ] => ⦇⦈ -- todo: uniqueness of n?
-      SNEHole : {Γ : τ̇ ctx} {e : ė} {t : τ̇} {u : Nat} → -- todo: uniqueness of n?
+      SEHole  : {Γ : tctx} {u : Nat} → Γ ⊢ ⦇⦈[ u ] => ⦇⦈ -- todo: uniqueness of n?
+      SNEHole : {Γ : tctx} {e : ė} {t : τ̇} {u : Nat} → -- todo: uniqueness of n?
                  Γ ⊢ e => t →
                  Γ ⊢ ⦇ e ⦈[ u ] => ⦇⦈
 
-    --todo: add rules for products
+    --todo: add rules for products in both jugements
 
     -- analysis
     data _⊢_<=_ : (Γ : τ̇ ctx) → (e : ė) → (t : τ̇) → Set where
-      ASubsume : {Γ : τ̇ ctx} {e : ė} {t t' : τ̇} →
+      ASubsume : {Γ : tctx} {e : ė} {t t' : τ̇} →
                  Γ ⊢ e => t' →
                  t ~ t' →
                  Γ ⊢ e <= t
-      ALam : {Γ : τ̇ ctx} {e : ė} {t t1 t2 : τ̇} {x : Nat} →
+      ALam : {Γ : tctx} {e : ė} {t t1 t2 : τ̇} {x : Nat} →
                  x # Γ →
                  t ▸arr (t1 ==> t2) →
                  (Γ ,, (x , t1)) ⊢ e <= t2 →
                  Γ ⊢ (·λ x e) <= t
-      AInl : {Γ : τ̇ ctx} {e : ė} {t+ t1 t2 : τ̇} →
+      AInl : {Γ : tctx} {e : ė} {t+ t1 t2 : τ̇} →
                  t+ ▸sum (t1 ⊕ t2) →
                  Γ ⊢ e <= t1 →
                  Γ ⊢ inl e <= t+
-      AInr : {Γ : τ̇ ctx} {e : ė} {t+ t1 t2 : τ̇} →
+      AInr : {Γ : tctx} {e : ė} {t+ t1 t2 : τ̇} →
                  t+ ▸sum (t1 ⊕ t2) →
                  Γ ⊢ e <= t2 →
                  Γ ⊢ inr e <= t+
-      ACase : {Γ : τ̇ ctx} {e e1 e2 : ė} {t t+ t1 t2 : τ̇} {x y : Nat} →
+      ACase : {Γ : tctx} {e e1 e2 : ė} {t t+ t1 t2 : τ̇} {x y : Nat} →
                  x # Γ →
                  y # Γ →
                  t+ ▸sum (t1 ⊕ t2) →
@@ -198,12 +205,12 @@ module core where
 
   -- expansion
   mutual
-    data _⊢_⇒_~>_⊣_ : (Γ : τ̇ ctx) (e : ė) (t : τ̇) (e' : ë) (Δ : (τ̇ ctx × τ̇) ctx) → Set where
+    data _⊢_⇒_~>_⊣_ : (Γ : tctx) (e : ė) (t : τ̇) (e' : ë) (Δ : hctx) → Set where
 
-    data _⊢_⇐_~>_::_⊣_ : (Γ : τ̇ ctx) (e : ė) (t : τ̇) (e' : ë) (t' : τ̇)(Δ : (τ̇ ctx × τ̇) ctx) → Set where
+    data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : ė) (t : τ̇) (e' : ë) (t' : τ̇)(Δ : hctx) → Set where
 
   -- type assignment
-  data _,_⊢_::_ : (Γ : τ̇ ctx) (Δ : (τ̇ ctx × τ̇) ctx) (e' : ë) (t : τ̇) → Set where
+  data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (e' : ë) (t : τ̇) → Set where
 
   -- value
   data _val : ë → Set where
@@ -212,7 +219,7 @@ module core where
   data _indet : ë → Set where
 
   -- error
-  data _err[_] : ë → τ̇ ctx → Set where -- todo not a context
+  data _err[_] : ë → hctx → Set where -- todo not a context
 
   -- final
   data _final : ë → Set where
