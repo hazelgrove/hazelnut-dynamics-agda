@@ -48,3 +48,10 @@ module contexts where
   ctxunicity {n = n} p q with natEQ n n
   ctxunicity p q | Inl refl = someinj (! p · q)
   ctxunicity _ _ | Inr x≠x = abort (x≠x refl)
+
+  -- warning: this is union but it assumes WITHOUT CHECKING that the
+  -- domains are disjoint.
+  _∪_ : {A : Set} → A ctx → A ctx → A ctx
+  (C1 ∪ C2) x with C1 x
+  (C1 ∪ C2) x | Some x₁ = Some x₁
+  (C1 ∪ C2) x | None = C2 x

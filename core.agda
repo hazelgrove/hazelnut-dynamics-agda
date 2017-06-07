@@ -31,8 +31,8 @@ module core where
     c        : ë
     X        : Nat → ë
     ·λ_[_]_  : Nat → τ̇ → ë → ë
-    ⦇⦈[_,_]  : Nat → subst → ë
-    ⦇_⦈[_,_] : ë → Nat → subst → ë
+    ⦇⦈[_&_]  : Nat → subst → ë
+    ⦇_⦈[_&_] : ë → Nat → subst → ë
     _∘_      : ë → ë → ë
     <_>_     : ë → τ̇ → ë
 
@@ -126,23 +126,58 @@ module core where
   -- expansion
   mutual
     data _⊢_⇒_~>_⊣_ : (Γ : tctx) (e : ė) (t : τ̇) (e' : ë) (Δ : hctx) → Set where
+      ESConst : ∀{Γ} → Γ ⊢ c ⇒ b ~> c ⊣ ∅
+      ESVar   : ∀{Γ x t} → (Γ ,, (x , t)) ⊢ X x ⇒ t ~> X x ⊣ ∅
+      ESLam   : ∀{Γ x t1 t2 e e' Δ } →
+                     (Γ ,, (x , t1)) ⊢ e ⇒ t2 ~> e' ⊣ Δ →
+                      Γ ⊢ ·λ x [ t1 ] e ⇒ (t1 ==> t2) ~> ·λ x [ t1 ] e' ⊣ ∅
+
+      -- todo: really ought to check disjointness of domains here ..
+      ESAp1   : ∀{Γ e1 e2 e2' e1' Δ1 t2 t1 Δ2} →
+                Γ ⊢ e1 => ⦇⦈ →
+                Γ ⊢ e2 ⇐ ⦇⦈ ~> e2' :: t2 ⊣ Δ2 →
+                Γ ⊢ e1 ⇐ (t2 ==> ⦇⦈) ~> e1' :: t1 ⊣ Δ1 →
+                Γ ⊢ (e1 ∘ e2) ⇒ ⦇⦈ ~> (< e1' > t2) ∘ e2' ⊣ (Δ1 ∪ Δ2)
+      -- ESAp2
+      -- ESAp3
+      -- ESEHole
+      -- ESNEHole
+      -- ESAsc1
+      -- ESAsc2
 
     data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : ė) (t : τ̇) (e' : ë) (t' : τ̇)(Δ : hctx) → Set where
+      -- EALam
+      -- EASubsume
+      -- EAEHole
+      -- EANEHole
 
   -- type assignment
   data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (e' : ë) (t : τ̇) → Set where
 
+  -- todo: ugh
+  postulate
+    [_]_ : subst → ë → ë
+
   -- value
   data _val : ë → Set where
-
-  -- indeterminate
-  data _indet : ë → Set where
+    VConst : c val
+    VLam   : ∀{x t e} → (·λ x [ t ] e) val
 
   -- error
   data _err[_] : ë → hctx → Set where -- todo not a context
 
-  -- final
-  data _final : ë → Set where
+  mutual
+    -- indeterminate
+    data _indet : ë → Set where
+      IEHole : ∀{u σ} → ⦇⦈[ u & σ ] indet
+      INEHole : ∀{e u σ} → e final → ⦇ e ⦈[ u & σ ] indet
+      IAp : ∀{e1 e2} → e1 indet → e2 final → (e1 ∘ e2) indet
+      ICast : ∀{e t} → e indet → (< e > t) indet
+
+    -- final
+    data _final : ë → Set where
+      FVal : ∀{e} → e val → e final
+      FIndet : ∀{e} → e indet → e final
 
   -- small step semantics
   data _↦_ : ë → ë → Set where
