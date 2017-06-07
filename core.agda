@@ -64,7 +64,6 @@ module core where
                t2 ~ t2' →
                (t1 ⊗ t2) ~ (t1' ⊗ t2')
 
-
   -- type inconsistency
   data _~̸_ : τ̇ → τ̇ → Set where
     ICNumArr1 : {t1 t2 : τ̇} → num ~̸ (t1 ==> t2)
@@ -351,9 +350,6 @@ module core where
   synthunicity SEHole SEHole = refl
   synthunicity (SNEHole _) (SNEHole _) = refl
 
-
-  ----- the zippered form of the forms above and the rules for actions on them
-
   -- those types without holes anywhere
   tcomplete : τ̇ → Set
   tcomplete num         = ⊤
@@ -378,3 +374,27 @@ module core where
   ecomplete [ e1 , e2 ] = ecomplete e1 × ecomplete e2
   ecomplete (fst e) = ecomplete e
   ecomplete (snd e) = ecomplete e
+
+  -- expansion
+  mutual
+    data _⊢_⇒_~>_⊣_ : (Γ : ·ctx) (e : ė) (t : τ̇) (e' : ë) (Δ : ·ctx) → Set where
+
+    data _⊢_⇐_~>_::_⊣_ : (Γ : ·ctx) (e : ė) (t : τ̇) (e' : ë) (t' : τ̇)(Δ : ·ctx) → Set where
+
+  -- type assignment
+  data _,_⊢_::_ : (Γ : ·ctx) (Δ : ·ctx) (e' : ë) (t : τ̇) → Set where
+
+  -- value
+  data _value : ë → Set where
+
+  -- indeterminate
+  data _indet : ë → Set where
+
+  -- error
+  data _err[_] : ë → ·ctx → Set where -- todo not a context
+
+  -- final
+  data _final : ë → Set where
+
+  -- small step semantics
+  data _↦_ : ë → ë → Set where
