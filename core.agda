@@ -9,25 +9,32 @@ module core where
     ⦇⦈    : τ̇
     _==>_ : τ̇ → τ̇ → τ̇
 
+  -- arrow type constructors bind very tightly
+  infixr 25  _==>_
+
   -- expressions
   data ė : Set where
-    c      : ė
-    _·:_   : ė → τ̇ → ė
-    X      : Nat → ė
-    ·λ     : Nat → ė → ė
-    ⦇⦈[_]  : Nat → ė
-    ⦇_⦈[_] : ė → Nat → ė
-    _∘_    : ė → ė → ė
+    c       : ė
+    _·:_    : ė → τ̇ → ė
+    X       : Nat → ė
+    ·λ      : Nat → ė → ė
+    ·λ_[_]_ : Nat → τ̇ → ė → ė
+    ⦇⦈[_]   : Nat → ė
+    ⦇_⦈[_]  : ė → Nat → ė
+    _∘_     : ė → ė → ė
 
-  data subst : Set where -- todo; reuse contexts? do we need access to an enumeration of the domain?
+  subst : Set -- todo: no idea if this is right
+  subst = ė ctx
 
   -- expressions without ascriptions but with casts
   data ë : Set where
+    c        : ë
     X        : Nat → ë
-    ·λ       : Nat → ë → ë
+    ·λ_[_]_  : Nat → τ̇ → ë → ë
     ⦇⦈[_,_]  : Nat → subst → ë
     ⦇_⦈[_,_] : ë → Nat → subst → ë
     _∘_      : ë → ë → ë
+    <_>_     : ë → τ̇ → ë
 
   -- type consistency
   data _~_ : (t1 : τ̇) → (t2 : τ̇) → Set where
@@ -37,23 +44,23 @@ module core where
     TCArr : {t1 t2 t1' t2' : τ̇} →
                t1 ~ t1' →
                t2 ~ t2' →
-               (t1 ==> t2) ~ (t1' ==> t2')
+               t1 ==> t2 ~ t1' ==> t2'
 
   -- type inconsistency
   data _~̸_ : τ̇ → τ̇ → Set where
-    ICBaseArr1 : {t1 t2 : τ̇} → b ~̸ (t1 ==> t2)
-    ICBaseArr2 : {t1 t2 : τ̇} → (t1 ==> t2) ~̸ b
+    ICBaseArr1 : {t1 t2 : τ̇} → b ~̸ t1 ==> t2
+    ICBaseArr2 : {t1 t2 : τ̇} → t1 ==> t2 ~̸ b
     ICArr1 : {t1 t2 t3 t4 : τ̇} →
                t1 ~̸ t3 →
-               (t1 ==> t2) ~̸ (t3 ==> t4)
+               t1 ==> t2 ~̸ t3 ==> t4
     ICArr2 : {t1 t2 t3 t4 : τ̇} →
                t2 ~̸ t4 →
-               (t1 ==> t2) ~̸ (t3 ==> t4)
+               t1 ==> t2 ~̸ t3 ==> t4
 
   --- matching for arrows, sums, and products
   data _▸arr_ : τ̇ → τ̇ → Set where
-    MAHole : ⦇⦈ ▸arr (⦇⦈ ==> ⦇⦈)
-    MAArr  : {t1 t2 : τ̇} → (t1 ==> t2) ▸arr (t1 ==> t2)
+    MAHole : ⦇⦈ ▸arr ⦇⦈ ==> ⦇⦈
+    MAArr  : {t1 t2 : τ̇} → t1 ==> t2 ▸arr t1 ==> t2
 
   -- aliases for type and hole contexts
   tctx : Set
@@ -75,13 +82,17 @@ module core where
                  Γ ⊢ X n => t
       SAp     : {Γ : tctx} {e1 e2 : ė} {t t' t2 : τ̇} →
                  Γ ⊢ e1 => t →
-                 t ▸arr (t2 ==> t') →
+                 t ▸arr t2 ==> t' →
                  Γ ⊢ e2 <= t2 →
                  Γ ⊢ (e1 ∘ e2) => t'
       SEHole  : {Γ : tctx} {u : Nat} → Γ ⊢ ⦇⦈[ u ] => ⦇⦈ -- todo: uniqueness of n?
       SNEHole : {Γ : tctx} {e : ė} {t : τ̇} {u : Nat} → -- todo: uniqueness of n?
                  Γ ⊢ e => t →
                  Γ ⊢ ⦇ e ⦈[ u ] => ⦇⦈
+      SLam    : {Γ : tctx} {e : ė} {t1 t2 : τ̇} {x : Nat} →
+                 x # Γ → -- todo
+                 (Γ ,, (x , t1)) ⊢ e => t2 →
+                 Γ ⊢ ·λ x [ t1 ] e => t1 ==> t2
 
     -- analysis
     data _⊢_<=_ : (Γ : τ̇ ctx) → (e : ė) → (t : τ̇) → Set where
@@ -91,7 +102,7 @@ module core where
                  Γ ⊢ e <= t
       ALam : {Γ : tctx} {e : ė} {t t1 t2 : τ̇} {x : Nat} →
                  x # Γ →
-                 t ▸arr (t1 ==> t2) →
+                 t ▸arr t1 ==> t2 →
                  (Γ ,, (x , t1)) ⊢ e <= t2 →
                  Γ ⊢ (·λ x e) <= t
 
@@ -110,6 +121,7 @@ module core where
   ecomplete ⦇⦈[ u ]       = ⊥
   ecomplete ⦇ e1 ⦈[ u ]   = ⊥
   ecomplete (e1 ∘ e2)  = ecomplete e1 × ecomplete e2
+  ecomplete (·λ x [ t ] e) = tcomplete t × ecomplete e
 
   -- expansion
   mutual
