@@ -31,8 +31,8 @@ module core where
     c        : ë
     X        : Nat → ë
     ·λ_[_]_  : Nat → τ̇ → ë → ë
-    ⦇⦈[_&_]  : Nat → subst → ë
-    ⦇_⦈[_&_] : ë → Nat → subst → ë
+    ⦇⦈[_]    : (Nat × subst) → ë
+    ⦇_⦈[_]   : ë → (Nat × subst) → ë
     _∘_      : ë → ë → ë
     <_>_     : ë → τ̇ → ë
 
@@ -158,10 +158,10 @@ module core where
               Γ ⊢ e2 ⇐ t2 ~> e2' :: t2 ⊣ Δ2 →
               Γ ⊢ e1 ∘ e2 ⇒ t ~> e1' ∘ e2' ⊣ (Δ1 ∪ Δ2)
       ESEHole : ∀{ Γ u } →
-                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈[ u & id Γ ] ⊣  ⟦ u ::[ Γ ] ⦇⦈ ⟧
+                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈[ u , id Γ ] ⊣  ⟦ u ::[ Γ ] ⦇⦈ ⟧
       ESNEHole : ∀{ Γ e t e' u Δ } →
                  Γ ⊢ e ⇒ t ~> e' ⊣ Δ →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ e' ⦈[ u & id Γ ] ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ e' ⦈[ u , id Γ ] ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
       ESAsc1 : ∀ {Γ e t e' t' Δ} →
                  Γ ⊢ e ⇐ t ~> e' :: t' ⊣ Δ →
                  (t == t' → ⊥) →
@@ -181,14 +181,32 @@ module core where
                   t ~ t' →
                   Γ ⊢ e ⇐ t ~> e' :: t' ⊣ Δ
       EAEHole : ∀{ Γ u t  } →
-                Γ ⊢ ⦇⦈[ u ] ⇐ t ~> ⦇⦈[ u & id Γ ] :: t ⊣ ⟦ u ::[ Γ ] t ⟧
+                Γ ⊢ ⦇⦈[ u ] ⇐ t ~> ⦇⦈[ u , id Γ ] :: t ⊣ ⟦ u ::[ Γ ] t ⟧
       EANEHole : ∀{ Γ e u t e' t' Δ  } →
                  Γ ⊢ e ⇒ t' ~> e' ⊣ Δ →
                  t ~ t' →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ t ~> ⦇ e' ⦈[ u & id Γ ] :: t ⊣ (Δ ,, u ::[ Γ ] t)
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ t ~> ⦇ e' ⦈[ u , id Γ ] :: t ⊣ (Δ ,, u ::[ Γ ] t)
 
   -- type assignment
   data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (e' : ë) (t : τ̇) → Set where
+    TAConst : ∀{Δ Γ} → Δ , Γ ⊢ c :: b
+    TAVar : ∀{Δ Γ x t} → Δ , (Γ ,, (x , t)) ⊢ X x :: t
+    TALam : ∀{ Δ Γ x t1 e t2} →
+            Δ , (Γ ,, (x , t1)) ⊢ e :: t2 →
+            Δ , Γ ⊢ ·λ x [ t1 ] e :: (t1 ==> t2)
+    TAAp : ∀{ Δ Γ e1 e2 t1 t2 t} →
+           Δ , Γ ⊢ e1 :: t1 →
+           t1 ▸arr (t2 ==> t) →
+           Δ , Γ ⊢ e2 :: t2 →
+           Δ , Γ ⊢ e1 ∘ e2 :: t
+    -- TAEHole : ∀{ Δ Γ σ u Γ' } → -- todo: overloaded form in the paper here
+    -- TANEHole : ∀ { Δ Γ e t' Γ' u σ t }
+    TACast : ∀{ Δ Γ e t t'} →
+           Δ , Γ ⊢ e :: t' →
+           t ~ t' →
+           Δ , Γ ⊢ < e > t :: t
+
+  -- todo: substition goes here
 
   -- value
   data _val : ë → Set where
@@ -196,13 +214,13 @@ module core where
     VLam   : ∀{x t e} → (·λ x [ t ] e) val
 
   -- error
-  data _err[_] : ë → hctx → Set where -- todo not a context
+  data _err[_] : ë → hctx → Set where
 
   mutual
     -- indeterminate
     data _indet : ë → Set where
-      IEHole : ∀{u σ} → ⦇⦈[ u & σ ] indet
-      INEHole : ∀{e u σ} → e final → ⦇ e ⦈[ u & σ ] indet
+      IEHole : ∀{u σ} → ⦇⦈[ u , σ ] indet
+      INEHole : ∀{e u σ} → e final → ⦇ e ⦈[ u , σ ] indet
       IAp : ∀{e1 e2} → e1 indet → e2 final → (e1 ∘ e2) indet
       ICast : ∀{e t} → e indet → (< e > t) indet
 
