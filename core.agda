@@ -69,6 +69,15 @@ module core where
   hctx : Set
   hctx = (τ̇ ctx × τ̇) ctx
 
+  postulate -- todo: write this stuff later
+    id : {A : Set} → A ctx → subst
+    [_]_ : subst → ë → ë
+
+  -- this is just fancy notation to match the paper
+  _::[_]_ : Nat → tctx → τ̇ → (Nat × tctx × τ̇)
+  u ::[ Γ ] t = u , Γ , t
+
+
   -- bidirectional type checking judgements for ė
   mutual
     -- synthesis
@@ -106,6 +115,7 @@ module core where
                  (Γ ,, (x , t1)) ⊢ e <= t2 →
                  Γ ⊢ (·λ x e) <= t
 
+  -- todo: do we care about completeness of ė or e-umlauts?
   -- those types without holes anywhere
   tcomplete : τ̇ → Set
   tcomplete b         = ⊤
@@ -137,26 +147,37 @@ module core where
                 Γ ⊢ e1 => ⦇⦈ →
                 Γ ⊢ e2 ⇐ ⦇⦈ ~> e2' :: t2 ⊣ Δ2 →
                 Γ ⊢ e1 ⇐ (t2 ==> ⦇⦈) ~> e1' :: t1 ⊣ Δ1 →
-                Γ ⊢ (e1 ∘ e2) ⇒ ⦇⦈ ~> (< e1' > t2) ∘ e2' ⊣ (Δ1 ∪ Δ2)
-      -- ESAp2
-      -- ESAp3
-      -- ESEHole
-      -- ESNEHole
-      -- ESAsc1
-      -- ESAsc2
+                Γ ⊢ e1 ∘ e2 ⇒ ⦇⦈ ~> (< e1' > t2) ∘ e2' ⊣ (Δ1 ∪ Δ2)
+      ESAp2 : ∀{Γ e1 t2 t e1' e2' Δ1 Δ2 t2' e2} →
+              Γ ⊢ e1 ⇒ (t2 ==> t) ~> e1' ⊣ Δ1 →
+              Γ ⊢ e2 ⇐ t2 ~> e2' :: t2' ⊣ Δ2 →
+              (t2 == t2' → ⊥) →
+              Γ ⊢ e1 ∘ e2 ⇒ t ~> e1' ∘ (< e2' > t2) ⊣ (Δ1 ∪ Δ2)
+      ESAp3 : ∀{Γ e1 t e1' Δ1 e2 t2 e2' Δ2 } →
+              Γ ⊢ e1 ⇒ (t2 ==> t) ~> e1' ⊣ Δ1 →
+              Γ ⊢ e2 ⇐ t2 ~> e2' :: t2 ⊣ Δ2 →
+              Γ ⊢ e1 ∘ e2 ⇒ t ~> e1' ∘ e2' ⊣ (Δ1 ∪ Δ2)
+      ESEHole : ∀{ Γ u } →
+                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈[ u & id Γ ] ⊣ (∅ ,, (u ::[ Γ ] ⦇⦈))
+      ESNEHole : ∀{ Γ e t e' u Δ } →
+                 Γ ⊢ e ⇒ t ~> e' ⊣ Δ →
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ e' ⦈[ u & id Γ ] ⊣ (Δ ,, (u ::[ Γ ] ⦇⦈))
+      ESAsc1 : ∀ {Γ e t e' t' Δ} →
+                 Γ ⊢ e ⇐ t ~> e' :: t' ⊣ Δ →
+                 (t == t' → ⊥) →
+                 Γ ⊢ (e ·: t) ⇒ t ~> (< e' > t) ⊣ Δ
+      ESAsc2 : ∀{Γ e t e' t' Δ } →
+               Γ ⊢ e ⇐ t ~> e' :: t' ⊣ Δ →
+               Γ ⊢ (e ·: t) ⇒ t ~> e' ⊣ Δ
 
     data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : ė) (t : τ̇) (e' : ë) (t' : τ̇)(Δ : hctx) → Set where
-      -- EALam
-      -- EASubsume
-      -- EAEHole
-      -- EANEHole
+      -- EALam :
+      -- EASubsume :
+      -- EAEHole :
+      -- EANEHole :
 
   -- type assignment
   data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (e' : ë) (t : τ̇) → Set where
-
-  -- todo: ugh
-  postulate
-    [_]_ : subst → ë → ë
 
   -- value
   data _val : ë → Set where
