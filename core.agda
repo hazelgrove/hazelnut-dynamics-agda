@@ -158,10 +158,10 @@ module core where
               Γ ⊢ e2 ⇐ t2 ~> e2' :: t2 ⊣ Δ2 →
               Γ ⊢ e1 ∘ e2 ⇒ t ~> e1' ∘ e2' ⊣ (Δ1 ∪ Δ2)
       ESEHole : ∀{ Γ u } →
-                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈[ u & id Γ ] ⊣ (∅ ,, (u ::[ Γ ] ⦇⦈))
+                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈[ u & id Γ ] ⊣  ⟦ u ::[ Γ ] ⦇⦈ ⟧
       ESNEHole : ∀{ Γ e t e' u Δ } →
                  Γ ⊢ e ⇒ t ~> e' ⊣ Δ →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ e' ⦈[ u & id Γ ] ⊣ (Δ ,, (u ::[ Γ ] ⦇⦈))
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ e' ⦈[ u & id Γ ] ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
       ESAsc1 : ∀ {Γ e t e' t' Δ} →
                  Γ ⊢ e ⇐ t ~> e' :: t' ⊣ Δ →
                  (t == t' → ⊥) →
@@ -171,10 +171,21 @@ module core where
                Γ ⊢ (e ·: t) ⇒ t ~> e' ⊣ Δ
 
     data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : ė) (t : τ̇) (e' : ë) (t' : τ̇)(Δ : hctx) → Set where
-      -- EALam :
-      -- EASubsume :
-      -- EAEHole :
-      -- EANEHole :
+      EALam : ∀{Γ x t1 t2 e e' t2' Δ } →
+              (Γ ,, (x , t1)) ⊢ e ⇐ t2 ~> e' :: t2' ⊣ Δ →
+              Γ ⊢ ·λ x e ⇐ (t1 ==> t2) ~> ·λ x [ t1 ] e' :: (t1 ==> t2') ⊣ Δ
+      EASubsume : ∀{e u m Γ t' e' Δ t} →
+                  (e == ⦇⦈[ u ] → ⊥) →
+                  (e == ⦇ m ⦈[ u ] → ⊥) →
+                  Γ ⊢ e ⇒ t' ~> e' ⊣ Δ →
+                  t ~ t' →
+                  Γ ⊢ e ⇐ t ~> e' :: t' ⊣ Δ
+      EAEHole : ∀{ Γ u t  } →
+                Γ ⊢ ⦇⦈[ u ] ⇐ t ~> ⦇⦈[ u & id Γ ] :: t ⊣ ⟦ u ::[ Γ ] t ⟧
+      EANEHole : ∀{ Γ e u t e' t' Δ  } →
+                 Γ ⊢ e ⇒ t' ~> e' ⊣ Δ →
+                 t ~ t' →
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ t ~> ⦇ e' ⦈[ u & id Γ ] :: t ⊣ (Δ ,, u ::[ Γ ] t)
 
   -- type assignment
   data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (e' : ë) (t : τ̇) → Set where

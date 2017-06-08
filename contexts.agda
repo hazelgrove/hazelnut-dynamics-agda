@@ -20,6 +20,12 @@ module contexts where
   (Γ ,, (x , t)) .x | Inl refl = Some t
   (Γ ,, (x , t)) y  | Inr neq  = Γ y
 
+  infixl 10 _,,_
+
+  -- the singleton context
+  ⟦_⟧ : {A : Set} → (Nat × A) → A ctx
+  ⟦ x ⟧ = ∅ ,, x
+
   -- membership, or presence, in a context
   _∈_ : {A : Set} (p : Nat × A) → (Γ : A ctx) → Set
   (x , y) ∈ Γ = (Γ x) == Some y
