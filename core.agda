@@ -213,9 +213,6 @@ module core where
     VConst : c val
     VLam   : ∀{x t e} → (·λ x [ t ] e) val
 
-  -- error
-  data _err[_] : ë → hctx → Set where
-
   mutual
     -- indeterminate
     data _indet : ë → Set where
@@ -229,5 +226,28 @@ module core where
       FVal : ∀{e} → e val → e final
       FIndet : ∀{e} → e indet → e final
 
+  -- error
+  data _err[_] : ë → hctx → Set where
+    -- ERNEHole
+    -- ERCastError
+    -- ERLam
+    -- ERAp1
+    -- ERAp2
+    -- ERCast
+
   -- small step semantics
   data _↦_ : ë → ë → Set where
+    STHole : ∀{ e e' u σ } →
+             e ↦ e' →
+             ⦇ e ⦈[ u , σ ] ↦ ⦇ e' ⦈[ u , σ ]
+    -- STCast
+    STAp1 : ∀{ e1 e2 e1' } →
+            e1 ↦ e1' →
+            (e1 ∘ e2) ↦ (e1' ∘ e2)
+    STAp2 : ∀{ e1 e2 e2' } →
+            e1 final →
+            e2 ↦ e2' →
+            (e1 ∘ e2) ↦ (e1 ∘ e2')
+    STApβ : ∀{ e1 e2 t x } →
+            e2 final →
+            ((·λ x [ t ] e1) ∘ e2) ↦ ([ ⟦ x , {!!} ⟧ ] e2)
