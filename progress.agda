@@ -5,7 +5,7 @@ open import core
 open import contexts
 
 module progress where
-  progress : (Δ : hctx) (d : dhexp) (t : htyp) →
-             Δ , ∅ ⊢ d :: t →
+  progress : (Δ : hctx) (d : dhexp) (τ : htyp) →
+             Δ , ∅ ⊢ d :: τ →
              d val + d indet + d err[ Δ ] + Σ[ d' ∈ dhexp ] (d ↦ d')
   progress = {!!}

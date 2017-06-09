@@ -38,29 +38,29 @@ module core where
 
   -- type consistency
   data _~_ : (t1 t2 : htyp) → Set where
-    TCRefl  : {t : htyp} → t ~ t
-    TCHole1 : {t : htyp} → t ~ ⦇⦈
-    TCHole2 : {t : htyp} → ⦇⦈ ~ t
-    TCArr   : {t1 t2 t1' t2' : htyp} →
-               t1 ~ t1' →
-               t2 ~ t2' →
-               t1 ==> t2 ~ t1' ==> t2'
+    TCRefl  : {τ : htyp} → τ ~ τ
+    TCHole1 : {τ : htyp} → τ ~ ⦇⦈
+    TCHole2 : {τ : htyp} → ⦇⦈ ~ τ
+    TCArr   : {τ1 τ2 τ1' τ2' : htyp} →
+               τ1 ~ τ1' →
+               τ2 ~ τ2' →
+               τ1 ==> τ2 ~ τ1' ==> τ2'
 
   -- type inconsistency
   data _~̸_ : htyp → htyp → Set where
-    ICBaseArr1 : {t1 t2 : htyp} → b ~̸ t1 ==> t2
-    ICBaseArr2 : {t1 t2 : htyp} → t1 ==> t2 ~̸ b
-    ICArr1 : {t1 t2 t3 t4 : htyp} →
-               t1 ~̸ t3 →
-               t1 ==> t2 ~̸ t3 ==> t4
-    ICArr2 : {t1 t2 t3 t4 : htyp} →
-               t2 ~̸ t4 →
-               t1 ==> t2 ~̸ t3 ==> t4
+    ICBaseArr1 : {τ1 τ2 : htyp} → b ~̸ τ1 ==> τ2
+    ICBaseArr2 : {τ1 τ2 : htyp} → τ1 ==> τ2 ~̸ b
+    ICArr1 : {τ1 τ2 τ3 τ4 : htyp} →
+               τ1 ~̸ τ3 →
+               τ1 ==> τ2 ~̸ τ3 ==> τ4
+    ICArr2 : {τ1 τ2 τ3 τ4 : htyp} →
+               τ2 ~̸ τ4 →
+               τ1 ==> τ2 ~̸ τ3 ==> τ4
 
   --- matching for arrows, sums, and products
   data _▸arr_ : htyp → htyp → Set where
     MAHole : ⦇⦈ ▸arr ⦇⦈ ==> ⦇⦈
-    MAArr  : {t1 t2 : htyp} → t1 ==> t2 ▸arr t1 ==> t2
+    MAArr  : {τ1 τ2 : htyp} → τ1 ==> τ2 ▸arr τ1 ==> τ2
 
   -- aliases for type and hole contexts
   tctx : Set
@@ -75,143 +75,143 @@ module core where
 
   -- this is just fancy notation to match the paper
   _::[_]_ : Nat → tctx → htyp → (Nat × tctx × htyp)
-  u ::[ Γ ] t = u , Γ , t
+  u ::[ Γ ] τ = u , Γ , τ
 
 
   -- bidirectional type checking judgements for hexp
   mutual
     -- synthesis
-    data _⊢_=>_ : (Γ : tctx) → (e : hexp) → (t : htyp) → Set where
+    data _⊢_=>_ : (Γ : tctx) → (e : hexp) → (τ : htyp) → Set where
       SConst  : {Γ : tctx} → Γ ⊢ c => b
-      SAsc    : {Γ : tctx} {e : hexp} {t : htyp} →
-                 Γ ⊢ e <= t →
-                 Γ ⊢ (e ·: t) => t
-      SVar    : {Γ : tctx} {t : htyp} {n : Nat} →
-                 (n , t) ∈ Γ →
-                 Γ ⊢ X n => t
-      SAp     : {Γ : tctx} {e1 e2 : hexp} {t t' t2 : htyp} →
-                 Γ ⊢ e1 => t →
-                 t ▸arr t2 ==> t' →
-                 Γ ⊢ e2 <= t2 →
-                 Γ ⊢ (e1 ∘ e2) => t'
+      SAsc    : {Γ : tctx} {e : hexp} {τ : htyp} →
+                 Γ ⊢ e <= τ →
+                 Γ ⊢ (e ·: τ) => τ
+      SVar    : {Γ : tctx} {τ : htyp} {n : Nat} →
+                 (n , τ) ∈ Γ →
+                 Γ ⊢ X n => τ
+      SAp     : {Γ : tctx} {e1 e2 : hexp} {τ τ1 τ2 : htyp} →
+                 Γ ⊢ e1 => τ1 →
+                 τ1 ▸arr τ2 ==> τ →
+                 Γ ⊢ e2 <= τ2 →
+                 Γ ⊢ (e1 ∘ e2) => τ
       SEHole  : {Γ : tctx} {u : Nat} → Γ ⊢ ⦇⦈[ u ] => ⦇⦈ -- todo: uniqueness of n?
-      SNEHole : {Γ : tctx} {e : hexp} {t : htyp} {u : Nat} → -- todo: uniqueness of n?
-                 Γ ⊢ e => t →
+      SNEHole : {Γ : tctx} {e : hexp} {τ : htyp} {u : Nat} → -- todo: uniqueness of n?
+                 Γ ⊢ e => τ →
                  Γ ⊢ ⦇ e ⦈[ u ] => ⦇⦈
-      SLam    : {Γ : tctx} {e : hexp} {t1 t2 : htyp} {x : Nat} →
+      SLam    : {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} {x : Nat} →
                  x # Γ → -- todo
-                 (Γ ,, (x , t1)) ⊢ e => t2 →
-                 Γ ⊢ ·λ x [ t1 ] e => t1 ==> t2
+                 (Γ ,, (x , τ1)) ⊢ e => τ2 →
+                 Γ ⊢ ·λ x [ τ1 ] e => τ1 ==> τ2
 
     -- analysis
-    data _⊢_<=_ : (Γ : htyp ctx) → (e : hexp) → (t : htyp) → Set where
-      ASubsume : {Γ : tctx} {e : hexp} {t t' : htyp} →
-                 Γ ⊢ e => t' →
-                 t ~ t' →
-                 Γ ⊢ e <= t
-      ALam : {Γ : tctx} {e : hexp} {t t1 t2 : htyp} {x : Nat} →
+    data _⊢_<=_ : (Γ : htyp ctx) → (e : hexp) → (τ : htyp) → Set where
+      ASubsume : {Γ : tctx} {e : hexp} {τ τ' : htyp} →
+                 Γ ⊢ e => τ' →
+                 τ ~ τ' →
+                 Γ ⊢ e <= τ
+      ALam : {Γ : tctx} {e : hexp} {τ τ1 τ2 : htyp} {x : Nat} →
                  x # Γ →
-                 t ▸arr t1 ==> t2 →
-                 (Γ ,, (x , t1)) ⊢ e <= t2 →
-                 Γ ⊢ (·λ x e) <= t
+                 τ ▸arr τ1 ==> τ2 →
+                 (Γ ,, (x , τ1)) ⊢ e <= τ2 →
+                 Γ ⊢ (·λ x e) <= τ
 
   -- todo: do we care about completeness of hexp or e-umlauts?
   -- those types without holes anywhere
   tcomplete : htyp → Set
   tcomplete b         = ⊤
   tcomplete ⦇⦈        = ⊥
-  tcomplete (t1 ==> t2) = tcomplete t1 × tcomplete t2
+  tcomplete (τ1 ==> τ2) = tcomplete τ1 × tcomplete τ2
 
   -- those expressions without holes anywhere
   ecomplete : hexp → Set
   ecomplete c = ⊤
-  ecomplete (e1 ·: t)  = ecomplete e1 × tcomplete t
+  ecomplete (e1 ·: τ)  = ecomplete e1 × tcomplete τ
   ecomplete (X _)      = ⊤
   ecomplete (·λ _ e1)  = ecomplete e1
   ecomplete ⦇⦈[ u ]       = ⊥
   ecomplete ⦇ e1 ⦈[ u ]   = ⊥
   ecomplete (e1 ∘ e2)  = ecomplete e1 × ecomplete e2
-  ecomplete (·λ x [ t ] e) = tcomplete t × ecomplete e
+  ecomplete (·λ x [ τ ] e) = tcomplete τ × ecomplete e
 
   -- expansion
   mutual
-    data _⊢_⇒_~>_⊣_ : (Γ : tctx) (e : hexp) (t : htyp) (d : dhexp) (Δ : hctx) → Set where
+    data _⊢_⇒_~>_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (Δ : hctx) → Set where
       ESConst : ∀{Γ} → Γ ⊢ c ⇒ b ~> c ⊣ ∅
-      ESVar   : ∀{Γ x t} → (Γ ,, (x , t)) ⊢ X x ⇒ t ~> X x ⊣ ∅
-      ESLam   : ∀{Γ x t1 t2 e d Δ } →
-                     (Γ ,, (x , t1)) ⊢ e ⇒ t2 ~> d ⊣ Δ →
-                      Γ ⊢ ·λ x [ t1 ] e ⇒ (t1 ==> t2) ~> ·λ x [ t1 ] d ⊣ ∅
+      ESVar   : ∀{Γ x τ} → (Γ ,, (x , τ)) ⊢ X x ⇒ τ ~> X x ⊣ ∅
+      ESLam   : ∀{Γ x τ1 τ2 e d Δ } →
+                     (Γ ,, (x , τ1)) ⊢ e ⇒ τ2 ~> d ⊣ Δ →
+                      Γ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ ∅
 
       -- todo: really ought to check disjointness of domains here ..
-      ESAp1   : ∀{Γ e1 e2 d2 d1 Δ1 t2 t1 Δ2} →
+      ESAp1   : ∀{Γ e1 e2 d2 d1 Δ1 τ2 τ1 Δ2} →
                 Γ ⊢ e1 => ⦇⦈ →
-                Γ ⊢ e2 ⇐ ⦇⦈ ~> d2 :: t2 ⊣ Δ2 →
-                Γ ⊢ e1 ⇐ (t2 ==> ⦇⦈) ~> d1 :: t1 ⊣ Δ1 →
-                Γ ⊢ e1 ∘ e2 ⇒ ⦇⦈ ~> (< t2 ==> ⦇⦈ > d1) ∘ d2 ⊣ (Δ1 ∪ Δ2)
-      ESAp2 : ∀{Γ e1 t2 t d1 d2 Δ1 Δ2 t2' e2} →
-              Γ ⊢ e1 ⇒ (t2 ==> t) ~> d1 ⊣ Δ1 →
-              Γ ⊢ e2 ⇐ t2 ~> d2 :: t2' ⊣ Δ2 →
-              (t2 == t2' → ⊥) →
-              Γ ⊢ e1 ∘ e2 ⇒ t ~> d1 ∘ (< t2 > d2) ⊣ (Δ1 ∪ Δ2)
-      ESAp3 : ∀{Γ e1 t d1 Δ1 e2 t2 d2 Δ2 } →
-              Γ ⊢ e1 ⇒ (t2 ==> t) ~> d1 ⊣ Δ1 →
-              Γ ⊢ e2 ⇐ t2 ~> d2 :: t2 ⊣ Δ2 →
-              Γ ⊢ e1 ∘ e2 ⇒ t ~> d1 ∘ d2 ⊣ (Δ1 ∪ Δ2)
+                Γ ⊢ e2 ⇐ ⦇⦈ ~> d2 :: τ2 ⊣ Δ2 →
+                Γ ⊢ e1 ⇐ (τ2 ==> ⦇⦈) ~> d1 :: τ1 ⊣ Δ1 →
+                Γ ⊢ e1 ∘ e2 ⇒ ⦇⦈ ~> (< τ2 ==> ⦇⦈ > d1) ∘ d2 ⊣ (Δ1 ∪ Δ2)
+      ESAp2 : ∀{Γ e1 τ2 τ d1 d2 Δ1 Δ2 τ2' e2} →
+              Γ ⊢ e1 ⇒ (τ2 ==> τ) ~> d1 ⊣ Δ1 →
+              Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2' ⊣ Δ2 →
+              (τ2 == τ2' → ⊥) →
+              Γ ⊢ e1 ∘ e2 ⇒ τ ~> d1 ∘ (< τ2 > d2) ⊣ (Δ1 ∪ Δ2)
+      ESAp3 : ∀{Γ e1 τ d1 Δ1 e2 τ2 d2 Δ2 } →
+              Γ ⊢ e1 ⇒ (τ2 ==> τ) ~> d1 ⊣ Δ1 →
+              Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2 ⊣ Δ2 →
+              Γ ⊢ e1 ∘ e2 ⇒ τ ~> d1 ∘ d2 ⊣ (Δ1 ∪ Δ2)
       ESEHole : ∀{ Γ u } →
                 Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈[ u , id Γ ] ⊣  ⟦ u ::[ Γ ] ⦇⦈ ⟧
-      ESNEHole : ∀{ Γ e t d u Δ } →
-                 Γ ⊢ e ⇒ t ~> d ⊣ Δ →
+      ESNEHole : ∀{ Γ e τ d u Δ } →
+                 Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
                  Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈[ u , id Γ ] ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
-      ESAsc1 : ∀ {Γ e t d t' Δ} →
-                 Γ ⊢ e ⇐ t ~> d :: t' ⊣ Δ →
-                 (t == t' → ⊥) →
-                 Γ ⊢ (e ·: t) ⇒ t ~> (< t > d) ⊣ Δ
-      ESAsc2 : ∀{Γ e t d t' Δ } →
-               Γ ⊢ e ⇐ t ~> d :: t' ⊣ Δ →
-               Γ ⊢ (e ·: t) ⇒ t ~> d ⊣ Δ
+      ESAsc1 : ∀ {Γ e τ d τ' Δ} →
+                 Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
+                 (τ == τ' → ⊥) →
+                 Γ ⊢ (e ·: τ) ⇒ τ ~> (< τ > d) ⊣ Δ
+      ESAsc2 : ∀{Γ e τ d τ' Δ } →
+               Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
+               Γ ⊢ (e ·: τ) ⇒ τ ~> d ⊣ Δ
 
-    data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : hexp) (t : htyp) (d : dhexp) (t' : htyp)(Δ : hctx) → Set where
-      EALam : ∀{Γ x t1 t2 e d t2' Δ } →
-              (Γ ,, (x , t1)) ⊢ e ⇐ t2 ~> d :: t2' ⊣ Δ →
-              Γ ⊢ ·λ x e ⇐ t1 ==> t2 ~> ·λ x [ t1 ] d :: t1 ==> t2' ⊣ Δ
-      EASubsume : ∀{e u e' Γ t' d Δ t} →
+    data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (τ' : htyp)(Δ : hctx) → Set where
+      EALam : ∀{Γ x τ1 τ2 e d τ2' Δ } →
+              (Γ ,, (x , τ1)) ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
+              Γ ⊢ ·λ x e ⇐ τ1 ==> τ2 ~> ·λ x [ τ1 ] d :: τ1 ==> τ2' ⊣ Δ
+      EASubsume : ∀{e u e' Γ τ' d Δ τ} →
                   (e == ⦇⦈[ u ] → ⊥) →
                   (e == ⦇ e' ⦈[ u ] → ⊥) →
-                  Γ ⊢ e ⇒ t' ~> d ⊣ Δ →
-                  t ~ t' →
-                  Γ ⊢ e ⇐ t ~> d :: t' ⊣ Δ
-      EAEHole : ∀{ Γ u t  } →
-                Γ ⊢ ⦇⦈[ u ] ⇐ t ~> ⦇⦈[ u , id Γ ] :: t ⊣ ⟦ u ::[ Γ ] t ⟧
-      EANEHole : ∀{ Γ e u t d t' Δ  } →
-                 Γ ⊢ e ⇒ t' ~> d ⊣ Δ →
-                 t ~ t' →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ t ~> ⦇ d ⦈[ u , id Γ ] :: t ⊣ (Δ ,, u ::[ Γ ] t)
+                  Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
+                  τ ~ τ' →
+                  Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
+      EAEHole : ∀{ Γ u τ  } →
+                Γ ⊢ ⦇⦈[ u ] ⇐ τ ~> ⦇⦈[ u , id Γ ] :: τ ⊣ ⟦ u ::[ Γ ] τ ⟧
+      EANEHole : ∀{ Γ e u τ d τ' Δ  } →
+                 Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
+                 τ ~ τ' →
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈[ u , id Γ ] :: τ ⊣ (Δ ,, u ::[ Γ ] τ)
 
   -- type assignment
-  data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (d : dhexp) (t : htyp) → Set where
+  data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (d : dhexp) (τ : htyp) → Set where
     TAConst : ∀{Δ Γ} → Δ , Γ ⊢ c :: b
-    TAVar : ∀{Δ Γ x t} → Δ , (Γ ,, (x , t)) ⊢ X x :: t
-    TALam : ∀{ Δ Γ x t1 d t2} →
-            Δ , (Γ ,, (x , t1)) ⊢ d :: t2 →
-            Δ , Γ ⊢ ·λ x [ t1 ] d :: (t1 ==> t2)
-    TAAp : ∀{ Δ Γ d1 d2 t1 t2 t} →
-           Δ , Γ ⊢ d1 :: t1 →
-           t1 ▸arr (t2 ==> t) →
-           Δ , Γ ⊢ d2 :: t2 →
-           Δ , Γ ⊢ d1 ∘ d2 :: t
-    -- TAEHole : ∀{ Δ Γ σ u Γ' } → -- todo: overloaded form in the paper here
-    -- TANEHole : ∀ { Δ Γ e t' Γ' u σ t }
-    TACast : ∀{ Δ Γ d t t'} →
-           Δ , Γ ⊢ d :: t' →
-           t ~ t' →
-           Δ , Γ ⊢ < t > d :: t
+    TAVar : ∀{Δ Γ x τ} → Δ , (Γ ,, (x , τ)) ⊢ X x :: τ
+    TALam : ∀{ Δ Γ x τ1 d τ2} →
+            Δ , (Γ ,, (x , τ1)) ⊢ d :: τ2 →
+            Δ , Γ ⊢ ·λ x [ τ1 ] d :: (τ1 ==> τ2)
+    TAAp : ∀{ Δ Γ d1 d2 τ1 τ2 τ} →
+           Δ , Γ ⊢ d1 :: τ1 →
+           τ1 ▸arr (τ2 ==> τ) →
+           Δ , Γ ⊢ d2 :: τ2 →
+           Δ , Γ ⊢ d1 ∘ d2 :: τ
+    -- ΤAEHole : ∀{ Δ Γ σ u Γ' } → -- τodo: overloaded form in τhe paper here
+    -- ΤANEHole : ∀ { Δ Γ e τ' Γ' u σ τ }
+    TACast : ∀{ Δ Γ d τ τ'} →
+           Δ , Γ ⊢ d :: τ' →
+           τ ~ τ' →
+           Δ , Γ ⊢ < τ > d :: τ
 
   -- todo: substition goes here
 
   -- value
   data _val : (d : dhexp) → Set where
     VConst : c val
-    VLam   : ∀{x t d} → (·λ x [ t ] d) val
+    VLam   : ∀{x τ d} → (·λ x [ τ ] d) val
 
   mutual
     -- indeterminate
@@ -219,7 +219,7 @@ module core where
       IEHole : ∀{u σ} → ⦇⦈[ u , σ ] indet
       INEHole : ∀{d u σ} → d final → ⦇ d ⦈[ u , σ ] indet
       IAp : ∀{d1 d2} → d1 indet → d2 final → (d1 ∘ d2) indet
-      ICast : ∀{d t} → d indet → (< t > d) indet
+      ICast : ∀{d τ} → d indet → (< τ > d) indet
 
     -- final
     data _final : (d : dhexp) → Set where
@@ -248,6 +248,6 @@ module core where
             d1 final →
             d2 ↦ d2' →
             (d1 ∘ d2) ↦ (d1 ∘ d2')
-    STApβ : ∀{ d1 d2 t x } →
+    STApβ : ∀{ d1 d2 τ x } →
             d2 final →
-            ((·λ x [ t ] d1) ∘ d2) ↦ ([ ⟦ x , c ⟧ ] d2)
+            ((·λ x [ τ ] d1) ∘ d2) ↦ ([ ⟦ x , c ⟧ ] d2)

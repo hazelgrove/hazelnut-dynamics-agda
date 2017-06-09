@@ -5,14 +5,14 @@ open import core
 
 module expandability where
   mutual
-    expandability-synth : (Γ : tctx) (e : hexp) (t : htyp) →
-                          Γ ⊢ e => t →
+    expandability-synth : (Γ : tctx) (e : hexp) (τ : htyp) →
+                          Γ ⊢ e => τ →
                           Σ[ d ∈ dhexp ] Σ[ Δ ∈ hctx ]
-                            (Γ ⊢ e ⇒ t ~> d ⊣ Δ)
+                            (Γ ⊢ e ⇒ τ ~> d ⊣ Δ)
     expandability-synth = {!!}
 
-    expandability-ana : (Γ : tctx) (e : hexp) (t : htyp) →
-                         Γ ⊢ e => t →
-                          Σ[ d ∈ dhexp ] Σ[ Δ ∈ hctx ] Σ[ t' ∈ htyp ]
-                            (Γ ⊢ e ⇐ t ~> d :: t' ⊣ Δ)
+    expandability-ana : (Γ : tctx) (e : hexp) (τ : htyp) →
+                         Γ ⊢ e => τ →
+                          Σ[ d ∈ dhexp ] Σ[ Δ ∈ hctx ] Σ[ τ' ∈ htyp ]
+                            (Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ)
     expandability-ana = {!!}

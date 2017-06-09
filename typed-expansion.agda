@@ -5,12 +5,12 @@ open import core
 
 module typed-expansion where
   mutual
-    typed-expansion-synth : (Γ : tctx) (e : hexp) (t : htyp) (d : dhexp) (Δ : hctx) →
-                            Γ ⊢ e ⇒ t ~> d ⊣ Δ →
-                            Δ , Γ ⊢ d :: t
+    typed-expansion-synth : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (Δ : hctx) →
+                            Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
+                            Δ , Γ ⊢ d :: τ
     typed-expansion-synth = {!!}
 
-    typed-expansion-ana : (Γ : tctx) (e : hexp) (t t' : htyp) (d : dhexp) (Δ : hctx) →
-                          Γ ⊢ e ⇐ t ~> d :: t' ⊣ Δ →
-                          (t ~ t') × (Δ , Γ ⊢ d :: t')
+    typed-expansion-ana : (Γ : tctx) (e : hexp) (τ τ' : htyp) (d : dhexp) (Δ : hctx) →
+                          Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
+                          (τ ~ τ') × (Δ , Γ ⊢ d :: τ')
     typed-expansion-ana = {!!}
