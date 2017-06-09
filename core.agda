@@ -23,18 +23,19 @@ module core where
     ⦇_⦈[_]  : hexp → Nat → hexp
     _∘_     : hexp → hexp → hexp
 
-  subst : Set -- todo: no idea if this is right
-  subst = hexp ctx
+  mutual
+    subst : Set -- todo: no idea if this is right; mutual thing is weird
+    subst = dhexp ctx
 
-  -- expressions without ascriptions but with casts
-  data dhexp : Set where
-    c        : dhexp
-    X        : Nat → dhexp
-    ·λ_[_]_  : Nat → htyp → dhexp → dhexp
-    ⦇⦈[_]    : (Nat × subst) → dhexp
-    ⦇_⦈[_]   : dhexp → (Nat × subst) → dhexp
-    _∘_      : dhexp → dhexp → dhexp
-    <_>_     : htyp → dhexp → dhexp
+    -- expressions without ascriptions but with casts
+    data dhexp : Set where
+      c        : dhexp
+      X        : Nat → dhexp
+      ·λ_[_]_  : Nat → htyp → dhexp → dhexp
+      ⦇⦈[_]    : (Nat × subst) → dhexp
+      ⦇_⦈[_]   : dhexp → (Nat × subst) → dhexp
+      _∘_      : dhexp → dhexp → dhexp
+      <_>_     : htyp → dhexp → dhexp
 
   -- type consistency
   data _~_ : (t1 t2 : htyp) → Set where
@@ -69,9 +70,8 @@ module core where
   hctx : Set
   hctx = (htyp ctx × htyp) ctx
 
-  postulate -- todo: write this stuff later
-    id : {A : Set} → A ctx → subst
-    [_]_ : subst → dhexp → dhexp
+  id : tctx → subst
+  id ctx n = {!!}
 
   -- this is just fancy notation to match the paper
   _::[_]_ : Nat → tctx → htyp → (Nat × tctx × htyp)
@@ -140,19 +140,20 @@ module core where
       ESLam   : ∀{Γ x τ1 τ2 e d Δ } →
                      (Γ ,, (x , τ1)) ⊢ e ⇒ τ2 ~> d ⊣ Δ →
                       Γ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ ∅
-
-      -- todo: really ought to check disjointness of domains here
       ESAp1   : ∀{Γ e1 e2 d2 d1 Δ1 τ2 τ1 Δ2} →
+                Δ1 ## Δ2 →
                 Γ ⊢ e1 => ⦇⦈ →
                 Γ ⊢ e2 ⇐ ⦇⦈ ~> d2 :: τ2 ⊣ Δ2 →
                 Γ ⊢ e1 ⇐ (τ2 ==> ⦇⦈) ~> d1 :: τ1 ⊣ Δ1 →
                 Γ ⊢ e1 ∘ e2 ⇒ ⦇⦈ ~> (< τ2 ==> ⦇⦈ > d1) ∘ d2 ⊣ (Δ1 ∪ Δ2)
       ESAp2 : ∀{Γ e1 τ2 τ d1 d2 Δ1 Δ2 τ2' e2} →
+              Δ1 ## Δ2 →
               Γ ⊢ e1 ⇒ (τ2 ==> τ) ~> d1 ⊣ Δ1 →
               Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2' ⊣ Δ2 →
               (τ2 == τ2' → ⊥) →
               Γ ⊢ e1 ∘ e2 ⇒ τ ~> d1 ∘ (< τ2 > d2) ⊣ (Δ1 ∪ Δ2)
       ESAp3 : ∀{Γ e1 τ d1 Δ1 e2 τ2 d2 Δ2 } →
+              Δ1 ## Δ2 →
               Γ ⊢ e1 ⇒ (τ2 ==> τ) ~> d1 ⊣ Δ1 →
               Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2 ⊣ Δ2 →
               Γ ⊢ e1 ∘ e2 ⇒ τ ~> d1 ∘ d2 ⊣ (Δ1 ∪ Δ2)
@@ -169,7 +170,7 @@ module core where
                Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                Γ ⊢ (e ·: τ) ⇒ τ ~> d ⊣ Δ
 
-    data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (τ' : htyp)(Δ : hctx) → Set where
+    data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (τ' : htyp) (Δ : hctx) → Set where
       EALam : ∀{Γ x τ1 τ2 e d τ2' Δ } →
               (Γ ,, (x , τ1)) ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
               Γ ⊢ ·λ x e ⇐ τ1 ==> τ2 ~> ·λ x [ τ1 ] d :: τ1 ==> τ2' ⊣ Δ
@@ -188,9 +189,11 @@ module core where
 
   mutual
     -- substitition type assignment
-    postulate
-      _,_⊢_:s:_ : hctx → tctx → subst → tctx → Set
-      -- Δ , Γ ⊢ σ :s: Γ' = {!!}
+    _,_⊢_:s:_ : hctx → tctx → subst → tctx → Set
+    Δ , Γ ⊢ σ :s: Γ' =
+        (x : Nat) (d : dhexp) →
+          (x , d) ∈ σ →
+          Σ[ τ ∈ htyp ] (Γ' x == Some τ × Δ , Γ ⊢ d :: τ)
 
     -- type assignment
     data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (d : dhexp) (τ : htyp) → Set where
@@ -216,7 +219,8 @@ module core where
              τ ~ τ' →
              Δ , Γ ⊢ < τ > d :: τ
 
-  -- todo: substition goes here
+  postulate -- todo: write this later
+    [_]_ : subst → dhexp → dhexp
 
   -- value
   data _val : (d : dhexp) → Set where

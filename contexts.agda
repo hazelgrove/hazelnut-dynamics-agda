@@ -36,6 +36,11 @@ module contexts where
   _#_ : {A : Set} (n : Nat) → (Γ : A ctx) → Set
   x # Γ = (Γ x) == None
 
+  -- disjointness for contexts
+  _##_ : {A : Set} → A ctx → A ctx → Set
+  _##_ {A} Γ Γ'  = ((n : Nat) (a : A) → Γ n == Some a → Γ' n == None) ×
+                   ((n : Nat) (a : A) → Γ' n == Some a → Γ n == None)
+
   -- without: remove a variable from a context
   _/_ : {A : Set} → A ctx → Nat → A ctx
   (Γ / x) y with natEQ x y
