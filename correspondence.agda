@@ -5,12 +5,12 @@ open import core
 
 module correspondence where
   mutual
-    correspondence-synth : (Γ : tctx) (e : ė) (t : τ̇) (e' : ë) (Δ : hctx) →
-                            Γ ⊢ e ⇒ t ~> e' ⊣ Δ →
+    correspondence-synth : (Γ : tctx) (e : hexp) (t : htyp) (d : dhexp) (Δ : hctx) →
+                            Γ ⊢ e ⇒ t ~> d ⊣ Δ →
                             Γ ⊢ e => t
     correspondence-synth = {!!}
 
-    correspondence-ana : (Γ : tctx) (e : ė) (t : τ̇) (e' : ë) (Δ : hctx) (t' : τ̇) →
-                          Γ ⊢ e ⇐ t ~> e' :: t' ⊣ Δ →
+    correspondence-ana : (Γ : tctx) (e : hexp) (t t' : htyp) (d : dhexp) (Δ : hctx)  →
+                          Γ ⊢ e ⇐ t ~> d :: t' ⊣ Δ →
                           Γ ⊢ e => t
     correspondence-ana = {!!}

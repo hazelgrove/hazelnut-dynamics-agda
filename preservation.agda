@@ -5,8 +5,8 @@ open import core
 open import contexts
 
 module preservation where
-  preservation : (Δ : hctx) (e e' : ë) (t : τ̇) →
-             Δ , ∅ ⊢ e :: t →
-             e ↦ e' →
-             Δ , ∅ ⊢ e' :: t
+  preservation : (Δ : hctx) (d d' : dhexp) (t : htyp) →
+             Δ , ∅ ⊢ d :: t →
+             d ↦ d' →
+             Δ , ∅ ⊢ d' :: t
   preservation = {!!}
