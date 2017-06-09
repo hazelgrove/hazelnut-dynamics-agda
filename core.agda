@@ -34,7 +34,7 @@ module core where
     ⦇⦈[_]    : (Nat × subst) → ë
     ⦇_⦈[_]   : ë → (Nat × subst) → ë
     _∘_      : ë → ë → ë
-    <_>_     : ë → τ̇ → ë
+    <_>_     : τ̇ → ë → ë
 
   -- type consistency
   data _~_ : (t1 : τ̇) → (t2 : τ̇) → Set where
@@ -147,12 +147,12 @@ module core where
                 Γ ⊢ e1 => ⦇⦈ →
                 Γ ⊢ e2 ⇐ ⦇⦈ ~> e2' :: t2 ⊣ Δ2 →
                 Γ ⊢ e1 ⇐ (t2 ==> ⦇⦈) ~> e1' :: t1 ⊣ Δ1 →
-                Γ ⊢ e1 ∘ e2 ⇒ ⦇⦈ ~> (< e1' > t2) ∘ e2' ⊣ (Δ1 ∪ Δ2)
+                Γ ⊢ e1 ∘ e2 ⇒ ⦇⦈ ~> (< t2 > e1') ∘ e2' ⊣ (Δ1 ∪ Δ2)
       ESAp2 : ∀{Γ e1 t2 t e1' e2' Δ1 Δ2 t2' e2} →
               Γ ⊢ e1 ⇒ (t2 ==> t) ~> e1' ⊣ Δ1 →
               Γ ⊢ e2 ⇐ t2 ~> e2' :: t2' ⊣ Δ2 →
               (t2 == t2' → ⊥) →
-              Γ ⊢ e1 ∘ e2 ⇒ t ~> e1' ∘ (< e2' > t2) ⊣ (Δ1 ∪ Δ2)
+              Γ ⊢ e1 ∘ e2 ⇒ t ~> e1' ∘ (< t2 > e2') ⊣ (Δ1 ∪ Δ2)
       ESAp3 : ∀{Γ e1 t e1' Δ1 e2 t2 e2' Δ2 } →
               Γ ⊢ e1 ⇒ (t2 ==> t) ~> e1' ⊣ Δ1 →
               Γ ⊢ e2 ⇐ t2 ~> e2' :: t2 ⊣ Δ2 →
@@ -165,7 +165,7 @@ module core where
       ESAsc1 : ∀ {Γ e t e' t' Δ} →
                  Γ ⊢ e ⇐ t ~> e' :: t' ⊣ Δ →
                  (t == t' → ⊥) →
-                 Γ ⊢ (e ·: t) ⇒ t ~> (< e' > t) ⊣ Δ
+                 Γ ⊢ (e ·: t) ⇒ t ~> (< t > e') ⊣ Δ
       ESAsc2 : ∀{Γ e t e' t' Δ } →
                Γ ⊢ e ⇐ t ~> e' :: t' ⊣ Δ →
                Γ ⊢ (e ·: t) ⇒ t ~> e' ⊣ Δ
@@ -204,7 +204,7 @@ module core where
     TACast : ∀{ Δ Γ e t t'} →
            Δ , Γ ⊢ e :: t' →
            t ~ t' →
-           Δ , Γ ⊢ < e > t :: t
+           Δ , Γ ⊢ < t > e :: t
 
   -- todo: substition goes here
 
@@ -219,7 +219,7 @@ module core where
       IEHole : ∀{u σ} → ⦇⦈[ u , σ ] indet
       INEHole : ∀{e u σ} → e final → ⦇ e ⦈[ u , σ ] indet
       IAp : ∀{e1 e2} → e1 indet → e2 final → (e1 ∘ e2) indet
-      ICast : ∀{e t} → e indet → (< e > t) indet
+      ICast : ∀{e t} → e indet → (< t > e) indet
 
     -- final
     data _final : ë → Set where
