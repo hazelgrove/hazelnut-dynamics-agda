@@ -47,7 +47,7 @@ module core where
                τ1 ==> τ2 ~ τ1' ==> τ2'
 
   -- type inconsistency
-  data _~̸_ : htyp → htyp → Set where
+  data _~̸_ : (τ1 τ2 : htyp) → Set where
     ICBaseArr1 : {τ1 τ2 : htyp} → b ~̸ τ1 ==> τ2
     ICBaseArr2 : {τ1 τ2 : htyp} → τ1 ==> τ2 ~̸ b
     ICArr1 : {τ1 τ2 τ3 τ4 : htyp} →
@@ -77,11 +77,10 @@ module core where
   _::[_]_ : Nat → tctx → htyp → (Nat × tctx × htyp)
   u ::[ Γ ] τ = u , Γ , τ
 
-
   -- bidirectional type checking judgements for hexp
   mutual
     -- synthesis
-    data _⊢_=>_ : (Γ : tctx) → (e : hexp) → (τ : htyp) → Set where
+    data _⊢_=>_ : (Γ : tctx) (e : hexp) (τ : htyp) → Set where
       SConst  : {Γ : tctx} → Γ ⊢ c => b
       SAsc    : {Γ : tctx} {e : hexp} {τ : htyp} →
                  Γ ⊢ e <= τ →
@@ -99,12 +98,12 @@ module core where
                  Γ ⊢ e => τ →
                  Γ ⊢ ⦇ e ⦈[ u ] => ⦇⦈
       SLam    : {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} {x : Nat} →
-                 x # Γ → -- todo
+                 x # Γ →
                  (Γ ,, (x , τ1)) ⊢ e => τ2 →
                  Γ ⊢ ·λ x [ τ1 ] e => τ1 ==> τ2
 
     -- analysis
-    data _⊢_<=_ : (Γ : htyp ctx) → (e : hexp) → (τ : htyp) → Set where
+    data _⊢_<=_ : (Γ : htyp ctx) (e : hexp) (τ : htyp) → Set where
       ASubsume : {Γ : tctx} {e : hexp} {τ τ' : htyp} →
                  Γ ⊢ e => τ' →
                  τ ~ τ' →
@@ -142,7 +141,7 @@ module core where
                      (Γ ,, (x , τ1)) ⊢ e ⇒ τ2 ~> d ⊣ Δ →
                       Γ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ ∅
 
-      -- todo: really ought to check disjointness of domains here ..
+      -- todo: really ought to check disjointness of domains here
       ESAp1   : ∀{Γ e1 e2 d2 d1 Δ1 τ2 τ1 Δ2} →
                 Γ ⊢ e1 => ⦇⦈ →
                 Γ ⊢ e2 ⇐ ⦇⦈ ~> d2 :: τ2 ⊣ Δ2 →
@@ -158,7 +157,7 @@ module core where
               Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2 ⊣ Δ2 →
               Γ ⊢ e1 ∘ e2 ⇒ τ ~> d1 ∘ d2 ⊣ (Δ1 ∪ Δ2)
       ESEHole : ∀{ Γ u } →
-                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈[ u , id Γ ] ⊣  ⟦ u ::[ Γ ] ⦇⦈ ⟧
+                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈[ u , id Γ ] ⊣  ■ (u ::[ Γ ] ⦇⦈)
       ESNEHole : ∀{ Γ e τ d u Δ } →
                  Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
                  Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈[ u , id Γ ] ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
@@ -181,30 +180,41 @@ module core where
                   τ ~ τ' →
                   Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
       EAEHole : ∀{ Γ u τ  } →
-                Γ ⊢ ⦇⦈[ u ] ⇐ τ ~> ⦇⦈[ u , id Γ ] :: τ ⊣ ⟦ u ::[ Γ ] τ ⟧
+                Γ ⊢ ⦇⦈[ u ] ⇐ τ ~> ⦇⦈[ u , id Γ ] :: τ ⊣ ■ (u ::[ Γ ] τ)
       EANEHole : ∀{ Γ e u τ d τ' Δ  } →
                  Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
                  τ ~ τ' →
                  Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈[ u , id Γ ] :: τ ⊣ (Δ ,, u ::[ Γ ] τ)
 
-  -- type assignment
-  data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (d : dhexp) (τ : htyp) → Set where
-    TAConst : ∀{Δ Γ} → Δ , Γ ⊢ c :: b
-    TAVar : ∀{Δ Γ x τ} → Δ , (Γ ,, (x , τ)) ⊢ X x :: τ
-    TALam : ∀{ Δ Γ x τ1 d τ2} →
-            Δ , (Γ ,, (x , τ1)) ⊢ d :: τ2 →
-            Δ , Γ ⊢ ·λ x [ τ1 ] d :: (τ1 ==> τ2)
-    TAAp : ∀{ Δ Γ d1 d2 τ1 τ2 τ} →
-           Δ , Γ ⊢ d1 :: τ1 →
-           τ1 ▸arr (τ2 ==> τ) →
-           Δ , Γ ⊢ d2 :: τ2 →
-           Δ , Γ ⊢ d1 ∘ d2 :: τ
-    -- ΤAEHole : ∀{ Δ Γ σ u Γ' } → -- τodo: overloaded form in τhe paper here
-    -- ΤANEHole : ∀ { Δ Γ e τ' Γ' u σ τ }
-    TACast : ∀{ Δ Γ d τ τ'} →
-           Δ , Γ ⊢ d :: τ' →
-           τ ~ τ' →
-           Δ , Γ ⊢ < τ > d :: τ
+  mutual
+    -- substitition type assignment
+    postulate
+      _,_⊢_:s:_ : hctx → tctx → subst → tctx → Set
+      -- Δ , Γ ⊢ σ :s: Γ' = {!!}
+
+    -- type assignment
+    data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (d : dhexp) (τ : htyp) → Set where
+      TAConst : ∀{Δ Γ} → Δ , Γ ⊢ c :: b
+      TAVar : ∀{Δ Γ x τ} → Δ , (Γ ,, (x , τ)) ⊢ X x :: τ
+      TALam : ∀{ Δ Γ x τ1 d τ2} →
+              Δ , (Γ ,, (x , τ1)) ⊢ d :: τ2 →
+              Δ , Γ ⊢ ·λ x [ τ1 ] d :: (τ1 ==> τ2)
+      TAAp : ∀{ Δ Γ d1 d2 τ1 τ2 τ} →
+             Δ , Γ ⊢ d1 :: τ1 →
+             τ1 ▸arr (τ2 ==> τ) →
+             Δ , Γ ⊢ d2 :: τ2 →
+             Δ , Γ ⊢ d1 ∘ d2 :: τ
+      ΤAEHole : ∀{ Δ Γ σ u Γ' τ} →
+                Δ , Γ ⊢ σ :s: Γ' →
+                (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇⦈[ u , σ ] :: τ
+      ΤANEHole : ∀ { Δ Γ d τ' Γ' u σ τ } →
+                 Δ , Γ ⊢ d :: τ' →
+                 Δ , Γ ⊢ σ :s: Γ' →
+                 (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇ d ⦈[ u , σ ] :: τ
+      TACast : ∀{ Δ Γ d τ τ'} →
+             Δ , Γ ⊢ d :: τ' →
+             τ ~ τ' →
+             Δ , Γ ⊢ < τ > d :: τ
 
   -- todo: substition goes here
 
@@ -226,6 +236,9 @@ module core where
       FVal : ∀{d} → d val → d final
       FIndet : ∀{d} → d indet → d final
 
+------------- these two judgements are still being figured out; form
+------------- changing, etc. double check everything here once it settles
+------------- before doing anything with it
   -- error
   data _err[_] : (d : dhexp) → (Δ : hctx) → Set where
     -- ERNEHole
@@ -236,10 +249,10 @@ module core where
     -- ERCast
 
   -- small step semantics
-  data _↦_ : (d d' : dhexp) → Set where
+  data _↦_ : (d d' : dhexp)  → Set where
     STHole : ∀{ d d' u σ } →
              d ↦ d' →
-             ⦇ d ⦈[ u , σ ] ↦ ⦇ d' ⦈[ u , σ ]
+             ⦇ d ⦈[ u , σ ] ↦  ⦇ d' ⦈[ u , σ ]
     -- STCast
     STAp1 : ∀{ d1 d2 d1' } →
             d1 ↦ d1' →
@@ -248,6 +261,6 @@ module core where
             d1 final →
             d2 ↦ d2' →
             (d1 ∘ d2) ↦ (d1 ∘ d2')
-    STApβ : ∀{ d1 d2 τ x } →
-            d2 final →
-            ((·λ x [ τ ] d1) ∘ d2) ↦ ([ ⟦ x , c ⟧ ] d2)
+    -- STApβ : ∀{ d1 d2 τ x } →
+    --         d2 final →
+    --         ((·λ x [ τ ] d1) ∘ d2) ↦ ([ ⟦ x , {!!} ⟧ ] d2)

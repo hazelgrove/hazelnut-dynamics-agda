@@ -23,8 +23,10 @@ module contexts where
   infixl 10 _,,_
 
   -- the singleton context
-  ⟦_⟧ : {A : Set} → (Nat × A) → A ctx
-  ⟦ x ⟧ = ∅ ,, x
+  ■_ : {A : Set} → (Nat × A) → A ctx
+  ■ x = ∅ ,, x
+
+  infixr 100 ■_
 
   -- membership, or presence, in a context
   _∈_ : {A : Set} (p : Nat × A) → (Γ : A ctx) → Set
