@@ -11,12 +11,12 @@ module typed-expansion where
     typed-expansion-synth Γ .c .b .c .(λ _ → None) ESConst = TAConst
     typed-expansion-synth _ _ τ _ .(λ _ → None) ESVar = TAVar
     typed-expansion-synth Γ _ _ _ .(λ _ → None) (ESLam D) with typed-expansion-synth _ _ _ _ _ D
-    ... | ih = TALam {!ih!}
-    typed-expansion-synth Γ _ .⦇⦈ _ _ (ESAp1 x x₁ x₂) = {!!}
-    typed-expansion-synth Γ _ τ _ _ (ESAp2 D x x₁) = {!!}
-    typed-expansion-synth Γ _ τ _ _ (ESAp3 D x) = {!!}
-    typed-expansion-synth Γ _ .⦇⦈ _ _ ESEHole = {!!}
-    typed-expansion-synth Γ _ .⦇⦈ _ _ (ESNEHole D) = {!!}
+    ... | ih = TALam {!!}
+    typed-expansion-synth Γ _ .⦇⦈ _ _ (ESAp1 y x x₁ x₂) = {!!}
+    typed-expansion-synth Γ _ τ _ _ (ESAp2 y D x x₁) = {!!}
+    typed-expansion-synth Γ _ τ _ _ (ESAp3 y D x) = {!!}
+    typed-expansion-synth Γ _ .⦇⦈ _ _ ESEHole = TAEHole {!!}
+    typed-expansion-synth Γ _ .⦇⦈ _ _ (ESNEHole D) = TANEHole {!!} {!!}
     typed-expansion-synth Γ _ τ _ Δ (ESAsc1 x x₁) = {!!}
     typed-expansion-synth Γ _ τ d Δ (ESAsc2 x) = {!!}
 

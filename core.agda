@@ -71,7 +71,7 @@ module core where
   hctx = (htyp ctx × htyp) ctx
 
   id : tctx → subst
-  id ctx n = {!!}
+  id Γ n = None -- todo: no idea if this is right
 
   -- this is just fancy notation to match the paper
   _::[_]_ : Nat → tctx → htyp → (Nat × tctx × htyp)
@@ -207,10 +207,10 @@ module core where
              τ1 ▸arr (τ2 ==> τ) →
              Δ , Γ ⊢ d2 :: τ2 →
              Δ , Γ ⊢ d1 ∘ d2 :: τ
-      ΤAEHole : ∀{ Δ Γ σ u Γ' τ} →
+      TAEHole : ∀{ Δ Γ σ u Γ' τ} →
                 Δ , Γ ⊢ σ :s: Γ' →
                 (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇⦈[ u , σ ] :: τ
-      ΤANEHole : ∀ { Δ Γ d τ' Γ' u σ τ } →
+      TANEHole : ∀ { Δ Γ d τ' Γ' u σ τ } →
                  Δ , Γ ⊢ d :: τ' →
                  Δ , Γ ⊢ σ :s: Γ' →
                  (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇ d ⦈[ u , σ ] :: τ
