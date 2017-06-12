@@ -71,7 +71,9 @@ module core where
   hctx = (htyp ctx × htyp) ctx
 
   id : tctx → subst
-  id Γ n = None -- todo: no idea if this is right
+  id ctx x with ctx x
+  id ctx x | Some τ = Some (X x)
+  id ctx x | None = None
 
   -- this is just fancy notation to match the paper
   _::[_]_ : Nat → tctx → htyp → (Nat × tctx × htyp)
@@ -93,7 +95,7 @@ module core where
                  τ1 ▸arr τ2 ==> τ →
                  Γ ⊢ e2 <= τ2 →
                  Γ ⊢ (e1 ∘ e2) => τ
-      SEHole  : {Γ : tctx} {u : Nat} → Γ ⊢ ⦇⦈[ u ] => ⦇⦈ -- todo: uniqueness of n?
+      SEHole  : {Γ : tctx} {u : Nat} → Γ ⊢ ⦇⦈[ u ] => ⦇⦈     -- todo: uniqueness of n?
       SNEHole : {Γ : tctx} {e : hexp} {τ : htyp} {u : Nat} → -- todo: uniqueness of n?
                  Γ ⊢ e => τ →
                  Γ ⊢ ⦇ e ⦈[ u ] => ⦇⦈
