@@ -15,12 +15,13 @@ module expandability where
     expandability-synth Γ _ τ (SAsc {e = e} x)
       with expandability-ana Γ e τ {!!}
     ... | d' , Δ' , τ' , D with htype-dec τ τ'
-    expandability-synth Γ _ τ (SAsc x₁) | d' , Δ' , .τ , D | Inl refl = {!!} , {!!} , ESAsc2 {!!}
-    expandability-synth Γ _ τ (SAsc x₁) | d' , Δ' , τ' , D | Inr x = {!!} , {!!} , ESAsc1 {!!} {!!}
-    expandability-synth Γ _ τ (SVar x) = {!!}
+    expandability-synth Γ _ τ (SAsc x₁) | d' , Δ' , .τ , D | Inl refl = d' , Δ' , ESAsc2 D
+    expandability-synth Γ _ τ (SAsc x₁) | d' , Δ' , τ' , D | Inr x = (< τ > d') , Δ' , ESAsc1 D x
+    expandability-synth Γ _ τ (SVar {n = n} x) = X n , ∅ , {!ESVar!}
     expandability-synth Γ _ τ (SAp D x x₁) = {!!}
-    expandability-synth Γ _ .⦇⦈ SEHole = {!!}
-    expandability-synth Γ _ .⦇⦈ (SNEHole D) = {!!}
+    expandability-synth Γ _ .⦇⦈ SEHole = _ , _ , ESEHole
+    expandability-synth Γ _ .⦇⦈ (SNEHole D) with expandability-synth _ _ _ D
+    ... | d' , Δ' , D' = _ , _ , ESNEHole D'
     expandability-synth Γ _ _ (SLam x₁ D) = {!!}
 
     expandability-ana : (Γ : tctx) (e : hexp) (τ : htyp) →
