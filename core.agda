@@ -203,7 +203,7 @@ module core where
     -- type assignment
     data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (d : dhexp) (τ : htyp) → Set where
       TAConst : ∀{Δ Γ} → Δ , Γ ⊢ c :: b
-      TAVar : ∀{Δ Γ x τ} → Δ , (Γ ,, (x , τ)) ⊢ X x :: τ
+      TAVar : ∀{Δ Γ x τ} → (x , τ) ∈ Γ → Δ , Γ ⊢ X x :: τ -- todo: made a change here
       TALam : ∀{ Δ Γ x τ1 d τ2} →
               Δ , (Γ ,, (x , τ1)) ⊢ d :: τ2 →
               Δ , Γ ⊢ ·λ x [ τ1 ] d :: (τ1 ==> τ2)
