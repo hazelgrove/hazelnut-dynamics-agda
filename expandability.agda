@@ -7,26 +7,35 @@ open import htype-decidable
 
 module expandability where
   mutual
-    expandability-synth : (Γ : tctx) (e : hexp) (τ : htyp) →
+    expandability-synth : {Γ : tctx} {e : hexp} {τ : htyp} →
                           Γ ⊢ e => τ →
                           Σ[ d ∈ dhexp ] Σ[ Δ ∈ hctx ]
                             (Γ ⊢ e ⇒ τ ~> d ⊣ Δ)
-    expandability-synth Γ .c .b SConst = c , ∅ , ESConst
-    expandability-synth Γ _ τ (SAsc wt)
-      with expandability-ana _ _ _ wt
-    ... | d' , Δ' , τ' , D with htype-dec τ τ'
-    expandability-synth Γ _ τ (SAsc x₁) | d' , Δ' , .τ , D | Inl refl = d' , Δ' , ESAsc2 D
-    expandability-synth Γ _ τ (SAsc x₁) | d' , Δ' , τ' , D | Inr x = (< τ > d') , Δ' , ESAsc1 D x
-    expandability-synth Γ _ τ (SVar {n = n} x) = X n , ∅ , ESVar x
-    expandability-synth Γ _ τ (SAp D x x₁) = {!!}
-    expandability-synth Γ _ .⦇⦈ SEHole = _ , _ , ESEHole
-    expandability-synth Γ _ .⦇⦈ (SNEHole D) with expandability-synth _ _ _  D
-    ... | d' , Δ' , D' = _ , _ , ESNEHole D'
-    expandability-synth Γ _ _ (SLam x₁ D) = {!!}
+    expandability-synth SConst = c , ∅ , ESConst
+    expandability-synth (SAsc {τ = τ} wt)
+      with expandability-ana wt
+    ... | d' , Δ' , τ' , D with htype-dec {!!} τ'
+    expandability-synth (SAsc x₁) | d' , Δ' , _ , D | Inl refl = d' , Δ' , ESAsc2 D
+    expandability-synth (SAsc x₁) | d' , Δ' , τ' , D | Inr x = (< {!!} > d') , Δ' , ESAsc1 D {!!}
+    expandability-synth (SVar {n = n} x) = X n , ∅ , ESVar x
+    expandability-synth (SAp D MAHole x₁)
+      with expandability-synth D | expandability-ana x₁
+    ... | d1 , Δ1 , D1
+        | d2 , Δ2 , τ2 , D2  = ((< τ2 ==> ⦇⦈ > d1) ∘ d2) , (Δ1 ∪ Δ2) , ESAp1 {!!} D D2 {!!}
+    expandability-synth (SAp D MAArr x₁) = {!!} , {!!} , {!!}
+    expandability-synth SEHole = _ , _ , ESEHole
+    expandability-synth (SNEHole wt) with expandability-synth wt
+    ... | d' , Δ' , wt' = _ , _ , ESNEHole wt'
+    expandability-synth (SLam x₁ wt) with expandability-synth wt
+    ... | d' , Δ' , wt' = _ , ∅ , ESLam wt'
 
-    expandability-ana : (Γ : tctx) (e : hexp) (τ : htyp) →
+    expandability-ana : {Γ : tctx} {e : hexp} {τ : htyp} →
                          Γ ⊢ e <= τ →
                           Σ[ d ∈ dhexp ] Σ[ Δ ∈ hctx ] Σ[ τ' ∈ htyp ]
                             (Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ)
-    expandability-ana Γ e τ (ASubsume x x₁) = {!!} , {!!} , {!!}
-    expandability-ana Γ _ τ (ALam x₁ x₂ wt) = {!!} , {!!} , {!!}
+    expandability-ana (ASubsume wt x₁) with expandability-synth wt
+    ... | d' , Δ' , D' = d' , Δ' , _ , EASubsume (λ x → {!!}) (λ x → {!!}) D' x₁
+    expandability-ana (ALam x₁ MAHole wt) with expandability-ana wt
+    ... | d' , Δ' , τ' , D'  = {!!} , {!!} , {!!} , {!!}
+    expandability-ana (ALam x₁ MAArr wt) with expandability-ana wt
+    ... | d' , Δ' , τ' , D' = _ , {!!} , {!!} , EALam {!!}
