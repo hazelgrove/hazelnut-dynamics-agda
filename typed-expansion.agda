@@ -20,8 +20,9 @@ module typed-expansion where
     typed-expansion-synth (ESAsc1 x x₁)
       with typed-expansion-ana x
     ... | con , ih = TACast ih con
-    typed-expansion-synth (ESAsc2 x) with typed-expansion-ana x
-    ... | con , ih = {!ih!}
+    typed-expansion-synth (ESAsc2 x)
+      with typed-expansion-ana x
+    ... | con , ih = {!!}
 
     typed-expansion-ana : {Γ : tctx} {e : hexp} {τ τ' : htyp} {d : dhexp} {Δ : hctx} →
                           Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
