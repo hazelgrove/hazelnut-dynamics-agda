@@ -8,7 +8,7 @@ open import lemmas-consistency
 open import lemmas-matching
 open import synth-unicity
 
--- open import correspondence
+open import correspondence
 -- open import expandability
 -- open import expansion-unicity
 -- open import preservation

@@ -10,21 +10,21 @@ module correspondence where
                             Γ ⊢ e => τ
     correspondence-synth ESConst = SConst
     correspondence-synth (ESVar x₁) = SVar x₁
-    correspondence-synth (ESLam ex) with correspondence-synth ex
-    ... | ih = SLam {!!} ih
-    correspondence-synth (ESAp1 x x₁ x₂ x₃) = {!!}
-    correspondence-synth (ESAp2 x ex x₁ x₂) = {!!}
-    correspondence-synth (ESAp3 x ex x₁) = {!!}
+    correspondence-synth (ESLam apt ex) with correspondence-synth ex
+    ... | ih = SLam apt ih
+    correspondence-synth (ESAp1 x x₁ x₂ x₃) = SAp x₁ MAHole (correspondence-ana x₂)
+    correspondence-synth (ESAp2 x ex x₁ x₂) = SAp (correspondence-synth ex) MAArr (correspondence-ana x₁)
+    correspondence-synth (ESAp3 x ex x₁) = SAp (correspondence-synth ex) MAArr (correspondence-ana x₁)
     correspondence-synth ESEHole = SEHole
     correspondence-synth (ESNEHole ex) = SNEHole (correspondence-synth ex)
-    correspondence-synth (ESAsc1 x x₁) = {!!}
-    correspondence-synth (ESAsc2 x) = {!!}
+    correspondence-synth (ESAsc1 x _) = SAsc (correspondence-ana x)
+    correspondence-synth (ESAsc2 x) = SAsc (correspondence-ana x)
 
-    correspondence-ana : {Γ : tctx} {e : hexp} {τ τ' : htyp} {d : dhexp} {Δ : hctx}  →
+    correspondence-ana : {Γ : tctx} {e : hexp} {τ τ' : htyp} {d : dhexp} {Δ : hctx} →
                           Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                           Γ ⊢ e <= τ
-    correspondence-ana (EALam ex) with correspondence-ana ex
-    ... | ih = ALam {!!} {!!} {!!}
-    correspondence-ana (EASubsume x x₁ x₂ x₃) = {!!}
-    correspondence-ana EAEHole = {!!}
-    correspondence-ana (EANEHole x x₁) = {!!}
+    correspondence-ana (EALam apt ex) with correspondence-ana ex
+    ... | ih = ALam apt MAArr ih
+    correspondence-ana (EASubsume x x₁ x₂ x₃) = ASubsume (correspondence-synth x₂) x₃
+    correspondence-ana EAEHole = ASubsume SEHole TCHole1
+    correspondence-ana (EANEHole x x₁) = ASubsume (SNEHole (correspondence-synth x)) TCHole1
