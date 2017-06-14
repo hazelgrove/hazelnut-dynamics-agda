@@ -142,8 +142,8 @@ module core where
                          Γ ⊢ X x ⇒ τ ~> X x ⊣ ∅
       ESLam   : ∀{Γ x τ1 τ2 e d Δ } →
                      (x # Γ) → -- todo: i added this
-                     (Γ ,, (x , τ1)) ⊢ e ⇒ τ2 ~> d ⊣ Δ → -- todo: why does Δ get thrown away here?
-                      Γ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ ∅
+                     (Γ ,, (x , τ1)) ⊢ e ⇒ τ2 ~> d ⊣ Δ →
+                      Γ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ Δ
       ESAp1   : ∀{Γ e1 e2 d2 d1 Δ1 τ2 τ1 Δ2} →
                 Δ1 ## Δ2 →
                 Γ ⊢ e1 => ⦇⦈ →
