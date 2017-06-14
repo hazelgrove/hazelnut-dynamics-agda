@@ -141,7 +141,7 @@ module core where
       ESVar   : ∀{Γ x τ} → (x , τ) ∈ Γ →
                          Γ ⊢ X x ⇒ τ ~> X x ⊣ ∅
       ESLam   : ∀{Γ x τ1 τ2 e d Δ } →
-                     (Γ ,, (x , τ1)) ⊢ e ⇒ τ2 ~> d ⊣ Δ →
+                     (Γ ,, (x , τ1)) ⊢ e ⇒ τ2 ~> d ⊣ Δ → -- todo: why does Δ get thrown away here?
                       Γ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ ∅
       ESAp1   : ∀{Γ e1 e2 d2 d1 Δ1 τ2 τ1 Δ2} →
                 Δ1 ## Δ2 →
