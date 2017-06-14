@@ -138,7 +138,8 @@ module core where
   mutual
     data _⊢_⇒_~>_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (Δ : hctx) → Set where
       ESConst : ∀{Γ} → Γ ⊢ c ⇒ b ~> c ⊣ ∅
-      ESVar   : ∀{Γ x τ} → (Γ ,, (x , τ)) ⊢ X x ⇒ τ ~> X x ⊣ ∅
+      ESVar   : ∀{Γ x τ} → (x , τ) ∈ Γ →
+                         Γ ⊢ X x ⇒ τ ~> X x ⊣ ∅
       ESLam   : ∀{Γ x τ1 τ2 e d Δ } →
                      (Γ ,, (x , τ1)) ⊢ e ⇒ τ2 ~> d ⊣ Δ →
                       Γ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ ∅
