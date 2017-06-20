@@ -12,8 +12,8 @@ module expansion-unicity where
                             τ1 == τ2 × d1 == d2 × Δ1 == Δ2
     expansion-unicity-synth ESConst ESConst = refl , refl , refl
     expansion-unicity-synth (ESVar {Γ = Γ} x₁) (ESVar x₂) = ctxunicity {Γ = Γ} x₁ x₂ , refl , refl
-    expansion-unicity-synth (ESLam d1) (ESLam d2) with expansion-unicity-synth d1 d2
-    ... | ih1 , ih2 , ih3 = ap1 _ ih1  , ap1 _ ih2 , refl
+    expansion-unicity-synth (ESLam apt1 d1) (ESLam apt2 d2) with expansion-unicity-synth d1 d2
+    ... | ih1 , ih2 , ih3 = ap1 _ ih1  , ap1 _ ih2 , {!!}
     expansion-unicity-synth (ESAp1 x x₁ x₂ x₃) (ESAp1 x₄ x₅ x₆ x₇) = {!!}
     expansion-unicity-synth (ESAp1 x x₁ x₂ x₃) (ESAp2 x₄ d5 x₅ x₆) = {!!}
     expansion-unicity-synth (ESAp1 x x₁ x₂ x₃) (ESAp3 x₄ d5 x₅) = {!!}
@@ -35,9 +35,9 @@ module expansion-unicity where
                           Γ ⊢ e ⇐ τ1 ~> d1 :: τ1' ⊣ Δ1 →
                           Γ ⊢ e ⇐ τ2 ~> d2 :: τ2' ⊣ Δ2 →
                           τ1 == τ2 × d1 == d2 × τ1' == τ2' × Δ1 == Δ2
-    expansion-unicity-ana (EALam d1) (EALam d2) = {!!}
-    expansion-unicity-ana (EALam d1) (EASubsume x₁ x₂ x₃ x₄) = {!!}
-    expansion-unicity-ana (EASubsume x₁ x₂ x₃ x₄) (EALam d2) = {!!}
+    expansion-unicity-ana (EALam apt1 d1) (EALam apt2 d2) = {!!}
+    expansion-unicity-ana (EALam apt1 d1) (EASubsume x₁ x₂ x₃ x₄) = {!!}
+    expansion-unicity-ana (EASubsume x₁ x₂ x₃ x₄) (EALam apt2 d2) = {!!}
     expansion-unicity-ana (EASubsume x x₁ x₂ x₃) (EASubsume x₄ x₅ x₆ x₇) = {!!}
     expansion-unicity-ana (EASubsume x x₁ x₂ x₃) EAEHole = {!!}
     expansion-unicity-ana (EASubsume x x₁ x₂ x₃) (EANEHole x₄ x₅) = {!!}
