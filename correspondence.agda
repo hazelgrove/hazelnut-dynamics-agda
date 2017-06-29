@@ -27,4 +27,4 @@ module correspondence where
     ... | ih = ALam apt MAArr ih
     correspondence-ana (EASubsume x x₁ x₂ x₃) = ASubsume (correspondence-synth x₂) x₃
     correspondence-ana EAEHole = ASubsume SEHole TCHole1
-    correspondence-ana (EANEHole x x₁) = ASubsume (SNEHole (correspondence-synth x)) TCHole1
+    correspondence-ana (EANEHole x) = ASubsume (SNEHole (correspondence-synth x)) TCHole1
