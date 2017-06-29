@@ -32,8 +32,8 @@ module core where
       c        : dhexp
       X        : Nat → dhexp
       ·λ_[_]_  : Nat → htyp → dhexp → dhexp
-      ⦇⦈[_]    : (Nat × subst) → dhexp
-      ⦇_⦈[_]   : dhexp → (Nat × subst) → dhexp
+      ⦇⦈⟨_⟩    : (Nat × subst) → dhexp
+      ⦇_⦈⟨_⟩   : dhexp → (Nat × subst) → dhexp
       _∘_      : dhexp → dhexp → dhexp
       <_>_     : htyp → dhexp → dhexp
 
@@ -134,6 +134,11 @@ module core where
   ecomplete (e1 ∘ e2)  = ecomplete e1 × ecomplete e2
   ecomplete (·λ x [ τ ] e) = tcomplete τ × ecomplete e
 
+  -- not a hole
+
+  data _not-hole : dhexp → Set where
+    CNotHole : c not-hole
+
   -- expansion
   mutual
     data _⊢_⇒_~>_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (Δ : hctx) → Set where
@@ -162,10 +167,10 @@ module core where
               Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2 ⊣ Δ2 →
               Γ ⊢ e1 ∘ e2 ⇒ τ ~> d1 ∘ d2 ⊣ (Δ1 ∪ Δ2)
       ESEHole : ∀{ Γ u } →
-                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈[ u , id Γ ] ⊣  ■ (u ::[ Γ ] ⦇⦈)
+                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , id Γ ⟩ ⊣  ■ (u ::[ Γ ] ⦇⦈)
       ESNEHole : ∀{ Γ e τ d u Δ } →
                  Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈[ u , id Γ ] ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈⟨ u , id Γ ⟩ ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
       ESAsc1 : ∀ {Γ e τ d τ' Δ} →
                  Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                  (τ == τ' → ⊥) →
@@ -179,18 +184,17 @@ module core where
               (x # Γ) → -- todo: i added this
               (Γ ,, (x , τ1)) ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
               Γ ⊢ ·λ x e ⇐ τ1 ==> τ2 ~> ·λ x [ τ1 ] d :: τ1 ==> τ2' ⊣ Δ
-      EASubsume : ∀{e u e' Γ τ' d Δ τ} →
-                  (e == ⦇⦈[ u ] → ⊥) →
-                  (e == ⦇ e' ⦈[ u ] → ⊥) →
+      EASubsume : ∀{e Γ τ' d Δ τ} →
+                  ((u : Nat) → (e == ⦇⦈[ u ] → ⊥)) →
+                  ((e' : hexp) (u : Nat) → (e == ⦇ e' ⦈[ u ] → ⊥)) →
                   Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
                   τ ~ τ' →
                   Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
       EAEHole : ∀{ Γ u τ  } →
-                Γ ⊢ ⦇⦈[ u ] ⇐ τ ~> ⦇⦈[ u , id Γ ] :: τ ⊣ ■ (u ::[ Γ ] τ)
+                Γ ⊢ ⦇⦈[ u ] ⇐ τ ~> ⦇⦈⟨ u , id Γ ⟩ :: τ ⊣ ■ (u ::[ Γ ] τ)
       EANEHole : ∀{ Γ e u τ d τ' Δ  } →
                  Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
-                 τ ~ τ' →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈[ u , id Γ ] :: τ ⊣ (Δ ,, u ::[ Γ ] τ)
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈⟨ u , id Γ ⟩ :: τ ⊣ (Δ ,, u ::[ Γ ] τ)
 
   mutual
     -- substitition type assignment
@@ -214,11 +218,11 @@ module core where
              Δ , Γ ⊢ d1 ∘ d2 :: τ
       TAEHole : ∀{ Δ Γ σ u Γ' τ} →
                 Δ , Γ ⊢ σ :s: Γ' →
-                (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇⦈[ u , σ ] :: τ
+                (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇⦈⟨ u , σ ⟩ :: τ
       TANEHole : ∀ { Δ Γ d τ' Γ' u σ τ } →
                  Δ , Γ ⊢ d :: τ' →
                  Δ , Γ ⊢ σ :s: Γ' →
-                 (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇ d ⦈[ u , σ ] :: τ
+                 (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇ d ⦈⟨ u , σ ⟩ :: τ
       TACast : ∀{ Δ Γ d τ τ'} →
              Δ , Γ ⊢ d :: τ' →
              τ ~ τ' →
@@ -235,8 +239,8 @@ module core where
   mutual
     -- indeterminate
     data _indet : (d : dhexp) → Set where
-      IEHole : ∀{u σ} → ⦇⦈[ u , σ ] indet
-      INEHole : ∀{d u σ} → d final → ⦇ d ⦈[ u , σ ] indet
+      IEHole : ∀{u σ} → ⦇⦈⟨ u , σ ⟩ indet
+      INEHole : ∀{d u σ} → d final → ⦇ d ⦈⟨ u , σ ⟩ indet
       IAp : ∀{d1 d2} → d1 indet → d2 final → (d1 ∘ d2) indet
       ICast : ∀{d τ} → d indet → (< τ > d) indet
 
@@ -261,7 +265,7 @@ module core where
   data _↦_ : (d d' : dhexp)  → Set where
     STHole : ∀{ d d' u σ } →
              d ↦ d' →
-             ⦇ d ⦈[ u , σ ] ↦  ⦇ d' ⦈[ u , σ ]
+             ⦇ d ⦈⟨ u , σ ⟩ ↦  ⦇ d' ⦈⟨ u , σ ⟩
     -- STCast
     STAp1 : ∀{ d1 d2 d1' } →
             d1 ↦ d1' →
