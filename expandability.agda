@@ -46,10 +46,11 @@ module expandability where
     expandability-ana {e = e ·: x} (ASubsume (SAsc x₁) x₂) = {!!}
     expandability-ana {e = X x} (ASubsume (SVar x₁) x₂) = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) (ESVar x₁) x₂
     expandability-ana {e = ·λ x e} (ASubsume () x₁)
-    expandability-ana {e = ·λ x [ x₁ ] e} (ASubsume (SLam x₂ wt) x₃) = _ , _ , _ , EASubsume {!!} {!!} (ESLam x₂ {!!}) x₃
+    expandability-ana {e = ·λ x [ x₁ ] e} (ASubsume (SLam x₂ wt) x₃) with expandability-synth wt
+    ... | d , Δ , D = _ , _ , _ , EASubsume (λ u → λ ()) (λ e' u → λ ()) (ESLam x₂ D) x₃
     expandability-ana {e = e1 ∘ e₁} (ASubsume (SAp wt MAHole x₁) x₂) = {!!}
     expandability-ana {e = e1 ∘ e₁} (ASubsume (SAp wt MAArr x₁) x₂) = {!!}
     expandability-ana (ALam x₁ MAHole wt) with expandability-ana wt
-    ... | d' , Δ' , τ' , D'  = {!!}
+    ... | d' , Δ' , τ' , D' = {!!} , {!!} , {!!} , {!!}
     expandability-ana (ALam x₁ MAArr wt) with expandability-ana wt
     ... | d' , Δ' , τ' , D' = _ , _ , _ , EALam x₁ D'
