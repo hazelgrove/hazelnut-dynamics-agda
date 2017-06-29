@@ -184,6 +184,10 @@ module core where
               (x # Γ) → -- todo: i added this
               (Γ ,, (x , τ1)) ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
               Γ ⊢ ·λ x e ⇐ τ1 ==> τ2 ~> ·λ x [ τ1 ] d :: τ1 ==> τ2' ⊣ Δ
+      EALamHole : ∀{Γ x  e d Δ } →
+              (x # Γ) → -- todo: i added this
+              {!!} →
+              Γ ⊢ ·λ x e ⇐ ⦇⦈ ~> ·λ x [ {!!}  ] d :: {!!} ⊣ Δ
       EASubsume : ∀{e Γ τ' d Δ τ} →
                   ((u : Nat) → (e == ⦇⦈[ u ] → ⊥)) →
                   ((e' : hexp) (u : Nat) → (e == ⦇ e' ⦈[ u ] → ⊥)) →
