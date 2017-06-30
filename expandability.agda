@@ -51,6 +51,6 @@ module expandability where
     expandability-ana {e = e1 ∘ e₁} (ASubsume (SAp wt MAHole x₁) x₂) = {!!}
     expandability-ana {e = e1 ∘ e₁} (ASubsume (SAp wt MAArr x₁) x₂) = {!!}
     expandability-ana (ALam x₁ MAHole wt) with expandability-ana wt
-    ... | d' , Δ' , τ' , D' = {!!} , {!!} , {!!} , {!!}
+    ... | d' , Δ' , τ' , D' = _ , _ , _ , EALamHole x₁ D'
     expandability-ana (ALam x₁ MAArr wt) with expandability-ana wt
     ... | d' , Δ' , τ' , D' = _ , _ , _ , EALam x₁ D'
