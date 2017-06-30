@@ -181,13 +181,13 @@ module core where
 
     data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (τ' : htyp) (Δ : hctx) → Set where
       EALam : ∀{Γ x τ1 τ2 e d τ2' Δ } →
-              (x # Γ) → -- todo: i added this
+              (x # Γ) →
               (Γ ,, (x , τ1)) ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
               Γ ⊢ ·λ x e ⇐ τ1 ==> τ2 ~> ·λ x [ τ1 ] d :: τ1 ==> τ2' ⊣ Δ
-      EALamHole : ∀{Γ x  e d Δ } →
-              (x # Γ) → -- todo: i added this
-              {!!} →
-              Γ ⊢ ·λ x e ⇐ ⦇⦈ ~> ·λ x [ {!!}  ] d :: {!!} ⊣ Δ
+      EALamHole : ∀{Γ x e τ d Δ } →
+              (x # Γ) →
+              (Γ ,, (x , ⦇⦈)) ⊢ e ⇐ ⦇⦈ ~> d :: τ ⊣ Δ  →
+              Γ ⊢ ·λ x e ⇐ ⦇⦈ ~> ·λ x [ ⦇⦈ ] d :: ⦇⦈ ==> τ ⊣ Δ
       EASubsume : ∀{e Γ τ' d Δ τ} →
                   ((u : Nat) → (e == ⦇⦈[ u ] → ⊥)) →
                   ((e' : hexp) (u : Nat) → (e == ⦇ e' ⦈[ u ] → ⊥)) →
