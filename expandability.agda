@@ -21,7 +21,7 @@ module expandability where
     expandability-synth (SAp wt1 MAHole wt2)
       with expandability-synth wt1 | expandability-ana wt2
     ... | d1 , Δ1 , D1
-        | d2 , Δ2 , τ2 , D2  = _ , _ , ESAp1 {!!} wt1 D1 D2
+        | d2 , Δ2 , τ2 , D2  = _ , _ , ESAp1 {!!} wt1 {!!} D2
     expandability-synth (SAp wt1 (MAArr {τ2 = τ2}) wt2)
       with expandability-synth wt1 | expandability-ana wt2
     ... | d1 , Δ1 , D1
@@ -56,7 +56,7 @@ module expandability where
     ... | d , Δ , D = _ , _ , _ , EASubsume (λ u → λ ()) (λ e' u → λ ()) (ESLam x₂ D) x₃
     expandability-ana {e = e1 ∘ e2} (ASubsume (SAp wt1 MAHole wt2) x₂)
       with expandability-synth wt1 | expandability-ana wt2
-    ... | d1 , Δ1 , D1 | d2 , Δ2 , τ2 , D2 = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) (ESAp1 {!!} wt1 D1 D2) x₂ --- todo: this may be shit; update PDF when resolve
+    ... | d1 , Δ1 , D1 | d2 , Δ2 , τ2 , D2 = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) (ESAp1 {!!} wt1 {!!} D2) x₂
     expandability-ana {e = e1 ∘ e2} (ASubsume (SAp wt MAArr x₁) x₂) = {!!}
     expandability-ana (ALam x₁ MAHole wt)
       with expandability-ana wt
