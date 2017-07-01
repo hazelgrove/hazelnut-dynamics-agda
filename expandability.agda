@@ -15,9 +15,9 @@ module expandability where
     expandability-synth (SAsc {τ = τ} wt)
       with expandability-ana wt
     ... | d' , Δ' , τ' , D with htype-dec τ τ'
-    ... | Inl _ = d' , Δ' , ESAsc2 D
-    ... | Inr x = (< _ > d') , Δ' , ESAsc1 D x
-    expandability-synth (SVar {n = n} x) = X n , ∅ , ESVar x
+    ... | Inl _ = _ , _ , ESAsc2 D
+    ... | Inr x = _ , _ , ESAsc1 D x
+    expandability-synth (SVar {n = n} x) = _ , _ , ESVar x
     expandability-synth (SAp wt1 MAHole wt2)
       with expandability-synth wt1 | expandability-ana wt2
     ... | d1 , Δ1 , D1
@@ -27,8 +27,8 @@ module expandability where
     ... | d1 , Δ1 , D1
         | d2 , Δ2 , τ2' , D2
       with htype-dec τ2 τ2'
-    expandability-synth (SAp wt1 MAArr wt2) | d1 , Δ1 , D1 | d2 , Δ2 , τ2' , D2 | Inr neq  = (d1 ∘ (< {!!} > d2)) , (Δ1 ∪ Δ2) , ESAp2 {Δ1 = Δ1} {Δ2 = Δ2} {!!} {!D1!} {!!} neq
-    expandability-synth (SAp wt1 MAArr wt2) | d1 , Δ1 , D1 | d2 , Δ2 , τ2 , D2  | Inl refl = (d1 ∘ d2) , (Δ1 ∪ Δ2) , ESAp3 {Δ1 = Δ1} {Δ2 = Δ2} {!!} {!D1!} {!!}
+    expandability-synth (SAp wt1 MAArr wt2) | d1 , Δ1 , D1 | d2 , Δ2 , τ2' , D2 | Inr neq  = _ , _ , ESAp2 {!!} {!D1!} {!!} neq
+    expandability-synth (SAp wt1 MAArr wt2) | d1 , Δ1 , D1 | d2 , Δ2 , τ2 , D2  | Inl refl = _ , _ , ESAp3 {!!} {!D1!} {!!}
     expandability-synth SEHole = _ , _ , ESEHole
     expandability-synth (SNEHole wt) with expandability-synth wt
     ... | d' , Δ' , wt' = _ , _ , ESNEHole wt'
