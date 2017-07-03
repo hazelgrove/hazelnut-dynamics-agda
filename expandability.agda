@@ -39,28 +39,19 @@ module expandability where
                          Γ ⊢ e <= τ →
                           Σ[ d ∈ dhexp ] Σ[ Δ ∈ hctx ] Σ[ τ' ∈ htyp ]
                             (Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ)
-    expandability-ana {e = ⦇⦈[ x ]} (ASubsume wt x₁) =  _ , _ , _ , EAEHole
-    expandability-ana {e = ⦇ e' ⦈[ x ]} (ASubsume (SNEHole wt) x₁)
-      with expandability-synth wt
-    ... | d , Δ , D = _ , _ , _ , EANEHole D
-    expandability-ana {e = c} (ASubsume SConst x₁) = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ())  ESConst x₁
-    expandability-ana {e = e ·: x} (ASubsume (SAsc wt) x₂)
-      with expandability-ana wt
-    ... | d' , Δ' , τ' , D' with htype-dec x τ'
-    expandability-ana {Γ} {e ·: .x} (ASubsume (SAsc wt) x₂) | d' , Δ' , x , D' | Inl refl = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) (ESAsc2 D') x₂
-    expandability-ana {Γ} {e ·: x} (ASubsume (SAsc wt) x₂) | d' , Δ' , τ' , D' | Inr x₁ = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) (ESAsc1 D' x₁) x₂
-    expandability-ana {e = X x} (ASubsume (SVar x₁) x₂) = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) (ESVar x₁) x₂
-    expandability-ana {e = ·λ x e} (ASubsume () x₁)
-    expandability-ana {e = ·λ x [ x₁ ] e} (ASubsume (SLam x₂ wt) x₃)
-      with expandability-synth wt
-    ... | d , Δ , D = _ , _ , _ , EASubsume (λ u → λ ()) (λ e' u → λ ()) (ESLam x₂ D) x₃
-    expandability-ana {e = e1 ∘ e2} (ASubsume (SAp wt1 MAHole wt2) x₂)
-      with expandability-synth wt1 | expandability-ana wt2
-    ... | d1 , Δ1 , D1 | d2 , Δ2 , τ2 , D2 = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) (ESAp1 {!!} wt1 {!!} D2) x₂
-    expandability-ana {e = e1 ∘ e2} (ASubsume (SAp wt MAArr x₁) x₂) = {!!}
-    expandability-ana (ALam x₁ MAHole wt)
-      with expandability-ana wt
-    ... | d' , Δ' , τ' , D' = _ , _ , _ , EALamHole x₁ D'
-    expandability-ana (ALam x₁ MAArr wt)
-      with expandability-ana wt
-    ... | d' , Δ' , τ' , D' = _ , _ , _ , EALam x₁ D'
+    expandability-ana {e = e} (ASubsume D x₁) with expandability-synth D
+    -- these cases just pass through, but we need to pattern match so we can prove things aren't holes
+    expandability-ana {Γ} {c} (ASubsume D x₁)             | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁
+    expandability-ana {Γ} {e ·: x} (ASubsume D x₁)        | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁
+    expandability-ana {Γ} {X x} (ASubsume D x₁)           | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁
+    expandability-ana {Γ} {·λ x e} (ASubsume D x₁)        | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁
+    expandability-ana {Γ} {·λ x [ x₁ ] e} (ASubsume D x₂) | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₂
+    expandability-ana {Γ} {e ∘ e₁} (ASubsume D x₁)        | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁
+    -- the two holes are special-cased
+    expandability-ana {Γ} {⦇⦈[ x ]} (ASubsume _ _ )       | _ , _ , _ = _ , _ , _ , EAEHole
+    expandability-ana {Γ} {⦇ e ⦈[ x ]} (ASubsume (SNEHole wt) _) | _ , _ , _ = _ , _ , _ , EANEHole (π2( π2 (expandability-synth wt)))
+    -- the lambda cases
+    expandability-ana (ALam x₁ MAHole wt) with expandability-ana wt
+    ... | _ , _ , _ , D' = _ , _ , _ , EALamHole x₁ D'
+    expandability-ana (ALam x₁ MAArr wt) with expandability-ana wt
+    ... | _ , _ , _ , D' = _ , _ , _ , EALam x₁ D'
