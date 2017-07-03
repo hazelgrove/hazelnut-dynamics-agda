@@ -16,7 +16,7 @@ module typed-expansion where
     typed-expansion-synth (ESAp2 x ex x₁ x₂) = TAAp {!!} MAArr {!!}
     typed-expansion-synth (ESAp3 x ex x₁)    = TAAp {!!} MAArr {!!}
     typed-expansion-synth ESEHole = TAEHole (λ x d x₁ → ⦇⦈ , {!!} , {!!})
-    typed-expansion-synth (ESNEHole ex) = TANEHole (typed-expansion-synth ex) (λ x d x₁ → {!!})
+    typed-expansion-synth (ESNEHole ex) = TANEHole (typed-expansion-synth ex) (λ x d x₁ → {!!} , {!!} , {!!})
     typed-expansion-synth (ESAsc1 x x₁)
       with typed-expansion-ana x
     ... | con , ih = TACast ih con
@@ -27,7 +27,12 @@ module typed-expansion where
     typed-expansion-ana : {Γ : tctx} {e : hexp} {τ τ' : htyp} {d : dhexp} {Δ : hctx} →
                           Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                           (τ ~ τ') × (Δ , Γ ⊢ d :: τ')
-    typed-expansion-ana (EALam x₁ ex) = {!!}
-    typed-expansion-ana (EASubsume x x₁ x₂ x₃) = {!!}
+    typed-expansion-ana (EALam x₁ ex)
+      with typed-expansion-ana ex
+    ... | con , D = (TCArr TCRefl con) , TALam D
+    typed-expansion-ana (EASubsume x x₁ x₂ x₃) = x₃ , typed-expansion-synth x₂
     typed-expansion-ana EAEHole = TCRefl , TAEHole {!!}
-    typed-expansion-ana (EANEHole x x₁) = TCRefl , TANEHole (typed-expansion-synth x) {!!}
+    typed-expansion-ana (EANEHole x) = TCRefl , TANEHole (typed-expansion-synth x) {!!}
+    typed-expansion-ana (EALamHole x y)
+      with typed-expansion-ana y
+    ... | _ , ih = TCHole2 , TALam ih
