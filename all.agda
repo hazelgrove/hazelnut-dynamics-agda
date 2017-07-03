@@ -7,6 +7,7 @@ open import core
 open import lemmas-consistency
 open import lemmas-matching
 open import synth-unicity
+open import htype-decidable
 
 open import correspondence
 -- open import expandability
