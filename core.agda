@@ -70,6 +70,7 @@ module core where
   hctx : Set
   hctx = (htyp ctx × htyp) ctx
 
+  -- todo: this probably belongs in contexts, but need to abstract it.
   id : tctx → subst
   id ctx x with ctx x
   id ctx x | Some τ = Some (X x)

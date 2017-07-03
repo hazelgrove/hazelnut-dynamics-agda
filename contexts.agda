@@ -68,3 +68,11 @@ module contexts where
   (C1 ∪ C2) x with C1 x
   (C1 ∪ C2) x | Some x₁ = Some x₁
   (C1 ∪ C2) x | None = C2 x
+
+  lem-union1 : {A : Set} (C1 C2 : A ctx) (x : Nat) (disjoint : C1 ## C2) → (C1 x) == ((C1 ∪ C2) x)
+  lem-union1 C1 C2 x dis with C1 x
+  lem-union1 C1 C2 x dis       | Some x₁ = refl
+  lem-union1 C1 C2 x (π1 , π2) | None = {!!}
+
+  lem-union2 : {A : Set} (C1 C2 : A ctx) (x : Nat) (disjoint : C1 ## C2) → (C2 x) == ((C1 ∪ C2) x)
+  lem-union2 C1 C2 x dis = {!!}
