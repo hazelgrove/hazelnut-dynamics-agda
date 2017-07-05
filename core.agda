@@ -37,7 +37,7 @@ module core where
       c        : dhexp
       X        : Nat → dhexp
       ·λ_[_]_  : Nat → htyp → dhexp → dhexp
-      ⦇⦈⟨_⟩    : (Nat × subst) → dhexp
+      ⦇⦈⟨_⟩    : (Nat × subst × mark) → dhexp
       ⦇_⦈⟨_⟩   : dhexp → (Nat × subst × mark) → dhexp
       _∘_      : dhexp → dhexp → dhexp
       <_>_     : htyp → dhexp → dhexp
@@ -168,7 +168,7 @@ module core where
               Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2 ⊣ Δ2 →
               Γ ⊢ e1 ∘ e2 ⇒ τ ~> d1 ∘ d2 ⊣ (Δ1 ∪ Δ2)
       ESEHole : ∀{ Γ u } →
-                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , id Γ ⟩ ⊣  ■ (u ::[ Γ ] ⦇⦈)
+                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , id Γ , ✗ ⟩ ⊣  ■ (u ::[ Γ ] ⦇⦈)
       ESNEHole : ∀{ Γ e τ d u Δ } →
                  Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
                  Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈⟨ u , id Γ , ✗ ⟩ ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
@@ -196,7 +196,7 @@ module core where
                   τ ~ τ' →
                   Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
       EAEHole : ∀{ Γ u τ  } →
-                Γ ⊢ ⦇⦈[ u ] ⇐ τ ~> ⦇⦈⟨ u , id Γ ⟩ :: τ ⊣ ■ (u ::[ Γ ] τ)
+                Γ ⊢ ⦇⦈[ u ] ⇐ τ ~> ⦇⦈⟨ u , id Γ , ✗ ⟩ :: τ ⊣ ■ (u ::[ Γ ] τ)
       EANEHole : ∀{ Γ e u τ d τ' Δ  } →
                  Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
                  Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈⟨ u , id Γ , ✗ ⟩ :: τ ⊣ (Δ ,, u ::[ Γ ] τ)
@@ -221,13 +221,13 @@ module core where
              τ1 ▸arr (τ2 ==> τ) →
              Δ , Γ ⊢ d2 :: τ2 →
              Δ , Γ ⊢ d1 ∘ d2 :: τ
-      TAEHole : ∀{ Δ Γ σ u Γ' τ} →
+      TAEHole : ∀{ Δ Γ σ u Γ' τ m} →
                 Δ , Γ ⊢ σ :s: Γ' →
-                (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇⦈⟨ u , σ ⟩ :: τ
-      TANEHole : ∀ { Δ Γ d τ' Γ' u σ τ } →
+                (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇⦈⟨ u , σ , m ⟩ :: τ
+      TANEHole : ∀ { Δ Γ d τ' Γ' u σ τ m} →
                  Δ , Γ ⊢ d :: τ' →
                  Δ , Γ ⊢ σ :s: Γ' →
-                 (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇ d ⦈⟨ u , σ , ✗ ⟩ :: τ
+                 (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇ d ⦈⟨ u , σ , m ⟩ :: τ
       TACast : ∀{ Δ Γ d τ τ'} →
              Δ , Γ ⊢ d :: τ' →
              τ ~ τ' →
