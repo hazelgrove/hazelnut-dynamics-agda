@@ -23,8 +23,8 @@ module expansion-unicity where
       with expansion-unicity-ana x₃ x₇ | expansion-unicity-ana x₂ x₆
     ... | refl , refl , refl , refl | refl , refl , refl , refl = refl , refl , refl
     expansion-unicity-synth (ESAp1 x x₁ x₂ x₃) (ESAp2 x₄ d5 x₅ x₆) = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₁))
-    expansion-unicity-synth (ESAp1 x x₁ x₂ x₃) (ESAp3 x₄ d5 x₅) = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₁))
-    expansion-unicity-synth (ESAp2 x d5 x₁ x₂) (ESAp1 x₃ x₄ x₅ x₆) = {!!}
+    expansion-unicity-synth (ESAp1 x x₁ x₂ x₃) (ESAp3 x₄ d5 x₅)    = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₁))
+    expansion-unicity-synth (ESAp2 x d5 x₁ x₂) (ESAp1 x₃ x₄ x₅ x₆) = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₄))
     expansion-unicity-synth (ESAp2 x d5 x₁ x₂) (ESAp2 x₃ d6 x₄ x₅)
       with expansion-unicity-synth d5 d6 | expansion-unicity-ana x₄ x₁
     ... | refl , refl , refl | refl , refl , refl , refl = refl , refl , refl
@@ -69,7 +69,9 @@ module expansion-unicity where
     expansion-unicity-ana EAEHole (EASubsume x x₁ x₂ x₃) = abort (x _ refl)
     expansion-unicity-ana EAEHole EAEHole = {!!} , refl , {!!} , {!!}
     expansion-unicity-ana (EANEHole x) (EASubsume x₂ x₃ x₄ x₅) = abort (x₃ _ _ refl)
-    expansion-unicity-ana (EANEHole x) (EANEHole x₁) =  {!!}
+    expansion-unicity-ana (EANEHole x) (EANEHole x₁)
+      with expansion-unicity-synth x x₁
+    ... | refl , refl , refl  =  {!!} , refl , {!!} ,  {!!}
     expansion-unicity-ana (EALam x₁ x₂) (EALamHole x₃ y) = {!!} -- should be an abort
     expansion-unicity-ana (EALamHole x₁ x₂) (EALam x₃ y) = {!!} -- should be same abort
     expansion-unicity-ana (EALamHole x₁ x₂) (EALamHole x₃ y)
