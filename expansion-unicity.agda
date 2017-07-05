@@ -40,8 +40,13 @@ module expansion-unicity where
     expansion-unicity-ana (EASubsume x₁ x₂ x₃ x₄) (EALam apt2 d2) = {!!}
     expansion-unicity-ana (EASubsume x x₁ x₂ x₃) (EASubsume x₄ x₅ x₆ x₇) = {!!}
     expansion-unicity-ana (EASubsume x x₁ x₂ x₃) EAEHole = {!!}
-    expansion-unicity-ana (EASubsume x x₁ x₂ x₃) (EANEHole x₄ x₅) = {!!}
+    expansion-unicity-ana (EASubsume x x₁ x₂ x₃) (EANEHole x₄) = {!!}
     expansion-unicity-ana EAEHole (EASubsume x x₁ x₂ x₃) = {!!}
     expansion-unicity-ana EAEHole EAEHole = {!!}
-    expansion-unicity-ana (EANEHole x x₁) (EASubsume x₂ x₃ x₄ x₅) = {!!}
-    expansion-unicity-ana (EANEHole x x₁) (EANEHole x₂ x₃) = {!!}
+    expansion-unicity-ana (EANEHole x) (EASubsume x₂ x₃ x₄ x₅) = {!!}
+    expansion-unicity-ana (EANEHole x) (EANEHole x₁) = {!!}
+    expansion-unicity-ana (EALam x₁ x₂) (EALamHole x₃ y) = {!!}
+    expansion-unicity-ana (EALamHole x₁ x₂) (EALam x₃ y) = {!!}
+    expansion-unicity-ana (EALamHole x₁ x₂) (EALamHole x₃ y) = {!!}
+    expansion-unicity-ana (EALamHole x₁ x₂) (EASubsume x₃ x₄ x₅ x₆) = {!!}
+    expansion-unicity-ana (EASubsume x₁ x₂ x₃ x₄) (EALamHole x₅ y) = {!!}

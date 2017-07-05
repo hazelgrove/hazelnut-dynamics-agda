@@ -23,6 +23,11 @@ module core where
     ⦇_⦈[_]  : hexp → Nat → hexp
     _∘_     : hexp → hexp → hexp
 
+  -- used to mark which dhexp holes have been evaluated
+  data mark : Set where
+    ✓ : mark
+    ✗ : mark
+
   mutual
     subst : Set -- todo: no idea if this is right; mutual thing is weird
     subst = dhexp ctx
@@ -33,7 +38,7 @@ module core where
       X        : Nat → dhexp
       ·λ_[_]_  : Nat → htyp → dhexp → dhexp
       ⦇⦈⟨_⟩    : (Nat × subst) → dhexp
-      ⦇_⦈⟨_⟩   : dhexp → (Nat × subst) → dhexp
+      ⦇_⦈⟨_⟩   : dhexp → (Nat × subst × mark) → dhexp
       _∘_      : dhexp → dhexp → dhexp
       <_>_     : htyp → dhexp → dhexp
 
@@ -166,7 +171,7 @@ module core where
                 Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , id Γ ⟩ ⊣  ■ (u ::[ Γ ] ⦇⦈)
       ESNEHole : ∀{ Γ e τ d u Δ } →
                  Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈⟨ u , id Γ ⟩ ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈⟨ u , id Γ , ✗ ⟩ ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
       ESAsc1 : ∀ {Γ e τ d τ' Δ} →
                  Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                  (τ == τ' → ⊥) →
@@ -194,7 +199,7 @@ module core where
                 Γ ⊢ ⦇⦈[ u ] ⇐ τ ~> ⦇⦈⟨ u , id Γ ⟩ :: τ ⊣ ■ (u ::[ Γ ] τ)
       EANEHole : ∀{ Γ e u τ d τ' Δ  } →
                  Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈⟨ u , id Γ ⟩ :: τ ⊣ (Δ ,, u ::[ Γ ] τ)
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈⟨ u , id Γ , ✗ ⟩ :: τ ⊣ (Δ ,, u ::[ Γ ] τ)
 
   mutual
     -- substitition type assignment
@@ -222,7 +227,7 @@ module core where
       TANEHole : ∀ { Δ Γ d τ' Γ' u σ τ } →
                  Δ , Γ ⊢ d :: τ' →
                  Δ , Γ ⊢ σ :s: Γ' →
-                 (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇ d ⦈⟨ u , σ ⟩ :: τ
+                 (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇ d ⦈⟨ u , σ , ✗ ⟩ :: τ
       TACast : ∀{ Δ Γ d τ τ'} →
              Δ , Γ ⊢ d :: τ' →
              τ ~ τ' →
