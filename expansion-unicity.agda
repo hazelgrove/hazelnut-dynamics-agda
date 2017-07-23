@@ -19,23 +19,23 @@ module expansion-unicity where
     expansion-unicity-synth (ESVar {Γ = Γ} x₁) (ESVar x₂) = ctxunicity {Γ = Γ} x₁ x₂ , refl , refl
     expansion-unicity-synth (ESLam apt1 d1) (ESLam apt2 d2) with expansion-unicity-synth d1 d2
     ... | ih1 , ih2 , ih3 = ap1 _ ih1  , ap1 _ ih2 , ih3
-    expansion-unicity-synth (ESAp1 x x₁ x₂ x₃) (ESAp1 x₄ x₅ x₆ x₇)
+    expansion-unicity-synth (ESAp1 x₁ x₂ x₃) (ESAp1 x₅ x₆ x₇)
       with expansion-unicity-ana x₃ x₇ | expansion-unicity-ana x₂ x₆
     ... | refl , refl , refl , refl | refl , refl , refl , refl = refl , refl , refl
-    expansion-unicity-synth (ESAp1 x x₁ x₂ x₃) (ESAp2 x₄ d5 x₅ x₆) = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₁))
-    expansion-unicity-synth (ESAp1 x x₁ x₂ x₃) (ESAp3 x₄ d5 x₅)    = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₁))
-    expansion-unicity-synth (ESAp2 x d5 x₁ x₂) (ESAp1 x₃ x₄ x₅ x₆) = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₄))
-    expansion-unicity-synth (ESAp2 x d5 x₁ x₂) (ESAp2 x₃ d6 x₄ x₅)
+    expansion-unicity-synth (ESAp1 x₁ x₂ x₃) (ESAp2 d5 x₅ x₆) = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₁))
+    expansion-unicity-synth (ESAp1 x₁ x₂ x₃) (ESAp3 d5 x₅)    = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₁))
+    expansion-unicity-synth (ESAp2 d5 x₁ x₂) (ESAp1 x₄ x₅ x₆) = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₄))
+    expansion-unicity-synth (ESAp2 d5 x₁ x₂) (ESAp2 d6 x₄ x₅)
       with expansion-unicity-synth d5 d6 | expansion-unicity-ana x₄ x₁
     ... | refl , refl , refl | refl , refl , refl , refl = refl , refl , refl
-    expansion-unicity-synth (ESAp2 x d5 x₁ x₂) (ESAp3 x₃ d6 x₄)
+    expansion-unicity-synth (ESAp2 d5 x₁ x₂) (ESAp3 d6 x₄)
       with expansion-unicity-synth d5 d6 | expansion-unicity-ana x₄ x₁
     ...| refl , refl , refl | refl , refl , refl , refl  = abort (x₂ refl)
-    expansion-unicity-synth (ESAp3 x d5 x₁) (ESAp1 x₂ x₃ x₄ x₅) = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₃))
-    expansion-unicity-synth (ESAp3 x d5 x₁) (ESAp2 x₂ d6 x₃ x₄)
+    expansion-unicity-synth (ESAp3 d5 x₁) (ESAp1 x₃ x₄ x₅) = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₃))
+    expansion-unicity-synth (ESAp3 d5 x₁) (ESAp2 d6 x₃ x₄)
       with expansion-unicity-synth d5 d6 | expansion-unicity-ana x₃ x₁
     ...| refl , refl , refl | refl , refl , refl , refl  = abort (x₄ refl)
-    expansion-unicity-synth (ESAp3 x d5 x₁) (ESAp3 x₂ d6 x₃)
+    expansion-unicity-synth (ESAp3 d5 x₁) (ESAp3 d6 x₃)
       with expansion-unicity-synth d5 d6 | expansion-unicity-ana x₃ x₁
     ... | refl , refl , refl | refl , refl , refl , refl = refl , refl , refl
     expansion-unicity-synth ESEHole ESEHole = refl , refl , refl
@@ -44,12 +44,12 @@ module expansion-unicity where
     expansion-unicity-synth (ESAsc1 x x₁) (ESAsc1 x₂ x₃)
       with expansion-unicity-ana x x₂
     ... | refl , refl , refl , refl = refl , refl , refl
-    expansion-unicity-synth (ESAsc1 x x₁) (ESAsc2 x₂)
+    expansion-unicity-synth (ESAsc1 {τ} {τ'} x x₁) (ESAsc2 x₂)
       with expansion-unicity-ana x x₂
-    ... | refl , refl , refl , refl = refl , {!!} , refl -- should fail, can't show it though
+    ... | refl , refl , refl , refl = {!!}
     expansion-unicity-synth (ESAsc2 x) (ESAsc1 x₁ x₂)
       with expansion-unicity-ana x x₁
-    ... | refl , refl , refl , refl = refl , {!!} , refl  -- ditto
+    ... | refl , refl , refl , refl = refl , {!!} , refl  -- symmetric to above case
     expansion-unicity-synth (ESAsc2 x) (ESAsc2 x₁)
       with expansion-unicity-ana x x₁
     ... | refl , refl , refl , refl = refl , refl , refl
@@ -58,7 +58,7 @@ module expansion-unicity where
                           Γ ⊢ e ⇐ τ1 ~> d1 :: τ1' ⊣ Δ1 →
                           Γ ⊢ e ⇐ τ2 ~> d2 :: τ2' ⊣ Δ2 →
                           τ1 == τ2 × d1 == d2 × τ1' == τ2' × Δ1 == Δ2
-    expansion-unicity-ana (EALam apt1 d1) (EALam apt2 d2) = {!expansion-unicity-ana d1 d2!} -- doesn't go because the contexts are different
+    expansion-unicity-ana (EALam {τ1 = τ1} apt1 d1) (EALam {τ1 = τ1'} apt2 d2) = {!!}
     expansion-unicity-ana (EALam apt1 d1) (EASubsume x₁ x₂ () x₄)
     expansion-unicity-ana (EASubsume x₁ x₂ () x₄) (EALam apt2 d2)
     expansion-unicity-ana (EASubsume x x₁ x₂ x₃) (EASubsume x₄ x₅ x₆ x₇)
@@ -71,9 +71,9 @@ module expansion-unicity where
     expansion-unicity-ana (EANEHole x) (EASubsume x₂ x₃ x₄ x₅) = abort (x₃ _ _ refl)
     expansion-unicity-ana (EANEHole x) (EANEHole x₁)
       with expansion-unicity-synth x x₁
-    ... | refl , refl , refl  =  {!!} , refl , {!!} ,  {!!}
+    ... | refl , refl , refl  =  {!!} , refl , {!!} ,  {!!} -- similar to the hole case above?
     expansion-unicity-ana (EALam x₁ x₂) (EALamHole x₃ y) = {!!} -- should be an abort
-    expansion-unicity-ana (EALamHole x₁ x₂) (EALam x₃ y) = {!!} -- should be same abort
+    expansion-unicity-ana (EALamHole x₁ x₂) (EALam x₃ y) = {!!} -- symmetric to above
     expansion-unicity-ana (EALamHole x₁ x₂) (EALamHole x₃ y)
       with expansion-unicity-ana x₂ y
     ... | refl , refl , refl , refl = refl , refl , refl , refl
