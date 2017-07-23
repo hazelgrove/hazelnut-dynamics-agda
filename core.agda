@@ -151,19 +151,19 @@ module core where
                      (Γ ,, (x , τ1)) ⊢ e ⇒ τ2 ~> d ⊣ Δ →
                       Γ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ Δ
       ESAp1   : ∀{Γ e1 e2 d2 d1 Δ1 τ1 τ2 Δ2} →
-                Δ1 ## Δ2 →
+                -- Δ1 ## Δ2 → -- todo: bneed to think about disjointness and context rep
                 Γ ⊢ e1 => ⦇⦈ →
                 Γ ⊢ e1 ⇐ (τ2 ==> ⦇⦈) ~> d1 :: τ1 ⊣ Δ1 →
                 Γ ⊢ e2 ⇐ ⦇⦈ ~> d2 :: τ2 ⊣ Δ2 →
                 Γ ⊢ e1 ∘ e2 ⇒ ⦇⦈ ~> (< τ2 ==> ⦇⦈ > d1) ∘ d2 ⊣ (Δ1 ∪ Δ2)
       ESAp2 : ∀{Γ e1 τ2 τ d1 d2 Δ1 Δ2 τ2' e2} →
-              Δ1 ## Δ2 →
+              -- Δ1 ## Δ2 → -- todo: bneed to think about disjointness and context rep
               Γ ⊢ e1 ⇒ (τ2 ==> τ) ~> d1 ⊣ Δ1 →
               Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2' ⊣ Δ2 →
               (τ2 == τ2' → ⊥) →
               Γ ⊢ e1 ∘ e2 ⇒ τ ~> d1 ∘ (< τ2 > d2) ⊣ (Δ1 ∪ Δ2)
       ESAp3 : ∀{Γ e1 τ d1 Δ1 e2 τ2 d2 Δ2 } →
-              Δ1 ## Δ2 →
+              -- Δ1 ## Δ2 → -- todo: bneed to think about disjointness and context rep
               Γ ⊢ e1 ⇒ (τ2 ==> τ) ~> d1 ⊣ Δ1 →
               Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2 ⊣ Δ2 →
               Γ ⊢ e1 ∘ e2 ⇒ τ ~> d1 ∘ d2 ⊣ (Δ1 ∪ Δ2)
