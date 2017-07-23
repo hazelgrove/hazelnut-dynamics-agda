@@ -10,7 +10,7 @@ open import synth-unicity
 open import htype-decidable
 
 open import correspondence
--- open import expandability
+open import expandability
 -- open import expansion-unicity
 -- open import preservation
 -- open import progress
