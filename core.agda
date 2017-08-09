@@ -176,8 +176,8 @@ module core where
                  Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                  (τ == τ' → ⊥) →
                  Γ ⊢ (e ·: τ) ⇒ τ ~> (< τ > d) ⊣ Δ
-      ESAsc2 : ∀{Γ e τ d τ' Δ } →
-               Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
+      ESAsc2 : ∀{Γ e τ d Δ } →
+               Γ ⊢ e ⇐ τ ~> d :: τ ⊣ Δ →
                Γ ⊢ (e ·: τ) ⇒ τ ~> d ⊣ Δ
 
     data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (τ' : htyp) (Δ : hctx) → Set where

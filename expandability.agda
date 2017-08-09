@@ -15,7 +15,7 @@ module expandability where
     expandability-synth (SAsc {τ = τ} wt)
       with expandability-ana wt
     ... | _ , _ , τ' , D with htype-dec τ τ'
-    ... | Inl _ = _ , _ , ESAsc2 D
+    expandability-synth (SAsc wt) | π1 , π2 , τ , D | Inl refl = _ , _ , ESAsc2 D
     ... | Inr x = _ , _ , ESAsc1 D x
     expandability-synth (SVar {n = n} x) = _ , _ , ESVar x
     expandability-synth (SAp wt1 MAHole wt2)
