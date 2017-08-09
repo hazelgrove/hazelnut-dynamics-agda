@@ -28,18 +28,26 @@ module expansion-unicity where
     expansion-unicity-synth (ESAp1 x₁ x₂ x₃) (ESAp3 d5 x₅)    = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₁))
     expansion-unicity-synth (ESAp2 d5 x₁ x₂) (ESAp1 x₄ x₅ x₆) = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₄))
     expansion-unicity-synth (ESAp2 d5 x₁ x₂) (ESAp2 d6 x₄ x₅)
-      with expansion-unicity-synth d5 d6 -- | expansion-unicity-ana x₄ x₁
-    ... | refl , refl , refl = {!expansion-unicity-ana x₄ x₁!} -- | refl , refl , refl = refl , refl , refl
-    expansion-unicity-synth (ESAp2 d5 x₁ x₂) (ESAp3 d6 x₄) = {!!}
-    --   with expansion-unicity-synth d5 d6 | expansion-unicity-ana x₄ x₁
-    -- ...| refl , refl , refl | refl , refl , refl , refl  = abort (x₂ refl)
+      with expansion-unicity-synth d5 d6
+    ... | refl , refl , refl
+      with expansion-unicity-ana x₄ x₁
+    ... | refl , refl , refl = refl , refl , refl
+    expansion-unicity-synth (ESAp2 d5 x₁ x₂) (ESAp3 d6 x₄)
+      with expansion-unicity-synth d5 d6
+    ...| refl , refl , refl
+      with expansion-unicity-ana x₄ x₁
+    ... | refl , refl , refl = abort (x₂ refl)
     expansion-unicity-synth (ESAp3 d5 x₁) (ESAp1 x₃ x₄ x₅) = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₃))
-    expansion-unicity-synth (ESAp3 d5 x₁) (ESAp2 d6 x₃ x₄) = {!!}
-    --   with expansion-unicity-synth d5 d6 | expansion-unicity-ana x₃ x₁
-    -- ...| refl , refl , refl | refl , refl , refl = abort (x₄ refl)
-    expansion-unicity-synth (ESAp3 d5 x₁) (ESAp3 d6 x₃) = {!!}
-    --   with expansion-unicity-synth d5 d6 | expansion-unicity-ana x₃ x₁
-    -- ... | refl , refl , refl | refl , refl , refl = refl , refl , refl
+    expansion-unicity-synth (ESAp3 d5 x₁) (ESAp2 d6 x₃ x₄)
+      with expansion-unicity-synth d5 d6
+    ...| refl , refl , refl
+      with expansion-unicity-ana x₁ x₃
+    ... | refl , refl , refl = abort (x₄ refl)
+    expansion-unicity-synth (ESAp3 d5 x₁) (ESAp3 d6 x₃)
+      with expansion-unicity-synth d5 d6
+    ...| refl , refl , refl
+      with expansion-unicity-ana x₁ x₃
+    ... | refl , refl , refl = refl , refl , refl
     expansion-unicity-synth ESEHole ESEHole = refl , refl , refl
     expansion-unicity-synth (ESNEHole d1) (ESNEHole d2) with expansion-unicity-synth d1 d2
     ... | ih1 , ih2 , ih3 = refl , ap1 _ ih2 , ap1 _ ih3
