@@ -8,27 +8,27 @@ open import contexts
 module typed-expansion where
   lem-idsub : ∀{Δ Γ} → Δ , Γ ⊢ id Γ :s: Γ
   lem-idsub {Γ = Γ} x d xin with Γ x
-  lem-idsub x .(X x) refl | Some τ = τ , refl , TAVar {!!} -- this hole should be refl from pattern matching but it isn't
-  lem-idsub x d xin       | None   = abort (somenotnone (! xin))
+  lem-idsub {Γ = Γ} x .(X x) refl | Some τ = τ , refl , TAVar {!!}
+  lem-idsub x d () | None
 
   lem-weakenΔ1 : ∀{Δ1 Δ2 Γ d τ} → Δ1 , Γ ⊢ d :: τ → (Δ1 ∪ Δ2) , Γ ⊢ d :: τ
   lem-weakenΔ1 TAConst = TAConst
   lem-weakenΔ1 (TAVar x₁) = TAVar x₁
   lem-weakenΔ1 (TALam D) = TALam (lem-weakenΔ1 D)
   lem-weakenΔ1 (TAAp D x D₁) = TAAp (lem-weakenΔ1 D) x (lem-weakenΔ1 D₁)
-  lem-weakenΔ1 (TAEHole x) = {!!}
+  lem-weakenΔ1 (TAEHole {Δ = Δ} x) = {!lem-weakenΔ1!}
   lem-weakenΔ1 (TANEHole D x) = {!!}
   lem-weakenΔ1 (TACast D x) = TACast (lem-weakenΔ1 D) x
 
+  lem-##eq : {Δ1 Δ2 : hctx} (n : Nat) → Δ1 ## Δ2 → Δ1 n == (Δ1 ∪ Δ2) n
+  lem-##eq {Δ1} {Δ2} n apart with Δ1 n
+  lem-##eq n apart | Some x = refl
+  lem-##eq {Δ1} {Δ2} n apart | None with Δ2 n
+  lem-##eq n (π1 , π2) | None | Some x = {!π1 n!}
+  lem-##eq n apart | None | None = refl
+
   lem-weakenΔ2 : ∀{Δ1 Δ2 Γ d τ} → Δ2 , Γ ⊢ d :: τ → (Δ1 ∪ Δ2) , Γ ⊢ d :: τ
-  lem-weakenΔ2 = {!!}
-  -- lem-weakenΔ2 TAConst = TAConst
-  -- lem-weakenΔ2 (TAVar x₁) = TAVar x₁
-  -- lem-weakenΔ2 (TALam D) = TALam (lem-weakenΔ2 D)
-  -- lem-weakenΔ2 (TAAp D x D₁) = TAAp (lem-weakenΔ2 D) x (lem-weakenΔ2 D₁)
-  -- lem-weakenΔ2 (TAEHole x) = {!!}
-  -- lem-weakenΔ2 (TANEHole D x) = {!!}
-  -- lem-weakenΔ2 (TACast D x) = TACast (lem-weakenΔ2 D) x
+  lem-weakenΔ2 {Δ1} {Δ2} {Γ} {d} {τ}  D = tr (λ x → x , Γ ⊢ d :: τ) (funext (λ x → {!!})) D
 
   mutual
     typed-expansion-synth : {Γ : tctx} {e : hexp} {τ : htyp} {d : dhexp} {Δ : hctx} →
