@@ -16,7 +16,7 @@ module typed-expansion where
   lem-weakenΔ1 (TAVar x₁) = TAVar x₁
   lem-weakenΔ1 (TALam D) = TALam (lem-weakenΔ1 D)
   lem-weakenΔ1 (TAAp D x D₁) = TAAp (lem-weakenΔ1 D) x (lem-weakenΔ1 D₁)
-  lem-weakenΔ1 (TAEHole {Δ = Δ} x) = {!lem-weakenΔ1!}
+  lem-weakenΔ1 (TAEHole {Δ = Δ} x) = {!!}
   lem-weakenΔ1 (TANEHole D x) = {!!}
   lem-weakenΔ1 (TACast D x) = TACast (lem-weakenΔ1 D) x
 
@@ -24,7 +24,7 @@ module typed-expansion where
   lem-##eq {Δ1} {Δ2} n apart with Δ1 n
   lem-##eq n apart | Some x = refl
   lem-##eq {Δ1} {Δ2} n apart | None with Δ2 n
-  lem-##eq n (π1 , π2) | None | Some x = {!π1 n!}
+  lem-##eq n (π1 , π2) | None | Some x = {!!}
   lem-##eq n apart | None | None = refl
 
   lem-weakenΔ2 : ∀{Δ1 Δ2 Γ d τ} → Δ2 , Γ ⊢ d :: τ → (Δ1 ∪ Δ2) , Γ ⊢ d :: τ
