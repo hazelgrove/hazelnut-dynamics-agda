@@ -14,5 +14,5 @@ open import expandability
 open import expansion-unicity
 -- open import preservation
 -- open import progress
--- open import type-assignment-unicity
+open import type-assignment-unicity
 -- open import typed-expansion

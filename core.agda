@@ -82,8 +82,8 @@ module core where
   id ctx x | None = None
 
   -- this is just fancy notation to match the paper
-  _::[_]_ : Nat → tctx → htyp → (Nat × tctx × htyp)
-  u ::[ Γ ] τ = u , Γ , τ
+  _::[_]_ : Nat → tctx → htyp → (Nat × (tctx × htyp))
+  u ::[ Γ ] τ = u , (Γ , τ)
 
   -- bidirectional type checking judgements for hexp
   mutual
@@ -205,9 +205,8 @@ module core where
     -- substitition type assignment
     _,_⊢_:s:_ : hctx → tctx → subst → tctx → Set
     Δ , Γ ⊢ σ :s: Γ' =
-        (x : Nat) (d : dhexp) →
-          (x , d) ∈ σ →
-          Σ[ τ ∈ htyp ] (Γ' x == Some τ × Δ , Γ ⊢ d :: τ)
+        (x : Nat) (d : dhexp) (xd∈σ : (x , d) ∈ σ) →
+            Σ[ τ ∈ htyp ] (Γ' x == Some τ × Δ , Γ ⊢ d :: τ)
 
     -- type assignment
     data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (d : dhexp) (τ : htyp) → Set where
@@ -222,12 +221,14 @@ module core where
              Δ , Γ ⊢ d2 :: τ2 →
              Δ , Γ ⊢ d1 ∘ d2 :: τ
       TAEHole : ∀{ Δ Γ σ u Γ' τ m} →
+                (u , (Γ' , τ)) ∈ Δ →
                 Δ , Γ ⊢ σ :s: Γ' →
-                (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇⦈⟨ u , σ , m ⟩ :: τ
+                Δ , Γ ⊢ ⦇⦈⟨ u , σ , m ⟩ :: τ
       TANEHole : ∀ { Δ Γ d τ' Γ' u σ τ m} →
+                 (u , (Γ' , τ)) ∈ Δ →
                  Δ , Γ ⊢ d :: τ' →
                  Δ , Γ ⊢ σ :s: Γ' →
-                 (Δ ,, u ::[ Γ' ] τ) , Γ ⊢ ⦇ d ⦈⟨ u , σ , m ⟩ :: τ
+                 Δ , Γ ⊢ ⦇ d ⦈⟨ u , σ , m ⟩ :: τ
       TACast : ∀{ Δ Γ d τ τ'} →
              Δ , Γ ⊢ d :: τ' →
              τ ~ τ' →

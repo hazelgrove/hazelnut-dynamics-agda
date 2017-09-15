@@ -24,8 +24,12 @@ module type-assignment-unicity where
   type-assignment-unicity (TAAp d3 MAArr d4) (TAAp d5 MAArr d6)
     with type-assignment-unicity d3 d5 | type-assignment-unicity d4 d6
   ... | refl | refl = refl
-  type-assignment-unicity (TAEHole {u = u} {Γ' = Γ'} {τ = τ} x) d2 = {!!}
-  type-assignment-unicity (TANEHole d1 x) d2 = {!d2!}
+  type-assignment-unicity (TAEHole {Δ = Δ} x y) (TAEHole x₁ x₂)
+    with ctxunicity {Γ = Δ} x x₁
+  ... | refl = refl
+  type-assignment-unicity (TANEHole {Δ = Δ} x d1 y) (TANEHole x₁ d2 x₂)
+    with ctxunicity {Γ = Δ} x₁ x
+  ... | refl = refl
   type-assignment-unicity (TACast d1 x) (TACast d2 x₁)
     with type-assignment-unicity d1 d2
   ... | refl = refl
