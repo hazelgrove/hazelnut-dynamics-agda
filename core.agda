@@ -267,19 +267,66 @@ module core where
     -- ERAp2
     -- ERCast
 
-  -- small step semantics
-  data _↦_ : (d d' : dhexp)  → Set where
-    STHole : ∀{ d d' u σ } →
-             d ↦ d' →
-             ⦇ d ⦈⟨ u , σ ⟩ ↦  ⦇ d' ⦈⟨ u , σ ⟩
-    -- STCast
-    STAp1 : ∀{ d1 d2 d1' } →
-            d1 ↦ d1' →
-            (d1 ∘ d2) ↦ (d1' ∘ d2)
-    STAp2 : ∀{ d1 d2 d2' } →
-            d1 final →
-            d2 ↦ d2' →
-            (d1 ∘ d2) ↦ (d1 ∘ d2')
-    -- STApβ : ∀{ d1 d2 τ x } →
-    --         d2 final →
-    --         ((·λ x [ τ ] d1) ∘ d2) ↦ ([ ⟦ x , {!!} ⟧ ] d2)
+  -- contextual dynamics
+
+  -- evaluation contexts
+  data ectx : Set where
+    ⊙ : ectx
+    ·λ_[_]_ : Nat → htyp → ectx → ectx
+    _∘₁_ : dhexp → ectx → ectx
+    _∘₂_ : ectx → dhexp → ectx
+    ⦇_⦈⟨_⟩ : ectx → (Nat × subst × mark) → ectx
+    <_>_   : htyp → ectx → ectx
+
+  -- instruction transition judgement
+  data _⊢_→>_ : (Δ : hctx) (d d' : dhexp) → Set where
+    ITLam : ∀{ Δ x τ d1 d2 } →
+            d2 final →
+            Δ ⊢ ((·λ x [ τ ] d1) ∘ d2) →> ([ ■ (x , d2) ] d1) -- this is very unlikely to work long term
+    ITCast : ∀{d Δ τ1 τ2 } →
+             d final →
+             Δ , ∅ ⊢ d :: τ2 →
+             τ1 ~ τ2 → -- maybe?
+             Δ ⊢ < τ1 > d →> d -- is that the right thing to step to?
+
+  data _ectxt : (ε : ectx) → Set where
+    ECDot : ⊙ ectxt
+    ECLam : ∀{ε x τ} →
+            ε ectxt →
+            (·λ x [ τ ] ε) ectxt
+    ECAp1 : ∀{d ε} →
+            d final →
+            ε ectxt →
+            (d ∘₁ ε) ectxt
+    ECAp2 : ∀{d ε} →
+            ε ectxt →
+            (ε ∘₂ d) ectxt
+    ECNEHole : ∀{ε m u σ} →
+               ε ectxt →
+               (⦇ ε ⦈⟨ u , σ , m ⟩) ectxt
+    ECCast : ∀{ ε τ } →
+             ε ectxt →
+             (< τ > ε ) ectxt
+
+  -- d is result of filling the hole in ε with d'
+  data _==_[_] : (d : dhexp) (ε : ectx) (d' : dhexp) → Set where
+    FRefl : ∀{d : dhexp} →
+            d == ⊙ [ d ]
+    -- FLam : ∀{ d d1 ε x τ } →
+    --        d1 == ε [ d ] →
+    --        (·λ x [ τ ] d1) == ?
+    -- FAp1 :
+    -- FAp2 :
+    -- FNEHole : ∀{ d d1 ε τ } →
+    --        d1 == ε [ d ] →
+    --        (⦇ d1 ⦈⟨ u , σ , m⟩) == ⦇ d ⦈⟨ u , σ , m⟩
+    FCast : ∀{ d d1 ε τ } →
+           d1 == ε [ d ] →
+           (< τ > d1) == < τ > ε [ d ]
+
+  data _⊢_↦_ : (Δ : hctx) (d d' : dhexp) → Set where
+    Step : ∀{ d d0 d' d0' Δ ε} →
+           d == ε [ d0 ] →
+           Δ ⊢ d0 →> d0' → -- should this Δ be ∅?
+           d' == ε [ d0' ] → -- why is this the same ε
+           Δ ⊢ d ↦ d
