@@ -69,6 +69,20 @@ module contexts where
   (C1 ∪ C2) x | Some x₁ = Some x₁
   (C1 ∪ C2) x | None = C2 x
 
+  x∈sing : {A : Set} → (Γ : A ctx) (n : Nat) (x : A) → (n , x) ∈ (Γ ,, (n , x))
+  x∈sing Γ n x with Γ n
+  x∈sing Γ n x  | Some y with natEQ n n
+  x∈sing Γ n x₁ | Some y | Inl refl = refl
+  x∈sing Γ n x₁ | Some y | Inr x = abort (x refl)
+  x∈sing Γ n x  | None with natEQ n n
+  x∈sing Γ n x₁ | None | Inl refl = refl
+  x∈sing Γ n x₁ | None | Inr x = abort (x refl)
+
+  x∈∪ : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ → (n , x) ∈ (Γ ∪ Γ')
+  x∈∪ Γ Γ' n x xin with Γ n
+  x∈∪ Γ Γ' n x₁ xin | Some x = xin
+  x∈∪ Γ Γ' n x ()   | None
+
   -- todo: i thought these would be the right thing to work out some holes,
   -- but they're not even true
   -- lem-union1 : {A : Set} (C1 C2 : A ctx) (x : Nat) (disjoint : C1 ## C2) → (C1 x) == ((C1 ∪ C2) x)
