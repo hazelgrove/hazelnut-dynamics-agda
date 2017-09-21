@@ -11,14 +11,14 @@ module progress where
   -- consequent of progress as:
   --
   -- d val + d indet + d err[ Δ ] + Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')
-  data ok : (d : dhexp) → Set where
-    V : ∀{d} → d val → ok d
-    I : ∀{d} → d indet → ok d
-    E : ∀{d Δ} → d err[ Δ ] → ok d
-    S : ∀{d Δ} → Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d') → ok d
+  data ok : (d : dhexp) (Δ : hctx) → Set where
+    V : ∀{d Δ} → d val → ok d Δ
+    I : ∀{d Δ} → d indet → ok d Δ
+    E : ∀{d Δ} → d err[ Δ ] → ok d Δ
+    S : ∀{d Δ} → Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d') → ok d Δ
 
   progress : {Δ : hctx} {d : dhexp} {τ : htyp} →
-             Δ , ∅ ⊢ d :: τ → ok d
+             Δ , ∅ ⊢ d :: τ → ok d Δ
   progress TAConst = V VConst
   progress (TAVar x) = abort (somenotnone (! x))
   progress (TALam D) = V VLam
@@ -50,7 +50,9 @@ module progress where
   progress (TANEHole x₁ D x₂) | S x = {!!}
   progress (TACast D x)
     with progress D
-  progress (TACast D x₁) | V x = {!!}
+  progress (TACast TAConst TCRefl)  | V VConst = E {!!}
+  progress (TACast TAConst TCHole2) | V VConst = E {!!}
+  progress (TACast D x₁) | V VLam = {!!}
   progress (TACast D x₁) | I x = {!!}
   progress (TACast D x₁) | E x = {!!}
-  progress (TACast D x₁) | S x = {!!}
+  progress (TACast D x₃) | S (d , Step x x₁ x₂) = {!!}
