@@ -255,10 +255,7 @@ module core where
       FVal : ∀{d} → d val → d final
       FIndet : ∀{d} → d indet → d final
 
-------------- these two judgements are still being figured out; form
-------------- changing, etc. double check everything here once it settles
-------------- before doing anything with it
-  -- error
+  -- error -- todo
   data _err[_] : (d : dhexp) → (Δ : hctx) → Set where
     -- ERNEHole
     -- ERCastError
@@ -303,30 +300,34 @@ module core where
             (ε ∘₂ d) ectxt
     ECNEHole : ∀{ε m u σ} →
                ε ectxt →
-               (⦇ ε ⦈⟨ u , σ , m ⟩) ectxt
+               ⦇ ε ⦈⟨ u , σ , m ⟩ ectxt
     ECCast : ∀{ ε τ } →
              ε ectxt →
              (< τ > ε ) ectxt
 
-  -- d is result of filling the hole in ε with d'
-  data _==_[_] : (d : dhexp) (ε : ectx) (d' : dhexp) → Set where
+  data _==_⟦_⟧ : (d : dhexp) (ε : ectx) (d' : dhexp) → Set where
     FRefl : ∀{d : dhexp} →
-            d == ⊙ [ d ]
-    -- FLam : ∀{ d d1 ε x τ } →
-    --        d1 == ε [ d ] →
-    --        (·λ x [ τ ] d1) == ?
-    -- FAp1 :
-    -- FAp2 :
-    -- FNEHole : ∀{ d d1 ε τ } →
-    --        d1 == ε [ d ] →
-    --        (⦇ d1 ⦈⟨ u , σ , m⟩) == ⦇ d ⦈⟨ u , σ , m⟩
+            d == ⊙ ⟦ d ⟧
+    FLam : ∀{ d d1 ε x τ } →
+           d1 == ε ⟦ d ⟧ →
+           (·λ x [ τ ] d1) == (·λ x [ τ ] ε) ⟦ d ⟧
+    FAp1 : ∀{ d1 d2 d ε} →
+           d1 final →
+           d2 == ε ⟦ d ⟧ →
+           (d1 ∘ d2) == (d1 ∘₁ ε) ⟦ d ⟧
+    FAp2 : ∀{ d1 d2 d ε} →
+           d2 == ε ⟦ d ⟧ →
+           (d1 ∘ d2) == (ε ∘₂ d2) ⟦ d ⟧
+    FNEHole : ∀{ d d1 ε u σ m} →
+              d1 == ε ⟦ d ⟧ →
+              ⦇ d1 ⦈⟨ (u , σ , m) ⟩ ==  ⦇ ε ⦈⟨ (u , σ , m) ⟩ ⟦ d ⟧
     FCast : ∀{ d d1 ε τ } →
-           d1 == ε [ d ] →
-           (< τ > d1) == < τ > ε [ d ]
+            d1 == ε ⟦ d ⟧ →
+            (< τ > d1) == < τ > ε ⟦ d ⟧
 
   data _⊢_↦_ : (Δ : hctx) (d d' : dhexp) → Set where
     Step : ∀{ d d0 d' d0' Δ ε} →
-           d == ε [ d0 ] →
+           d == ε ⟦ d0 ⟧ →
            Δ ⊢ d0 →> d0' → -- should this Δ be ∅?
-           d' == ε [ d0' ] → -- why is this the same ε
+           d' == ε ⟦ d0' ⟧ → -- why is this the same ε
            Δ ⊢ d ↦ d
