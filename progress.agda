@@ -26,7 +26,8 @@ module progress where
     with progress D1 | progress D2
   progress (TAAp TAConst () D2) | V VConst | V x₁
   progress {Δ = Δ} (TAAp D1 x₂ D2) | V VLam | V x₁ = S {Δ = Δ} (_ , Step FRefl (ITLam (FVal x₁)) FRefl)
-  progress (TAAp D1 x₂ D2) | V x | I x₁ = {!!}
+  progress (TAAp TAConst () D2) | V VConst | I x₁
+  progress (TAAp (TALam D1) MAArr D2) | V VLam | I x₁ = S (_ , Step (FAp1 (FVal VLam) {!!}) (ITLam (FIndet x₁)) {!!})
   progress (TAAp D1 x₂ D2) | V x | E x₁ = {!!}
   progress (TAAp D1 x₂ D2) | V x | S x₁ = {!!}
   progress (TAAp D1 x₂ D2) | I x | V x₁ = {!!}
@@ -44,15 +45,16 @@ module progress where
   progress (TAEHole x x₁) = I IEHole
   progress (TANEHole x D x₁)
     with progress D
-  progress (TANEHole x₁ D x₂) | V x = {!!}
-  progress (TANEHole x₁ D x₂) | I x = {!!}
-  progress (TANEHole x₁ D x₂) | E x = {!!}
-  progress (TANEHole x₁ D x₂) | S x = {!!}
+  progress (TANEHole x₁ D x₂) | V VConst = I (INEHole (FVal VConst))
+  progress (TANEHole x₁ (TALam D) x₂) | V VLam = I (INEHole (FVal VLam))
+  progress (TANEHole x₁ D x₂) | I x = I (INEHole (FIndet x))
+  progress (TANEHole x₁ D x₂) | E x = E {!!}
+  progress (TANEHole x₃ D x₄) | S (d , Step x x₁ x₂) = S (_ , (Step (FNEHole x) x₁ (FNEHole x₂)))
   progress (TACast D x)
     with progress D
   progress (TACast TAConst TCRefl)  | V VConst = E {!!}
   progress (TACast TAConst TCHole2) | V VConst = E {!!}
-  progress (TACast D x₁) | V VLam = {!!}
-  progress (TACast D x₁) | I x = {!!}
-  progress (TACast D x₁) | E x = {!!}
-  progress (TACast D x₃) | S (d , Step x x₁ x₂) = {!!}
+  progress (TACast D x₁) | V VLam = E {!!}
+  progress (TACast D x₁) | I x = I (ICast x)
+  progress (TACast D x₁) | E x = E {!!}
+  progress (TACast D x₃) | S (d , Step x x₁ x₂) = S ( _ , Step (FCast x) x₁ (FCast x₂))
