@@ -65,7 +65,7 @@ module typed-expansion where
     typed-expansion-synth (ESEHole {Γ = Γ} {u = u})  = TAEHole (x∈sing ∅ u (Γ , ⦇⦈)) lem-idsub
     typed-expansion-synth (ESNEHole {Γ = Γ} {τ = τ} {u = u} {Δ = Δ} ex)
       with typed-expansion-synth ex
-    ... | ih1 = TANEHole {Δ = Δ ,, (u , Γ , ⦇⦈)} (x∈sing Δ u (Γ , ⦇⦈)) (lem-weakenΔsingle ih1) lem-idsub
+    ... | ih1 = TANEHole {Δ = Δ ,, (u , Γ , ⦇⦈)} (x∈sing Δ u (Γ , ⦇⦈)) (lem-weakenΔsingle {u = u} ih1) lem-idsub
     typed-expansion-synth (ESAsc1 x x₁)
       with typed-expansion-ana x
     ... | con , ih = TACast ih con
@@ -83,7 +83,7 @@ module typed-expansion where
     typed-expansion-ana (EAEHole {Γ = Γ} {u = u}) = TCRefl , TAEHole (x∈sing ∅ u (Γ , _)) lem-idsub
     typed-expansion-ana (EANEHole {Γ = Γ} {u = u} {τ = τ} {Δ = Δ}  x)
       with typed-expansion-synth x
-    ... | ih1 = TCRefl , TANEHole (x∈sing Δ u (Γ , τ)) (lem-weakenΔsingle ih1) lem-idsub
+    ... | ih1 = TCRefl , TANEHole {Δ = Δ ,, (u , Γ , τ)} (x∈sing Δ u (Γ , τ)) (lem-weakenΔsingle {u = u} ih1) lem-idsub
     typed-expansion-ana (EALamHole x y)
       with typed-expansion-ana y
     ... | _ , ih = TCHole2 , TALam ih
