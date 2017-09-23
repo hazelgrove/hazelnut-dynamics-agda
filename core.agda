@@ -256,13 +256,23 @@ module core where
       FIndet : ∀{d} → d indet → d final
 
   -- error -- todo
-  data _err[_] : (d : dhexp) → (Δ : hctx) → Set where
-    -- ERNEHole
-    -- ERCastError
-    -- ERLam
-    -- ERAp1
-    -- ERAp2
-    -- ERCast
+  data _⊢_err : (Δ : hctx) (d : dhexp) → Set where
+    ECastError : ∀{ Δ d τ1 τ2 } →
+                 Δ , ∅ ⊢ d :: τ2 →
+                 τ1 ~̸ τ2 →
+                 Δ ⊢ (< τ1 > d) err
+    EAp1 : ∀{ Δ d1 d2} →
+           Δ ⊢ d1 err →
+           Δ ⊢ (d1 ∘ d2) err
+    EAp2 : ∀{ Δ d1 d2} →
+           Δ ⊢ d2 err →
+           Δ ⊢ (d1 ∘ d2) err
+    ENEHole : ∀{ Δ d u σ m} →
+           Δ ⊢ d err →
+           Δ ⊢ (⦇ d ⦈⟨ (u , σ , m)⟩) err
+    ECastProp : ∀{ Δ d τ} →
+                Δ ⊢ d err →
+                Δ ⊢ (< τ > d) err
 
   -- contextual dynamics
 
