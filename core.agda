@@ -298,6 +298,12 @@ module core where
              Δ , ∅ ⊢ d :: τ2 →
              τ1 ~ τ2 → -- maybe?
              Δ ⊢ < τ1 > d →> d -- is that the right thing to step to?
+    ITEHole : ∀{ Δ u σ} →
+              Δ ⊢ ⦇⦈⟨ u , σ , ✗ ⟩ →> ⦇⦈⟨ u , σ , ✓ ⟩ -- todo: added to make progress work
+    ITNEHole : ∀{ Δ u σ d } → -- todo: aded this to make progress work
+               d final →
+               Δ ⊢ ⦇ d ⦈⟨ u , σ , ✗ ⟩ →> ⦇ d ⦈⟨ u , σ , ✓ ⟩
+
 
   data _ectxt : (ε : ectx) → Set where
     ECDot : ⊙ ectxt

@@ -40,12 +40,13 @@ module progress where
   progress (TAAp D1 x₂ D2) | S x | I x₁ = {!!}
   -- progress (TAAp D1 x₂ D2) | S x | S x₁ = {!!}
   progress (TAEHole {m = ✓} x x₁) = I IEHole
-  progress (TAEHole {σ = σ} {u = u} {m = ✗}  x x₁) = S (⦇⦈⟨ u , σ , ✓ ⟩ , {!!})
+  progress (TAEHole {m = ✗} x x₁) = S (_ , Step FRefl ITEHole FRefl)
   progress (TANEHole x D x₁)
     with progress D
-  progress (TANEHole x₁ D x₂) | V VConst = {!!} -- I (INEHole (FVal VConst))
-  progress (TANEHole x₁ (TALam D) x₂) | V VLam = {!!} -- I (INEHole (FVal VLam))
-  progress (TANEHole x₁ D x₂) | I x = {!!} -- I (INEHole (FIndet x))
+  progress (TANEHole {m = ✓} x₁ D x₂) | V v = I (INEHole (FVal v))
+  progress (TANEHole {m = ✗} x₁ D x₂) | V v = S (_ , Step FRefl (ITNEHole (FVal v)) FRefl)
+  progress (TANEHole {m = ✓} x₁ D x₂) | I x = I (INEHole (FIndet x))
+  progress (TANEHole {m = ✗} x₁ D x₂) | I x = S (_ , Step FRefl (ITNEHole (FIndet x)) FRefl)
   progress (TANEHole x₁ D x₂) | E x = E (ENEHole x)
   progress (TANEHole x₃ D x₄) | S (d , Step x x₁ x₂) = S (_ , (Step (FNEHole x) x₁ (FNEHole x₂)))
   progress (TACast D x)
