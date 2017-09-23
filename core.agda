@@ -101,8 +101,8 @@ module core where
                  τ1 ▸arr τ2 ==> τ →
                  Γ ⊢ e2 <= τ2 →
                  Γ ⊢ (e1 ∘ e2) => τ
-      SEHole  : {Γ : tctx} {u : Nat} → Γ ⊢ ⦇⦈[ u ] => ⦇⦈     -- todo: uniqueness of n?
-      SNEHole : {Γ : tctx} {e : hexp} {τ : htyp} {u : Nat} → -- todo: uniqueness of n?
+      SEHole  : {Γ : tctx} {u : Nat} → Γ ⊢ ⦇⦈[ u ] => ⦇⦈     -- todo: uniqueness of u?
+      SNEHole : {Γ : tctx} {e : hexp} {τ : htyp} {u : Nat} → -- todo: uniqueness of u?
                  Γ ⊢ e => τ →
                  Γ ⊢ ⦇ e ⦈[ u ] => ⦇⦈
       SLam    : {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} {x : Nat} →
@@ -122,7 +122,9 @@ module core where
                  (Γ ,, (x , τ1)) ⊢ e <= τ2 →
                  Γ ⊢ (·λ x e) <= τ
 
-  -- todo: do we care about completeness of hexp or e-umlauts?
+  -- todo: do we care about completeness of hexp or e-umlauts? should this
+  -- be judgemental rather than functional?
+
   -- those types without holes anywhere
   tcomplete : htyp → Set
   tcomplete b         = ⊤
@@ -245,8 +247,8 @@ module core where
   mutual
     -- indeterminate
     data _indet : (d : dhexp) → Set where
-      IEHole : ∀{u σ} → ⦇⦈⟨ u , σ ⟩ indet
-      INEHole : ∀{d u σ} → d final → ⦇ d ⦈⟨ u , σ ⟩ indet
+      IEHole : ∀{u σ} → ⦇⦈⟨ u , σ , ✓ ⟩ indet
+      INEHole : ∀{d u σ} → d final → ⦇ d ⦈⟨ u , σ , ✓ ⟩ indet
       IAp : ∀{d1 d2} → d1 indet → d2 final → (d1 ∘ d2) indet
       ICast : ∀{d τ} → d indet → (< τ > d) indet
 
