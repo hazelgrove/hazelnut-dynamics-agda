@@ -273,6 +273,7 @@ module core where
     ECastProp : ∀{ Δ d τ} →
                 Δ ⊢ d err →
                 Δ ⊢ (< τ > d) err
+    -- EConst : ∀{ Δ τ } → Δ ⊢ (< τ > c) err -- todo: is it an error to ever cast the constant?
 
   -- contextual dynamics
 
