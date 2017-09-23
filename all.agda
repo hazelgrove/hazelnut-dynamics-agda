@@ -12,7 +12,12 @@ open import htype-decidable
 open import correspondence
 open import expandability
 open import expansion-unicity
+open import type-assignment-unicity
+
+open import canonical-forms
+
 -- open import preservation
 -- open import progress
-open import type-assignment-unicity
+
 -- open import typed-expansion
+-- open import complete-progress
