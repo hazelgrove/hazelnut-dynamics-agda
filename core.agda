@@ -286,7 +286,7 @@ module core where
     ECastProp : ∀{ Δ d τ} →
                 Δ ⊢ d err →
                 Δ ⊢ (< τ > d) err
-    -- EConst : ∀{ Δ τ } → Δ ⊢ (< τ > c) err -- todo: is it an error to ever cast the constant?
+    EConst : ∀{ Δ τ } → Δ ⊢ (< τ > c) err
 
   -- contextual dynamics
 
@@ -308,10 +308,10 @@ module core where
              d final →
              Δ , ∅ ⊢ d :: τ2 →
              τ1 ~ τ2 → -- maybe?
-             Δ ⊢ < τ1 > d →> d -- is that the right thing to step to?
+             Δ ⊢ < τ1 > d →> d
     ITEHole : ∀{ Δ u σ} →
-              Δ ⊢ ⦇⦈⟨ u , σ , ✗ ⟩ →> ⦇⦈⟨ u , σ , ✓ ⟩ -- todo: added to make progress work
-    ITNEHole : ∀{ Δ u σ d } → -- todo: aded this to make progress work
+              Δ ⊢ ⦇⦈⟨ u , σ , ✗ ⟩ →> ⦇⦈⟨ u , σ , ✓ ⟩
+    ITNEHole : ∀{ Δ u σ d } →
                d final →
                Δ ⊢ ⦇ d ⦈⟨ u , σ , ✗ ⟩ →> ⦇ d ⦈⟨ u , σ , ✓ ⟩
 
