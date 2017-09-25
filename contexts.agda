@@ -13,19 +13,6 @@ module contexts where
   ∅ : {A : Set} → A ctx
   ∅ _ = None
 
-  -- add a new binding to the context, clobbering anything that might have
-  -- been there before.
-  _,,_ : {A : Set} → A ctx → (Nat × A) → A ctx
-  (Γ ,, (x , t)) y with natEQ x y
-  (Γ ,, (x , t)) .x | Inl refl = Some t
-  (Γ ,, (x , t)) y  | Inr neq  = Γ y
-
-  infixl 10 _,,_
-
-  -- the singleton context
-  ■_ : {A : Set} → (Nat × A) → A ctx
-  ■ x = ∅ ,, x
-
   infixr 100 ■_
 
   -- membership, or presence, in a context
@@ -69,21 +56,48 @@ module contexts where
   (C1 ∪ C2) x | Some x₁ = Some x₁
   (C1 ∪ C2) x | None = C2 x
 
-  x∈sing : {A : Set} → (Γ : A ctx) (n : Nat) (x : A) → (n , x) ∈ (Γ ,, (n , x))
-  x∈sing Γ n x with Γ n
-  x∈sing Γ n x  | Some y with natEQ n n
-  x∈sing Γ n x₁ | Some y | Inl refl = refl
-  x∈sing Γ n x₁ | Some y | Inr x = abort (x refl)
-  x∈sing Γ n x  | None with natEQ n n
-  x∈sing Γ n x₁ | None | Inl refl = refl
-  x∈sing Γ n x₁ | None | Inr x = abort (x refl)
+  -- the singleton context
+  ■_ : {A : Set} → (Nat × A) → A ctx
+  (■ (x , a)) y with natEQ x y
+  (■ (x , a)) .x | Inl refl = Some a
+  ... | Inr _ = None
 
-  x∈∪ : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ → (n , x) ∈ (Γ ∪ Γ')
-  x∈∪ Γ Γ' n x xin with Γ n
-  x∈∪ Γ Γ' n x₁ xin | Some x = xin
-  x∈∪ Γ Γ' n x ()   | None
+  -- add a new binding to the context, clobbering anything that might have
+  -- been there before.
+  _,,_ : {A : Set} → A ctx → (Nat × A) → A ctx
+  (Γ ,, (x , t)) = Γ ∪ (■ (x , t))
 
-  -- todo: i thought these would be the right thing to work out some holes,
-  -- but they're not even true
-  -- lem-union1 : {A : Set} (C1 C2 : A ctx) (x : Nat) (disjoint : C1 ## C2) → (C1 x) == ((C1 ∪ C2) x)
-  -- lem-union2 : {A : Set} (C1 C2 : A ctx) (x : Nat) (disjoint : C1 ## C2) → (C2 x) == ((C1 ∪ C2) x)
+  infixl 10 _,,_
+
+  -- x∈sing Γ n x with Γ n
+  -- x∈sing Γ n x  | Some y with natEQ n n
+  -- x∈sing Γ n x₁ | Some y | Inl refl = {!!}
+  -- x∈sing Γ n x₁ | Some y | Inr x = abort (x refl)
+  -- x∈sing Γ n x  | None with natEQ n n
+  -- x∈sing Γ n x₁ | None | Inl refl = refl
+  -- x∈sing Γ n x₁ | None | Inr x = abort (x refl)
+
+  x∈∪1 : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ → (n , x) ∈ (Γ ∪ Γ')
+  x∈∪1 Γ Γ' n x xin with Γ n
+  x∈∪1 Γ Γ' n x₁ xin | Some x = xin
+  x∈∪1 Γ Γ' n x ()   | None
+
+  -- x∈∪2 : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ' → (n , x) ∈ (Γ ∪ Γ')
+  -- x∈∪2 Γ Γ' n x xin with Γ' n | Γ n
+  -- x∈∪2 Γ Γ' n x₂ xin | Some x | Some x₁ = {!!}
+  -- x∈∪2 Γ Γ' n x refl | Some .x | None = {!!}
+  -- x∈∪2 Γ Γ' n x₁ xin | None   | _ = abort (somenotnone (! xin))
+
+  x∈■ : {A : Set} (n : Nat) (a : A) → (n , a) ∈ (■ (n , a))
+  x∈■ n a with natEQ n n
+  x∈■ n a | Inl refl = refl
+  x∈■ n a | Inr x = abort (x refl)
+
+  x∈∪■ : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ∪ (■ (n , a)))
+  x∈∪■ Γ n a with natEQ n n
+  x∈∪■ Γ n a | Inl refl = {!!} -- it might be in Γ because i don't know that they're disjoint. this is where that premise gets you
+  x∈∪■ Γ n a | Inr x = {!!}
+
+
+  x∈sing : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ,, (n , a))
+  x∈sing Γ n a  = {!!} -- x∈∪2 Γ (■ (n , a)) n a (x∈■ n a)

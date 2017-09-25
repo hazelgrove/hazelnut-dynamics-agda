@@ -236,8 +236,19 @@ module core where
              τ ~ τ' →
              Δ , Γ ⊢ < τ > d :: τ
 
-  postulate -- todo: write this later
-    [_]_ : subst → dhexp → dhexp
+  -- postulate -- todo: write this later
+  -- substitution
+  [_/_]_ : dhexp → Nat → dhexp → dhexp
+  [ d / y ] c = c
+  [ d / y ] X x
+    with natEQ x y
+  [ d / y ] X .y | Inl refl = d
+  [ d / y ] X x  | Inr neq = X y
+  [ d / y ] (·λ x [ x₁ ] d') = ·λ x [ x₁ ] ( [ d / y ] d') -- TODO: i *think* barendrecht's saves us here, or at least i want it to. may need to reformulat this as a relation --> set
+  [ d / y ] ⦇⦈⟨ u , σ , m ⟩ = ⦇⦈⟨ u , σ , m ⟩
+  [ d / y ] ⦇ d' ⦈⟨ u , σ , m ⟩ =  ⦇ [ d / y ] d' ⦈⟨ u , σ , m ⟩
+  [ d / y ] (d1 ∘ d2) =  ([ d / y ] d1) ∘ ([ d / y ] d2)
+  [ d / y ] (< τ > d') = < τ > ([ d / y ] d')
 
   -- value
   data _val : (d : dhexp) → Set where
@@ -257,7 +268,7 @@ module core where
       FVal : ∀{d} → d val → d final
       FIndet : ∀{d} → d indet → d final
 
-  -- error -- todo
+  -- error
   data _⊢_err : (Δ : hctx) (d : dhexp) → Set where
     ECastError : ∀{ Δ d τ1 τ2 } →
                  Δ , ∅ ⊢ d :: τ2 →
@@ -292,7 +303,7 @@ module core where
   data _⊢_→>_ : (Δ : hctx) (d d' : dhexp) → Set where
     ITLam : ∀{ Δ x τ d1 d2 } →
             d2 final →
-            Δ ⊢ ((·λ x [ τ ] d1) ∘ d2) →> ([ ■ (x , d2) ] d1) -- this is very unlikely to work long term
+            Δ ⊢ ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1) -- this is very unlikely to work long term
     ITCast : ∀{d Δ τ1 τ2 } →
              d final →
              Δ , ∅ ⊢ d :: τ2 →
