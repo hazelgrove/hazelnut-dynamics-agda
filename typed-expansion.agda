@@ -20,31 +20,13 @@ module typed-expansion where
   lem-weakenΔ1 (TAVar x₁) = TAVar x₁
   lem-weakenΔ1 (TALam D) = TALam (lem-weakenΔ1 D)
   lem-weakenΔ1 (TAAp D x D₁) = TAAp (lem-weakenΔ1 D) x (lem-weakenΔ1 D₁)
-  lem-weakenΔ1 (TAEHole {Δ = Δ} x y) = TAEHole (x∈∪ Δ _ _ _ x) (lem-subweak y)
-  lem-weakenΔ1 (TANEHole {Δ = Δ} D x y) = TANEHole (x∈∪ Δ _ _ _ D) (lem-weakenΔ1 x) (lem-subweak y)
+  lem-weakenΔ1 (TAEHole {Δ = Δ} x y) = TAEHole (x∈∪1 Δ _ _ _ x) (lem-subweak y)
+  lem-weakenΔ1 (TANEHole {Δ = Δ} D x y) = TANEHole (x∈∪1 Δ _ _ _ D) (lem-weakenΔ1 x) (lem-subweak y)
   lem-weakenΔ1 (TACast D x) = TACast (lem-weakenΔ1 D) x
 
   lem-weakenΔ2 : ∀{Δ1 Δ2 Γ d τ} → Δ2 , Γ ⊢ d :: τ → (Δ1 ∪ Δ2) , Γ ⊢ d :: τ
-  lem-weakenΔ2 = {!!}
+  lem-weakenΔ2 {Δ1} {Δ2} {Γ} {d} {τ} D = tr (λ q → q , Γ ⊢ d :: τ) (∪comm Δ2 Δ1) (lem-weakenΔ1 D)
 
-  sing∪' : {A : Set} → (Γ : A ctx) (n : Nat) (x : A) (n' : Nat) → (Γ ,, (n , x)) n' == ((Γ ∪ (■ (n , x))) n')
-  sing∪' Γ n x n' with natEQ n n'
-  sing∪' Γ n x₁ .n | Inl refl with Γ n
-  sing∪' Γ n x₁ .n | Inl refl | Some x = {!!}
-  sing∪' Γ n x₁ .n | Inl refl | None with natEQ n n
-  sing∪' Γ n x₁ .n | Inl refl | None | Inl refl = refl
-  sing∪' Γ n x₁ .n | Inl refl | None | Inr x = abort (x refl)
-  sing∪' Γ n x₁ n' | Inr x with Γ n'
-  sing∪' Γ n x₂ n' | Inr x₁ | Some x = refl
-  sing∪' Γ n x₁ n' | Inr x  | None with natEQ n n'
-  sing∪' Γ n' x₂ .n' | Inr x₁ | None | Inl refl = abort (x₁ refl)
-  sing∪' Γ n x₂ n' | Inr x₁ | None | Inr x = refl
-
-  sing∪ : {A : Set} → (Γ : A ctx) (n : Nat) (x : A) → (Γ ,, (n , x)) == Γ ∪ (■ (n , x))
-  sing∪ Γ n x = funext (sing∪' Γ n x)
-
-  lem-weakenΔsingle : ∀{Δ Γ d τ u Γ' τ'} → Δ , Γ ⊢ d :: τ → (Δ ,, u ::[ Γ' ] τ') , Γ ⊢ d :: τ
-  lem-weakenΔsingle = {!!}
 
   mutual
     typed-expansion-synth : {Γ : tctx} {e : hexp} {τ : htyp} {d : dhexp} {Δ : hctx} →
@@ -65,7 +47,7 @@ module typed-expansion where
     typed-expansion-synth (ESEHole {Γ = Γ} {u = u})  = TAEHole (x∈sing ∅ u (Γ , ⦇⦈)) lem-idsub
     typed-expansion-synth (ESNEHole {Γ = Γ} {τ = τ} {u = u} {Δ = Δ} ex)
       with typed-expansion-synth ex
-    ... | ih1 = TANEHole {Δ = Δ ,, (u , Γ , ⦇⦈)} (x∈sing Δ u (Γ , ⦇⦈)) (lem-weakenΔsingle {u = u} ih1) lem-idsub
+    ... | ih1 = TANEHole {Δ = Δ ,, (u , Γ , ⦇⦈)} (x∈sing Δ u (Γ , ⦇⦈)) (lem-weakenΔ1 ih1) lem-idsub
     typed-expansion-synth (ESAsc1 x x₁)
       with typed-expansion-ana x
     ... | con , ih = TACast ih con
@@ -83,7 +65,7 @@ module typed-expansion where
     typed-expansion-ana (EAEHole {Γ = Γ} {u = u}) = TCRefl , TAEHole (x∈sing ∅ u (Γ , _)) lem-idsub
     typed-expansion-ana (EANEHole {Γ = Γ} {u = u} {τ = τ} {Δ = Δ}  x)
       with typed-expansion-synth x
-    ... | ih1 = TCRefl , TANEHole {Δ = Δ ,, (u , Γ , τ)} (x∈sing Δ u (Γ , τ)) (lem-weakenΔsingle {u = u} ih1) lem-idsub
+    ... | ih1 = TCRefl , TANEHole {Δ = Δ ,, (u , Γ , τ)} (x∈sing Δ u (Γ , τ)) (lem-weakenΔ1 ih1) lem-idsub
     typed-expansion-ana (EALamHole x y)
       with typed-expansion-ana y
     ... | _ , ih = TCHole2 , TALam ih

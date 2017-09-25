@@ -54,9 +54,13 @@ module progress where
   progress (TANEHole x₃ D x₄) | S (d , Step x x₁ x₂) = S (_ , (Step (FNEHole x) x₁ (FNEHole x₂)))
   progress (TACast D x)
     with progress D
-  progress (TACast TAConst TCRefl)  | V VConst = {!!}
-  progress (TACast TAConst TCHole2) | V VConst = {!!}
-  progress (TACast D x₁) | V VLam = {!!}
+  progress (TACast TAConst TCRefl)  | V VConst = E EConst
+  progress (TACast TAConst TCHole2) | V VConst = E EConst
+  progress (TACast D x₁) | V VLam
+    with invert-lam D
+  progress (TACast D TCRefl)        | V VLam | τ1 , τ2 , refl = {!!}
+  progress (TACast D TCHole2)       | V VLam | τ1 , τ2 , refl = {!!}
+  progress (TACast D (TCArr x₁ x₂)) | V VLam | τ1 , τ2 , refl = {!!}
   progress (TACast D x₁) | I x = I (ICast x)
   progress (TACast D x₁) | E x = E (ECastProp x)
   progress (TACast D x₃) | S (d , Step x x₁ x₂) = S ( _ , Step (FCast x) x₁ (FCast x₂))

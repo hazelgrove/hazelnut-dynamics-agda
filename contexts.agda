@@ -69,7 +69,22 @@ module contexts where
 
   infixl 10 _,,_
 
-  -- x∈sing Γ n x with Γ n
+  x∈∪1 : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ → (n , x) ∈ (Γ ∪ Γ')
+  x∈∪1 Γ Γ' n x xin with Γ n
+  x∈∪1 Γ Γ' n x₁ xin | Some x = xin
+  x∈∪1 Γ Γ' n x ()   | None
+
+
+  x∈■ : {A : Set} (n : Nat) (a : A) → (n , a) ∈ (■ (n , a))
+  x∈■ n a with natEQ n n
+  x∈■ n a | Inl refl = refl
+  x∈■ n a | Inr x = abort (x refl)
+
+  postulate -- TODO
+    x∈sing : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ,, (n , a))
+    ∪comm : {A : Set} → (C1 C2 : A ctx) → (C1 ∪ C2) == (C2 ∪ C1)
+
+-- x∈sing Γ n x with Γ n
   -- x∈sing Γ n x  | Some y with natEQ n n
   -- x∈sing Γ n x₁ | Some y | Inl refl = {!!}
   -- x∈sing Γ n x₁ | Some y | Inr x = abort (x refl)
@@ -77,28 +92,15 @@ module contexts where
   -- x∈sing Γ n x₁ | None | Inl refl = refl
   -- x∈sing Γ n x₁ | None | Inr x = abort (x refl)
 
-  x∈∪1 : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ → (n , x) ∈ (Γ ∪ Γ')
-  x∈∪1 Γ Γ' n x xin with Γ n
-  x∈∪1 Γ Γ' n x₁ xin | Some x = xin
-  x∈∪1 Γ Γ' n x ()   | None
-
   -- x∈∪2 : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ' → (n , x) ∈ (Γ ∪ Γ')
   -- x∈∪2 Γ Γ' n x xin with Γ' n | Γ n
   -- x∈∪2 Γ Γ' n x₂ xin | Some x | Some x₁ = {!!}
   -- x∈∪2 Γ Γ' n x refl | Some .x | None = {!!}
   -- x∈∪2 Γ Γ' n x₁ xin | None   | _ = abort (somenotnone (! xin))
 
-  x∈■ : {A : Set} (n : Nat) (a : A) → (n , a) ∈ (■ (n , a))
-  x∈■ n a with natEQ n n
-  x∈■ n a | Inl refl = refl
-  x∈■ n a | Inr x = abort (x refl)
-
-  -- x∈∪■ : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ∪ (■ (n , a)))
+-- x∈∪■ : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ∪ (■ (n , a)))
   -- x∈∪■ Γ n a with natEQ n n
   -- x∈∪■ Γ n a | Inl refl = {!!} -- it might be in Γ because i don't know that they're disjoint. this is where that premise gets you
   -- x∈∪■ Γ n a | Inr x = {!!}
 
-
-  postulate -- TODO
-    x∈sing : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ,, (n , a))
   -- x∈sing Γ n a  = {!!} -- x∈∪2 Γ (■ (n , a)) n a (x∈■ n a)

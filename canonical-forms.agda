@@ -26,3 +26,8 @@ module canonical-forms where
   cf-base (TAEHole x x₁) ()
   cf-base (TANEHole x D x₁) ()
   cf-base (TACast D x) ()
+
+  invert-lam : ∀{ Δ Γ x τ d τ'} →
+               Δ , Γ ⊢ (·λ_[_]_ x τ d) :: τ' →
+               Σ[ τ1 ∈ htyp ] Σ[ τ2 ∈ htyp ] (τ' == (τ1 ==> τ2))
+  invert-lam (TALam D) = _ , _ , refl

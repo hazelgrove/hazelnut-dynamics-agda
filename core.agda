@@ -236,7 +236,6 @@ module core where
              τ ~ τ' →
              Δ , Γ ⊢ < τ > d :: τ
 
-  -- postulate -- todo: write this later
   -- substitution
   [_/_]_ : dhexp → Nat → dhexp → dhexp
   [ d / y ] c = c
