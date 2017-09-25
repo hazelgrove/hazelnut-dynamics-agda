@@ -93,11 +93,12 @@ module contexts where
   x∈■ n a | Inl refl = refl
   x∈■ n a | Inr x = abort (x refl)
 
-  x∈∪■ : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ∪ (■ (n , a)))
-  x∈∪■ Γ n a with natEQ n n
-  x∈∪■ Γ n a | Inl refl = {!!} -- it might be in Γ because i don't know that they're disjoint. this is where that premise gets you
-  x∈∪■ Γ n a | Inr x = {!!}
+  -- x∈∪■ : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ∪ (■ (n , a)))
+  -- x∈∪■ Γ n a with natEQ n n
+  -- x∈∪■ Γ n a | Inl refl = {!!} -- it might be in Γ because i don't know that they're disjoint. this is where that premise gets you
+  -- x∈∪■ Γ n a | Inr x = {!!}
 
 
-  x∈sing : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ,, (n , a))
-  x∈sing Γ n a  = {!!} -- x∈∪2 Γ (■ (n , a)) n a (x∈■ n a)
+  postulate -- TODO
+    x∈sing : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ,, (n , a))
+  -- x∈sing Γ n a  = {!!} -- x∈∪2 Γ (■ (n , a)) n a (x∈■ n a)
