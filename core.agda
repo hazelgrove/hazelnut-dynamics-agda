@@ -298,6 +298,47 @@ module core where
     ⦇_⦈⟨_⟩ : ectx → (Nat × subst × mark) → ectx
     <_>_   : htyp → ectx → ectx
 
+ --ε is an evaluation context
+  data _evalctx : (ε : ectx) → Set where
+    ECDot : ⊙ evalctx
+    ECLam : ∀{ε x τ} →
+            ε evalctx →
+            (·λ x [ τ ] ε) evalctx
+    ECAp1 : ∀{d ε} →
+            d final →
+            ε evalctx →
+            (d ∘₁ ε) evalctx
+    ECAp2 : ∀{d ε} →
+            ε evalctx →
+            (ε ∘₂ d) evalctx
+    ECNEHole : ∀{ε m u σ} →
+               ε evalctx →
+               ⦇ ε ⦈⟨ u , σ , m ⟩ evalctx
+    ECCast : ∀{ ε τ } →
+             ε evalctx →
+             (< τ > ε ) evalctx
+
+  -- d is the result of filling the hole in ε with d'
+  data _==_⟦_⟧ : (d : dhexp) (ε : ectx) (d' : dhexp) → Set where
+    FDot : ∀{d : dhexp} →
+            d == ⊙ ⟦ d ⟧
+    FLam : ∀{ d d' ε x τ } →
+           d == ε ⟦ d' ⟧ →
+           (·λ x [ τ ] d) == (·λ x [ τ ] ε) ⟦ d' ⟧
+    FAp1 : ∀{d1 d2 d2' ε} →
+           d1 final →
+           d2 == ε ⟦ d2' ⟧ →
+           (d1 ∘ d2) == (d1 ∘₁ ε) ⟦ d2' ⟧
+    FAp2 : ∀{d1 d1' d2 ε} →
+           d1 == ε ⟦ d1' ⟧ →
+           (d1 ∘ d2) == (ε ∘₂ d2) ⟦ d1' ⟧
+    FNEHole : ∀{ d d1 ε u σ m} →
+              d1 == ε ⟦ d ⟧ →
+              ⦇ d1 ⦈⟨ (u , σ , m) ⟩ ==  ⦇ ε ⦈⟨ (u , σ , m) ⟩ ⟦ d ⟧
+    FCast : ∀{ d d' ε τ } →
+            d == ε ⟦ d' ⟧ →
+            (< τ > d) == < τ > ε ⟦ d' ⟧
+
   -- instruction transition judgement
   data _⊢_→>_ : (Δ : hctx) (d d' : dhexp) → Set where
     ITLam : ∀{ Δ x τ d1 d2 } →
@@ -313,46 +354,6 @@ module core where
     ITNEHole : ∀{ Δ u σ d } →
                d final →
                Δ ⊢ ⦇ d ⦈⟨ u , σ , ✗ ⟩ →> ⦇ d ⦈⟨ u , σ , ✓ ⟩
-
-
-  data _ectxt : (ε : ectx) → Set where
-    ECDot : ⊙ ectxt
-    ECLam : ∀{ε x τ} →
-            ε ectxt →
-            (·λ x [ τ ] ε) ectxt
-    ECAp1 : ∀{d ε} →
-            d final →
-            ε ectxt →
-            (d ∘₁ ε) ectxt
-    ECAp2 : ∀{d ε} →
-            ε ectxt →
-            (ε ∘₂ d) ectxt
-    ECNEHole : ∀{ε m u σ} →
-               ε ectxt →
-               ⦇ ε ⦈⟨ u , σ , m ⟩ ectxt
-    ECCast : ∀{ ε τ } →
-             ε ectxt →
-             (< τ > ε ) ectxt
-
-  data _==_⟦_⟧ : (d : dhexp) (ε : ectx) (d' : dhexp) → Set where
-    FRefl : ∀{d : dhexp} →
-            d == ⊙ ⟦ d ⟧
-    FLam : ∀{ d d1 ε x τ } →
-           d1 == ε ⟦ d ⟧ →
-           (·λ x [ τ ] d1) == (·λ x [ τ ] ε) ⟦ d ⟧
-    FAp1 : ∀{ d1 d2 d ε} →
-           d1 final →
-           d2 == ε ⟦ d ⟧ →
-           (d1 ∘ d2) == (d1 ∘₁ ε) ⟦ d ⟧
-    FAp2 : ∀{ d1 d2 d ε} →
-           d2 == ε ⟦ d ⟧ →
-           (d1 ∘ d2) == (ε ∘₂ d2) ⟦ d ⟧
-    FNEHole : ∀{ d d1 ε u σ m} →
-              d1 == ε ⟦ d ⟧ →
-              ⦇ d1 ⦈⟨ (u , σ , m) ⟩ ==  ⦇ ε ⦈⟨ (u , σ , m) ⟩ ⟦ d ⟧
-    FCast : ∀{ d d1 ε τ } →
-            d1 == ε ⟦ d ⟧ →
-            (< τ > d1) == < τ > ε ⟦ d ⟧
 
   data _⊢_↦_ : (Δ : hctx) (d d' : dhexp) → Set where
     Step : ∀{ d d0 d' d0' Δ ε} →
