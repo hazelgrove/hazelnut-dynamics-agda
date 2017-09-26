@@ -292,7 +292,6 @@ module core where
   -- evaluation contexts
   data ectx : Set where
     ⊙ : ectx
-    ·λ_[_]_ : Nat → htyp → ectx → ectx
     _∘₁_ : dhexp → ectx → ectx
     _∘₂_ : ectx → dhexp → ectx
     ⦇_⦈⟨_⟩ : ectx → (Nat × subst × mark) → ectx
@@ -301,9 +300,6 @@ module core where
  --ε is an evaluation context
   data _evalctx : (ε : ectx) → Set where
     ECDot : ⊙ evalctx
-    ECLam : ∀{ε x τ} →
-            ε evalctx →
-            (·λ x [ τ ] ε) evalctx
     ECAp1 : ∀{d ε} →
             d final →
             ε evalctx →
@@ -320,22 +316,24 @@ module core where
 
   -- d is the result of filling the hole in ε with d'
   data _==_⟦_⟧ : (d : dhexp) (ε : ectx) (d' : dhexp) → Set where
-    FDot : ∀{d : dhexp} →
-            d == ⊙ ⟦ d ⟧
-    FLam : ∀{ d d' ε x τ } →
-           d == ε ⟦ d' ⟧ →
-           (·λ x [ τ ] d) == (·λ x [ τ ] ε) ⟦ d' ⟧
-    FAp1 : ∀{d1 d2 d2' ε} →
+    FHConst : c == ⊙ ⟦ c ⟧
+    FHAp1 : ∀{d1 d2 d2' ε} →
            d1 final →
            d2 == ε ⟦ d2' ⟧ →
            (d1 ∘ d2) == (d1 ∘₁ ε) ⟦ d2' ⟧
-    FAp2 : ∀{d1 d1' d2 ε} →
+    FHAp2 : ∀{d1 d1' d2 ε} →
            d1 == ε ⟦ d1' ⟧ →
            (d1 ∘ d2) == (ε ∘₂ d2) ⟦ d1' ⟧
-    FNEHole : ∀{ d d1 ε u σ m} →
-              d1 == ε ⟦ d ⟧ →
-              ⦇ d1 ⦈⟨ (u , σ , m) ⟩ ==  ⦇ ε ⦈⟨ (u , σ , m) ⟩ ⟦ d ⟧
-    FCast : ∀{ d d' ε τ } →
+    FHEHole : ∀{u σ m} → ⦇⦈⟨ (u , σ , m) ⟩ == ⊙ ⟦ ⦇⦈⟨ (u , σ , m) ⟩ ⟧
+    FHNEHoleEvaled : ∀{ d u σ} →
+              ⦇ d ⦈⟨ (u , σ , ✓) ⟩ ==  ⊙ ⟦ ⦇ d ⦈⟨ (u , σ , ✓) ⟩ ⟧
+    FHNEHoleInside : ∀{ d d' ε u σ} →
+              d == ε ⟦ d' ⟧ →
+              ⦇ d ⦈⟨ (u , σ , ✗) ⟩ ==  ⦇ ε ⦈⟨ (u , σ , ✗) ⟩ ⟦ d' ⟧
+    FHNEHoleFinal : ∀{ d u σ} →
+              d final →
+              ⦇ d ⦈⟨ (u , σ , ✗) ⟩ ==  ⊙ ⟦ ⦇ d ⦈⟨ (u , σ , ✗) ⟩ ⟧
+    FHCast : ∀{ d d' ε τ } →
             d == ε ⟦ d' ⟧ →
             (< τ > d) == < τ > ε ⟦ d' ⟧
 
@@ -360,4 +358,4 @@ module core where
            d == ε ⟦ d0 ⟧ →
            Δ ⊢ d0 →> d0' → -- should this Δ be ∅?
            d' == ε ⟦ d0' ⟧ → -- why is this the same ε
-           Δ ⊢ d ↦ d
+           Δ ⊢ d ↦ d'
