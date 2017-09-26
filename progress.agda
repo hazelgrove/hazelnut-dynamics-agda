@@ -28,7 +28,7 @@ module progress where
   progress (TAAp D1 x D2)
     with progress D1 | progress D2
   progress (TAAp TAConst () D2)       | V VConst | _
-  progress {Δ = Δ} (TAAp D1 x₂ D2)    | V VLam | V x₁ = S {Δ = Δ} (_ , Step FRefl (ITLam (FVal x₁)) FRefl)
+  progress {Δ = Δ} (TAAp D1 x₂ D2)    | V VLam | V x₁ = S {Δ = Δ} (_ , Step FDot (ITLam (FVal x₁)) FDot)
   progress (TAAp (TALam D1) MAArr D2) | V VLam | I x₁ = S (_ , Step (FAp1 (FVal VLam) {!!}) (ITLam (FIndet x₁)) {!!}) -- stuck on defining substitution
   progress (TAAp D1 x₂ D2)            | _   | E x₁ = E (EAp2 x₁)
   progress (TAAp D1 x₂ D2)            | E x | _    = E (EAp1 x)
@@ -43,13 +43,13 @@ module progress where
   -- progress (TAAp D1 x₂ D2) | S x | I x₁ = {!!}
   -- progress (TAAp D1 x₂ D2) | S x | S x₁ = {!!}
   progress (TAEHole {m = ✓} x x₁) = I IEHole
-  progress (TAEHole {m = ✗} x x₁) = S (_ , Step FRefl ITEHole FRefl)
+  progress (TAEHole {m = ✗} x x₁) = S (_ , Step FDot ITEHole FDot)
   progress (TANEHole x D x₁)
     with progress D
   progress (TANEHole {m = ✓} x₁ D x₂) | V v = I (INEHole (FVal v))
-  progress (TANEHole {m = ✗} x₁ D x₂) | V v = S (_ , Step FRefl (ITNEHole (FVal v)) FRefl)
+  progress (TANEHole {m = ✗} x₁ D x₂) | V v = S (_ , Step FDot (ITNEHole (FVal v)) FDot)
   progress (TANEHole {m = ✓} x₁ D x₂) | I x = I (INEHole (FIndet x))
-  progress (TANEHole {m = ✗} x₁ D x₂) | I x = S (_ , Step FRefl (ITNEHole (FIndet x)) FRefl)
+  progress (TANEHole {m = ✗} x₁ D x₂) | I x = S (_ , Step FDot (ITNEHole (FIndet x)) FDot)
   progress (TANEHole x₁ D x₂) | E x = E (ENEHole x)
   progress (TANEHole x₃ D x₄) | S (d , Step x x₁ x₂) = S (_ , (Step (FNEHole x) x₁ (FNEHole x₂)))
   progress (TACast D x)
