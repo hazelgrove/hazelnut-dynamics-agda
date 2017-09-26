@@ -27,11 +27,11 @@ module progress where
   progress (TALam D) = V VLam
   progress (TAAp D1 x D2)
     with progress D1 | progress D2
-  progress (TAAp TAConst () D2)       | V VConst | _
-  progress {Δ = Δ} (TAAp D1 x₂ D2)    | V VLam | V x₁ = S {Δ = Δ} (_ , Step FDot (ITLam (FVal x₁)) FDot)
-  progress (TAAp (TALam D1) MAArr D2) | V VLam | I x₁ = S (_ , Step (FAp1 (FVal VLam) {!!}) (ITLam (FIndet x₁)) {!!}) -- stuck on defining substitution
-  progress (TAAp D1 x₂ D2)            | _   | E x₁ = E (EAp2 x₁)
-  progress (TAAp D1 x₂ D2)            | E x | _    = E (EAp1 x)
+  progress (TAAp TAConst () D2) | V VConst | _
+  progress (TAAp D1 MAArr D2) | V VLam | V x₁ = {!!}
+  progress (TAAp (TALam D1) MAArr D2) | V VLam | I x₁ = S {!!} -- (_ , Step (FAp1 (FVal VLam) {!!}) (ITLam (FIndet x₁)) {!!}) -- stuck on defining substitution
+  progress (TAAp D1 x₂ D2) | _   | E x₁ = E (EAp2 x₁)
+  progress (TAAp D1 x₂ D2) | E x | _    = E (EAp1 x)
   -- progress (TAAp D1 x₂ D2) | V x | S x₁ = {!!}
   progress (TAAp D1 x₂ D2) | I IEHole | V x₁ = I (IAp IEHole (FVal x₁))
   progress (TAAp D1 x₂ D2) | I (INEHole x) | V x₁ = I (IAp (INEHole x) (FVal x₁))
@@ -43,15 +43,15 @@ module progress where
   -- progress (TAAp D1 x₂ D2) | S x | I x₁ = {!!}
   -- progress (TAAp D1 x₂ D2) | S x | S x₁ = {!!}
   progress (TAEHole {m = ✓} x x₁) = I IEHole
-  progress (TAEHole {m = ✗} x x₁) = S (_ , Step FDot ITEHole FDot)
+  progress (TAEHole {m = ✗} x x₁) = S (_ , Step FHEHole ITEHole FHEHole)
   progress (TANEHole x D x₁)
     with progress D
   progress (TANEHole {m = ✓} x₁ D x₂) | V v = I (INEHole (FVal v))
-  progress (TANEHole {m = ✗} x₁ D x₂) | V v = S (_ , Step FDot (ITNEHole (FVal v)) FDot)
+  progress (TANEHole {m = ✗} x₁ D x₂) | V v = S {!!} -- S (_ , Step FDot (ITNEHole (FVal v)) FDot)
   progress (TANEHole {m = ✓} x₁ D x₂) | I x = I (INEHole (FIndet x))
-  progress (TANEHole {m = ✗} x₁ D x₂) | I x = S (_ , Step FDot (ITNEHole (FIndet x)) FDot)
+  progress (TANEHole {m = ✗} x₁ D x₂) | I x = S {!!} -- S (_ , Step FDot (ITNEHole (FIndet x)) FDot)
   progress (TANEHole x₁ D x₂) | E x = E (ENEHole x)
-  progress (TANEHole x₃ D x₄) | S (d , Step x x₁ x₂) = S (_ , (Step (FNEHole x) x₁ (FNEHole x₂)))
+  progress (TANEHole x₃ D x₄) | S (d , Step x x₁ x₂) = S {!!} --  S (_ , (Step (FNEHole x) x₁ (FNEHole x₂)))
   progress (TACast D x)
     with progress D
   progress (TACast TAConst TCRefl)  | V VConst = E EConst
@@ -63,4 +63,4 @@ module progress where
   progress (TACast D (TCArr x₁ x₂)) | V VLam | τ1 , τ2 , refl = {!!}
   progress (TACast D x₁) | I x = I (ICast x)
   progress (TACast D x₁) | E x = E (ECastProp x)
-  progress (TACast D x₃) | S (d , Step x x₁ x₂) = S ( _ , Step (FCast x) x₁ (FCast x₂))
+  progress (TACast D x₃) | S (d , Step x x₁ x₂) = S (_ , Step (FHCast x) x₁ (FHCast x₂))
