@@ -57,7 +57,7 @@ module progress where
   progress (TANEHole {m = ✓} x₁ D x₂) | V v = I (INEHole (FVal v))
   progress (TANEHole {m = ✗} x₁ D x₂) | V v = S ( _ , Step (FHNEHoleFinal (FVal v)) (ITNEHole (FVal v)) FHNEHoleEvaled)
   progress (TANEHole {m = ✓} x₁ D x₂) | I x = I (INEHole (FIndet x))
-  progress (TANEHole {m = ✗} x₁ D x₂) | I x = S ({!!} , {!!})
+  progress (TANEHole {m = ✗} x₁ D x₂) | I x = {!!}
   progress (TANEHole x₁ D x₂) | E x = E (ENEHole x)
   progress (TANEHole x₃ D x₄) | S (d , Step x x₁ x₂) = S {!!} --  S (_ , (Step (FNEHole x) x₁ (FNEHole x₂)))
 
