@@ -29,13 +29,13 @@ module contexts where
                    ((n : Nat) (a : A) → Γ' n == Some a → Γ n == None)
 
   -- without: remove a variable from a context
-  _/_ : {A : Set} → A ctx → Nat → A ctx
-  (Γ / x) y with natEQ x y
-  (Γ / x) .x | Inl refl = None
-  (Γ / x) y  | Inr neq  = Γ y
+  _//_ : {A : Set} → A ctx → Nat → A ctx
+  (Γ // x) y with natEQ x y
+  (Γ // x) .x | Inl refl = None
+  (Γ // x) y  | Inr neq  = Γ y
 
   -- a variable is apart from any context from which it is removed
-  aar : {A : Set} → (Γ : A ctx) (x : Nat) → x # (Γ / x)
+  aar : {A : Set} → (Γ : A ctx) (x : Nat) → x # (Γ // x)
   aar Γ x with natEQ x x
   aar Γ x | Inl refl = refl
   aar Γ x | Inr x≠x  = abort (x≠x refl)
