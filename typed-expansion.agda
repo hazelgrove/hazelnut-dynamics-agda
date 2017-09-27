@@ -7,9 +7,18 @@ open import contexts
 
 module typed-expansion where
   lem-idsub : ∀{Δ Γ} → Δ , Γ ⊢ id Γ :s: Γ
-  lem-idsub {Γ = Γ} x d xin with Γ x
-  lem-idsub {Γ = Γ} x .(X x) refl | Some τ = τ , refl , TAVar {!!}
-  lem-idsub x d () | None
+  lem-idsub = {!!}
+  -- lem-idsub {Δ} {Γ} x d xd∈σ with Γ x  | (id Γ) x
+  -- lem-idsub x₁ x refl | Some x₂ | Some .x = x₂ , (refl , {!!})
+  -- lem-idsub x d () | Some x₁ | None
+  -- lem-idsub x₁ x refl | None | Some .x = {!!}
+  -- lem-idsub x d () | None | None
+
+  -- lem-idsub {Δ} {Γ} x d xd∈σ with (id Γ) x | Γ x
+  -- lem-idsub x .(X x) refl | Some x₁ | Some x₂ = x₂ , refl , TAVar {!!}
+  -- lem-idsub x d xd∈σ | Some x₁ | None = abort (somenotnone (! xd∈σ))
+  -- lem-idsub x .(X x) refl | None | Some x₁ = x₁ , refl , TAVar {!!}
+  -- lem-idsub x d xd∈σ | None | None = abort (somenotnone (! xd∈σ))
 
   lem-subweak : ∀{Δ Γ Γ' Δ' σ} → Δ , Γ ⊢ σ :s: Γ' → (Δ ∪ Δ') , Γ ⊢ σ :s: Γ'
   lem-subweak sub x d xd∈σ with sub x d xd∈σ
