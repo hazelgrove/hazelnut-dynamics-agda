@@ -285,7 +285,6 @@ module core where
     ECastProp : ∀{ Δ d τ} →
                 Δ ⊢ d err →
                 Δ ⊢ (< τ > d) err
-    EConst : ∀{ Δ τ } → Δ ⊢ (< τ > c) err
 
   -- contextual dynamics
 
@@ -316,7 +315,7 @@ module core where
 
   -- d is the result of filling the hole in ε with d'
   data _==_⟦_⟧ : (d : dhexp) (ε : ectx) (d' : dhexp) → Set where
-    FHConst : c == ⊙ ⟦ c ⟧
+    FHFinal : ∀{d} → d final → d == ⊙ ⟦ d ⟧
     FHAp1 : ∀{d1 d2 d2' ε} →
            d1 final →
            d2 == ε ⟦ d2' ⟧ →
@@ -336,6 +335,9 @@ module core where
     FHCast : ∀{ d d' ε τ } →
             d == ε ⟦ d' ⟧ →
             (< τ > d) == < τ > ε ⟦ d' ⟧
+    FHCastFinal : ∀{d τ} →
+                 d final →
+                 (< τ > d) == ⊙ ⟦ < τ > d ⟧
 
   -- instruction transition judgement
   data _⊢_→>_ : (Δ : hctx) (d d' : dhexp) → Set where

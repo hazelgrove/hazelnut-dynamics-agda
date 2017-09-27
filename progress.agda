@@ -7,7 +7,6 @@ open import lemmas-consistency
 open import canonical-forms
 
 module progress where
-
   -- this is a little bit of syntactic sugar to avoid many layer nested Inl
   -- and Inrs that you would get from the more literal transcription of the
   -- consequent of progress as:
@@ -22,17 +21,24 @@ module progress where
   progress : {Δ : hctx} {d : dhexp} {τ : htyp} →
              Δ , ∅ ⊢ d :: τ →
              ok d Δ
+  -- constants
   progress TAConst = V VConst
+
+  -- variables
   progress (TAVar x) = abort (somenotnone (! x))
+
+  -- lambdas
   progress (TALam D) = V VLam
+
+  -- applications
   progress (TAAp D1 x D2)
     with progress D1 | progress D2
   progress (TAAp TAConst () D2) | V VConst | _
-  progress (TAAp D1 MAArr D2) | V VLam | V x₁ = {!!}
-  progress (TAAp (TALam D1) MAArr D2) | V VLam | I x₁ = S {!!} -- (_ , Step (FAp1 (FVal VLam) {!!}) (ITLam (FIndet x₁)) {!!}) -- stuck on defining substitution
+  progress (TAAp {d2 = d2} D1 MAArr D2) | V (VLam {x = x} {d = d}) | V x₁ = S ([ d2 / x ] d , Step (FHAp1 (FVal VLam) {!!}) (ITLam (FVal x₁)) {!!} )
+  progress (TAAp {d2 = d2} D1 MAArr D2) | V (VLam {x = x} {d = d}) | I x₁ = S ([ d2 / x ] d , Step (FHAp1 (FVal VLam) {!!}) (ITLam (FIndet x₁)) {!!} )
+  progress (TAAp D1 x₂ D2) | V x | S x₁ = {!!}
   progress (TAAp D1 x₂ D2) | _   | E x₁ = E (EAp2 x₁)
   progress (TAAp D1 x₂ D2) | E x | _    = E (EAp1 x)
-  -- progress (TAAp D1 x₂ D2) | V x | S x₁ = {!!}
   progress (TAAp D1 x₂ D2) | I IEHole | V x₁ = I (IAp IEHole (FVal x₁))
   progress (TAAp D1 x₂ D2) | I (INEHole x) | V x₁ = I (IAp (INEHole x) (FVal x₁))
   progress (TAAp D1 x₃ D2) | I (IAp x x₁) | V x₂ = I (IAp (IAp x x₁) (FVal x₂))
@@ -40,27 +46,26 @@ module progress where
   progress (TAAp D1 x₂ D2) | I x | I x₁ = I (IAp x (FIndet x₁))
   progress (TAAp {d1 = d1} D1 x₄ D2) | _ | S (d , Step x₁ x₂ x₃) = S ((d1 ∘ d) , (Step {!!} (ITLam (FIndet {!!})) {!!}))
   progress (TAAp {d2 = d2} D1 x₂ D2) | S (π1 , π2) | _ = S ((π1 ∘ d2) , {!!})
-  -- progress (TAAp D1 x₂ D2) | S x | I x₁ = {!!}
-  -- progress (TAAp D1 x₂ D2) | S x | S x₁ = {!!}
+
+  -- empty holes
   progress (TAEHole {m = ✓} x x₁) = I IEHole
   progress (TAEHole {m = ✗} x x₁) = S (_ , Step FHEHole ITEHole FHEHole)
+
+  -- non-empty holes
   progress (TANEHole x D x₁)
     with progress D
   progress (TANEHole {m = ✓} x₁ D x₂) | V v = I (INEHole (FVal v))
-  progress (TANEHole {m = ✗} x₁ D x₂) | V v = S {!!} -- S (_ , Step FDot (ITNEHole (FVal v)) FDot)
+  progress (TANEHole {m = ✗} x₁ D x₂) | V v = S ( _ , Step (FHNEHoleFinal (FVal v)) (ITNEHole (FVal v)) FHNEHoleEvaled)
   progress (TANEHole {m = ✓} x₁ D x₂) | I x = I (INEHole (FIndet x))
-  progress (TANEHole {m = ✗} x₁ D x₂) | I x = S {!!} -- S (_ , Step FDot (ITNEHole (FIndet x)) FDot)
+  progress (TANEHole {m = ✗} x₁ D x₂) | I x = S ({!!} , {!!})
   progress (TANEHole x₁ D x₂) | E x = E (ENEHole x)
   progress (TANEHole x₃ D x₄) | S (d , Step x x₁ x₂) = S {!!} --  S (_ , (Step (FNEHole x) x₁ (FNEHole x₂)))
+
+  -- casts
   progress (TACast D x)
     with progress D
-  progress (TACast TAConst TCRefl)  | V VConst = E EConst
-  progress (TACast TAConst TCHole2) | V VConst = E EConst
-  progress (TACast D x₁) | V VLam
-    with invert-lam D
-  progress (TACast D TCRefl)        | V VLam | τ1 , τ2 , refl = {!!}
-  progress (TACast D TCHole2)       | V VLam | τ1 , τ2 , refl = {!!}
-  progress (TACast D (TCArr x₁ x₂)) | V VLam | τ1 , τ2 , refl = {!!}
+  progress (TACast TAConst con) | V VConst = S (c , Step (FHCastFinal (FVal VConst)) (ITCast (FVal VConst) TAConst con) (FHFinal (FVal VConst)))
+  progress (TACast D m) | V VLam = S (_ , Step (FHCastFinal (FVal VLam)) (ITCast (FVal VLam) D m) (FHFinal (FVal VLam)))
   progress (TACast D x₁) | I x = I (ICast x)
   progress (TACast D x₁) | E x = E (ECastProp x)
   progress (TACast D x₃) | S (d , Step x x₁ x₂) = S (_ , Step (FHCast x) x₁ (FHCast x₂))
