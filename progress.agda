@@ -33,18 +33,18 @@ module progress where
   -- applications
   progress (TAAp D1 x D2)
     with progress D1 | progress D2
+    -- left applicand value
   progress (TAAp TAConst () D2) | V VConst | _
   progress (TAAp {d2 = d2} D1 MAArr D2) | V (VLam {x = x} {d = d}) | V x₁ = S ([ d2 / x ] d , Step (FHAp1 (FVal VLam) {!!}) (ITLam (FVal x₁)) {!!} )
   progress (TAAp {d2 = d2} D1 MAArr D2) | V (VLam {x = x} {d = d}) | I x₁ = S ([ d2 / x ] d , Step (FHAp1 (FVal VLam) {!!}) (ITLam (FIndet x₁)) {!!} )
-  progress (TAAp D1 x₂ D2) | V x | S x₁ = {!!}
+    -- errors propagate
   progress (TAAp D1 x₂ D2) | _   | E x₁ = E (EAp2 x₁)
   progress (TAAp D1 x₂ D2) | E x | _    = E (EAp1 x)
-  progress (TAAp D1 x₂ D2) | I IEHole | V x₁ = I (IAp IEHole (FVal x₁))
-  progress (TAAp D1 x₂ D2) | I (INEHole x) | V x₁ = I (IAp (INEHole x) (FVal x₁))
-  progress (TAAp D1 x₃ D2) | I (IAp x x₁) | V x₂ = I (IAp (IAp x x₁) (FVal x₂))
-  progress (TAAp D1 x₂ D2) | I (ICast x) | V x₁ = I (IAp (ICast x) (FVal x₁))
+    -- indeterminates
+  progress (TAAp D1 x₂ D2) | I i | V v = I (IAp i  (FVal v))
   progress (TAAp D1 x₂ D2) | I x | I x₁ = I (IAp x (FIndet x₁))
-  progress (TAAp {d1 = d1} D1 x₄ D2) | _ | S (d , Step x₁ x₂ x₃) = S ((d1 ∘ d) , (Step {!!} (ITLam (FIndet {!!})) {!!}))
+    -- either applicand steps
+  progress (TAAp {d1 = d1} D1 x₄ D2) | _ | S (d , Step x₁ x₂ x₃) = S ((d1 ∘ d) , {!!})
   progress (TAAp {d2 = d2} D1 x₂ D2) | S (π1 , π2) | _ = S ((π1 ∘ d2) , {!!})
 
   -- empty holes
@@ -57,9 +57,9 @@ module progress where
   progress (TANEHole {m = ✓} x₁ D x₂) | V v = I (INEHole (FVal v))
   progress (TANEHole {m = ✗} x₁ D x₂) | V v = S ( _ , Step (FHNEHoleFinal (FVal v)) (ITNEHole (FVal v)) FHNEHoleEvaled)
   progress (TANEHole {m = ✓} x₁ D x₂) | I x = I (INEHole (FIndet x))
-  progress (TANEHole {m = ✗} x₁ D x₂) | I x = {!!}
+  progress (TANEHole {m = ✗} x₁ D x₂) | I x = S (_ , Step (FHNEHoleFinal (FIndet x)) (ITNEHole (FIndet x)) FHNEHoleEvaled )
   progress (TANEHole x₁ D x₂) | E x = E (ENEHole x)
-  progress (TANEHole x₃ D x₄) | S (d , Step x x₁ x₂) = S {!!} --  S (_ , (Step (FNEHole x) x₁ (FNEHole x₂)))
+  progress (TANEHole {d = d} {u = u} {σ = σ} {m = m} x₃ D x₄) | S (d' , Step x x₁ x₂) = S ( ⦇ d' ⦈⟨ u , σ , m ⟩ , {!!}) -- maybe depends on m
 
   -- casts
   progress (TACast D x)
