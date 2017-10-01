@@ -260,7 +260,6 @@ module core where
       IEHole : ∀{u σ} → ⦇⦈⟨ u , σ , ✓ ⟩ indet
       INEHole : ∀{d u σ} → d final → ⦇ d ⦈⟨ u , σ , ✓ ⟩ indet
       IAp : ∀{d1 d2} → d1 indet → d2 final → (d1 ∘ d2) indet
-      ICast : ∀{d τ} → d indet → (< τ > d) indet
 
     -- final
     data _final : (d : dhexp) → Set where

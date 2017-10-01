@@ -66,6 +66,6 @@ module progress where
     with progress D
   progress (TACast TAConst con) | V VConst = S (c , Step (FHCastFinal (FVal VConst)) (ITCast (FVal VConst) TAConst con) (FHFinal (FVal VConst)))
   progress (TACast D m) | V VLam = S (_ , Step (FHCastFinal (FVal VLam)) (ITCast (FVal VLam) D m) (FHFinal (FVal VLam)))
-  progress (TACast D x₁) | I x = I (ICast x)
+  progress (TACast D x₁) | I x = S {!!}
   progress (TACast D x₁) | E x = E (ECastProp x)
   progress (TACast D x₃) | S (d , Step x x₁ x₂) = S (_ , Step (FHCast x) x₁ (FHCast x₂))
