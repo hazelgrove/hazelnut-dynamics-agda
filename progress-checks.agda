@@ -69,13 +69,15 @@ module progress-checks where
   is (INEHole x) (_ , Step FHNEHoleEvaled () FHNEHoleEvaled)
   is (INEHole x) (_ , Step FHNEHoleEvaled () (FHNEHoleFinal x₁))
   is (INEHole x) (_ , Step FHNEHoleEvaled () (FHCastFinal x₁))
-  is (IAp i x) (d' , Step p q r) = {!p r!}
+  is (IAp i x) (d' , Step p q r) = {!!}
 
   -- errors and expressions that step are disjoint
   es : ∀{d Δ} → Δ ⊢ d err → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
   es (ECastError x x₁) (d' , Step (FHFinal (FVal ())) x₃ x₄)
   es (ECastError x x₁) (d' , Step (FHFinal (FIndet ())) x₃ x₄)
-  es (ECastError x x₁) (_ , Step (FHCast x₂) x₃ (FHCast x₄)) = {!x₃!}
+--  es (ECastError x x₁) (_ , Step (FHCast x₂) x₃ (FHCast x₄)) = {!x₂!}
+  es (ECastError x x₁) (_ , Step (FHCast x₂) x₃ (FHCast x₄)) = {!x₂!}
+
   es (ECastError x x₁) (d' , Step (FHCastFinal (FVal x₂)) (ITCast x₃ x₄ x₅) x₆)
     with type-assignment-unicity x x₄
   ... | refl = ~apart x₁ x₅
@@ -87,7 +89,39 @@ module progress-checks where
   es (EAp1 e) (_ , Step (FHAp1 x x₁) x₂ (FHAp1 x₃ x₄)) = {!!}
   es (EAp1 e) (_ , Step (FHAp2 x) x₁ (FHAp2 x₂)) = {!!}
   es (EAp2 e) s = {!!}
-  es (ENEHole e) s = {!!}
+
+  --es (ENEHole e) x = {!e!}
+  es (ENEHole (ECastError x x₁)) (d' , Step (FHFinal x₂) x₃ x₄) = {!!}
+  es (ENEHole (ECastError x x₁)) (d' , Step FHNEHoleEvaled x₂ x₃) = {!!}
+  es (ENEHole (ECastError x x₁)) (d' , Step (FHNEHoleInside x₂) x₃ x₄) = {!!}
+  es (ENEHole (ECastError x x₁)) (d' , Step (FHNEHoleFinal x₂) x₃ x₄) = {!!}
+  es (ENEHole (EAp1 e)) (d' , Step (FHFinal x) x₁ x₂) = {!!}
+  es (ENEHole (EAp1 e)) (d' , Step FHNEHoleEvaled x₁ x₂) = {!!}
+  es (ENEHole (EAp1 e)) (d' , Step (FHNEHoleInside x) x₁ x₂) = {!!}
+  es (ENEHole (EAp1 e)) (d' , Step (FHNEHoleFinal x) x₁ x₂) = {!!}
+  es (ENEHole (EAp2 e)) (d' , Step (FHFinal x) x₁ x₂) = {!!}
+  es (ENEHole (EAp2 e)) (d' , Step FHNEHoleEvaled x₁ x₂) = {!!}
+  es (ENEHole (EAp2 e)) (d' , Step (FHNEHoleInside x) x₁ x₂) = {!!}
+  es (ENEHole (EAp2 e)) (d' , Step (FHNEHoleFinal x) x₁ x₂) = {!!}
+  es (ENEHole (ENEHole e)) (d' , Step (FHFinal x) x₁ x₂) = {!!}
+  es (ENEHole (ENEHole e)) (d' , Step FHNEHoleEvaled x₁ x₂) = {!!}
+  es (ENEHole (ENEHole e)) (d' , Step (FHNEHoleInside x) x₁ x₂) = {!!}
+  es (ENEHole (ENEHole e)) (d' , Step (FHNEHoleFinal x) x₁ x₂) = {!!}
+  es (ENEHole (ECastProp e)) (d' , Step (FHFinal x) x₁ x₂) = {!!}
+  es (ENEHole (ECastProp e)) (d' , Step FHNEHoleEvaled x₁ x₂) = {!!}
+  es (ENEHole (ECastProp e)) (d' , Step (FHNEHoleInside x) x₁ x₂) = {!!}
+  es (ENEHole (ECastProp e)) (d' , Step (FHNEHoleFinal x) x₁ x₂) = {!!}
+  -- es (ENEHole e) (d' , Step (FHFinal (FVal ())) x₁ x₂)
+  -- es (ENEHole e) (d' , Step (FHFinal (FIndet (INEHole x))) () x₂)
+  -- es (ENEHole e) (d' , Step FHNEHoleEvaled () x₂)
+  -- es (ENEHole e) (_ , Step (FHNEHoleInside x) x₁ (FHNEHoleInside x₂)) = {!!}
+  -- es (ENEHole e) (_ , Step (FHNEHoleFinal x) (ITNEHole x₁) (FHFinal (FVal ())))
+  -- es (ENEHole (ECastError x x₁)) (_ , Step (FHNEHoleFinal x₂) (ITNEHole x₃) (FHFinal (FIndet (INEHole x₄)))) = {!x₁!}
+  -- es (ENEHole (EAp1 e)) (_ , Step (FHNEHoleFinal x) (ITNEHole x₁) (FHFinal (FIndet (INEHole x₂)))) = {!!}
+  -- es (ENEHole (EAp2 e)) (_ , Step (FHNEHoleFinal x) (ITNEHole x₁) (FHFinal (FIndet (INEHole x₂)))) = {!!}
+  -- es (ENEHole (ENEHole e)) (_ , Step (FHNEHoleFinal x) (ITNEHole x₁) (FHFinal (FIndet (INEHole x₂)))) = {!!}
+  -- es (ENEHole (ECastProp e)) (_ , Step (FHNEHoleFinal x) (ITNEHole x₁) (FHFinal (FIndet (INEHole x₂)))) = {!!}
+  -- es (ENEHole e) (_ , Step (FHNEHoleFinal x) (ITNEHole x₁) FHNEHoleEvaled) = {!!}
   es (ECastProp e) (d' , Step (FHFinal (FVal x)) (ITCast x₁ x₂ x₃) x₄) = {!!}
   es (ECastProp e) (d' , Step (FHFinal (FIndet x)) x₁ x₂) = {!!}
   es (ECastProp e) (d' , Step (FHCast x) x₁ x₂) = {!!}
