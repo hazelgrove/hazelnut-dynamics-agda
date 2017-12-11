@@ -20,7 +20,7 @@ open import type-assignment-unicity
 -- open import progress
 -- open import progress-checks
 
--- open import complete-preservation
+open import complete-preservation
 -- open import complete-progress
 
 -- open import typed-expansion
