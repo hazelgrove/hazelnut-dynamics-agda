@@ -47,29 +47,38 @@ module progress-checks where
   ie (IAp i (FVal x)) (EAp2 e) = ve x e
   ie (IAp i (FIndet x)) (EAp2 e) = ie x e
 
+
+  -- todo: these are bad names
+  lem2 : ∀{d Δ d'} → d indet → Δ ⊢ d →> d' → ⊥
+  lem2 IEHole ()
+  lem2 (INEHole x) ()
+  lem2 (IAp () x₁) (ITLam x₂)
+
+  lem3 : ∀{d Δ d'} → d val → Δ ⊢ d →> d' → ⊥
+  lem3 VConst ()
+  lem3 VLam ()
+
+  lem1 : ∀{d Δ d'} → d final → Δ ⊢ d →> d' → ⊥
+  lem1 (FVal x) st = lem3 x st
+  lem1 (FIndet x) st = lem2 x st
+
   -- indeterminates and expressions that step are disjoint
   is : ∀{d Δ} → d indet → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
-  is IEHole (d0' , Step (FHFinal x) () (FHFinal x₁))
-  is IEHole (d0' , Step FHEHole () (FHFinal x))
-  is IEHole (_ , Step (FHFinal x) () FHEHole)
+  is IEHole (_ , Step (FHFinal x) q _) = lem1 x q
+  is IEHole (_ , Step FHEHole () (FHFinal x))
   is IEHole (_ , Step FHEHole () FHEHole)
-  is IEHole (_ , Step (FHFinal x) () FHNEHoleEvaled)
   is IEHole (_ , Step FHEHole () FHNEHoleEvaled)
-  is IEHole (_ , Step (FHFinal x) () (FHNEHoleFinal x₁))
   is IEHole (_ , Step FHEHole () (FHNEHoleFinal x))
-  is IEHole (_ , Step (FHFinal x) () (FHCastFinal x₁))
   is IEHole (_ , Step FHEHole () (FHCastFinal x))
-  is (INEHole x) (d , Step (FHFinal x₁) () (FHFinal x₂))
-  is (INEHole x) (_ , Step (FHFinal x₁) () FHEHole)
-  is (INEHole x) (_ , Step (FHFinal x₁) () FHNEHoleEvaled)
-  is (INEHole x) (_ , Step (FHFinal x₁) () (FHNEHoleFinal x₂))
-  is (INEHole x) (_ , Step (FHFinal x₁) () (FHCastFinal x₂))
-  is (INEHole x) (d , Step FHNEHoleEvaled () (FHFinal x₁))
+  is (INEHole x) (_ , Step (FHFinal x₁) q _) = lem1 x₁ q
+  is (INEHole x) (_ , Step FHNEHoleEvaled () (FHFinal x₁))
   is (INEHole x) (_ , Step FHNEHoleEvaled () FHEHole)
   is (INEHole x) (_ , Step FHNEHoleEvaled () FHNEHoleEvaled)
   is (INEHole x) (_ , Step FHNEHoleEvaled () (FHNEHoleFinal x₁))
   is (INEHole x) (_ , Step FHNEHoleEvaled () (FHCastFinal x₁))
-  is (IAp i x) (d' , Step p q r) = {!!}
+  is (IAp i x) (_ , Step (FHFinal x₁) q _) = lem1 x₁ q
+  is (IAp i x) (_ , Step (FHAp1 x₁ p) q (FHAp1 x₂ r)) = {!!}
+  is (IAp i x) (_ , Step (FHAp2 p) q (FHAp2 r)) = {!!}
 
   -- errors and expressions that step are disjoint
   es : ∀{d Δ} → Δ ⊢ d err → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
