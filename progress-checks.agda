@@ -104,15 +104,15 @@ module progress-checks where
   -- ap2 cases
   es (EAp2 er) (d' , Step (FHFinal x) x₁ x₂) = lem1 x x₁
   es (EAp2 er) (_ , Step (FHAp1 x x₁) x₂ (FHAp1 x₃ x₄)) = es er (_ , Step x₁ x₂ x₄)
-  es (EAp2 er) (d' , Step (FHAp2 x) x₁ x₂) = {!!}
+  es (EAp2 er) (_ , Step (FHAp2 x) x₁ (FHAp2 x₂)) = {!!}
 
   -- nehole cases
   es (ENEHole er) (d' , Step (FHFinal x) x₁ x₂) = lem1 x x₁
-  es (ENEHole er) (d' , Step FHNEHoleEvaled x₁ x₂) = {!!}
-  es (ENEHole er) (d' , Step (FHNEHoleInside x) x₁ x₂) = {!!}
-  es (ENEHole er) (d' , Step (FHNEHoleFinal x) x₁ x₂) = {!!}
+  es (ENEHole er) (d' , Step FHNEHoleEvaled () x₂)
+  es (ENEHole er) (_ , Step (FHNEHoleInside x) x₁ (FHNEHoleInside x₂)) = es er (_ , Step x x₁ x₂)
+  es (ENEHole er) (d' , Step (FHNEHoleFinal x) x₁ x₂) = fe x er
 
   -- castprop cases
   es (ECastProp er) (d' , Step (FHFinal x) x₁ x₂) = lem1 x x₁
-  es (ECastProp er) (d' , Step (FHCast x) x₁ x₂) = {!!}
-  es (ECastProp er) (d' , Step (FHCastFinal x) x₁ x₂) = {!!}
+  es (ECastProp er) (_ , Step (FHCast x) x₁ (FHCast x₂)) = es er (_ , Step x x₁ x₂)
+  es (ECastProp er) (d' , Step (FHCastFinal x) x₁ x₂) = fe x er
