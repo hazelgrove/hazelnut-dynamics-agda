@@ -77,8 +77,9 @@ module progress-checks where
   is (INEHole x) (_ , Step FHNEHoleEvaled () (FHNEHoleFinal x₁))
   is (INEHole x) (_ , Step FHNEHoleEvaled () (FHCastFinal x₁))
   is (IAp i x) (_ , Step (FHFinal x₁) q _) = lem1 x₁ q
-  is (IAp i x) (_ , Step (FHAp1 x₁ p) q (FHAp1 x₂ r)) = {!!}
-  is (IAp i x) (_ , Step (FHAp2 p) q (FHAp2 r)) = {!!}
+  is (IAp i (FVal x)) (_ , Step (FHAp1 x₁ p) q (FHAp1 x₂ r)) = vs x (_ , Step p q r)
+  is (IAp i (FIndet x)) (_ , Step (FHAp1 x₁ p) q (FHAp1 x₂ r)) = is x (_ , Step p q r)
+  is (IAp i x) (_ , Step (FHAp2 p) q (FHAp2 r)) = is i (_ , (Step p q r))
 
 
 
