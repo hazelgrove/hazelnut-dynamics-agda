@@ -80,6 +80,8 @@ module progress-checks where
   is (IAp i x) (_ , Step (FHAp1 x₁ p) q (FHAp1 x₂ r)) = {!!}
   is (IAp i x) (_ , Step (FHAp2 p) q (FHAp2 r)) = {!!}
 
+
+
   -- errors and expressions that step are disjoint
   es : ∀{d Δ} → Δ ⊢ d err → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
   es (ECastError x x₁) (d' , Step (FHFinal (FVal ())) x₃ x₄)

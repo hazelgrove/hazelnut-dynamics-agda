@@ -236,7 +236,7 @@ module core where
              τ ~ τ' →
              Δ , Γ ⊢ < τ > d :: τ
 
-  -- substitution
+  -- substitution;; todo: maybe get a premise that it's final; analagous to "value substitution"
   [_/_]_ : dhexp → Nat → dhexp → dhexp
   [ d / y ] c = c
   [ d / y ] X x
@@ -246,7 +246,7 @@ module core where
   [ d / y ] (·λ x [ x₁ ] d') = ·λ x [ x₁ ] ( [ d / y ] d') -- TODO: i *think* barendrecht's saves us here, or at least i want it to. may need to reformulat this as a relation --> set
   [ d / y ] ⦇⦈⟨ u , σ , m ⟩ = ⦇⦈⟨ u , σ , m ⟩
   [ d / y ] ⦇ d' ⦈⟨ u , σ , m ⟩ =  ⦇ [ d / y ] d' ⦈⟨ u , σ , m ⟩
-  [ d / y ] (d1 ∘ d2) =  ([ d / y ] d1) ∘ ([ d / y ] d2)
+  [ d / y ] (d1 ∘ d2) = ([ d / y ] d1) ∘ ([ d / y ] d2)
   [ d / y ] (< τ > d') = < τ > ([ d / y ] d')
 
   -- value
@@ -357,6 +357,6 @@ module core where
   data _⊢_↦_ : (Δ : hctx) (d d' : dhexp) → Set where
     Step : ∀{ d d0 d' d0' Δ ε} →
            d == ε ⟦ d0 ⟧ →
-           Δ ⊢ d0 →> d0' → -- should this Δ be ∅?
-           d' == ε ⟦ d0' ⟧ → -- why is this the same ε
+           Δ ⊢ d0 →> d0' →
+           d' == ε ⟦ d0' ⟧ →
            Δ ⊢ d ↦ d'
