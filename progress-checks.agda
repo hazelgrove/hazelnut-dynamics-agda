@@ -102,7 +102,7 @@ module progress-checks where
   -- ap2 cases
   es (EAp2 er) (d' , Step (FHFinal x) x₁ x₂) = lem1 x x₁
   es (EAp2 er) (_ , Step (FHAp1 x x₁) x₂ (FHAp1 x₃ x₄)) = es er (_ , Step x₁ x₂ x₄)
-  es (EAp2 er) (_ , Step (FHAp2 x) x₁ (FHAp2 x₂)) = {!!}
+  es (EAp2 er) (_ , Step (FHAp2 x) x₁ (FHAp2 x₂)) = {!!} -- es er (_ , (Step {!!} x₁ x₂))
 
   -- nehole cases
   es (ENEHole er) (d' , Step (FHFinal x) x₁ x₂) = lem1 x x₁
