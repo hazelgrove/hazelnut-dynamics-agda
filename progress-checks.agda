@@ -27,32 +27,35 @@ module progress-checks where
 
   -- values and expressions that step are disjoint
   vs : ∀{d Δ} → d val → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
-  vs VConst (d , Step (FHFinal x) () (FHFinal x₂))
-  vs VConst (_ , Step (FHFinal x) () FHEHole)
-  vs VConst (_ , Step (FHFinal x) () FHNEHoleEvaled)
-  vs VConst (_ , Step (FHFinal x) () (FHNEHoleFinal x₂))
-  vs VConst (_ , Step (FHFinal x) () (FHCastFinal x₂))
-  vs VLam (d , Step (FHFinal x₁) () (FHFinal x₃))
-  vs VLam (_ , Step (FHFinal x₁) () FHEHole)
-  vs VLam (_ , Step (FHFinal x₁) () FHNEHoleEvaled)
-  vs VLam (_ , Step (FHFinal x₁) () (FHNEHoleFinal x₃))
-  vs VLam (_ , Step (FHFinal x₁) () (FHCastFinal x₃))
+  vs VConst (_ , Step (FHFinal _) () (FHFinal _))
+  vs VConst (_ , Step (FHFinal _) () FHEHole)
+  vs VConst (_ , Step (FHFinal _) () FHNEHoleEvaled)
+  vs VConst (_ , Step (FHFinal _) () (FHNEHoleFinal _))
+  vs VConst (_ , Step (FHFinal _) () (FHCastFinal _))
+  vs VLam (_ , Step (FHFinal _) () (FHFinal _))
+  vs VLam (_ , Step (FHFinal _) () FHEHole)
+  vs VLam (_ , Step (FHFinal _) () FHNEHoleEvaled)
+  vs VLam (_ , Step (FHFinal _) () (FHNEHoleFinal _))
+  vs VLam (_ , Step (FHFinal _) () (FHCastFinal _))
 
-  -- indeterminates and errors are disjoint
-  ie : ∀{d Δ} → d indet → Δ ⊢ d err → ⊥
-  ie IEHole ()
-  ie (INEHole (FVal x)) (ENEHole e) = ve x e
-  ie (INEHole (FIndet x)) (ENEHole e) = ie x e
-  ie (IAp i x) (EAp1 e) = ie i e
-  ie (IAp i (FVal x)) (EAp2 e) = ve x e
-  ie (IAp i (FIndet x)) (EAp2 e) = ie x e
+  mutual
+    -- indeterminates and errors are disjoint
+    ie : ∀{d Δ} → d indet → Δ ⊢ d err → ⊥
+    ie IEHole ()
+    ie (INEHole x) (ENEHole e) = fe x e
+    ie (IAp i x) (EAp1 e) = ie i e
+    ie (IAp i x) (EAp2 e) = fe x e
 
+    -- final expressions are not errors (not one of the 6 cases for progress, just a convenience)
+    fe : ∀{d Δ} → d final → Δ ⊢ d err → ⊥
+    fe (FVal x) er = ve x er
+    fe (FIndet x) er = ie x er
 
   -- todo: these are bad names
   lem2 : ∀{d Δ d'} → d indet → Δ ⊢ d →> d' → ⊥
   lem2 IEHole ()
-  lem2 (INEHole x) ()
-  lem2 (IAp () x₁) (ITLam x₂)
+  lem2 (INEHole _) ()
+  lem2 (IAp () _) (ITLam _)
 
   lem3 : ∀{d Δ d'} → d val → Δ ⊢ d →> d' → ⊥
   lem3 VConst ()
@@ -65,27 +68,22 @@ module progress-checks where
   -- indeterminates and expressions that step are disjoint
   is : ∀{d Δ} → d indet → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
   is IEHole (_ , Step (FHFinal x) q _) = lem1 x q
-  is IEHole (_ , Step FHEHole () (FHFinal x))
+  is IEHole (_ , Step FHEHole () (FHFinal _))
   is IEHole (_ , Step FHEHole () FHEHole)
   is IEHole (_ , Step FHEHole () FHNEHoleEvaled)
-  is IEHole (_ , Step FHEHole () (FHNEHoleFinal x))
-  is IEHole (_ , Step FHEHole () (FHCastFinal x))
-  is (INEHole x) (_ , Step (FHFinal x₁) q _) = lem1 x₁ q
-  is (INEHole x) (_ , Step FHNEHoleEvaled () (FHFinal x₁))
-  is (INEHole x) (_ , Step FHNEHoleEvaled () FHEHole)
-  is (INEHole x) (_ , Step FHNEHoleEvaled () FHNEHoleEvaled)
-  is (INEHole x) (_ , Step FHNEHoleEvaled () (FHNEHoleFinal x₁))
-  is (INEHole x) (_ , Step FHNEHoleEvaled () (FHCastFinal x₁))
-  is (IAp i x) (_ , Step (FHFinal x₁) q _) = lem1 x₁ q
-  is (IAp i (FVal x)) (_ , Step (FHAp1 x₁ p) q (FHAp1 x₂ r)) = vs x (_ , Step p q r)
-  is (IAp i (FIndet x)) (_ , Step (FHAp1 x₁ p) q (FHAp1 x₂ r)) = is x (_ , Step p q r)
+  is IEHole (_ , Step FHEHole () (FHNEHoleFinal _))
+  is IEHole (_ , Step FHEHole () (FHCastFinal _))
+  is (INEHole _) (_ , Step (FHFinal x₁) q _) = lem1 x₁ q
+  is (INEHole _) (_ , Step FHNEHoleEvaled () (FHFinal _))
+  is (INEHole _) (_ , Step FHNEHoleEvaled () FHEHole)
+  is (INEHole _) (_ , Step FHNEHoleEvaled () FHNEHoleEvaled)
+  is (INEHole _) (_ , Step FHNEHoleEvaled () (FHNEHoleFinal _))
+  is (INEHole _) (_ , Step FHNEHoleEvaled () (FHCastFinal _))
+  is (IAp _ _) (_ , Step (FHFinal x₁) q _) = lem1 x₁ q
+  is (IAp _ (FVal x)) (_ , Step (FHAp1 _ p) q (FHAp1 _ r)) = vs x (_ , Step p q r)
+  is (IAp _ (FIndet x)) (_ , Step (FHAp1 _ p) q (FHAp1 _ r)) = is x (_ , Step p q r)
   is (IAp i x) (_ , Step (FHAp2 p) q (FHAp2 r)) = is i (_ , (Step p q r))
 
-
-  -- final expressions are not errors (not one of the 6 cases for progress)
-  fe : ∀{d Δ} → d final → Δ ⊢ d err → ⊥
-  fe (FVal x) er = ve x er
-  fe (FIndet x) er = ie x er
 
   -- errors and expressions that step are disjoint
   es : ∀{d Δ} → Δ ⊢ d err → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
