@@ -268,7 +268,7 @@ module core where
 
   -- error
   data _⊢_err : (Δ : hctx) (d : dhexp) → Set where
-    ECastError : ∀{ Δ d τ1 τ2 } →
+    ECastError : ∀{ Δ d τ1 τ2 } → -- lol hax: d final?
                  Δ , ∅ ⊢ d :: τ2 →
                  τ1 ~̸ τ2 →
                  Δ ⊢ (< τ1 > d) err
@@ -276,6 +276,7 @@ module core where
            Δ ⊢ d1 err →
            Δ ⊢ (d1 ∘ d2) err
     EAp2 : ∀{ Δ d1 d2} →
+           d1 final →
            Δ ⊢ d2 err →
            Δ ⊢ (d1 ∘ d2) err
     ENEHole : ∀{ Δ d u σ m} →

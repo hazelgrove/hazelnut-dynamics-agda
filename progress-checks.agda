@@ -44,7 +44,7 @@ module progress-checks where
     ie IEHole ()
     ie (INEHole x) (ENEHole e) = fe x e
     ie (IAp i x) (EAp1 e) = ie i e
-    ie (IAp i x) (EAp2 e) = fe x e
+    ie (IAp i x) (EAp2 y e) = fe x e
 
     -- final expressions are not errors (not one of the 6 cases for progress, just a convenience)
     fe : ∀{d Δ} → d final → Δ ⊢ d err → ⊥
@@ -84,6 +84,20 @@ module progress-checks where
   is (IAp _ (FIndet x)) (_ , Step (FHAp1 _ p) q (FHAp1 _ r)) = is x (_ , Step p q r)
   is (IAp i x) (_ , Step (FHAp2 p) q (FHAp2 r)) = is i (_ , (Step p q r))
 
+  lem4 : ∀{d ε x} → d final → d == ε ⟦ x ⟧ → x final
+  lem4 f (FHFinal x) = x
+  lem4 (FVal ()) (FHAp1 x₂ sub)
+  lem4 (FIndet (IAp x₁ x₂)) (FHAp1 x₃ sub) = lem4 x₂ sub
+  lem4 (FVal ()) (FHAp2 sub)
+  lem4 (FIndet (IAp x₁ x₂)) (FHAp2 sub) = lem4 (FIndet x₁) sub
+  lem4 f FHEHole = f
+  lem4 f FHNEHoleEvaled = f
+  lem4 (FVal ()) (FHNEHoleInside sub)
+  lem4 (FIndet ()) (FHNEHoleInside sub)
+  lem4 f (FHNEHoleFinal x) = f
+  lem4 (FVal ()) (FHCast sub)
+  lem4 (FIndet ()) (FHCast sub)
+  lem4 f (FHCastFinal x) = f
 
   -- errors and expressions that step are disjoint
   es : ∀{d Δ} → Δ ⊢ d err → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
@@ -100,9 +114,9 @@ module progress-checks where
   es (EAp1 er) (_ , Step (FHAp2 x) x₁ (FHAp2 x₂)) = es er (_ , Step x x₁ x₂)
 
   -- ap2 cases
-  es (EAp2 er) (d' , Step (FHFinal x) x₁ x₂) = lem1 x x₁
-  es (EAp2 er) (_ , Step (FHAp1 x x₁) x₂ (FHAp1 x₃ x₄)) = es er (_ , Step x₁ x₂ x₄)
-  es (EAp2 er) (_ , Step (FHAp2 x) x₁ (FHAp2 x₂)) = {!!} -- es er (_ , (Step {!!} x₁ x₂))
+  es (EAp2 a er) (d' , Step (FHFinal x) x₁ x₂) = lem1 x x₁
+  es (EAp2 a er) (_ , Step (FHAp1 x x₁) x₂ (FHAp1 x₃ x₄)) = es er (_ , Step x₁ x₂ x₄)
+  es (EAp2 a er) (_ , Step (FHAp2 x) x₁ (FHAp2 x₂)) = lem1 (lem4 a x) x₁
 
   -- nehole cases
   es (ENEHole er) (d' , Step (FHFinal x) x₁ x₂) = lem1 x x₁
