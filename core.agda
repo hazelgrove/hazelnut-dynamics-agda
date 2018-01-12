@@ -252,8 +252,8 @@ module core where
   mutual
     -- indeterminate
     data _indet : (d : dhexp) → Set where
-      IEHole : ∀{u σ} → ⦇⦈⟨ u , σ  ⟩ indet
-      INEHole : ∀{d u σ} → d final → ⦇ d ⦈⟨ u , σ  ⟩ indet
+      IEHole : ∀{u σ} → ⦇⦈⟨ u , σ ⟩ indet
+      INEHole : ∀{d u σ} → d final → ⦇ d ⦈⟨ u , σ ⟩ indet
       IAp : ∀{d1 d2} → d1 indet → d2 final → (d1 ∘ d2) indet
 
     -- final
@@ -319,9 +319,7 @@ module core where
            d1 == ε ⟦ d1' ⟧ →
            (d1 ∘ d2) == (ε ∘₂ d2) ⟦ d1' ⟧
     FHEHole : ∀{u σ} → ⦇⦈⟨ (u , σ ) ⟩ == ⊙ ⟦ ⦇⦈⟨ (u , σ ) ⟩ ⟧
-    FHNEHoleEvaled : ∀{ d u σ} →
-              ⦇ d ⦈⟨ (u , σ ) ⟩ ==  ⊙ ⟦ ⦇ d ⦈⟨ (u , σ ) ⟩ ⟧
-    FHNEHoleInside : ∀{ d d' ε u σ} →
+    FHNEHole : ∀{ d d' ε u σ} →
               d == ε ⟦ d' ⟧ →
               ⦇ d ⦈⟨ (u , σ ) ⟩ ==  ⦇ ε ⦈⟨ (u , σ ) ⟩ ⟦ d' ⟧
     FHNEHoleFinal : ∀{ d u σ} →
@@ -344,11 +342,6 @@ module core where
              Δ , ∅ ⊢ d :: τ2 →
              τ1 ~ τ2 → -- maybe?
              Δ ⊢ < τ1 > d →> d
-    ITEHole : ∀{ Δ u σ} →
-              Δ ⊢ ⦇⦈⟨ u , σ  ⟩ →> ⦇⦈⟨ u , σ  ⟩
-    ITNEHole : ∀{ Δ u σ d } →
-               d final →
-               Δ ⊢ ⦇ d ⦈⟨ u , σ  ⟩ →> ⦇ d ⦈⟨ u , σ  ⟩
 
   data _⊢_↦_ : (Δ : hctx) (d d' : dhexp) → Set where
     Step : ∀{ d d0 d' d0' Δ ε} →
