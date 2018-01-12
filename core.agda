@@ -23,11 +23,6 @@ module core where
     ⦇_⦈[_]  : hexp → Nat → hexp
     _∘_     : hexp → hexp → hexp
 
-  -- used to mark which dhexp holes have been evaluated
-  data mark : Set where
-    ✓ : mark
-    ✗ : mark
-
   mutual
     subst : Set -- todo: no idea if this is right; mutual thing is weird
     subst = dhexp ctx
@@ -37,8 +32,8 @@ module core where
       c        : dhexp
       X        : Nat → dhexp
       ·λ_[_]_  : Nat → htyp → dhexp → dhexp
-      ⦇⦈⟨_⟩    : (Nat × subst × mark) → dhexp
-      ⦇_⦈⟨_⟩   : dhexp → (Nat × subst × mark) → dhexp
+      ⦇⦈⟨_⟩    : (Nat × subst) → dhexp
+      ⦇_⦈⟨_⟩   : dhexp → (Nat × subst) → dhexp
       _∘_      : dhexp → dhexp → dhexp
       <_>_     : htyp → dhexp → dhexp
 
@@ -170,10 +165,10 @@ module core where
               Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2 ⊣ Δ2 →
               Γ ⊢ e1 ∘ e2 ⇒ τ ~> d1 ∘ d2 ⊣ (Δ1 ∪ Δ2)
       ESEHole : ∀{ Γ u } →
-                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , id Γ , ✗ ⟩ ⊣  ■ (u ::[ Γ ] ⦇⦈)
+                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , id Γ ⟩ ⊣  ■ (u ::[ Γ ] ⦇⦈)
       ESNEHole : ∀{ Γ e τ d u Δ } →
                  Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈⟨ u , id Γ , ✗ ⟩ ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈⟨ u , id Γ  ⟩ ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
       ESAsc1 : ∀ {Γ e τ d τ' Δ} →
                  Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                  (τ == τ' → ⊥) →
@@ -198,10 +193,10 @@ module core where
                   τ ~ τ' →
                   Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
       EAEHole : ∀{ Γ u τ  } →
-                Γ ⊢ ⦇⦈[ u ] ⇐ τ ~> ⦇⦈⟨ u , id Γ , ✗ ⟩ :: τ ⊣ ■ (u ::[ Γ ] τ)
+                Γ ⊢ ⦇⦈[ u ] ⇐ τ ~> ⦇⦈⟨ u , id Γ  ⟩ :: τ ⊣ ■ (u ::[ Γ ] τ)
       EANEHole : ∀{ Γ e u τ d τ' Δ  } →
                  Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈⟨ u , id Γ , ✗ ⟩ :: τ ⊣ (Δ ,, u ::[ Γ ] τ)
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈⟨ u , id Γ  ⟩ :: τ ⊣ (Δ ,, u ::[ Γ ] τ)
 
   mutual
     -- substitition type assignment
@@ -222,15 +217,15 @@ module core where
              τ1 ▸arr (τ2 ==> τ) →
              Δ , Γ ⊢ d2 :: τ2 →
              Δ , Γ ⊢ d1 ∘ d2 :: τ
-      TAEHole : ∀{ Δ Γ σ u Γ' τ m} →
+      TAEHole : ∀{ Δ Γ σ u Γ' τ} →
                 (u , (Γ' , τ)) ∈ Δ →
                 Δ , Γ ⊢ σ :s: Γ' →
-                Δ , Γ ⊢ ⦇⦈⟨ u , σ , m ⟩ :: τ
-      TANEHole : ∀ { Δ Γ d τ' Γ' u σ τ m} →
+                Δ , Γ ⊢ ⦇⦈⟨ u , σ ⟩ :: τ
+      TANEHole : ∀ { Δ Γ d τ' Γ' u σ τ } →
                  (u , (Γ' , τ)) ∈ Δ →
                  Δ , Γ ⊢ d :: τ' →
                  Δ , Γ ⊢ σ :s: Γ' →
-                 Δ , Γ ⊢ ⦇ d ⦈⟨ u , σ , m ⟩ :: τ
+                 Δ , Γ ⊢ ⦇ d ⦈⟨ u , σ ⟩ :: τ
       TACast : ∀{ Δ Γ d τ τ'} →
              Δ , Γ ⊢ d :: τ' →
              τ ~ τ' →
@@ -244,8 +239,8 @@ module core where
   [ d / y ] X .y | Inl refl = d
   [ d / y ] X x  | Inr neq = X y
   [ d / y ] (·λ x [ x₁ ] d') = ·λ x [ x₁ ] ( [ d / y ] d') -- TODO: i *think* barendrecht's saves us here, or at least i want it to. may need to reformulat this as a relation --> set
-  [ d / y ] ⦇⦈⟨ u , σ , m ⟩ = ⦇⦈⟨ u , σ , m ⟩
-  [ d / y ] ⦇ d' ⦈⟨ u , σ , m ⟩ =  ⦇ [ d / y ] d' ⦈⟨ u , σ , m ⟩
+  [ d / y ] ⦇⦈⟨ u , σ ⟩ = ⦇⦈⟨ u , σ ⟩
+  [ d / y ] ⦇ d' ⦈⟨ u , σ  ⟩ =  ⦇ [ d / y ] d' ⦈⟨ u , σ ⟩
   [ d / y ] (d1 ∘ d2) = ([ d / y ] d1) ∘ ([ d / y ] d2)
   [ d / y ] (< τ > d') = < τ > ([ d / y ] d')
 
@@ -257,8 +252,8 @@ module core where
   mutual
     -- indeterminate
     data _indet : (d : dhexp) → Set where
-      IEHole : ∀{u σ} → ⦇⦈⟨ u , σ , ✓ ⟩ indet
-      INEHole : ∀{d u σ} → d final → ⦇ d ⦈⟨ u , σ , ✓ ⟩ indet
+      IEHole : ∀{u σ} → ⦇⦈⟨ u , σ  ⟩ indet
+      INEHole : ∀{d u σ} → d final → ⦇ d ⦈⟨ u , σ  ⟩ indet
       IAp : ∀{d1 d2} → d1 indet → d2 final → (d1 ∘ d2) indet
 
     -- final
@@ -279,9 +274,9 @@ module core where
            d1 final →
            Δ ⊢ d2 err →
            Δ ⊢ (d1 ∘ d2) err
-    ENEHole : ∀{ Δ d u σ m} →
+    ENEHole : ∀{ Δ d u σ } →
            Δ ⊢ d err →
-           Δ ⊢ (⦇ d ⦈⟨ (u , σ , m)⟩) err
+           Δ ⊢ (⦇ d ⦈⟨ (u , σ)⟩) err
     ECastProp : ∀{ Δ d τ} →
                 Δ ⊢ d err →
                 Δ ⊢ (< τ > d) err
@@ -293,7 +288,7 @@ module core where
     ⊙ : ectx
     _∘₁_ : dhexp → ectx → ectx
     _∘₂_ : ectx → dhexp → ectx
-    ⦇_⦈⟨_⟩ : ectx → (Nat × subst × mark) → ectx
+    ⦇_⦈⟨_⟩ : ectx → (Nat × subst ) → ectx
     <_>_   : htyp → ectx → ectx
 
  --ε is an evaluation context
@@ -306,9 +301,9 @@ module core where
     ECAp2 : ∀{d ε} →
             ε evalctx →
             (ε ∘₂ d) evalctx
-    ECNEHole : ∀{ε m u σ} →
+    ECNEHole : ∀{ε u σ} →
                ε evalctx →
-               ⦇ ε ⦈⟨ u , σ , m ⟩ evalctx
+               ⦇ ε ⦈⟨ u , σ  ⟩ evalctx
     ECCast : ∀{ ε τ } →
              ε evalctx →
              (< τ > ε ) evalctx
@@ -323,15 +318,15 @@ module core where
     FHAp2 : ∀{d1 d1' d2 ε} →
            d1 == ε ⟦ d1' ⟧ →
            (d1 ∘ d2) == (ε ∘₂ d2) ⟦ d1' ⟧
-    FHEHole : ∀{u σ m} → ⦇⦈⟨ (u , σ , m) ⟩ == ⊙ ⟦ ⦇⦈⟨ (u , σ , m) ⟩ ⟧
+    FHEHole : ∀{u σ} → ⦇⦈⟨ (u , σ ) ⟩ == ⊙ ⟦ ⦇⦈⟨ (u , σ ) ⟩ ⟧
     FHNEHoleEvaled : ∀{ d u σ} →
-              ⦇ d ⦈⟨ (u , σ , ✓) ⟩ ==  ⊙ ⟦ ⦇ d ⦈⟨ (u , σ , ✓) ⟩ ⟧
+              ⦇ d ⦈⟨ (u , σ ) ⟩ ==  ⊙ ⟦ ⦇ d ⦈⟨ (u , σ ) ⟩ ⟧
     FHNEHoleInside : ∀{ d d' ε u σ} →
               d == ε ⟦ d' ⟧ →
-              ⦇ d ⦈⟨ (u , σ , ✗) ⟩ ==  ⦇ ε ⦈⟨ (u , σ , ✗) ⟩ ⟦ d' ⟧
+              ⦇ d ⦈⟨ (u , σ ) ⟩ ==  ⦇ ε ⦈⟨ (u , σ ) ⟩ ⟦ d' ⟧
     FHNEHoleFinal : ∀{ d u σ} →
               d final →
-              ⦇ d ⦈⟨ (u , σ , ✗) ⟩ ==  ⊙ ⟦ ⦇ d ⦈⟨ (u , σ , ✗) ⟩ ⟧
+              ⦇ d ⦈⟨ (u , σ ) ⟩ ==  ⊙ ⟦ ⦇ d ⦈⟨ (u , σ ) ⟩ ⟧
     FHCast : ∀{ d d' ε τ } →
             d == ε ⟦ d' ⟧ →
             (< τ > d) == < τ > ε ⟦ d' ⟧
@@ -350,10 +345,10 @@ module core where
              τ1 ~ τ2 → -- maybe?
              Δ ⊢ < τ1 > d →> d
     ITEHole : ∀{ Δ u σ} →
-              Δ ⊢ ⦇⦈⟨ u , σ , ✗ ⟩ →> ⦇⦈⟨ u , σ , ✓ ⟩
+              Δ ⊢ ⦇⦈⟨ u , σ  ⟩ →> ⦇⦈⟨ u , σ  ⟩
     ITNEHole : ∀{ Δ u σ d } →
                d final →
-               Δ ⊢ ⦇ d ⦈⟨ u , σ , ✗ ⟩ →> ⦇ d ⦈⟨ u , σ , ✓ ⟩
+               Δ ⊢ ⦇ d ⦈⟨ u , σ  ⟩ →> ⦇ d ⦈⟨ u , σ  ⟩
 
   data _⊢_↦_ : (Δ : hctx) (d d' : dhexp) → Set where
     Step : ∀{ d d0 d' d0' Δ ε} →
