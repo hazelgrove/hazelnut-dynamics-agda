@@ -43,7 +43,8 @@ module progress-checks where
     fe (FVal x) er = ve x er
     fe (FIndet x) er = ie x er
 
-  -- todo: these are bad names
+  -- todo: these are bad names; probably some places below where i inlined
+  -- some of these lemmas before i'd come up with them
   lem2 : ∀{d Δ d'} → d indet → Δ ⊢ d →> d' → ⊥
   lem2 IEHole ()
   lem2 (INEHole f) ()

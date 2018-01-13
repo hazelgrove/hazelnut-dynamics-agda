@@ -19,10 +19,6 @@ module progress where
     S : ∀{d Δ} → Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d') → ok d Δ
 
 
-  lem : ∀{Δ d d' u σ m} → Δ ⊢ d ↦ d' → Δ ⊢ ⦇ d ⦈⟨ (u , σ , ✗) ⟩ ↦ ⦇ d' ⦈⟨ (u , σ , ✗) ⟩
-  lem (Step x x₁ x₂) = {!!}
-
-
   progress : {Δ : hctx} {d : dhexp} {τ : htyp} →
              Δ , ∅ ⊢ d :: τ →
              ok d Δ
@@ -53,21 +49,15 @@ module progress where
   progress (TAAp {d2 = d2} D1 x₂ D2) | S (π1 , π2) | _ = S ((π1 ∘ d2) , {!!})
 
   -- empty holes
-  progress (TAEHole {m = ✓} x x₁) = I IEHole
-  progress (TAEHole {m = ✗} x x₁) = S (_ , Step FHEHole ITEHole FHEHole)
+  progress (TAEHole x x₁) = I IEHole
 
   -- non-empty holes
   progress (TANEHole x D x₁)
     with progress D
-  progress (TANEHole {m = ✓} x₁ D x₂) | V v = I (INEHole (FVal v))
-  progress (TANEHole {m = ✗} x₁ D x₂) | V v = S ( _ , Step (FHNEHoleFinal (FVal v)) (ITNEHole (FVal v)) FHNEHoleEvaled)
-  progress (TANEHole {m = ✓} x₁ D x₂) | I x = I (INEHole (FIndet x))
-  progress (TANEHole {m = ✗} x₁ D x₂) | I x = S (_ , Step (FHNEHoleFinal (FIndet x)) (ITNEHole (FIndet x)) FHNEHoleEvaled )
+  progress (TANEHole x₁ D x₂) | V v = I (INEHole (FVal v))
+  progress (TANEHole x₁ D x₂) | I x = I (INEHole (FIndet x))
   progress (TANEHole x₁ D x₂) | E x = E (ENEHole x)
-  -- progress (TANEHole {d = d} {u = u} {σ = σ} {m = m} x₃ D x₄) | S (d' , Step x x₁ x₂) = S (_ , lem (Step x x₁ x₂) ) -- S ( ⦇ d' ⦈⟨ u , σ , m ⟩ , {!!}) -- maybe depends on m
-  progress (TANEHole {d = d} {u = u} {σ = σ} {m = ✓} x₃ D x₄) | S (d' , Step x x₁ x₂) =  S ( ⦇ d' ⦈⟨ u , σ , {!!} ⟩ ,
-                                                                                             Step FHNEHoleEvaled {!!} FHNEHoleEvaled)
-  progress (TANEHole {d = d} {u = u} {σ = σ} {m = ✗} x₃ D x₄) | S (d' , Step x x₁ x₂) = S(_ , lem (Step x x₁ x₂)) -- S ( ⦇ d' ⦈⟨ u , σ , ✓ ⟩ , {!!})
+  progress (TANEHole {d = d} {u = u} {σ = σ} x₃ D x₄) | S (d' , Step x x₁ x₂) = {!!} -- S (_ , {!!} ) -- S ( ⦇ d' ⦈⟨ u , σ , m ⟩ , {!!}) -- maybe depends on m
 
   -- casts
   progress (TACast D x)
