@@ -27,16 +27,8 @@ module progress-checks where
 
   -- values and expressions that step are disjoint
   vs : ∀{d Δ} → d val → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
-  vs VConst (_ , Step (FHFinal _) () (FHFinal _))
-  vs VConst (_ , Step (FHFinal _) () FHEHole)
-  vs VConst (_ , Step (FHFinal _) () FHNEHoleEvaled)
-  vs VConst (_ , Step (FHFinal _) () (FHNEHoleFinal _))
-  vs VConst (_ , Step (FHFinal _) () (FHCastFinal _))
-  vs VLam (_ , Step (FHFinal _) () (FHFinal _))
-  vs VLam (_ , Step (FHFinal _) () FHEHole)
-  vs VLam (_ , Step (FHFinal _) () FHNEHoleEvaled)
-  vs VLam (_ , Step (FHFinal _) () (FHNEHoleFinal _))
-  vs VLam (_ , Step (FHFinal _) () (FHCastFinal _))
+  vs VConst (_ , Step (FHFinal _) () _)
+  vs VLam (_ , Step (FHFinal _) () _)
 
   mutual
     -- indeterminates and errors are disjoint
@@ -54,7 +46,7 @@ module progress-checks where
   -- todo: these are bad names
   lem2 : ∀{d Δ d'} → d indet → Δ ⊢ d →> d' → ⊥
   lem2 IEHole ()
-  lem2 (INEHole _) ()
+  lem2 (INEHole f) ()
   lem2 (IAp () _) (ITLam _)
 
   lem3 : ∀{d Δ d'} → d val → Δ ⊢ d →> d' → ⊥
@@ -65,25 +57,6 @@ module progress-checks where
   lem1 (FVal x) st = lem3 x st
   lem1 (FIndet x) st = lem2 x st
 
-  -- indeterminates and expressions that step are disjoint
-  is : ∀{d Δ} → d indet → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
-  is IEHole (_ , Step (FHFinal x) q _) = lem1 x q
-  is IEHole (_ , Step FHEHole () (FHFinal _))
-  is IEHole (_ , Step FHEHole () FHEHole)
-  is IEHole (_ , Step FHEHole () FHNEHoleEvaled)
-  is IEHole (_ , Step FHEHole () (FHNEHoleFinal _))
-  is IEHole (_ , Step FHEHole () (FHCastFinal _))
-  is (INEHole _) (_ , Step (FHFinal x₁) q _) = lem1 x₁ q
-  is (INEHole _) (_ , Step FHNEHoleEvaled () (FHFinal _))
-  is (INEHole _) (_ , Step FHNEHoleEvaled () FHEHole)
-  is (INEHole _) (_ , Step FHNEHoleEvaled () FHNEHoleEvaled)
-  is (INEHole _) (_ , Step FHNEHoleEvaled () (FHNEHoleFinal _))
-  is (INEHole _) (_ , Step FHNEHoleEvaled () (FHCastFinal _))
-  is (IAp _ _) (_ , Step (FHFinal x₁) q _) = lem1 x₁ q
-  is (IAp _ (FVal x)) (_ , Step (FHAp1 _ p) q (FHAp1 _ r)) = vs x (_ , Step p q r)
-  is (IAp _ (FIndet x)) (_ , Step (FHAp1 _ p) q (FHAp1 _ r)) = is x (_ , Step p q r)
-  is (IAp i x) (_ , Step (FHAp2 p) q (FHAp2 r)) = is i (_ , (Step p q r))
-
   lem4 : ∀{d ε x} → d final → d == ε ⟦ x ⟧ → x final
   lem4 f (FHFinal x) = x
   lem4 (FVal ()) (FHAp1 x₂ sub)
@@ -91,13 +64,30 @@ module progress-checks where
   lem4 (FVal ()) (FHAp2 sub)
   lem4 (FIndet (IAp x₁ x₂)) (FHAp2 sub) = lem4 (FIndet x₁) sub
   lem4 f FHEHole = f
-  lem4 f FHNEHoleEvaled = f
-  lem4 (FVal ()) (FHNEHoleInside sub)
-  lem4 (FIndet ()) (FHNEHoleInside sub)
   lem4 f (FHNEHoleFinal x) = f
   lem4 (FVal ()) (FHCast sub)
   lem4 (FIndet ()) (FHCast sub)
   lem4 f (FHCastFinal x) = f
+  lem4 (FVal ()) (FHNEHole y)
+  lem4 (FIndet (INEHole x₁)) (FHNEHole y) = lem4 x₁ y
+
+  lem5 : ∀{d Δ d' d'' ε} →  d final → d == ε ⟦ d' ⟧ → Δ ⊢ d' →> d'' → ⊥
+  lem5 f sub step = lem1 (lem4 f sub) step
+
+  -- indeterminates and expressions that step are disjoint
+  is : ∀{d Δ} → d indet → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
+  is IEHole (_ , Step (FHFinal x) q _) = lem1 x q
+  is IEHole (_ , Step FHEHole () _)
+  is (INEHole _) (_ , Step (FHFinal x₁) q _) = lem1 x₁ q
+  is (INEHole x) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = lem5 x x₁ x₂
+  is (INEHole x) (_ , Step (FHNEHoleFinal x₁) () FHEHole)
+  is (INEHole x) (d , Step (FHNEHoleFinal x₁) () (FHFinal x₃))
+  is (INEHole x) (_ , Step (FHNEHoleFinal x₁) () (FHNEHoleFinal x₃))
+  is (INEHole x) (_ , Step (FHNEHoleFinal x₁) () (FHCastFinal x₃))
+  is (IAp _ _) (_ , Step (FHFinal x₁) q _) = lem1 x₁ q
+  is (IAp _ (FVal x)) (_ , Step (FHAp1 _ p) q (FHAp1 _ r)) = vs x (_ , Step p q r)
+  is (IAp _ (FIndet x)) (_ , Step (FHAp1 _ p) q (FHAp1 _ r)) = is x (_ , Step p q r)
+  is (IAp i x) (_ , Step (FHAp2 p) q (FHAp2 r)) = is i (_ , (Step p q r))
 
   -- errors and expressions that step are disjoint
   es : ∀{d Δ} → Δ ⊢ d err → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
@@ -116,12 +106,11 @@ module progress-checks where
   -- ap2 cases
   es (EAp2 a er) (d' , Step (FHFinal x) x₁ x₂) = lem1 x x₁
   es (EAp2 a er) (_ , Step (FHAp1 x x₁) x₂ (FHAp1 x₃ x₄)) = es er (_ , Step x₁ x₂ x₄)
-  es (EAp2 a er) (_ , Step (FHAp2 x) x₁ (FHAp2 x₂)) = lem1 (lem4 a x) x₁
+  es (EAp2 a er) (_ , Step (FHAp2 x) x₁ (FHAp2 x₂)) = lem5 a x x₁
 
   -- nehole cases
   es (ENEHole er) (d' , Step (FHFinal x) x₁ x₂) = lem1 x x₁
-  es (ENEHole er) (d' , Step FHNEHoleEvaled () x₂)
-  es (ENEHole er) (_ , Step (FHNEHoleInside x) x₁ (FHNEHoleInside x₂)) = es er (_ , Step x x₁ x₂)
+  es (ENEHole er) (_ , Step (FHNEHole a) x (FHNEHole x₂)) = es er (_ , Step a x x₂)
   es (ENEHole er) (d' , Step (FHNEHoleFinal x) x₁ x₂) = fe x er
 
   -- castprop cases
