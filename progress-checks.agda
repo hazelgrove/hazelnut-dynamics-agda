@@ -93,9 +93,9 @@ module progress-checks where
   is (IAp _ (FVal x)) (_ , Step (FHAp1 _ p) q (FHAp1 _ r)) = vs x (_ , Step p q r)
   is (IAp _ (FIndet x)) (_ , Step (FHAp1 _ p) q (FHAp1 _ r)) = is x (_ , Step p q r)
   is (IAp i x) (_ , Step (FHAp2 p) q (FHAp2 r)) = is i (_ , (Step p q r))
-  is (ICast a) (d' , Step (FHFinal x) (ITCast x₁ x₂ x₃) x₄) = {!lem1 x₁!}
+  is (ICast a) (d' , Step (FHFinal x) q x₄) = lem1 x q
   is (ICast a) (_ , Step (FHCast x) x₁ (FHCast x₂)) = is a (_ , Step x x₁ x₂)
-  is (ICast a) (d' , Step (FHCastFinal x) x₁ x₂) = {!x₂!}
+  is (ICast a) (d' , Step (FHCastFinal x) x₁ x₂) = lem5 (FIndet (ICast a)) (FHCastFinal x) x₁ -- todo: this feels odd
 
   -- errors and expressions that step are disjoint
   es : ∀{d Δ} → Δ ⊢ d err → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
