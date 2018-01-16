@@ -39,14 +39,17 @@ module progress where
   progress (TAAp {d2 = d2} D1 MAArr D2) | V (VLam {x = x} {d = d}) | V x₁ = S ([ d2 / x ] d , Step (FHAp1 (FVal VLam) {!!}) (ITLam (FVal x₁)) {!!} )
   progress (TAAp {d2 = d2} D1 MAArr D2) | V (VLam {x = x} {d = d}) | I x₁ = S ([ d2 / x ] d , Step (FHAp1 (FVal VLam) {!!}) (ITLam (FIndet x₁)) {!!} )
     -- errors propagate
-  progress (TAAp D1 x₂ D2) | _   | E x₁ = E (EAp2 {!!} x₁)
+  progress (TAAp D1 x₂ D2) | V x | E x₁ = E (EAp2 (FVal x) x₁)
+  progress (TAAp D1 x₂ D2) | I x | E x₁ = E (EAp2 (FIndet x) x₁)
+  progress (TAAp D1 x₂ D2) | E x | E x₁ = {!!}
+  progress (TAAp D1 x₂ D2) | S x | E x₁ = S {!!} -- E (EAp2 {!w!} x₁)
   progress (TAAp D1 x₂ D2) | E x | _    = E (EAp1 x)
     -- indeterminates
   progress (TAAp D1 x₂ D2) | I i | V v = I (IAp i  (FVal v))
   progress (TAAp D1 x₂ D2) | I x | I x₁ = I (IAp x (FIndet x₁))
     -- either applicand steps
-  progress (TAAp {d1 = d1} D1 x₄ D2) | _ | S (d , Step x₁ x₂ x₃) = S ((d1 ∘ d) , {!!})
-  progress (TAAp {d2 = d2} D1 x₂ D2) | S (π1 , π2) | _ = S ((π1 ∘ d2) , {!!})
+  progress (TAAp D1 x₃ D2) | S (d1' , Step x x₁ x₂)  | _ = S (_ , Step (FHAp2 x) x₁ (FHAp2 x₂))
+  progress (TAAp D1 x₄ D2) | _ | S (d2' , Step x₁ x₂ x₃) = S (_ , Step (FHAp1 {!!} x₁) x₂ (FHAp1 {!!} x₃))
 
   -- empty holes
   progress (TAEHole x x₁) = I IEHole
@@ -57,13 +60,13 @@ module progress where
   progress (TANEHole x₁ D x₂) | V v = I (INEHole (FVal v))
   progress (TANEHole x₁ D x₂) | I x = I (INEHole (FIndet x))
   progress (TANEHole x₁ D x₂) | E x = E (ENEHole x)
-  progress (TANEHole {d = d} {u = u} {σ = σ} x₃ D x₄) | S (d' , Step x x₁ x₂) = {!!} -- S (_ , {!!} ) -- S ( ⦇ d' ⦈⟨ u , σ , m ⟩ , {!!}) -- maybe depends on m
+  progress (TANEHole x₃ D x₄) | S (_ , Step x x₁ x₂) = S (_ , Step (FHNEHole x) x₁ (FHNEHole x₂))
 
   -- casts
   progress (TACast D x)
     with progress D
   progress (TACast TAConst con) | V VConst = S (c , Step (FHCastFinal (FVal VConst)) (ITCast (FVal VConst) TAConst con) (FHFinal (FVal VConst)))
   progress (TACast D m) | V VLam = S (_ , Step (FHCastFinal (FVal VLam)) (ITCast (FVal VLam) D m) (FHFinal (FVal VLam)))
-  progress (TACast D x₁) | I x = S {!!}
+  progress (TACast D x₁) | I x = I (ICast x)
   progress (TACast D x₁) | E x = E (ECastProp x)
   progress (TACast D x₃) | S (d , Step x x₁ x₂) = S (_ , Step (FHCast x) x₁ (FHCast x₂))

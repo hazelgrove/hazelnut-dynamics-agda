@@ -37,6 +37,8 @@ module progress-checks where
     ie (INEHole x) (ENEHole e) = fe x e
     ie (IAp i x) (EAp1 e) = ie i e
     ie (IAp i x) (EAp2 y e) = fe x e
+    ie (ICast i) (ECastError x x₁) = {!!} -- todo: this is evidence that casts are busted
+    ie (ICast i) (ECastProp x) = ie i x
 
     -- final expressions are not errors (not one of the 6 cases for progress, just a convenience)
     fe : ∀{d Δ} → d final → Δ ⊢ d err → ⊥
@@ -49,6 +51,8 @@ module progress-checks where
   lem2 IEHole ()
   lem2 (INEHole f) ()
   lem2 (IAp () _) (ITLam _)
+  lem2 (ICast x) (ITCast (FVal x₁) x₂ x₃) = vi x₁ x
+  lem2 (ICast x) (ITCast (FIndet x₁) x₂ x₃) = {!!} -- todo: this is evidence that casts are busted
 
   lem3 : ∀{d Δ d'} → d val → Δ ⊢ d →> d' → ⊥
   lem3 VConst ()
@@ -67,7 +71,7 @@ module progress-checks where
   lem4 f FHEHole = f
   lem4 f (FHNEHoleFinal x) = f
   lem4 (FVal ()) (FHCast sub)
-  lem4 (FIndet ()) (FHCast sub)
+  lem4 (FIndet (ICast i)) (FHCast sub) = lem4 (FIndet i) sub
   lem4 f (FHCastFinal x) = f
   lem4 (FVal ()) (FHNEHole y)
   lem4 (FIndet (INEHole x₁)) (FHNEHole y) = lem4 x₁ y
@@ -89,6 +93,9 @@ module progress-checks where
   is (IAp _ (FVal x)) (_ , Step (FHAp1 _ p) q (FHAp1 _ r)) = vs x (_ , Step p q r)
   is (IAp _ (FIndet x)) (_ , Step (FHAp1 _ p) q (FHAp1 _ r)) = is x (_ , Step p q r)
   is (IAp i x) (_ , Step (FHAp2 p) q (FHAp2 r)) = is i (_ , (Step p q r))
+  is (ICast a) (d' , Step (FHFinal x) (ITCast x₁ x₂ x₃) x₄) = {!lem1 x₁!}
+  is (ICast a) (_ , Step (FHCast x) x₁ (FHCast x₂)) = is a (_ , Step x x₁ x₂)
+  is (ICast a) (d' , Step (FHCastFinal x) x₁ x₂) = {!x₂!}
 
   -- errors and expressions that step are disjoint
   es : ∀{d Δ} → Δ ⊢ d err → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
