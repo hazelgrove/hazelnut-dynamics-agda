@@ -101,7 +101,7 @@ module progress-checks where
   es : ∀{d Δ} → Δ ⊢ d err → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
   -- cast error cases
   es (ECastError x x₁) (d' , Step (FHFinal x₂) x₃ x₄) = lem1 x₂ x₃
-  es (ECastError x x₁) (_ , Step (FHCast x₂) x₃ (FHCast x₄)) = {!!}
+  es (ECastError x x₁) (_ , Step (FHCast x₂) x₃ (FHCast x₄)) = {!!} -- todo: this is evidence that casts are busted
   es (ECastError x x₁) (d' , Step (FHCastFinal x₂) (ITCast x₃ x₄ x₅) x₆)
     with type-assignment-unicity x x₄
   ... | refl = ~apart x₁ x₅
