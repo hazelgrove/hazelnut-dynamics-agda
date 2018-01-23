@@ -39,6 +39,8 @@ module progress-checks where
     ie (IAp i x) (EAp2 y e) = fe x e
     ie (ICast i) (ECastError x x₁) = {!!} -- todo: this is evidence that casts are busted
     ie (ICast i) (ECastProp x) = ie i x
+    ie (ICastIncon x x₁) (ECastError x₂ x₃) = {!type-assignment-unicity !}
+    ie (ICastIncon x x₁) (ECastProp er) = {!!}
 
     -- final expressions are not errors (not one of the 6 cases for progress, just a convenience)
     fe : ∀{d Δ} → d final → Δ ⊢ d err → ⊥
@@ -53,6 +55,7 @@ module progress-checks where
   lem2 (IAp () _) (ITLam _)
   lem2 (ICast x) (ITCast (FVal x₁) x₂ x₃) = vi x₁ x
   lem2 (ICast x) (ITCast (FIndet x₁) x₂ x₃) = {!!} -- todo: this is evidence that casts are busted
+  lem2 (ICastIncon x x₁) (ITCast x₂ x₃ x₄) = {!type-assignment-unicity!}
 
   lem3 : ∀{d Δ d'} → d val → Δ ⊢ d →> d' → ⊥
   lem3 VConst ()
@@ -75,6 +78,7 @@ module progress-checks where
   lem4 f (FHCastFinal x) = f
   lem4 (FVal ()) (FHNEHole y)
   lem4 (FIndet (INEHole x₁)) (FHNEHole y) = lem4 x₁ y
+  lem4 (FIndet (ICastIncon x₁ x₂)) (FHCast y) = {!!}
 
   lem5 : ∀{d Δ d' d'' ε} →  d final → d == ε ⟦ d' ⟧ → Δ ⊢ d' →> d'' → ⊥
   lem5 f sub step = lem1 (lem4 f sub) step
@@ -96,6 +100,7 @@ module progress-checks where
   is (ICast a) (d' , Step (FHFinal x) q x₄) = lem1 x q
   is (ICast a) (_ , Step (FHCast x) x₁ (FHCast x₂)) = is a (_ , Step x x₁ x₂)
   is (ICast a) (d' , Step (FHCastFinal x) x₁ x₂) = lem5 (FIndet (ICast a)) (FHCastFinal x) x₁ -- todo: this feels odd
+  is (ICastIncon x x₁) (d' , Step x₂ x₃ x₄) = {!!}
 
   -- errors and expressions that step are disjoint
   es : ∀{d Δ} → Δ ⊢ d err → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥

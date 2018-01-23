@@ -256,6 +256,9 @@ module core where
       INEHole : ∀{d u σ} → d final → ⦇ d ⦈⟨ u , σ ⟩ indet
       IAp : ∀{d1 d2} → d1 indet → d2 final → (d1 ∘ d2) indet -- todo: should there be two ap rules?
       ICast : ∀{d τ} → d indet → (< τ > d) indet
+      ICastIncon : ∀{Δ Γ d τ τ'} → Δ , Γ ⊢ d :: τ -- proposal
+                                 → τ ~̸ τ'
+                                 → (< τ' > d) indet
 
     -- final
     data _final : (d : dhexp) → Set where

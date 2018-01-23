@@ -41,8 +41,8 @@ module progress where
     -- errors propagate
   progress (TAAp D1 x₂ D2) | V x | E x₁ = E (EAp2 (FVal x) x₁)
   progress (TAAp D1 x₂ D2) | I x | E x₁ = E (EAp2 (FIndet x) x₁)
-  progress (TAAp D1 x₂ D2) | E x | E x₁ = {!!}
-  progress (TAAp D1 x₂ D2) | S x | E x₁ = S {!!} -- E (EAp2 {!w!} x₁)
+  progress (TAAp D1 x₂ D2) | E x | E x₁ = E (EAp1 x) -- NB: could have picked the other one here, too; this is a source of non-determinism
+  progress (TAAp D1 x₂ D2) | S x | E x₁ = S {!!}
   progress (TAAp D1 x₂ D2) | E x | _    = E (EAp1 x)
     -- indeterminates
   progress (TAAp D1 x₂ D2) | I i | V v = I (IAp i  (FVal v))
