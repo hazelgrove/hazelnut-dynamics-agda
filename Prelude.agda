@@ -41,6 +41,10 @@ module Prelude where
 
   infixr 9 _==_
 
+  -- disequality
+  _≠_ : {l : Level} {A : Set l} → (a b : A) → Set l
+  a ≠ b = (a == b) → ⊥
+
   {-# BUILTIN EQUALITY _==_ #-}
   {-# BUILTIN REFL refl #-}
 

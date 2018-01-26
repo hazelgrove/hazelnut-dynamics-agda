@@ -176,8 +176,8 @@ module core where
               (Γ ,, (x , ⦇⦈)) ⊢ e ⇐ ⦇⦈ ~> d :: τ ⊣ Δ  →
               Γ ⊢ ·λ x e ⇐ ⦇⦈ ~> ·λ x [ ⦇⦈ ] d :: ⦇⦈ ==> τ ⊣ Δ
       EASubsume : ∀{e Γ τ' d Δ τ} →
-                  ((u : Nat) → (e == ⦇⦈[ u ] → ⊥)) →
-                  ((e' : hexp) (u : Nat) → (e == ⦇ e' ⦈[ u ] → ⊥)) →
+                  ((u : Nat) → e ≠ ⦇⦈[ u ]) →
+                  ((e' : hexp) (u : Nat) → e ≠ ⦇ e' ⦈[ u ]) →
                   Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
                   τ ~ τ' →
                   Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
@@ -245,7 +245,7 @@ module core where
   data _boxedval : (d : dhexp) → Set where
     BVVal : ∀{d} → d val → d boxedval
     BVArrCast : ∀{ d τ1 τ2 τ3 τ4 } →
-                ((τ1 ==> τ2) == (τ3 ==> τ4) → ⊥) →
+                τ1 ==> τ2 ≠ τ3 ==> τ4 →
                 d boxedval →
                 d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ boxedval
     BVHoleCast : ∀{ τ d } → τ ground → d boxedval → d ⟨ τ ⇒ ⦇⦈ ⟩ boxedval
@@ -256,12 +256,12 @@ module core where
       IEHole : ∀{u σ} → ⦇⦈⟨ u , σ ⟩ indet
       INEHole : ∀{d u σ} → d final → ⦇ d ⦈⟨ u , σ ⟩ indet
       IAp : ∀{d1 d1' d2 τ1 τ2 τ3 τ4} →
-                       ((d1 == d1' ⟨(τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩) → ⊥)  →
+                       d1 ≠ (d1' ⟨(τ1 ==> τ2) ⇒ (τ3 ==> τ4)⟩)  →
                        d1 indet →
                        d2 final →
                        (d1 ∘ d2) indet -- todo: should there be two ap rules?
       ICastArr : ∀{d τ1 τ2 τ3 τ4} →
-                 (((τ1 ==> τ2) == (τ3 ==> τ4)) → ⊥) →
+                 τ1 ==> τ2 ≠ τ3 ==> τ4 →
                  d indet →
                  d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ indet
       ICastGroundHole : ∀{ τ d } → τ ground → d indet → d ⟨ τ ⇒  ⦇⦈ ⟩ indet
@@ -337,7 +337,7 @@ module core where
                (d ⟨ τ1 ==> τ2 ⇒ ⦇⦈ ⟩) →> (d ⟨ τ1 ==> τ2 ⇒ ⦇⦈ ==> ⦇⦈ ⇒ ⦇⦈ ⟩)
     ITExpand : ∀{d τ1 τ2 } →
                d final →
-               ((τ1 ==> τ2 == ⦇⦈ ==> ⦇⦈) → ⊥) →
+               τ1 ==> τ2 ≠ ⦇⦈ ==> ⦇⦈ →
                (d ⟨ ⦇⦈ ⇒ τ1 ==> τ2 ⟩) →> (d ⟨ ⦇⦈ ⇒ ⦇⦈ ==> ⦇⦈ ⇒ τ1 ==> τ2 ⟩)
 
   data _⊢_↦_ : (Δ : hctx) (d d' : dhexp) → Set where
@@ -352,7 +352,7 @@ module core where
                   d final →
                   τ1 ground →
                   τ2 ground →
-                  (τ1 == τ2 → ⊥) →
+                  τ1 ≠ τ2 →
                   d ⟨ τ1 ⇒ ⦇⦈ ⇒ τ2 ⟩ casterr
     CECong : ∀{ d ε d0} →
              d == ε ⟦ d0 ⟧ →
