@@ -35,7 +35,11 @@ module core where
       ⦇⦈⟨_⟩    : (Nat × subst) → dhexp
       ⦇_⦈⟨_⟩   : dhexp → (Nat × subst) → dhexp
       _∘_      : dhexp → dhexp → dhexp
-      <_>_     : htyp → dhexp → dhexp
+      _⟨_⇒_⟩   : dhexp → htyp → htyp → dhexp
+
+  -- notation for chaining together agreeable casts
+  _⟨_⇒_⇒_⟩ : dhexp → htyp → htyp → htyp → dhexp
+  d ⟨ t1 ⇒ t2 ⇒ t3 ⟩ = d ⟨ t1 ⇒ t2 ⟩ ⟨ t2 ⇒ t3 ⟩
 
   -- type consistency
   data _~_ : (t1 t2 : htyp) → Set where
@@ -147,35 +151,20 @@ module core where
                      (x # Γ) → -- todo: i added this
                      (Γ ,, (x , τ1)) ⊢ e ⇒ τ2 ~> d ⊣ Δ →
                       Γ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ Δ
-      ESAp1   : ∀{Γ e1 e2 d2 d1 Δ1 τ1 τ2 Δ2} →
-                -- Δ1 ## Δ2 → -- todo: bneed to think about disjointness and context rep
-                Γ ⊢ e1 => ⦇⦈ →
-                Γ ⊢ e1 ⇐ (τ2 ==> ⦇⦈) ~> d1 :: τ1 ⊣ Δ1 →
-                Γ ⊢ e2 ⇐ ⦇⦈ ~> d2 :: τ2 ⊣ Δ2 →
-                Γ ⊢ e1 ∘ e2 ⇒ ⦇⦈ ~> (< τ2 ==> ⦇⦈ > d1) ∘ d2 ⊣ (Δ1 ∪ Δ2)
-      ESAp2 : ∀{Γ e1 τ2 τ d1 d2 Δ1 Δ2 τ2' e2} →
-              -- Δ1 ## Δ2 → -- todo: bneed to think about disjointness and context rep
-              Γ ⊢ e1 ⇒ (τ2 ==> τ) ~> d1 ⊣ Δ1 →
+      ESAp : ∀{Γ e1 τ τ1 τ2 τ2' d1 Δ1 e2 d2 Δ2 } →
+              -- Δ1 ## Δ2 → -- todo: need to think about disjointness and context rep
+              Γ ⊢ e1 ⇒ τ1 ~> d1 ⊣ Δ1 →
+              τ1 ▸arr τ2 ==> τ →
               Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2' ⊣ Δ2 →
-              (τ2 == τ2' → ⊥) →
-              Γ ⊢ e1 ∘ e2 ⇒ τ ~> d1 ∘ (< τ2 > d2) ⊣ (Δ1 ∪ Δ2)
-      ESAp3 : ∀{Γ e1 τ d1 Δ1 e2 τ2 d2 Δ2 } →
-              -- Δ1 ## Δ2 → -- todo: bneed to think about disjointness and context rep
-              Γ ⊢ e1 ⇒ (τ2 ==> τ) ~> d1 ⊣ Δ1 →
-              Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2 ⊣ Δ2 →
-              Γ ⊢ e1 ∘ e2 ⇒ τ ~> d1 ∘ d2 ⊣ (Δ1 ∪ Δ2)
+              Γ ⊢ e1 ∘ e2 ⇒ τ ~> (d1 ⟨ τ1 ⇒ τ2 ==> τ ⟩) ∘ (d2 ⟨ τ2' ⇒ τ2 ⟩) ⊣ (Δ1 ∪ Δ2)
       ESEHole : ∀{ Γ u } →
                 Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , id Γ ⟩ ⊣  ■ (u ::[ Γ ] ⦇⦈)
       ESNEHole : ∀{ Γ e τ d u Δ } →
                  Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
                  Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈⟨ u , id Γ  ⟩ ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
-      ESAsc1 : ∀ {Γ e τ d τ' Δ} →
+      ESAsc : ∀ {Γ e τ d τ' Δ} →
                  Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
-                 (τ == τ' → ⊥) →
-                 Γ ⊢ (e ·: τ) ⇒ τ ~> (< τ > d) ⊣ Δ
-      ESAsc2 : ∀{Γ e τ d Δ } →
-               Γ ⊢ e ⇐ τ ~> d :: τ ⊣ Δ →
-               Γ ⊢ (e ·: τ) ⇒ τ ~> d ⊣ Δ
+                 Γ ⊢ (e ·: τ) ⇒ τ ~> d ⟨ τ ⇒ τ' ⟩ ⊣ Δ
 
     data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (τ' : htyp) (Δ : hctx) → Set where
       EALam : ∀{Γ x τ1 τ2 e d τ2' Δ } →
@@ -212,10 +201,9 @@ module core where
       TALam : ∀{ Δ Γ x τ1 d τ2} →
               Δ , (Γ ,, (x , τ1)) ⊢ d :: τ2 →
               Δ , Γ ⊢ ·λ x [ τ1 ] d :: (τ1 ==> τ2)
-      TAAp : ∀{ Δ Γ d1 d2 τ1 τ2 τ} →
-             Δ , Γ ⊢ d1 :: τ1 →
-             τ1 ▸arr (τ2 ==> τ) →
-             Δ , Γ ⊢ d2 :: τ2 →
+      TAAp : ∀{ Δ Γ d1 d2 τ1 τ} →
+             Δ , Γ ⊢ d1 :: τ1 ==> τ →
+             Δ , Γ ⊢ d2 :: τ1 →
              Δ , Γ ⊢ d1 ∘ d2 :: τ
       TAEHole : ∀{ Δ Γ σ u Γ' τ} →
                 (u , (Γ' , τ)) ∈ Δ →
@@ -226,10 +214,10 @@ module core where
                  Δ , Γ ⊢ d :: τ' →
                  Δ , Γ ⊢ σ :s: Γ' →
                  Δ , Γ ⊢ ⦇ d ⦈⟨ u , σ ⟩ :: τ
-      TACast : ∀{ Δ Γ d τ τ'} →
-             Δ , Γ ⊢ d :: τ' →
-             τ ~ τ' →
-             Δ , Γ ⊢ < τ > d :: τ
+      TACast : ∀{ Δ Γ d τ1 τ2} →
+             Δ , Γ ⊢ d :: τ1 →
+             τ1 ~ τ2 →
+             Δ , Γ ⊢ d ⟨ τ1 ⇒ τ2 ⟩ :: τ2
 
   -- substitution;; todo: maybe get a premise that it's final; analagous to "value substitution"
   [_/_]_ : dhexp → Nat → dhexp → dhexp
@@ -242,111 +230,131 @@ module core where
   [ d / y ] ⦇⦈⟨ u , σ ⟩ = ⦇⦈⟨ u , σ ⟩
   [ d / y ] ⦇ d' ⦈⟨ u , σ  ⟩ =  ⦇ [ d / y ] d' ⦈⟨ u , σ ⟩
   [ d / y ] (d1 ∘ d2) = ([ d / y ] d1) ∘ ([ d / y ] d2)
-  [ d / y ] (< τ > d') = < τ > ([ d / y ] d')
+  [ d / y ] (d' ⟨ τ1 ⇒ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒ τ2 ⟩
 
   -- value
   data _val : (d : dhexp) → Set where
     VConst : c val
     VLam   : ∀{x τ d} → (·λ x [ τ ] d) val
 
+  -- ground
+  data _ground : (τ : htyp) → Set where
+    GBase : b ground
+    GHole : ⦇⦈ ==> ⦇⦈ ground
+
+  data _boxedval : (d : dhexp) → Set where
+    BVVal : ∀{d} → d val → d boxedval
+    BVArrCast : ∀{ d τ1 τ2 τ3 τ4 } →
+                ((τ1 ==> τ2) == (τ3 ==> τ4) → ⊥) →
+                d boxedval →
+                d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ boxedval
+    BVHoleCast : ∀{ τ d } → τ ground → d boxedval → d ⟨ τ ⇒ ⦇⦈ ⟩ boxedval
+
   mutual
     -- indeterminate
     data _indet : (d : dhexp) → Set where
       IEHole : ∀{u σ} → ⦇⦈⟨ u , σ ⟩ indet
       INEHole : ∀{d u σ} → d final → ⦇ d ⦈⟨ u , σ ⟩ indet
-      IAp : ∀{d1 d2} → d1 indet → d2 final → (d1 ∘ d2) indet -- todo: should there be two ap rules?
-      ICast : ∀{d τ} → d indet → (< τ > d) indet
+      IAp : ∀{d1 d1' d2 τ1 τ2 τ3 τ4} →
+                       ((d1 == d1' ⟨(τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩) → ⊥)  →
+                       d1 indet →
+                       d2 final →
+                       (d1 ∘ d2) indet -- todo: should there be two ap rules?
+      ICastArr : ∀{d τ1 τ2 τ3 τ4} →
+                 (((τ1 ==> τ2) == (τ3 ==> τ4)) → ⊥) →
+                 d indet →
+                 d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ indet
+      ICastGroundHole : ∀{ τ d } → τ ground → d indet → d ⟨ τ ⇒  ⦇⦈ ⟩ indet
 
     -- final
     data _final : (d : dhexp) → Set where
-      FVal : ∀{d} → d val → d final
+      FBoxed : ∀{d} → d boxedval → d final
       FIndet : ∀{d} → d indet → d final
 
-  -- error
-  data _⊢_err : (Δ : hctx) (d : dhexp) → Set where
-    ECastError : ∀{ Δ d τ1 τ2 } → -- lol hax: d final?
-                 Δ , ∅ ⊢ d :: τ2 →
-                 τ1 ~̸ τ2 →
-                 Δ ⊢ (< τ1 > d) err
-    EAp1 : ∀{ Δ d1 d2} →
-           Δ ⊢ d1 err →
-           Δ ⊢ (d1 ∘ d2) err
-    EAp2 : ∀{ Δ d1 d2} →
-           d1 final →
-           Δ ⊢ d2 err →
-           Δ ⊢ (d1 ∘ d2) err
-    ENEHole : ∀{ Δ d u σ } →
-           Δ ⊢ d err →
-           Δ ⊢ (⦇ d ⦈⟨ (u , σ)⟩) err
-    ECastProp : ∀{ Δ d τ} →
-                Δ ⊢ d err →
-                Δ ⊢ (< τ > d) err
 
-  -- contextual dynamics
+ --  -- contextual dynamics
 
   -- evaluation contexts
   data ectx : Set where
     ⊙ : ectx
-    _∘₁_ : dhexp → ectx → ectx
-    _∘₂_ : ectx → dhexp → ectx
+    _∘₁_ : ectx → dhexp → ectx
+    _∘₂_ : dhexp → ectx → ectx
     ⦇_⦈⟨_⟩ : ectx → (Nat × subst ) → ectx
-    <_>_   : htyp → ectx → ectx
+    _⟨_⇒_⟩   : ectx → htyp → htyp → ectx
 
  --ε is an evaluation context
   data _evalctx : (ε : ectx) → Set where
     ECDot : ⊙ evalctx
     ECAp1 : ∀{d ε} →
+            ε evalctx →
+            (ε ∘₁ d) evalctx
+    ECAp2 : ∀{d ε} →
             d final →
             ε evalctx →
-            (d ∘₁ ε) evalctx
-    ECAp2 : ∀{d ε} →
-            ε evalctx →
-            (ε ∘₂ d) evalctx
+            (d ∘₂ ε) evalctx
     ECNEHole : ∀{ε u σ} →
                ε evalctx →
-               ⦇ ε ⦈⟨ u , σ  ⟩ evalctx
-    ECCast : ∀{ ε τ } →
+               ⦇ ε ⦈⟨ u , σ ⟩ evalctx
+    ECCast : ∀{ ε τ1 τ2} →
              ε evalctx →
-             (< τ > ε ) evalctx
+             (ε ⟨ τ1 ⇒ τ2 ⟩) evalctx
 
   -- d is the result of filling the hole in ε with d'
   data _==_⟦_⟧ : (d : dhexp) (ε : ectx) (d' : dhexp) → Set where
-    FHFinal : ∀{d} → d final → d == ⊙ ⟦ d ⟧
-    FHAp1 : ∀{d1 d2 d2' ε} →
+    FHOuter : ∀{d} → d == ⊙ ⟦ d ⟧ -- this used to a have a premise of being final for some reason
+    FHAp1 : ∀{d1 d1' d2 ε} →
+           d1 == ε ⟦ d1' ⟧ →
+           (d1 ∘ d2) == (ε ∘₁ d2) ⟦ d1' ⟧
+    FHAp2 : ∀{d1 d2 d2' ε} →
            d1 final →
            d2 == ε ⟦ d2' ⟧ →
-           (d1 ∘ d2) == (d1 ∘₁ ε) ⟦ d2' ⟧
-    FHAp2 : ∀{d1 d1' d2 ε} →
-           d1 == ε ⟦ d1' ⟧ →
-           (d1 ∘ d2) == (ε ∘₂ d2) ⟦ d1' ⟧
-    FHEHole : ∀{u σ} → ⦇⦈⟨ (u , σ ) ⟩ == ⊙ ⟦ ⦇⦈⟨ (u , σ ) ⟩ ⟧
+           (d1 ∘ d2) == (d1 ∘₂ ε) ⟦ d2' ⟧
     FHNEHole : ∀{ d d' ε u σ} →
               d == ε ⟦ d' ⟧ →
               ⦇ d ⦈⟨ (u , σ ) ⟩ ==  ⦇ ε ⦈⟨ (u , σ ) ⟩ ⟦ d' ⟧
-    FHNEHoleFinal : ∀{ d u σ} →
-              d final →
-              ⦇ d ⦈⟨ (u , σ ) ⟩ ==  ⊙ ⟦ ⦇ d ⦈⟨ (u , σ ) ⟩ ⟧
-    FHCast : ∀{ d d' ε τ } →
+    FHCast : ∀{ d d' ε τ1 τ2 } →
             d == ε ⟦ d' ⟧ →
-            (< τ > d) == < τ > ε ⟦ d' ⟧
-    FHCastFinal : ∀{d τ} →
-                 d final →
-                 (< τ > d) == ⊙ ⟦ < τ > d ⟧
+            d ⟨ τ1 ⇒ τ2 ⟩ == ε ⟨ τ1 ⇒ τ2 ⟩ ⟦ d' ⟧
 
   -- instruction transition judgement
-  data _⊢_→>_ : (Δ : hctx) (d d' : dhexp) → Set where
-    ITLam : ∀{ Δ x τ d1 d2 } →
+  data _→>_ : (d d' : dhexp) → Set where
+    ITLam : ∀{ x τ d1 d2 } →
             d2 final →
-            Δ ⊢ ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1) -- this is very unlikely to work long term
-    ITCast : ∀{d Δ τ1 τ2 } →
-             d final →
-             Δ , ∅ ⊢ d :: τ2 →
-             τ1 ~ τ2 → -- maybe?
-             Δ ⊢ < τ1 > d →> d
+            ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1) -- this is very unlikely to work long term
+    ITCastID : ∀{d τ } →
+               d final →
+               (d ⟨ τ ⇒ τ ⟩) →> d
+    ITCastSucceed : ∀{d τ } →
+                    d final →
+                    τ ground →
+                    (d ⟨ τ ⇒ ⦇⦈ ⇒ τ ⟩) →> d
+    ITApCast : ∀{d1 d2 τ1 τ2 τ1' τ2' } →
+               d1 final →
+               d2 final →
+               ((d1 ⟨ (τ1 ==> τ2) ⇒ (τ1' ==> τ2')⟩) ∘ d2) →> ((d1 ∘ (d2 ⟨ τ1' ⇒ τ1 ⟩)) ⟨ τ2 ⇒ τ2' ⟩)
+    ITGround : ∀{ d τ1 τ2 } →
+               d final →
+               (d ⟨ τ1 ==> τ2 ⇒ ⦇⦈ ⟩) →> (d ⟨ τ1 ==> τ2 ⇒ ⦇⦈ ==> ⦇⦈ ⇒ ⦇⦈ ⟩)
+    ITExpand : ∀{d τ1 τ2 } →
+               d final →
+               ((τ1 ==> τ2 == ⦇⦈ ==> ⦇⦈) → ⊥) →
+               (d ⟨ ⦇⦈ ⇒ τ1 ==> τ2 ⟩) →> (d ⟨ ⦇⦈ ⇒ ⦇⦈ ==> ⦇⦈ ⇒ τ1 ==> τ2 ⟩)
 
   data _⊢_↦_ : (Δ : hctx) (d d' : dhexp) → Set where
     Step : ∀{ d d0 d' d0' Δ ε} →
            d == ε ⟦ d0 ⟧ →
-           Δ ⊢ d0 →> d0' →
+           d0 →> d0' →
            d' == ε ⟦ d0' ⟧ →
            Δ ⊢ d ↦ d'
+
+  data _casterr : (d : dhexp) → Set where
+    CECastFinal : ∀ {d τ1 τ2} →
+                  d final →
+                  τ1 ground →
+                  τ2 ground →
+                  (τ1 == τ2 → ⊥) →
+                  d ⟨ τ1 ⇒ ⦇⦈ ⇒ τ2 ⟩ casterr
+    CECong : ∀{ d ε d0} →
+             d == ε ⟦ d0 ⟧ →
+             d0 casterr →
+             d casterr
