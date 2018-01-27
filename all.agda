@@ -5,6 +5,8 @@ open import Prelude
 open import contexts
 open import core
 
+open import focus-formation
+
 open import lemmas-consistency
 open import lemmas-matching
 open import synth-unicity
