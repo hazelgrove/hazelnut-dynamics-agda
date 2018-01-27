@@ -11,7 +11,7 @@ module canonical-forms where
             Σ[ x ∈ Nat ] Σ[ d' ∈ dhexp ] (d == (·λ_[_]_ x τ1 d'))
   cf-lam (TAVar x₁) ()
   cf-lam (TALam D) VLam = _ , _ , refl
-  cf-lam (TAAp D x D₁) ()
+  cf-lam (TAAp D x) ()
   cf-lam (TAEHole x x₁) ()
   cf-lam (TANEHole x D x₁) ()
   cf-lam (TACast D x) ()
@@ -22,7 +22,7 @@ module canonical-forms where
             d == c
   cf-base TAConst VConst = refl
   cf-base (TAVar x₁) ()
-  cf-base (TAAp D x D₁) ()
+  cf-base (TAAp D x) ()
   cf-base (TAEHole x x₁) ()
   cf-base (TANEHole x D x₁) ()
   cf-base (TACast D x) ()
