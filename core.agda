@@ -264,7 +264,15 @@ module core where
                  τ1 ==> τ2 ≠ τ3 ==> τ4 →
                  d indet →
                  d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ indet
-      ICastGroundHole : ∀{ τ d } → τ ground → d indet → d ⟨ τ ⇒  ⦇⦈ ⟩ indet
+      ICastGroundHole : ∀{ τ d } →
+                        τ ground →
+                        d indet →
+                        d ⟨ τ ⇒  ⦇⦈ ⟩ indet
+      ICastHoleGround : ∀ { d d' τ τ' } →
+                        d ≠ (d' ⟨ τ' ⇒ ⦇⦈ ⟩) →
+                        d indet →
+                        τ ground →
+                        d ⟨ ⦇⦈ ⇒ τ ⟩ indet
 
     -- final
     data _final : (d : dhexp) → Set where
