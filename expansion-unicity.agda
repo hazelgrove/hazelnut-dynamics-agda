@@ -5,8 +5,10 @@ open import core
 open import contexts
 open import correspondence
 open import synth-unicity
+open import lemmas-matching
 
 module expansion-unicity where
+  -- todo: move to a lemmas file
   ⦇⦈≠arr : ∀{t1 t2} → t1 ==> t2 == ⦇⦈ → ⊥
   ⦇⦈≠arr ()
 
@@ -17,50 +19,20 @@ module expansion-unicity where
                             τ1 == τ2 × d1 == d2 × Δ1 == Δ2
     expansion-unicity-synth ESConst ESConst = refl , refl , refl
     expansion-unicity-synth (ESVar {Γ = Γ} x₁) (ESVar x₂) = ctxunicity {Γ = Γ} x₁ x₂ , refl , refl
-    expansion-unicity-synth (ESLam apt1 d1) (ESLam apt2 d2) with expansion-unicity-synth d1 d2
+    expansion-unicity-synth (ESLam apt1 d1) (ESLam apt2 d2)
+      with expansion-unicity-synth d1 d2
     ... | ih1 , ih2 , ih3 = ap1 _ ih1  , ap1 _ ih2 , ih3
-    expansion-unicity-synth (ESAp1 x₁ x₂ x₃) (ESAp1 x₅ x₆ x₇)
-       with expansion-unicity-ana x₃ x₇
-    ... | refl , refl , refl
-      with expansion-unicity-ana x₂ x₆
-    ... | refl , refl , refl = refl , refl , refl
-    expansion-unicity-synth (ESAp1 x₁ x₂ x₃) (ESAp2 d5 x₅ x₆) = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₁))
-    expansion-unicity-synth (ESAp1 x₁ x₂ x₃) (ESAp3 d5 x₅)    = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₁))
-    expansion-unicity-synth (ESAp2 d5 x₁ x₂) (ESAp1 x₄ x₅ x₆) = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₄))
-    expansion-unicity-synth (ESAp2 d5 x₁ x₂) (ESAp2 d6 x₄ x₅)
-      with expansion-unicity-synth d5 d6
-    ... | refl , refl , refl
-      with expansion-unicity-ana x₄ x₁
-    ... | refl , refl , refl = refl , refl , refl
-    expansion-unicity-synth (ESAp2 d5 x₁ x₂) (ESAp3 d6 x₄)
-      with expansion-unicity-synth d5 d6
-    ...| refl , refl , refl
-      with expansion-unicity-ana x₄ x₁
-    ... | refl , refl , refl = abort (x₂ refl)
-    expansion-unicity-synth (ESAp3 d5 x₁) (ESAp1 x₃ x₄ x₅) = abort (⦇⦈≠arr (synthunicity (correspondence-synth d5) x₃))
-    expansion-unicity-synth (ESAp3 d5 x₁) (ESAp2 d6 x₃ x₄)
-      with expansion-unicity-synth d5 d6
-    ...| refl , refl , refl
-      with expansion-unicity-ana x₁ x₃
-    ... | refl , refl , refl = abort (x₄ refl)
-    expansion-unicity-synth (ESAp3 d5 x₁) (ESAp3 d6 x₃)
-      with expansion-unicity-synth d5 d6
-    ...| refl , refl , refl
-      with expansion-unicity-ana x₁ x₃
+    expansion-unicity-synth (ESAp x x₁ x₂ x₃) (ESAp x₄ x₅ x₆ x₇)
+      with synthunicity x x₄
+    ... | refl with match-unicity x₁ x₅
+    ... | refl with expansion-unicity-ana x₂ x₆
+    ... | refl , refl , refl with expansion-unicity-ana x₃ x₇
     ... | refl , refl , refl = refl , refl , refl
     expansion-unicity-synth ESEHole ESEHole = refl , refl , refl
-    expansion-unicity-synth (ESNEHole d1) (ESNEHole d2) with expansion-unicity-synth d1 d2
+    expansion-unicity-synth (ESNEHole d1) (ESNEHole d2)
+      with expansion-unicity-synth d1 d2
     ... | ih1 , ih2 , ih3 = refl , ap1 _ ih2 , ap1 _ ih3
-    expansion-unicity-synth (ESAsc1 x x₁) (ESAsc1 x₂ x₃)
-      with expansion-unicity-ana x x₂
-    ... | refl , refl , refl = refl , refl , refl
-    expansion-unicity-synth (ESAsc1 {Γ} {e} {τ} {d} {τ'} x x₁) (ESAsc2 x₂)
-      with expansion-unicity-ana x x₂
-    ... | refl , contr , refl = abort (x₁ (! contr))
-    expansion-unicity-synth (ESAsc2 x) (ESAsc1 x₁ x₂)
-      with expansion-unicity-ana x x₁
-    ... | refl , contr , refl = abort (x₂ contr)
-    expansion-unicity-synth (ESAsc2 x) (ESAsc2 x₁)
+    expansion-unicity-synth (ESAsc x) (ESAsc x₁)
       with expansion-unicity-ana x x₁
     ... | refl , refl , refl = refl , refl , refl
 

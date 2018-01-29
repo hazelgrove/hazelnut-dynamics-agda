@@ -21,3 +21,7 @@ module lemmas-matching where
   match-consist : ∀{τ1 τ2} → τ1 ▸arr τ2 → (τ2 ~ τ1)
   match-consist MAHole = TCHole1
   match-consist MAArr = TCRefl
+
+  match-unicity : ∀{ τ τ1 τ2} → τ ▸arr τ1 → τ ▸arr τ2 → τ1 == τ2
+  match-unicity MAHole MAHole = refl
+  match-unicity MAArr MAArr = refl
