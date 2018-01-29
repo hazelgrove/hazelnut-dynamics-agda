@@ -165,7 +165,7 @@ module core where
                  Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈⟨ u , id Γ  ⟩ ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
       ESAsc : ∀ {Γ e τ d τ' Δ} →
                  Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
-                 Γ ⊢ (e ·: τ) ⇒ τ ~> d ⟨ τ ⇒ τ' ⟩ ⊣ Δ
+                 Γ ⊢ (e ·: τ) ⇒ τ ~> d ⟨ τ' ⇒ τ ⟩ ⊣ Δ
 
     data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (τ' : htyp) (Δ : hctx) → Set where
       EALam : ∀{Γ x τ1 τ2 e d τ2' Δ } →

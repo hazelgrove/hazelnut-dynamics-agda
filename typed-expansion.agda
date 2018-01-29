@@ -4,21 +4,11 @@ open import List
 open import core
 open import correspondence
 open import contexts
+open import lemmas-consistency
 
 module typed-expansion where
   lem-idsub : ∀{Δ Γ} → Δ , Γ ⊢ id Γ :s: Γ
   lem-idsub = {!!}
-  -- lem-idsub {Δ} {Γ} x d xd∈σ with Γ x  | (id Γ) x
-  -- lem-idsub x₁ x refl | Some x₂ | Some .x = x₂ , (refl , {!!})
-  -- lem-idsub x d () | Some x₁ | None
-  -- lem-idsub x₁ x refl | None | Some .x = {!!}
-  -- lem-idsub x d () | None | None
-
-  -- lem-idsub {Δ} {Γ} x d xd∈σ with (id Γ) x | Γ x
-  -- lem-idsub x .(X x) refl | Some x₁ | Some x₂ = x₂ , refl , TAVar {!!}
-  -- lem-idsub x d xd∈σ | Some x₁ | None = abort (somenotnone (! xd∈σ))
-  -- lem-idsub x .(X x) refl | None | Some x₁ = x₁ , refl , TAVar {!!}
-  -- lem-idsub x d xd∈σ | None | None = abort (somenotnone (! xd∈σ))
 
   lem-subweak : ∀{Δ Γ Γ' Δ' σ} → Δ , Γ ⊢ σ :s: Γ' → (Δ ∪ Δ') , Γ ⊢ σ :s: Γ'
   lem-subweak sub x d xd∈σ with sub x d xd∈σ
@@ -28,7 +18,7 @@ module typed-expansion where
   lem-weakenΔ1 TAConst = TAConst
   lem-weakenΔ1 (TAVar x₁) = TAVar x₁
   lem-weakenΔ1 (TALam D) = TALam (lem-weakenΔ1 D)
-  lem-weakenΔ1 (TAAp D x D₁) = TAAp (lem-weakenΔ1 D) x (lem-weakenΔ1 D₁)
+  lem-weakenΔ1 (TAAp D D₁) = TAAp (lem-weakenΔ1 D) (lem-weakenΔ1 D₁)
   lem-weakenΔ1 (TAEHole {Δ = Δ} x y) = TAEHole (x∈∪1 Δ _ _ _ x) (lem-subweak y)
   lem-weakenΔ1 (TANEHole {Δ = Δ} D x y) = TANEHole (x∈∪1 Δ _ _ _ D) (lem-weakenΔ1 x) (lem-subweak y)
   lem-weakenΔ1 (TACast D x) = TACast (lem-weakenΔ1 D) x
@@ -44,25 +34,16 @@ module typed-expansion where
     typed-expansion-synth ESConst = TAConst
     typed-expansion-synth (ESVar x₁) = TAVar x₁
     typed-expansion-synth (ESLam x₁ ex) = TALam (typed-expansion-synth ex)
-    typed-expansion-synth (ESAp1 {Δ1 = Δ1} x₁ x₂ x₃)
-      with typed-expansion-ana x₂ | typed-expansion-ana x₃
-    ... | con1 , ih1 | con2 , ih2 = TAAp (TACast (lem-weakenΔ1 ih1) con1) MAArr (lem-weakenΔ2 {Δ1 = Δ1} ih2)
-    typed-expansion-synth (ESAp2 {Δ1 = Δ1} ex x₁ x₂)
-      with typed-expansion-synth ex | typed-expansion-ana x₁
-    ... | ih1 | con2 , ih2 = TAAp (lem-weakenΔ1 ih1) MAArr (TACast (lem-weakenΔ2 {Δ1 = Δ1} ih2) con2)
-    typed-expansion-synth (ESAp3 {Δ1 = Δ1} ex x₁)
-      with typed-expansion-synth ex | typed-expansion-ana x₁
-    ... | ih1 | con2 , ih2 = TAAp (lem-weakenΔ1 ih1) MAArr (lem-weakenΔ2 {Δ1 = Δ1} ih2)
+    typed-expansion-synth (ESAp {Δ1 = Δ1} x₁ x₂ x₃ x₄)
+      with typed-expansion-ana x₃ | typed-expansion-ana x₄
+    ... | con1 , ih1 | con2 , ih2  = TAAp (TACast (lem-weakenΔ1 ih1) (~sym con1)) (TACast (lem-weakenΔ2 {Δ1 = Δ1 }ih2) (~sym con2)) --todo: is there a notational inconsistency that means we need this ~sym here, or is it actually important?
     typed-expansion-synth (ESEHole {Γ = Γ} {u = u})  = TAEHole (x∈sing ∅ u (Γ , ⦇⦈)) lem-idsub
     typed-expansion-synth (ESNEHole {Γ = Γ} {τ = τ} {u = u} {Δ = Δ} ex)
       with typed-expansion-synth ex
     ... | ih1 = TANEHole {Δ = Δ ,, (u , Γ , ⦇⦈)} (x∈sing Δ u (Γ , ⦇⦈)) (lem-weakenΔ1 ih1) lem-idsub
-    typed-expansion-synth (ESAsc1 x x₁)
+    typed-expansion-synth (ESAsc x)
       with typed-expansion-ana x
-    ... | con , ih = TACast ih con
-    typed-expansion-synth (ESAsc2 x)
-      with typed-expansion-ana x
-    ... | con , ih = ih
+    ... | con , ih = TACast ih (~sym con) --todo: ditto above
 
     typed-expansion-ana : {Γ : tctx} {e : hexp} {τ τ' : htyp} {d : dhexp} {Δ : hctx} →
                           Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
