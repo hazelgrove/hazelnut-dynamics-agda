@@ -4,6 +4,7 @@ open import List
 open import core
 open import contexts
 open import htype-decidable
+open import lemmas-matching
 
 module expandability where
   mutual
@@ -16,17 +17,9 @@ module expandability where
       with expandability-ana wt
     ... | _ , _ , τ' , D  = _ , _ , ESAsc D
     expandability-synth (SVar {n = n} x) = _ , _ , ESVar x
-    expandability-synth (SAp wt1 MAHole wt2)
-      with expandability-ana wt2
-    ... | d2 , Δ2 , τ2 , D2 with expandability-ana (ASubsume wt1 TCHole1)
-    ... | d1 , Δ1 , τ1 , D1 =  _ , _ , {!!} -- ESAp1 wt1 D1 D2
-    expandability-synth (SAp wt1 (MAArr {τ1 = τ2}) wt2)
-      with expandability-synth wt1 | expandability-ana wt2
-    ... | d1 , Δ1 , D1
-        | d2 , Δ2 , τ2' , D2
-      with htype-dec τ2 τ2'
-    expandability-synth (SAp wt1 MAArr wt2) | d1 , Δ1 , D1 | d2 , Δ2 , τ2' , D2 | Inr neq  = _ , _ , {!!} -- ESAp2 D1 D2 neq
-    expandability-synth (SAp wt1 MAArr wt2) | d1 , Δ1 , D1 | d2 , Δ2 , τ1  , D2 | Inl refl = _ , _ , {!!} -- ESAp3 D1 D2
+    expandability-synth (SAp wt1 m wt2)
+      with expandability-ana (ASubsume wt1 (match-consist m)) | expandability-ana wt2
+    ... | _ , _ , _ , D1 | _ , _ , _ , D2 = _ , _ , ESAp wt1 m D1 D2
     expandability-synth SEHole = _ , _ , ESEHole
     expandability-synth (SNEHole wt)
       with expandability-synth wt

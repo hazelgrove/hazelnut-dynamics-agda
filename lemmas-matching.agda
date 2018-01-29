@@ -12,8 +12,12 @@ module lemmas-matching where
 
   -- if an arrow matches, then it's consistent with the least restrictive
   -- function type
-  matchconsist : ∀{t t'} →
+  matchconsisthole : ∀{t t'} →
                  t ▸arr t' →
                  t ~ (⦇⦈ ==> ⦇⦈)
-  matchconsist MAHole = TCHole2
-  matchconsist MAArr = TCArr TCHole1 TCHole1
+  matchconsisthole MAHole = TCHole2
+  matchconsisthole MAArr = TCArr TCHole1 TCHole1
+
+  match-consist : ∀{τ1 τ2} → τ1 ▸arr τ2 → (τ2 ~ τ1)
+  match-consist MAHole = TCHole1
+  match-consist MAArr = TCRefl
