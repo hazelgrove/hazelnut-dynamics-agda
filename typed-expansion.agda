@@ -36,26 +36,26 @@ module typed-expansion where
     typed-expansion-synth (ESLam x₁ ex) = TALam (typed-expansion-synth ex)
     typed-expansion-synth (ESAp {Δ1 = Δ1} x₁ x₂ x₃ x₄)
       with typed-expansion-ana x₃ | typed-expansion-ana x₄
-    ... | con1 , ih1 | con2 , ih2  = TAAp (TACast (lem-weakenΔ1 ih1) (~sym con1)) (TACast (lem-weakenΔ2 {Δ1 = Δ1 }ih2) (~sym con2)) --todo: is there a notational inconsistency that means we need this ~sym here, or is it actually important?
+    ... | con1 , ih1 | con2 , ih2  = TAAp (TACast (lem-weakenΔ1 ih1) con1) (TACast (lem-weakenΔ2 {Δ1 = Δ1 }ih2) con2)
     typed-expansion-synth (ESEHole {Γ = Γ} {u = u})  = TAEHole (x∈sing ∅ u (Γ , ⦇⦈)) lem-idsub
     typed-expansion-synth (ESNEHole {Γ = Γ} {τ = τ} {u = u} {Δ = Δ} ex)
       with typed-expansion-synth ex
     ... | ih1 = TANEHole {Δ = Δ ,, (u , Γ , ⦇⦈)} (x∈sing Δ u (Γ , ⦇⦈)) (lem-weakenΔ1 ih1) lem-idsub
     typed-expansion-synth (ESAsc x)
       with typed-expansion-ana x
-    ... | con , ih = TACast ih (~sym con) --todo: ditto above
+    ... | con , ih = TACast ih con
 
     typed-expansion-ana : {Γ : tctx} {e : hexp} {τ τ' : htyp} {d : dhexp} {Δ : hctx} →
                           Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
-                          (τ ~ τ') × (Δ , Γ ⊢ d :: τ')
+                          (τ' ~ τ) × (Δ , Γ ⊢ d :: τ')
     typed-expansion-ana (EALam x₁ ex)
       with typed-expansion-ana ex
     ... | con , D = (TCArr TCRefl con) , TALam D
-    typed-expansion-ana (EASubsume x x₁ x₂ x₃) = x₃ , typed-expansion-synth x₂
+    typed-expansion-ana (EASubsume x x₁ x₂ x₃) = ~sym x₃ , typed-expansion-synth x₂
     typed-expansion-ana (EAEHole {Γ = Γ} {u = u}) = TCRefl , TAEHole (x∈sing ∅ u (Γ , _)) lem-idsub
     typed-expansion-ana (EANEHole {Γ = Γ} {u = u} {τ = τ} {Δ = Δ}  x)
       with typed-expansion-synth x
     ... | ih1 = TCRefl , TANEHole {Δ = Δ ,, (u , Γ , τ)} (x∈sing Δ u (Γ , τ)) (lem-weakenΔ1 ih1) lem-idsub
     typed-expansion-ana (EALamHole x y)
       with typed-expansion-ana y
-    ... | _ , ih = TCHole2 , TALam ih
+    ... | _ , ih = TCHole1 , TALam ih
