@@ -349,12 +349,12 @@ module core where
                τ1 ==> τ2 ≠ ⦇⦈ ==> ⦇⦈ →
                (d ⟨ ⦇⦈ ⇒ τ1 ==> τ2 ⟩) →> (d ⟨ ⦇⦈ ⇒ ⦇⦈ ==> ⦇⦈ ⇒ τ1 ==> τ2 ⟩)
 
-  data _⊢_↦_ : (Δ : hctx) (d d' : dhexp) → Set where
-    Step : ∀{ d d0 d' d0' Δ ε} →
+  data _↦_ : (d d' : dhexp) → Set where
+    Step : ∀{ d d0 d' d0' ε} →
            d == ε ⟦ d0 ⟧ →
            d0 →> d0' →
            d' == ε ⟦ d0' ⟧ →
-           Δ ⊢ d ↦ d'
+           d ↦ d'
 
   data _casterr : (d : dhexp) → Set where
     CECastFinal : ∀ {d τ1 τ2} →

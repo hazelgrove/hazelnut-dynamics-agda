@@ -9,7 +9,7 @@ module complete-preservation where
   postulate
       preservation : {Δ : hctx} {d d' : dhexp} {τ : htyp} →
              Δ , ∅ ⊢ d :: τ →
-             Δ ⊢ d ↦ d' →
+             d ↦ d' →
              Δ , ∅ ⊢ d' :: τ
       typed-expansion-synth : {Γ : tctx} {e : hexp} {τ : htyp} {d : dhexp} {Δ : hctx} →
                             Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
@@ -19,6 +19,6 @@ module complete-preservation where
   complete-preservation : {Δ : hctx} {e : hexp} {d d' : dhexp} {τ : htyp} →
              ecomplete e →
              ∅ ⊢ e ⇒ τ ~> d ⊣ Δ →
-             Δ ⊢ d ↦ d' →
+             d ↦ d' →
              Δ , ∅ ⊢ d' :: τ
   complete-preservation comp exp step = preservation (typed-expansion-synth exp) step
