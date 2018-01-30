@@ -36,7 +36,7 @@ module progress-checks where
   ve (BVHoleCast x bv) (CECong x₁ er) = {!!}
 
   -- values and expressions that step are disjoint
-  vs : ∀{d Δ} → d boxedval → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
+  vs : ∀{d} → d boxedval → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
   vs (BVVal VConst) (d' , Step FHOuter () x₃)
   vs (BVVal VLam) (d' , Step FHOuter () x₃)
   vs (BVArrCast x bv) (d' , Step x₁ x₂ x₃) = {!x₂!}
@@ -102,7 +102,7 @@ module progress-checks where
   lem5 f sub step = lem1 (lem4 f sub) step
 
   -- indeterminates and expressions that step are disjoint
-  is : ∀{d Δ} → d indet → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
+  is : ∀{d} → d indet → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
   is = {!!}
   -- is IEHole (_ , Step (FHFinal x) q _) = lem1 x q
   -- is IEHole (_ , Step FHEHole () _)
@@ -121,7 +121,7 @@ module progress-checks where
   -- is (ICast a) (d' , Step (FHCastFinal x) x₁ x₂) = lem5 (FIndet (ICast a)) (FHCastFinal x) x₁ -- todo: this feels odd
 
   -- errors and expressions that step are disjoint
-  es : ∀{d Δ} → d casterr → (Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')) → ⊥
+  es : ∀{d} → d casterr → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
   es = {!!}
   -- -- cast error cases
   -- es (ECastError x x₁) (d' , Step (FHFinal x₂) x₃ x₄) = lem1 x₂ x₃
