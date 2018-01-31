@@ -11,7 +11,7 @@ module progress where
   -- and Inrs that you would get from the more literal transcription of the
   -- consequent of progress as:
   --
-  -- d val + d indet + d err[ Δ ] + Σ[ d' ∈ dhexp ] (Δ ⊢ d ↦ d')
+  -- d boxedval + d indet + d casterr[ Δ ] + Σ[ d' ∈ dhexp ] (d ↦ d')
   data ok : (d : dhexp) (Δ : hctx) → Set where
     S : ∀{d Δ} → Σ[ d' ∈ dhexp ] (d ↦ d') → ok d Δ
     E : ∀{d Δ} → d casterr → ok d Δ
