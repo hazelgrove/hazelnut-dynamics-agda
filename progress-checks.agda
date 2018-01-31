@@ -66,20 +66,28 @@ module progress-checks where
   -- todo: these are bad names; probably some places below where i inlined
   -- some of these lemmas before i'd come up with them
   lem2 : ∀{d d'} → d indet → d →> d' → ⊥
-  lem2 = {!!}
-  -- lem2 IEHole ()
-  -- lem2 (INEHole f) ()
-  -- lem2 (IAp () _) (ITLam _)
-  -- lem2 (ICast x) (ITCast (FVal x₁) x₂ x₃) = vi x₁ x
-  -- lem2 (ICast x) (ITCast (FIndet x₁) x₂ x₃) = {!!} -- todo: this is evidence that casts are busted
+  lem2 IEHole ()
+  lem2 (INEHole x) ()
+  lem2 (IAp x₁ () x₂) (ITLam x₃)
+  lem2 (IAp x (ICastArr x₁ ind) x₂) (ITApCast x₃ x₄) = {!!} -- cyrus
+  lem2 (ICastArr x ind) (ITCastID (FBoxed x₁)) = vi x₁ ind
+  lem2 (ICastArr x ind) (ITCastID (FIndet x₁)) = {!!} -- cyrus
+  lem2 (ICastGroundHole x ind) stp = {!!}
+  lem2 (ICastHoleGround x ind x₁) stp = {!!}
 
-  lem3 : ∀{d d'} → d val → d →> d' → ⊥ -- boxed?
-  lem3 = {!!}
-  -- lem3 VConst ()
-  -- lem3 VLam ()
+  lem3 : ∀{d d'} → d boxedval → d →> d' → ⊥ -- boxed?
+  lem3 (BVVal VConst) ()
+  lem3 (BVVal VLam) ()
+  lem3 (BVArrCast x bv) st = {!!}
+  lem3 (BVHoleCast x bv) st = {!!}
 
   lem1 : ∀{d d'} → d final → d →> d' → ⊥
-  lem1 = {!!}
+  lem1 (FBoxed x) = lem3 x
+  lem1 (FIndet x) = lem2 x
+
+  lem1' : ∀{d d'} → d final → d ↦ d' → ⊥
+  lem1' fin = {!!}
+
   -- lem1 (FVal x) st = lem3 x st
   -- lem1 (FIndet x) st = lem2 x st
 
@@ -101,17 +109,20 @@ module progress-checks where
   lem5 : ∀{d d' d'' ε} →  d final → d == ε ⟦ d' ⟧ → d' →> d'' → ⊥
   lem5 f sub step = lem1 (lem4 f sub) step
 
+
+
   -- indeterminates and expressions that step are disjoint
   is : ∀{d} → d indet → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
-  is = {!!}
-  -- is IEHole (_ , Step (FHFinal x) q _) = lem1 x q
-  -- is IEHole (_ , Step FHEHole () _)
-  -- is (INEHole _) (_ , Step (FHFinal x₁) q _) = lem1 x₁ q
-  -- is (INEHole x) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = lem5 x x₁ x₂
-  -- is (INEHole x) (_ , Step (FHNEHoleFinal x₁) () FHEHole)
-  -- is (INEHole x) (d , Step (FHNEHoleFinal x₁) () (FHFinal x₃))
-  -- is (INEHole x) (_ , Step (FHNEHoleFinal x₁) () (FHNEHoleFinal x₃))
-  -- is (INEHole x) (_ , Step (FHNEHoleFinal x₁) () (FHCastFinal x₃))
+  is IEHole (d' , Step FHOuter () FHOuter)
+  is (INEHole x) (d' , Step FHOuter () FHOuter)
+  is (INEHole x) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = lem5 x x₁ x₂
+  is (IAp x₁ () x₂) (_ , Step FHOuter (ITLam x₃) FHOuter)
+  is (IAp x (ICastArr x₁ ind) x₂) (_ , Step FHOuter (ITApCast x₃ x₄) FHOuter) = {!!}
+  is (IAp x ind x₁) (_ , Step (FHAp1 x₂) x₃ (FHAp1 x₄)) = is ind (_ , Step x₂ x₃ x₄)
+  is (IAp x ind x₁) (_ , Step (FHAp2 x₂ x₃) x₄ (FHAp2 x₅ x₆)) = lem1 x₁ {!π2 (lem6 (Step x₃ x₄ x₆))!}
+  is (ICastArr x ind) stp = {!!}
+  is (ICastGroundHole x ind) stp = {!!}
+  is (ICastHoleGround x ind g) stp = {!!}
   -- is (IAp _ _) (_ , Step (FHFinal x₁) q _) = lem1 x₁ q
   -- is (IAp _ (FVal x)) (_ , Step (FHAp1 _ p) q (FHAp1 _ r)) = vs x (_ , Step p q r)
   -- is (IAp _ (FIndet x)) (_ , Step (FHAp1 _ p) q (FHAp1 _ r)) = is x (_ , Step p q r)
@@ -122,7 +133,7 @@ module progress-checks where
 
   -- errors and expressions that step are disjoint
   es : ∀{d} → d casterr → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
-  es = {!!}
+  es er stp = {!e!}
   -- -- cast error cases
   -- es (ECastError x x₁) (d' , Step (FHFinal x₂) x₃ x₄) = lem1 x₂ x₃
   -- es (ECastError x x₁) (_ , Step (FHCast x₂) x₃ (FHCast x₄)) = {!!} -- todo: this is evidence that casts are busted
