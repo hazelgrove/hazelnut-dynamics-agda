@@ -4,7 +4,6 @@ open import List
 open import core
 open import contexts
 open import lemmas-consistency
-open import canonical-forms
 open import type-assignment-unicity
 
 -- taken together, the theorems in this file argue that for any expression
