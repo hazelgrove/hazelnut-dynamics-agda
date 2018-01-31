@@ -62,7 +62,7 @@ module core where
                τ2 ~̸ τ4 →
                τ1 ==> τ2 ~̸ τ3 ==> τ4
 
-  --- matching for arrows, sums, and products
+  --- matching for arrows
   data _▸arr_ : htyp → htyp → Set where
     MAHole : ⦇⦈ ▸arr ⦇⦈ ==> ⦇⦈
     MAArr  : {τ1 τ2 : htyp} → τ1 ==> τ2 ▸arr τ1 ==> τ2
