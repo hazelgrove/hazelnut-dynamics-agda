@@ -356,6 +356,13 @@ module core where
            d' == ε ⟦ d0' ⟧ →
            d ↦ d'
 
+  data _↦*_ : (d d' : dhexp) → Set where
+    MSRefl : ∀{d} → d ↦* d
+    MSStep : ∀{d d' d''} →
+                 d ↦ d' →
+                 d' ↦* d'' →
+                 d  ↦* d''
+
   data _casterr : (d : dhexp) → Set where
     CECastFinal : ∀ {d τ1 τ2} →
                   d final →

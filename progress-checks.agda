@@ -159,3 +159,8 @@ module progress-checks where
   -- es (ECastProp er) (d' , Step (FHFinal x) x₁ x₂) = lem1 x x₁
   -- es (ECastProp er) (_ , Step (FHCast x) x₁ (FHCast x₂)) = es er (_ , Step x x₁ x₂)
   -- es (ECastProp er) (d' , Step (FHCastFinal x) x₁ x₂) = fe x er
+
+
+  fs : ∀{d} → d final → Σ[ d' ∈ dhexp ] (d ↦ d') → ⊥
+  fs (FBoxed x) stp = vs x stp
+  fs (FIndet x) stp = is x stp
