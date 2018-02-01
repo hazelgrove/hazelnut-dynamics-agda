@@ -43,23 +43,26 @@ module progress-checks where
   vs (BVHoleCast x bv) (d' , Step FHOuter x₂ FHOuter) = {!x₂!} -- cyrus
   vs (BVHoleCast x bv) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = vs bv (_ , Step x₁ x₂ x₃)
 
+  -- todo: what class of P is this true for?
+  -- lem-something : ∀{ d ε d'} → d == ε ⟦ d' ⟧ → P d' → P d
+
   mutual
     -- indeterminates and errors are disjoint
     ie : ∀{d} → d indet → d casterr → ⊥
-    ie IEHole (CECong FHOuter err) = ie IEHole err -- this is extremely strange
-    ie (INEHole x) (CECong x₁ err) = {!!} -- fe x {!!}
-    ie (IAp x indet x₁) (CECong x₂ err) = {!x₂!}
-    ie (ICastArr x indet) (CECong x₁ err) = {!!}
+    ie IEHole (CECong FHOuter err) = ie IEHole err -- this feels extremely strange
+    ie (INEHole x) (CECong FHOuter err) = {!!}
+    ie (INEHole x) (CECong (FHNEHole x₁) err) = fe x (CECong x₁ err)
+    ie (IAp x indet x₁) (CECong FHOuter err) = {!!}
+    ie (IAp x indet x₁) (CECong (FHAp1 x₂) err) = ie indet (CECong x₂ err)
+    ie (IAp x indet x₁) (CECong (FHAp2 x₂ x₃) err) = fe x₁ (CECong x₃ err)
+    ie (ICastArr x indet) (CECong FHOuter err) = {!!}
+    ie (ICastArr x indet) (CECong (FHCast x₁) err) = ie indet (CECong x₁ err)
     ie (ICastGroundHole x indet) (CECastFinal x₁ x₂ () x₄)
-    ie (ICastGroundHole x indet) (CECong x₁ err) = {!!}
-    ie (ICastHoleGround x indet x₁) (CECastFinal x₂ x₃ x₄ x₅) = {!!}
-    ie (ICastHoleGround x indet x₁) (CECong x₂ err) = {!!}
-
-    -- ie (INEHole x) (ENEHole e) = fe x e
-    -- ie (IAp i x) (EAp1 e) = ie i e
-    -- ie (IAp i x) (EAp2 y e) = fe x e
-    -- ie (ICast i) (ECastError x x₁) = {!!} -- todo: this is evidence that casts are busted
-    -- ie (ICast i) (ECastProp x) = ie i x
+    ie (ICastGroundHole x indet) (CECong FHOuter err) = {!!}
+    ie (ICastGroundHole x indet) (CECong (FHCast x₁) err) = ie indet (CECong x₁ err)
+    ie (ICastHoleGround x indet x₁) (CECastFinal x₂ x₃ x₄ x₅) = x _ _ refl
+    ie (ICastHoleGround x indet x₁) (CECong FHOuter err) = {!!}
+    ie (ICastHoleGround x indet x₁) (CECong (FHCast x₂) err) = ie indet (CECong x₂ err)
 
     -- final expressions are not errors (not one of the 6 cases for progress, just a convenience)
     fe : ∀{d} → d final → d casterr → ⊥
@@ -72,7 +75,7 @@ module progress-checks where
   lem2 IEHole ()
   lem2 (INEHole x) ()
   lem2 (IAp x₁ () x₂) (ITLam x₃)
-  lem2 (IAp x (ICastArr x₁ ind) x₂) (ITApCast x₃ x₄) = {!!} -- cyrus
+  lem2 (IAp x (ICastArr x₁ ind) x₂) (ITApCast x₃ x₄) = x _ _ _ _ _ refl
   lem2 (ICastArr x ind) (ITCastID (FBoxed x₁)) = vi x₁ ind
   lem2 (ICastArr x ind) (ITCastID (FIndet x₁)) = x refl
   lem2 (ICastGroundHole x ind) stp = {!!}
@@ -91,14 +94,13 @@ module progress-checks where
   lem1 (FIndet x) = lem2 x
 
   lem4 : ∀{d ε x} → d final → d == ε ⟦ x ⟧ → x final
-  lem4 (FBoxed x) FHOuter = FBoxed x
+  lem4 x FHOuter = x
   lem4 (FBoxed (BVVal ())) (FHAp1 eps)
   lem4 (FBoxed (BVVal ())) (FHAp2 x₂ eps)
   lem4 (FBoxed (BVVal ())) (FHNEHole eps)
   lem4 (FBoxed (BVVal ())) (FHCast eps)
   lem4 (FBoxed (BVArrCast x₁ x₂)) (FHCast eps) = lem4 (FBoxed x₂) eps
   lem4 (FBoxed (BVHoleCast x₁ x₂)) (FHCast eps) = lem4 (FBoxed x₂) eps
-  lem4 (FIndet x) FHOuter = FIndet x
   lem4 (FIndet (IAp x₁ x₂ x₃)) (FHAp1 eps) = lem4 (FIndet x₂) eps
   lem4 (FIndet (IAp x₁ x₂ x₃)) (FHAp2 x₄ eps) = lem4 x₃ eps
   lem4 (FIndet (INEHole x₁)) (FHNEHole eps) = lem4 x₁ eps
@@ -116,7 +118,7 @@ module progress-checks where
     is (INEHole x) (d' , Step FHOuter () FHOuter)
     is (INEHole x) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = lem5 x x₁ x₂
     is (IAp x₁ () x₂) (_ , Step FHOuter (ITLam x₃) FHOuter)
-    is (IAp x (ICastArr x₁ ind) x₂) (_ , Step FHOuter (ITApCast x₃ x₄) FHOuter) = {!!} -- cyrus / maybe that error in the rule with pi-types
+    is (IAp x (ICastArr x₁ ind) x₂) (_ , Step FHOuter (ITApCast x₃ x₄) FHOuter) = x _ _ _ _ _  refl
     is (IAp x ind _) (_ , Step (FHAp1 x₂) x₃ (FHAp1 x₄)) = is ind (_ , Step x₂ x₃ x₄)
     is (IAp x ind f) (_ , Step (FHAp2 x₂ x₃) x₄ (FHAp2 x₅ x₆)) = fs f (_ , Step x₃ x₄ x₆)
     is (ICastArr x ind) (d0' , Step FHOuter (ITCastID x₁) FHOuter) = x refl
@@ -124,9 +126,11 @@ module progress-checks where
     is (ICastGroundHole () ind) (d' , Step FHOuter (ITCastID x₁) FHOuter)
     is (ICastGroundHole x ind) (d' , Step FHOuter (ITCastSucceed x₁ ()) FHOuter)
     is (ICastGroundHole GHole ind) (_ , Step FHOuter (ITGround (FBoxed x)) FHOuter) = vi x ind
-    is (ICastGroundHole GHole ind) (_ , Step FHOuter (ITGround (FIndet x)) FHOuter) = {!!}
+    is (ICastGroundHole GHole ind) (_ , Step FHOuter (ITGround (FIndet x)) FHOuter) = {!!} -- cyrus
     is (ICastGroundHole x ind) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = is ind (_ , Step x₁ x₂ x₃)
-    is (ICastHoleGround x ind g) (d' , Step FHOuter x₂ FHOuter) = {!!}
+    is (ICastHoleGround x ind ()) (d' , Step FHOuter (ITCastID x₁) FHOuter)
+    is (ICastHoleGround x ind g) (d' , Step FHOuter (ITCastSucceed x₁ x₂) FHOuter) = x _ _ refl
+    is (ICastHoleGround x ind GHole) (_ , Step FHOuter (ITExpand x₁ x₂) FHOuter) = x₂ refl
     is (ICastHoleGround x ind g) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = is ind (_ , Step x₁ x₂ x₃)
 
     fs : ∀{d} → d final → Σ[ d' ∈ dhexp ] (d ↦ d') → ⊥
