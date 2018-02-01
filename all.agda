@@ -6,6 +6,7 @@ open import contexts
 open import core
 
 open import focus-formation
+open import finality
 
 open import lemmas-consistency
 open import lemmas-matching
