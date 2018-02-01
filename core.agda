@@ -253,8 +253,7 @@ module core where
     data _indet : (d : dhexp) → Set where
       IEHole : ∀{u σ} → ⦇⦈⟨ u , σ ⟩ indet
       INEHole : ∀{d u σ} → d final → ⦇ d ⦈⟨ u , σ ⟩ indet
-      IAp : ∀{d1 d1' d2 τ1 τ2 τ3 τ4} →
-                       d1 ≠ (d1' ⟨(τ1 ==> τ2) ⇒ (τ3 ==> τ4)⟩)  →
+      IAp : ∀{d1 d2} → ((τ1 τ2 τ3 τ4 : htyp) (d1' : dhexp) → d1 ≠ (d1' ⟨(τ1 ==> τ2) ⇒ (τ3 ==> τ4)⟩)) →
                        d1 indet →
                        d2 final →
                        (d1 ∘ d2) indet -- todo: should there be two ap rules?
@@ -266,8 +265,8 @@ module core where
                         τ ground →
                         d indet →
                         d ⟨ τ ⇒  ⦇⦈ ⟩ indet
-      ICastHoleGround : ∀ { d d' τ τ' } →
-                        d ≠ (d' ⟨ τ' ⇒ ⦇⦈ ⟩) →
+      ICastHoleGround : ∀ { d τ } →
+                        ((d' : dhexp) (τ' : htyp) → d ≠ (d' ⟨ τ' ⇒ ⦇⦈ ⟩)) →
                         d indet →
                         τ ground →
                         d ⟨ ⦇⦈ ⇒ τ ⟩ indet
