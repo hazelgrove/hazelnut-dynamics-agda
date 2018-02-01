@@ -48,14 +48,14 @@ module typed-expansion where
     typed-expansion-ana : {Γ : tctx} {e : hexp} {τ τ' : htyp} {d : dhexp} {Δ : hctx} →
                           Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                           (τ' ~ τ) × (Δ , Γ ⊢ d :: τ')
-    typed-expansion-ana (EALam x₁ ex)
+    typed-expansion-ana (EALam x₁ MAHole ex)
       with typed-expansion-ana ex
-    ... | con , D = (TCArr TCRefl con) , TALam D
+    ... | con , D = TCHole1 , TALam D
+    typed-expansion-ana (EALam x₁ MAArr ex)
+      with typed-expansion-ana ex
+    ... | con , D = TCArr TCRefl con , TALam D
     typed-expansion-ana (EASubsume x x₁ x₂ x₃) = ~sym x₃ , typed-expansion-synth x₂
     typed-expansion-ana (EAEHole {Γ = Γ} {u = u}) = TCRefl , TAEHole (x∈sing ∅ u (Γ , _)) lem-idsub
     typed-expansion-ana (EANEHole {Γ = Γ} {u = u} {τ = τ} {Δ = Δ}  x)
       with typed-expansion-synth x
     ... | ih1 = TCRefl , TANEHole {Δ = Δ ,, (u , Γ , τ)} (x∈sing Δ u (Γ , τ)) (lem-weakenΔ1 ih1) lem-idsub
-    typed-expansion-ana (EALamHole x y)
-      with typed-expansion-ana y
-    ... | _ , ih = TCHole1 , TALam ih

@@ -20,8 +20,7 @@ module correspondence where
     correspondence-ana : {Γ : tctx} {e : hexp} {τ τ' : htyp} {d : dhexp} {Δ : hctx} →
                           Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                           Γ ⊢ e <= τ
-    correspondence-ana (EALam apt ex) = ALam apt MAArr (correspondence-ana ex)
-    correspondence-ana (EALamHole apt D) = ALam apt MAHole (correspondence-ana D)
+    correspondence-ana (EALam apt m ex) = ALam apt m (correspondence-ana ex)
     correspondence-ana (EASubsume x x₁ x₂ x₃) = ASubsume (correspondence-synth x₂) x₃
     correspondence-ana EAEHole = ASubsume SEHole TCHole1
     correspondence-ana (EANEHole x) = ASubsume (SNEHole (correspondence-synth x)) TCHole1

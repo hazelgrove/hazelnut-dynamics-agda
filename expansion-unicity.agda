@@ -40,16 +40,12 @@ module expansion-unicity where
                           Γ ⊢ e ⇐ τ1 ~> d  :: τ2  ⊣ Δ  →
                           Γ ⊢ e ⇐ τ1 ~> d' :: τ2' ⊣ Δ' →
                           d == d' × τ2 == τ2' × Δ == Δ'
-    expansion-unicity-ana (EALam x₁ D1) (EALam x₂ D2)
-      with expansion-unicity-ana D1 D2
+    expansion-unicity-ana (EALam x₁ m D1) (EALam x₂ m2 D2)
+      with match-unicity m m2
+    ... | refl with expansion-unicity-ana D1 D2
     ... | refl , refl , refl = refl , refl , refl
-    expansion-unicity-ana (EALam x₁ D1) (EASubsume x₂ x₃ () x₅)
-    expansion-unicity-ana (EALamHole x₁ D1) (EALamHole x₂ D2)
-      with expansion-unicity-ana D1 D2
-    ... | refl , refl , refl = refl , refl , refl
-    expansion-unicity-ana (EALamHole x₁ D1) (EASubsume x₂ x₃ () x₅)
-    expansion-unicity-ana (EASubsume x₁ x₂ () x₄) (EALam x₅ D2)
-    expansion-unicity-ana (EASubsume x₁ x₂ () x₄) (EALamHole x₅ D2)
+    expansion-unicity-ana (EALam x₁ m D1) (EASubsume x₂ x₃ () x₅)
+    expansion-unicity-ana (EASubsume x₁ x₂ () x₄) (EALam x₅ m D2)
     expansion-unicity-ana (EASubsume x x₁ x₂ x₃) (EASubsume x₄ x₅ x₆ x₇)
       with expansion-unicity-synth x₂ x₆
     ... | refl , refl , refl = refl , refl , refl

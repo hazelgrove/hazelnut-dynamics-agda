@@ -45,9 +45,6 @@ module expandability where
     expandability-ana {e = ⦇⦈[ x ]} (ASubsume _ _ )              | _ , _ , _  = _ , _ , _ , EAEHole
     expandability-ana {e = ⦇ e ⦈[ x ]} (ASubsume (SNEHole wt) _) | _ , _ , _  = _ , _ , _ , EANEHole (π2( π2 (expandability-synth wt)))
     -- the lambda cases
-    expandability-ana (ALam x₁ MAHole wt)
+    expandability-ana (ALam x₁ m wt)
       with expandability-ana wt
-    ... | _ , _ , _ , D' = _ , _ , _ , EALamHole x₁ D'
-    expandability-ana (ALam x₁ MAArr wt)
-      with expandability-ana wt
-    ... | _ , _ , _ , D' = _ , _ , _ , EALam x₁ D'
+    ... | _ , _ , _ , D' = _ , _ , _ , EALam x₁ m D'
