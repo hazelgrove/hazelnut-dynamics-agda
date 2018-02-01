@@ -13,7 +13,7 @@ open import type-assignment-unicity
 -- of currying and comutativity of products, this means that there are six
 -- theorems to prove)
 module progress-checks where
-  -- values and indeterminates are disjoint
+  -- boxed values and indeterminates are disjoint
   vi : ∀{d} → d boxedval → d indet → ⊥
   vi (BVVal VConst) ()
   vi (BVVal VLam) ()
@@ -21,25 +21,27 @@ module progress-checks where
   vi (BVHoleCast x bv) (ICastGroundHole x₁ ind) = vi bv ind
   vi (BVHoleCast x bv) (ICastHoleGround x₁ ind x₂) = vi bv ind
 
-  lem-valfill : ∀{ε d d'} → d val → d == ε ⟦ d' ⟧ → d' val
-  lem-valfill VConst FHOuter = VConst
-  lem-valfill VLam FHOuter = VLam
-
-  -- values and errors are disjoint
+  -- boxed values and errors are disjoint
   ve : ∀{d} → d boxedval → d casterr → ⊥
   ve (BVVal ()) (CECastFinal x₁ x₂ x₃ x₄)
   ve (BVHoleCast x bv) (CECastFinal x₁ x₂ () x₄)
-  ve (BVVal x) (CECong x₁ er) = ve (BVVal (lem-valfill x x₁)) er
-  ve (BVArrCast x bv) (CECong FHOuter (CECong x₁ er)) = {!!} -- ve bv {!!}
+  ve (BVArrCast x bv) (CECong FHOuter (CECong x₁ er)) = {!!}
   ve (BVArrCast x bv) (CECong (FHCast x₁) er) = ve bv (CECong x₁ er)
   ve (BVHoleCast x bv) (CECong x₁ er) = {!!}
+  ve (BVVal x) (CECong x₁ er) = ve (BVVal (lem-valfill x x₁)) er
+    where
+    lem-valfill : ∀{ε d d'} → d val → d == ε ⟦ d' ⟧ → d' val
+    lem-valfill VConst FHOuter = VConst
+    lem-valfill VLam FHOuter = VLam
 
-  -- values and expressions that step are disjoint
+  -- boxed values and expressions that step are disjoint
   vs : ∀{d} → d boxedval → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
   vs (BVVal VConst) (d' , Step FHOuter () x₃)
   vs (BVVal VLam) (d' , Step FHOuter () x₃)
-  vs (BVArrCast x bv) (d' , Step x₁ x₂ x₃) = {!x₂!}
-  vs (BVHoleCast x bv) s = {!!}
+  vs (BVArrCast x bv) (d0' , Step FHOuter (ITCastID x₁) FHOuter) = x refl
+  vs (BVArrCast x bv) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = vs bv (_ , Step x₁ x₂ x₃)
+  vs (BVHoleCast x bv) (d' , Step FHOuter x₂ FHOuter) = {!x₂!} -- cyrus
+  vs (BVHoleCast x bv) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = vs bv (_ , Step x₁ x₂ x₃)
 
   mutual
     -- indeterminates and errors are disjoint
@@ -74,7 +76,7 @@ module progress-checks where
   lem2 (ICastGroundHole x ind) stp = {!!}
   lem2 (ICastHoleGround x ind x₁) stp = {!!}
 
-  lem3 : ∀{d d'} → d boxedval → d →> d' → ⊥ -- boxed?
+  lem3 : ∀{d d'} → d boxedval → d →> d' → ⊥
   lem3 (BVVal VConst) ()
   lem3 (BVVal VLam) ()
   lem3 (BVArrCast x bv) st = {!!}
@@ -84,83 +86,49 @@ module progress-checks where
   lem1 (FBoxed x) = lem3 x
   lem1 (FIndet x) = lem2 x
 
-  lem1' : ∀{d d'} → d final → d ↦ d' → ⊥
-  lem1' fin = {!!}
-
-  -- lem1 (FVal x) st = lem3 x st
-  -- lem1 (FIndet x) st = lem2 x st
-
   lem4 : ∀{d ε x} → d final → d == ε ⟦ x ⟧ → x final
-  lem4 = {!!}
-  -- lem4 f (FHFinal x) = x
-  -- lem4 (FVal ()) (FHAp1 x₂ sub)
-  -- lem4 (FIndet (IAp x₁ x₂)) (FHAp1 x₃ sub) = lem4 x₂ sub
-  -- lem4 (FVal ()) (FHAp2 sub)
-  -- lem4 (FIndet (IAp x₁ x₂)) (FHAp2 sub) = lem4 (FIndet x₁) sub
-  -- lem4 f FHEHole = f
-  -- lem4 f (FHNEHoleFinal x) = f
-  -- lem4 (FVal ()) (FHCast sub)
-  -- lem4 (FIndet (ICast i)) (FHCast sub) = lem4 (FIndet i) sub
-  -- lem4 f (FHCastFinal x) = f
-  -- lem4 (FVal ()) (FHNEHole y)
-  -- lem4 (FIndet (INEHole x₁)) (FHNEHole y) = lem4 x₁ y
+  lem4 (FBoxed x) FHOuter = FBoxed x
+  lem4 (FBoxed (BVVal ())) (FHAp1 eps)
+  lem4 (FBoxed (BVVal ())) (FHAp2 x₂ eps)
+  lem4 (FBoxed (BVVal ())) (FHNEHole eps)
+  lem4 (FBoxed (BVVal ())) (FHCast eps)
+  lem4 (FBoxed (BVArrCast x₁ x₂)) (FHCast eps) = lem4 (FBoxed x₂) eps
+  lem4 (FBoxed (BVHoleCast x₁ x₂)) (FHCast eps) = lem4 (FBoxed x₂) eps
+  lem4 (FIndet x) FHOuter = FIndet x
+  lem4 (FIndet (IAp x₁ x₂ x₃)) (FHAp1 eps) = lem4 (FIndet x₂) eps
+  lem4 (FIndet (IAp x₁ x₂ x₃)) (FHAp2 x₄ eps) = lem4 x₃ eps
+  lem4 (FIndet (INEHole x₁)) (FHNEHole eps) = lem4 x₁ eps
+  lem4 (FIndet (ICastArr x₁ x₂)) (FHCast eps) = lem4 (FIndet x₂) eps
+  lem4 (FIndet (ICastGroundHole x₁ x₂)) (FHCast eps) = lem4 (FIndet x₂) eps
+  lem4 (FIndet (ICastHoleGround x₁ x₂ x₃)) (FHCast eps) = lem4 (FIndet x₂) eps
 
   lem5 : ∀{d d' d'' ε} →  d final → d == ε ⟦ d' ⟧ → d' →> d'' → ⊥
   lem5 f sub step = lem1 (lem4 f sub) step
 
-
-
   -- indeterminates and expressions that step are disjoint
-  is : ∀{d} → d indet → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
-  is IEHole (d' , Step FHOuter () FHOuter)
-  is (INEHole x) (d' , Step FHOuter () FHOuter)
-  is (INEHole x) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = lem5 x x₁ x₂
-  is (IAp x₁ () x₂) (_ , Step FHOuter (ITLam x₃) FHOuter)
-  is (IAp x (ICastArr x₁ ind) x₂) (_ , Step FHOuter (ITApCast x₃ x₄) FHOuter) = {!!}
-  is (IAp x ind x₁) (_ , Step (FHAp1 x₂) x₃ (FHAp1 x₄)) = is ind (_ , Step x₂ x₃ x₄)
-  is (IAp x ind x₁) (_ , Step (FHAp2 x₂ x₃) x₄ (FHAp2 x₅ x₆)) = lem1 x₁ {!π2 (lem6 (Step x₃ x₄ x₆))!}
-  is (ICastArr x ind) stp = {!!}
-  is (ICastGroundHole x ind) stp = {!!}
-  is (ICastHoleGround x ind g) stp = {!!}
-  -- is (IAp _ _) (_ , Step (FHFinal x₁) q _) = lem1 x₁ q
-  -- is (IAp _ (FVal x)) (_ , Step (FHAp1 _ p) q (FHAp1 _ r)) = vs x (_ , Step p q r)
-  -- is (IAp _ (FIndet x)) (_ , Step (FHAp1 _ p) q (FHAp1 _ r)) = is x (_ , Step p q r)
-  -- is (IAp i x) (_ , Step (FHAp2 p) q (FHAp2 r)) = is i (_ , (Step p q r))
-  -- is (ICast a) (d' , Step (FHFinal x) q x₄) = lem1 x q
-  -- is (ICast a) (_ , Step (FHCast x) x₁ (FHCast x₂)) = is a (_ , Step x x₁ x₂)
-  -- is (ICast a) (d' , Step (FHCastFinal x) x₁ x₂) = lem5 (FIndet (ICast a)) (FHCastFinal x) x₁ -- todo: this feels odd
+  mutual
+    is : ∀{d} → d indet → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
+    is IEHole (d' , Step FHOuter () FHOuter)
+    is (INEHole x) (d' , Step FHOuter () FHOuter)
+    is (INEHole x) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = lem5 x x₁ x₂
+    is (IAp x₁ () x₂) (_ , Step FHOuter (ITLam x₃) FHOuter)
+    is (IAp x (ICastArr x₁ ind) x₂) (_ , Step FHOuter (ITApCast x₃ x₄) FHOuter) = {!!} -- cyrus / maybe that error in the rule with pi-types
+    is (IAp x ind _) (_ , Step (FHAp1 x₂) x₃ (FHAp1 x₄)) = is ind (_ , Step x₂ x₃ x₄)
+    is (IAp x ind f) (_ , Step (FHAp2 x₂ x₃) x₄ (FHAp2 x₅ x₆)) = fs f (_ , Step x₃ x₄ x₆)
+    is (ICastArr x ind) (d0' , Step FHOuter (ITCastID x₁) FHOuter) = x refl
+    is (ICastArr x ind) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = is ind (_ , Step x₁ x₂ x₃)
+    is (ICastGroundHole () ind) (d' , Step FHOuter (ITCastID x₁) FHOuter)
+    is (ICastGroundHole x ind) (d' , Step FHOuter (ITCastSucceed x₁ ()) FHOuter)
+    is (ICastGroundHole GHole ind) (_ , Step FHOuter (ITGround (FBoxed x)) FHOuter) = vi x ind
+    is (ICastGroundHole GHole ind) (_ , Step FHOuter (ITGround (FIndet x)) FHOuter) = {!!}
+    is (ICastGroundHole x ind) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = is ind (_ , Step x₁ x₂ x₃)
+    is (ICastHoleGround x ind g) (d' , Step FHOuter x₂ FHOuter) = {!!}
+    is (ICastHoleGround x ind g) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = is ind (_ , Step x₁ x₂ x₃)
+
+    fs : ∀{d} → d final → Σ[ d' ∈ dhexp ] (d ↦ d') → ⊥
+    fs (FBoxed x) stp = vs x stp
+    fs (FIndet x) stp = is x stp
 
   -- errors and expressions that step are disjoint
   es : ∀{d} → d casterr → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
-  es er stp = {!e!}
-  -- -- cast error cases
-  -- es (ECastError x x₁) (d' , Step (FHFinal x₂) x₃ x₄) = lem1 x₂ x₃
-  -- es (ECastError x x₁) (_ , Step (FHCast x₂) x₃ (FHCast x₄)) = {!!} -- todo: this is evidence that casts are busted
-  -- es (ECastError x x₁) (d' , Step (FHCastFinal x₂) (ITCast x₃ x₄ x₅) x₆)
-  --   with type-assignment-unicity x x₄
-  -- ... | refl = ~apart x₁ x₅
-
-  -- -- ap1 cases
-  -- es (EAp1 er) (d' , Step (FHFinal x) x₁ x₂) = lem1 x x₁
-  -- es (EAp1 er) (_ , Step (FHAp1 x x₁) x₂ (FHAp1 x₃ x₄)) = fe x er
-  -- es (EAp1 er) (_ , Step (FHAp2 x) x₁ (FHAp2 x₂)) = es er (_ , Step x x₁ x₂)
-
-  -- -- ap2 cases
-  -- es (EAp2 a er) (d' , Step (FHFinal x) x₁ x₂) = lem1 x x₁
-  -- es (EAp2 a er) (_ , Step (FHAp1 x x₁) x₂ (FHAp1 x₃ x₄)) = es er (_ , Step x₁ x₂ x₄)
-  -- es (EAp2 a er) (_ , Step (FHAp2 x) x₁ (FHAp2 x₂)) = lem5 a x x₁
-
-  -- -- nehole cases
-  -- es (ENEHole er) (d' , Step (FHFinal x) x₁ x₂) = lem1 x x₁
-  -- es (ENEHole er) (_ , Step (FHNEHole a) x (FHNEHole x₂)) = es er (_ , Step a x x₂)
-  -- es (ENEHole er) (d' , Step (FHNEHoleFinal x) x₁ x₂) = fe x er
-
-  -- -- castprop cases
-  -- es (ECastProp er) (d' , Step (FHFinal x) x₁ x₂) = lem1 x x₁
-  -- es (ECastProp er) (_ , Step (FHCast x) x₁ (FHCast x₂)) = es er (_ , Step x x₁ x₂)
-  -- es (ECastProp er) (d' , Step (FHCastFinal x) x₁ x₂) = fe x er
-
-
-  fs : ∀{d} → d final → Σ[ d' ∈ dhexp ] (d ↦ d') → ⊥
-  fs (FBoxed x) stp = vs x stp
-  fs (FIndet x) stp = is x stp
+  es er stp = {!!}
