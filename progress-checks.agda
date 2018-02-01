@@ -25,14 +25,14 @@ module progress-checks where
   ve : ∀{d} → d boxedval → d casterr → ⊥
   ve (BVVal ()) (CECastFinal x₁ x₂ x₃ x₄)
   ve (BVHoleCast x bv) (CECastFinal x₁ x₂ () x₄)
-  ve (BVArrCast x bv) (CECong FHOuter (CECong x₁ er)) = {!!}
+  ve (BVArrCast x bv) (CECong FHOuter (CECong eps er)) = {!!}
   ve (BVArrCast x bv) (CECong (FHCast x₁) er) = ve bv (CECong x₁ er)
   ve (BVHoleCast x bv) (CECong x₁ er) = {!!}
-  ve (BVVal x) (CECong x₁ er) = ve (BVVal (lem-valfill x x₁)) er
+  ve (BVVal x) (CECong x₁ er) = ve (lem-valfill x x₁) er
     where
-    lem-valfill : ∀{ε d d'} → d val → d == ε ⟦ d' ⟧ → d' val
-    lem-valfill VConst FHOuter = VConst
-    lem-valfill VLam FHOuter = VLam
+    lem-valfill : ∀{ε d d'} → d val → d == ε ⟦ d' ⟧ → d' boxedval
+    lem-valfill VConst FHOuter = BVVal VConst
+    lem-valfill VLam FHOuter = BVVal VLam
 
   -- boxed values and expressions that step are disjoint
   vs : ∀{d} → d boxedval → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
@@ -46,13 +46,15 @@ module progress-checks where
   mutual
     -- indeterminates and errors are disjoint
     ie : ∀{d} → d indet → d casterr → ⊥
-    ie IEHole err = {!err!}
-    ie (INEHole x) err = {!!}
-    ie (IAp x indet x₁) err = {!!}
-    ie (ICastArr x indet) err = {!!}
-    ie (ICastGroundHole x indet) err = {!!}
-    ie (ICastHoleGround x indet x₁) err = {!!}
-    -- ie IEHole ()
+    ie IEHole (CECong FHOuter err) = ie IEHole err -- this is extremely strange
+    ie (INEHole x) (CECong x₁ err) = {!!} -- fe x {!!}
+    ie (IAp x indet x₁) (CECong x₂ err) = {!x₂!}
+    ie (ICastArr x indet) (CECong x₁ err) = {!!}
+    ie (ICastGroundHole x indet) (CECastFinal x₁ x₂ () x₄)
+    ie (ICastGroundHole x indet) (CECong x₁ err) = {!!}
+    ie (ICastHoleGround x indet x₁) (CECastFinal x₂ x₃ x₄ x₅) = {!!}
+    ie (ICastHoleGround x indet x₁) (CECong x₂ err) = {!!}
+
     -- ie (INEHole x) (ENEHole e) = fe x e
     -- ie (IAp i x) (EAp1 e) = ie i e
     -- ie (IAp i x) (EAp2 y e) = fe x e
@@ -72,15 +74,17 @@ module progress-checks where
   lem2 (IAp x₁ () x₂) (ITLam x₃)
   lem2 (IAp x (ICastArr x₁ ind) x₂) (ITApCast x₃ x₄) = {!!} -- cyrus
   lem2 (ICastArr x ind) (ITCastID (FBoxed x₁)) = vi x₁ ind
-  lem2 (ICastArr x ind) (ITCastID (FIndet x₁)) = {!!} -- cyrus
+  lem2 (ICastArr x ind) (ITCastID (FIndet x₁)) = x refl
   lem2 (ICastGroundHole x ind) stp = {!!}
   lem2 (ICastHoleGround x ind x₁) stp = {!!}
 
   lem3 : ∀{d d'} → d boxedval → d →> d' → ⊥
   lem3 (BVVal VConst) ()
   lem3 (BVVal VLam) ()
-  lem3 (BVArrCast x bv) st = {!!}
-  lem3 (BVHoleCast x bv) st = {!!}
+  lem3 (BVArrCast x bv) (ITCastID x₁) = x refl
+  lem3 (BVHoleCast () bv) (ITCastID x₁)
+  lem3 (BVHoleCast () bv) (ITCastSucceed x₁ x₂)
+  lem3 (BVHoleCast GHole bv) (ITGround x₁) = {!!} -- cyrus
 
   lem1 : ∀{d d'} → d final → d →> d' → ⊥
   lem1 (FBoxed x) = lem3 x
