@@ -33,7 +33,7 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-base (TAAp wt wt₁) (IAp x ind x₁) = Inr (Inr (Inl (_ , _ , _ , _ , refl , wt , wt₁ , ind , x₁ , {!x!})))
   canonical-indeterminate-forms-base (TAEHole x x₁) IEHole = Inl (_ , _ , _ , refl , x)
   canonical-indeterminate-forms-base (TANEHole x wt x₁) (INEHole x₂) = Inr (Inl (_ , _ , _ , _ , _ , refl , x₂ , wt , x))
-  canonical-indeterminate-forms-base (TACast wt x) (ICastHoleGround x₁ ind x₂) = Inr (Inr (Inr (_ , _ , _ , refl , ind , x₁)))
+  canonical-indeterminate-forms-base (TACast wt x) (ICastHoleGround x₁ ind x₂) = {!!} -- Inr (Inr (Inr (_ , _ , _ , refl , ind , x₁)))
 
   -- canonical-indeterminate-forms-arr :
   -- canonical-indeterminate-forms-arr = ?
