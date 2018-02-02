@@ -25,14 +25,28 @@ module progress-checks where
   ve : ∀{d} → d boxedval → d casterr → ⊥
   ve (BVVal ()) (CECastFail x₁ x₂ x₃ x₄)
   ve (BVHoleCast x bv) (CECastFail x₁ x₂ () x₄)
-  ve (BVArrCast x bv) (CECong FHOuter (CECong eps er)) = {!!}
-  ve (BVArrCast x bv) (CECong (FHCast x₁) er) = ve bv (CECong x₁ er)
-  ve (BVHoleCast x bv) (CECong x₁ er) = {!!}
-  ve (BVVal x) (CECong x₁ er) = ve (lem-valfill x x₁) er
+  ve (BVArrCast x bv) (CECong FHOuter er) = ve bv (lem er)
     where
-    lem-valfill : ∀{ε d d'} → d val → d == ε ⟦ d' ⟧ → d' boxedval
-    lem-valfill VConst FHOuter = BVVal VConst
-    lem-valfill VLam FHOuter = BVVal VLam
+    -- todo: also being used below
+    lem : ∀{d τ1 τ2 τ3 τ4} → (d ⟨ τ1 ==> τ2 ⇒ τ3 ==> τ4 ⟩) casterr → d casterr
+    lem (CECong FHOuter ce) = lem ce
+    lem (CECong (FHCast x₁) ce) = CECong x₁ ce
+  ve (BVArrCast x bv) (CECong (FHCast x₁) er) = ve bv (CECong x₁ er)
+  ve (BVHoleCast x bv) (CECong FHOuter er) = ve bv (lem er)
+    where
+    --- todo: okay this is now getting reused here and in the case of ie
+    --- below, so this is apparently more of an interesting property than
+    --- i'd thought
+    lem : ∀{d τ} → (d ⟨ τ ⇒ ⦇⦈ ⟩) casterr → d casterr
+    lem (CECastFail x₁ x₂ () x₄)
+    lem (CECong FHOuter ce) = lem ce
+    lem (CECong (FHCast x₁) ce) = CECong x₁ ce
+  ve (BVHoleCast x bv) (CECong (FHCast x₁) er) = ve bv (CECong x₁ er)
+  ve (BVVal x) (CECong FHOuter er) = ve (BVVal x) er
+  ve (BVVal ()) (CECong (FHAp1 x₁) er)
+  ve (BVVal ()) (CECong (FHAp2 x₁ x₂) er)
+  ve (BVVal ()) (CECong (FHNEHole x₁) er)
+  ve (BVVal ()) (CECong (FHCast x₁) er)
 
   -- boxed values and expressions that step are disjoint
   vs : ∀{d} → d boxedval → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
