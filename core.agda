@@ -360,7 +360,7 @@ module core where
                  d  ↦* d''
 
   data _casterr : (d : dhexp) → Set where
-    CECastFinal : ∀ {d τ1 τ2} →
+    CECastFail : ∀ {d τ1 τ2} →
                   d final →
                   τ1 ground →
                   τ2 ground →

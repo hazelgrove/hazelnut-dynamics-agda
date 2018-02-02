@@ -23,8 +23,8 @@ module progress-checks where
 
   -- boxed values and errors are disjoint
   ve : ∀{d} → d boxedval → d casterr → ⊥
-  ve (BVVal ()) (CECastFinal x₁ x₂ x₃ x₄)
-  ve (BVHoleCast x bv) (CECastFinal x₁ x₂ () x₄)
+  ve (BVVal ()) (CECastFail x₁ x₂ x₃ x₄)
+  ve (BVHoleCast x bv) (CECastFail x₁ x₂ () x₄)
   ve (BVArrCast x bv) (CECong FHOuter (CECong eps er)) = {!!}
   ve (BVArrCast x bv) (CECong (FHCast x₁) er) = ve bv (CECong x₁ er)
   ve (BVHoleCast x bv) (CECong x₁ er) = {!!}
@@ -57,10 +57,10 @@ module progress-checks where
     ie (IAp x indet x₁) (CECong (FHAp2 x₂ x₃) err) = fe x₁ (CECong x₃ err)
     ie (ICastArr x indet) (CECong FHOuter err) = {!!}
     ie (ICastArr x indet) (CECong (FHCast x₁) err) = ie indet (CECong x₁ err)
-    ie (ICastGroundHole x indet) (CECastFinal x₁ x₂ () x₄)
+    ie (ICastGroundHole x indet) (CECastFail x₁ x₂ () x₄)
     ie (ICastGroundHole x indet) (CECong FHOuter err) = {!!}
     ie (ICastGroundHole x indet) (CECong (FHCast x₁) err) = ie indet (CECong x₁ err)
-    ie (ICastHoleGround x indet x₁) (CECastFinal x₂ x₃ x₄ x₅) = x _ _ refl
+    ie (ICastHoleGround x indet x₁) (CECastFail x₂ x₃ x₄ x₅) = x _ _ refl
     ie (ICastHoleGround x indet x₁) (CECong FHOuter err) = {!!}
     ie (ICastHoleGround x indet x₁) (CECong (FHCast x₂) err) = ie indet (CECong x₂ err)
 
