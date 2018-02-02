@@ -8,10 +8,10 @@ open import type-assignment-unicity
 
 -- taken together, the theorems in this file argue that for any expression
 -- d, at most one summand of the labeled sum that results from progress may
--- be true at any time, i.e. that values, indeterminates, errors, and
--- expressions that step are pairwise disjoint. (note that as a consequence
--- of currying and comutativity of products, this means that there are six
--- theorems to prove)
+-- be true at any time, i.e. that boxed values, indeterminates, cast
+-- errors, and expressions that step are pairwise disjoint. (note that as a
+-- consequence of currying and comutativity of products, this means that
+-- there are six theorems to prove)
 module progress-checks where
   -- boxed values and indeterminates are disjoint
   vi : ∀{d} → d boxedval → d indet → ⊥
@@ -188,4 +188,12 @@ module progress-checks where
 
   -- errors and expressions that step are disjoint
   es : ∀{d} → d casterr → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
-  es er stp = {!!}
+  es (CECastFail x x₁ () x₃) (_ , Step FHOuter (ITCastID x₄) FHOuter)
+  es (CECastFail x x₁ x₂ x₃) (d' , Step FHOuter (ITCastSucceed x₄ x₅) FHOuter) = x₃ refl
+  es (CECastFail x x₁ GHole x₃) (_ , Step FHOuter (ITExpand x₄ x₅) FHOuter) = x₅ refl
+  es (CECastFail x x₁ x₂ x₃) (_ , Step (FHCast x₄) x₅ (FHCast x₆)) = {!!}
+  es (CECong x er) (d0' , Step FHOuter x₂ FHOuter) = {!x₂!}
+  es (CECong x er) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = {!x₂!}
+  es (CECong x er) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅)) = {!!}
+  es (CECong x er) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = {!!}
+  es (CECong x er) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!}
