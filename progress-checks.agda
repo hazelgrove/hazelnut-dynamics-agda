@@ -54,7 +54,9 @@ module progress-checks where
   vs (BVVal VLam) (d' , Step FHOuter () x₃)
   vs (BVArrCast x bv) (d0' , Step FHOuter (ITCastID x₁) FHOuter) = x refl
   vs (BVArrCast x bv) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = vs bv (_ , Step x₁ x₂ x₃)
-  vs (BVHoleCast x bv) (d' , Step FHOuter x₂ FHOuter) = {!x₂!} -- cyrus
+  vs (BVHoleCast () bv) (d' , Step FHOuter (ITCastID x₁) FHOuter)
+  vs (BVHoleCast x bv) (d' , Step FHOuter (ITCastSucceed x₁ ()) FHOuter)
+  vs (BVHoleCast GHole bv) (_ , Step FHOuter (ITGround x₁ x₂) FHOuter) = x₂ refl
   vs (BVHoleCast x bv) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = vs bv (_ , Step x₁ x₂ x₃)
 
   -- todo: what class of P is this true for?
@@ -122,8 +124,12 @@ module progress-checks where
   lem2 (IAp x (ICastArr x₁ ind) x₂) (ITApCast x₃ x₄) = x _ _ _ _ _ refl
   lem2 (ICastArr x ind) (ITCastID (FBoxed x₁)) = vi x₁ ind
   lem2 (ICastArr x ind) (ITCastID (FIndet x₁)) = x refl
-  lem2 (ICastGroundHole x ind) stp = {!!}
-  lem2 (ICastHoleGround x ind x₁) stp = {!!}
+  lem2 (ICastGroundHole () ind) (ITCastID x₁)
+  lem2 (ICastGroundHole x ind) (ITCastSucceed x₁ ())
+  lem2 (ICastGroundHole GHole ind) (ITGround x₁ x₂) = x₂ refl
+  lem2 (ICastHoleGround x ind ()) (ITCastID x₂)
+  lem2 (ICastHoleGround x ind x₁) (ITCastSucceed x₂ x₃) = x _ _ refl
+  lem2 (ICastHoleGround x ind GHole) (ITExpand x₂ x₃) = x₃ refl
 
   lem3 : ∀{d d'} → d boxedval → d →> d' → ⊥
   lem3 (BVVal VConst) ()
