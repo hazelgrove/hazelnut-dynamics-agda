@@ -86,11 +86,12 @@ module progress-checks where
       lem (CECong (FHCast x₁) ce) = CECong x₁ ce
     ie (ICastGroundHole x indet) (CECong (FHCast x₁) err) = ie indet (CECong x₁ err)
     ie (ICastHoleGround x indet x₁) (CECastFail x₂ x₃ x₄ x₅) = x _ _ refl
-    ie (ICastHoleGround x indet x₁) (CECong FHOuter err) = ie indet (lem err)
+    ie (ICastHoleGround x indet x₁) (CECong FHOuter err) = ie indet (lem err x)
       where
-      lem : ∀{d τ} → (d ⟨ ⦇⦈ ⇒ τ ⟩) casterr → d casterr
-      lem (CECastFail x₂ x₃ x₄ x₅) = {!!}
-      lem (CECong x₂ ce) = {!!}
+      lem : ∀{d τ} → (d ⟨ ⦇⦈ ⇒ τ ⟩) casterr → ((d' : dhexp) (τ' : htyp) → d ≠ (d' ⟨ τ' ⇒ ⦇⦈ ⟩)) → d casterr
+      lem (CECastFail x₂ x₃ x₄ x₅) f = abort (f _ _ refl)
+      lem (CECong FHOuter ce) = lem ce
+      lem (CECong (FHCast x₂) ce) _ = CECong x₂ ce
     ie (ICastHoleGround x indet x₁) (CECong (FHCast x₂) err) = ie indet (CECong x₂ err)
 
     -- final expressions are not errors (not one of the 6 cases for progress, just a convenience)
