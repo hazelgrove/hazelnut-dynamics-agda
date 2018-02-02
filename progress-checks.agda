@@ -47,21 +47,50 @@ module progress-checks where
   -- lem-something : ∀{ d ε d'} → d == ε ⟦ d' ⟧ → P d' → P d
 
   mutual
+    -- todo: there's something going on with these lemmas here that's
+    -- repetative and i don't quite understand how to make it more compact
+
     -- indeterminates and errors are disjoint
     ie : ∀{d} → d indet → d casterr → ⊥
-    ie IEHole (CECong FHOuter err) = ie IEHole err -- this feels extremely strange
-    ie (INEHole x) (CECong FHOuter err) = {!!}
+    ie IEHole (CECong FHOuter err) = ie IEHole err
+    ie (INEHole x) (CECong FHOuter err) = fe x (lem err)
+      where
+      lem : ∀{d u σ} → ⦇ d ⦈⟨ u , σ ⟩ casterr → d casterr
+      lem (CECong FHOuter ce) = lem ce
+      lem (CECong (FHNEHole x₁) ce) = CECong x₁ ce
     ie (INEHole x) (CECong (FHNEHole x₁) err) = fe x (CECong x₁ err)
-    ie (IAp x indet x₁) (CECong FHOuter err) = {!!}
+    ie (IAp x indet x₁) (CECong FHOuter err)
+      with lem err
+      where
+      lem : ∀{d1 d2} → (d1 ∘ d2) casterr → (d1 casterr + d2 casterr)
+      lem (CECong FHOuter ce) = lem ce
+      lem (CECong (FHAp1 x₂) ce) = Inl (CECong x₂ ce)
+      lem (CECong (FHAp2 x₂ x₃) ce) = Inr (CECong x₃ ce)
+    ... | Inl d1err = ie indet d1err
+    ... | Inr d2err = fe x₁ d2err
+      where
     ie (IAp x indet x₁) (CECong (FHAp1 x₂) err) = ie indet (CECong x₂ err)
     ie (IAp x indet x₁) (CECong (FHAp2 x₂ x₃) err) = fe x₁ (CECong x₃ err)
-    ie (ICastArr x indet) (CECong FHOuter err) = {!!}
+    ie (ICastArr x indet) (CECong FHOuter err) = ie indet (lem err)
+      where
+      lem : ∀{d τ1 τ2 τ3 τ4} → (d ⟨ τ1 ==> τ2 ⇒ τ3 ==> τ4 ⟩) casterr → d casterr
+      lem (CECong FHOuter ce) = lem ce
+      lem (CECong (FHCast x₁) ce) = CECong x₁ ce
     ie (ICastArr x indet) (CECong (FHCast x₁) err) = ie indet (CECong x₁ err)
     ie (ICastGroundHole x indet) (CECastFail x₁ x₂ () x₄)
-    ie (ICastGroundHole x indet) (CECong FHOuter err) = {!!}
+    ie (ICastGroundHole x indet) (CECong FHOuter err) = ie indet (lem err)
+      where
+      lem : ∀{d τ} → (d ⟨ τ ⇒ ⦇⦈ ⟩) casterr → d casterr
+      lem (CECastFail x₁ x₂ () x₄)
+      lem (CECong FHOuter ce) = lem ce
+      lem (CECong (FHCast x₁) ce) = CECong x₁ ce
     ie (ICastGroundHole x indet) (CECong (FHCast x₁) err) = ie indet (CECong x₁ err)
     ie (ICastHoleGround x indet x₁) (CECastFail x₂ x₃ x₄ x₅) = x _ _ refl
-    ie (ICastHoleGround x indet x₁) (CECong FHOuter err) = {!!}
+    ie (ICastHoleGround x indet x₁) (CECong FHOuter err) = ie indet (lem err)
+      where
+      lem : ∀{d τ} → (d ⟨ ⦇⦈ ⇒ τ ⟩) casterr → d casterr
+      lem (CECastFail x₂ x₃ x₄ x₅) = {!!}
+      lem (CECong x₂ ce) = {!!}
     ie (ICastHoleGround x indet x₁) (CECong (FHCast x₂) err) = ie indet (CECong x₂ err)
 
     -- final expressions are not errors (not one of the 6 cases for progress, just a convenience)
