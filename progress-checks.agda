@@ -131,7 +131,7 @@ module progress-checks where
   lem3 (BVArrCast x bv) (ITCastID x₁) = x refl
   lem3 (BVHoleCast () bv) (ITCastID x₁)
   lem3 (BVHoleCast () bv) (ITCastSucceed x₁ x₂)
-  lem3 (BVHoleCast GHole bv) (ITGround x₁) = {!!} -- cyrus
+  lem3 (BVHoleCast GHole bv) (ITGround x₁ y ) = y refl
 
   lem1 : ∀{d d'} → d final → d →> d' → ⊥
   lem1 (FBoxed x) = lem3 x
@@ -169,8 +169,7 @@ module progress-checks where
     is (ICastArr x ind) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = is ind (_ , Step x₁ x₂ x₃)
     is (ICastGroundHole () ind) (d' , Step FHOuter (ITCastID x₁) FHOuter)
     is (ICastGroundHole x ind) (d' , Step FHOuter (ITCastSucceed x₁ ()) FHOuter)
-    is (ICastGroundHole GHole ind) (_ , Step FHOuter (ITGround (FBoxed x)) FHOuter) = vi x ind
-    is (ICastGroundHole GHole ind) (_ , Step FHOuter (ITGround (FIndet x)) FHOuter) = {!!} -- cyrus
+    is (ICastGroundHole GHole ind) (_ , Step FHOuter (ITGround _ y) FHOuter) = y refl
     is (ICastGroundHole x ind) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = is ind (_ , Step x₁ x₂ x₃)
     is (ICastHoleGround x ind ()) (d' , Step FHOuter (ITCastID x₁) FHOuter)
     is (ICastHoleGround x ind g) (d' , Step FHOuter (ITCastSucceed x₁ x₂) FHOuter) = x _ _ refl
