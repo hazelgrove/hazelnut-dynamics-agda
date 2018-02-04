@@ -71,5 +71,17 @@ module progress where
     with progress wt
   ... | S (_ , Step x y z) = S (_ , Step (FHCast x) y (FHCast z))
   ... | E x = E (CECong (FHCast FHOuter) x)
-  ... | I x = I {!!}
-  ... | V x = V {!!}
+  -- indet cases, inspect how the casts are realted by consistency
+  progress (TACast wt TCRefl)  | I x = S (_ , Step FHOuter (ITCastID (FIndet x)) FHOuter)
+  progress (TACast wt TCHole1) | I x = I (ICastGroundHole {!!} x) -- cyrus
+  progress (TACast wt TCHole2) | I x = I (ICastHoleGround {!!} x {!!}) -- cyrus
+  progress (TACast wt (TCArr c1 c2)) | I x = I (ICastArr {!!} x) -- cyrus
+  -- boxed value cases, inspect how the casts are realted by consistency
+  progress (TACast wt TCRefl)  | V x = S (_ , Step FHOuter (ITCastID (FBoxed x)) FHOuter)
+  progress (TACast wt TCHole1) | V x = V (BVHoleCast {!!} x) -- cyrus
+  progress (TACast wt TCHole2) | V x = V {!!} -- cyrus: missing rule for boxed values?
+  progress (TACast wt (TCArr c1 c2)) | V x = V (BVArrCast {!!} x) -- cyrus
+
+
+  -- this would fill two above, but it's false: ⦇⦈ indet but its type, ⦇⦈, is not ground
+  -- lem-groundindet : ∀{ Δ d τ} → Δ , ∅ ⊢ d :: τ → d indet → τ ground
