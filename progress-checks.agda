@@ -188,34 +188,43 @@ module progress-checks where
 
   -- errors and expressions that step are disjoint
   es : ∀{d} → d casterr → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
+    -- cast fail cases
   es (CECastFail x x₁ () x₃) (_ , Step FHOuter (ITCastID x₄) FHOuter)
-  es (CECastFail x x₁ x₂ x₃) (d' , Step FHOuter (ITCastSucceed x₄ x₅) FHOuter) = x₃ refl
+  es (CECastFail x x₁ x₂ x₃) (_ , Step FHOuter (ITCastSucceed x₄ x₅) FHOuter) = x₃ refl
   es (CECastFail x x₁ GHole x₃) (_ , Step FHOuter (ITExpand x₄ x₅) FHOuter) = x₅ refl
-  es (CECastFail x x₁ x₂ x₃) (_ , Step (FHCast x₄) x₅ (FHCast x₆)) = {!!} -- cyrus
+  es (CECastFail x x₁ x₂ x₃) (_ , Step (FHCast x₄) x₅ (FHCast x₆)) = {!!} -- es ? (_ , Step x₄ x₅ x₆)
 
-  es (CECong FHOuter er) (d0' , Step FHOuter x₂ FHOuter) = es er (_ , Step FHOuter x₂ FHOuter)
-  es (CECong (FHAp1 x) er) (d0' , Step FHOuter x₂ FHOuter) = {!er!}
-  es (CECong (FHAp2 x x₁) er) (d0' , Step FHOuter x₂ FHOuter) = {!!}
-  es (CECong (FHNEHole x) er) (d0' , Step FHOuter x₂ FHOuter) = {!!}
-  es (CECong (FHCast x) er) (d0' , Step FHOuter x₂ FHOuter) = {!!}
+    -- congruence cases -- es ce
+  es (CECong x ce) (_ , Step FHOuter x₂ FHOuter) = {!!}
+  es (CECong x ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = {!x!}
+  es (CECong x ce) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅)) = {!!}
+  es (CECong x ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = {!!}
+  es (CECong x ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!}
 
-  es (CECong FHOuter er) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = {!!}
-  es (CECong (FHAp1 x) er) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = {!!}
-  es (CECong (FHAp2 x x₁) er) (_ , Step (FHAp1 x₂) x₃ (FHAp1 x₄)) = fs x (_ , Step x₂ x₃ x₄)
 
-  es (CECong FHOuter er) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅)) = {!!}
-  es (CECong (FHAp1 x) er) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅)) = {!!}
-  es (CECong (FHAp2 x x₁) er) (_ , Step (FHAp2 x₂ x₃) x₄ (FHAp2 x₅ x₆)) = {!!}
-  --     with lem {!!}
-  --     where
-  --     lem : ∀{d1 d2} → (d1 ∘ d2) casterr → (d1 casterr + d2 casterr)
-  --     lem (CECong FHOuter ce) = lem ce
-  --     lem (CECong (FHAp1 x₂) ce) = Inl (CECong x₂ ce)
-  --     lem (CECong (FHAp2 x₂ x₃) ce) = Inr (CECong x₃ ce)
-  -- ... | Inl d1err = {!!}
-  -- ... | Inr d2err = {!!} -- = es {!!} (_ , Step x₂ x₃ x₅)
-  es (CECong FHOuter er) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = {!!}
-  es (CECong (FHNEHole x) er) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = {!!}
+  -- es (CECong FHOuter er) (d0' , Step FHOuter x₂ FHOuter) = es er (_ , Step FHOuter x₂ FHOuter)
+  -- es (CECong (FHAp1 x) er) (d0' , Step FHOuter x₂ FHOuter) = {!er!}
+  -- es (CECong (FHAp2 x x₁) er) (d0' , Step FHOuter x₂ FHOuter) = {!!}
+  -- es (CECong (FHNEHole x) er) (d0' , Step FHOuter x₂ FHOuter) = {!!}
+  -- es (CECong (FHCast x) er) (d0' , Step FHOuter x₂ FHOuter) = {!!}
 
-  es (CECong FHOuter er) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!}
-  es (CECong (FHCast x) er) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!}
+  -- es (CECong FHOuter er) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = {!!}
+  -- es (CECong (FHAp1 x) er) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = {!!}
+  -- es (CECong (FHAp2 x x₁) er) (_ , Step (FHAp1 x₂) x₃ (FHAp1 x₄)) = fs x (_ , Step x₂ x₃ x₄)
+
+  -- es (CECong FHOuter er) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅)) = {!!}
+  -- es (CECong (FHAp1 x) er) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅)) = {!!}
+  -- es (CECong (FHAp2 x x₁) er) (_ , Step (FHAp2 x₂ x₃) x₄ (FHAp2 x₅ x₆)) = {!!}
+  -- --     with lem {!!}
+  -- --     where
+  -- --     lem : ∀{d1 d2} → (d1 ∘ d2) casterr → (d1 casterr + d2 casterr)
+  -- --     lem (CECong FHOuter ce) = lem ce
+  -- --     lem (CECong (FHAp1 x₂) ce) = Inl (CECong x₂ ce)
+  -- --     lem (CECong (FHAp2 x₂ x₃) ce) = Inr (CECong x₃ ce)
+  -- -- ... | Inl d1err = {!!}
+  -- -- ... | Inr d2err = {!!} -- = es {!!} (_ , Step x₂ x₃ x₅)
+  -- es (CECong FHOuter er) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = {!!}
+  -- es (CECong (FHNEHole x) er) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = {!!}
+
+  -- es (CECong FHOuter er) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!}
+  -- es (CECong (FHCast x) er) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!}
