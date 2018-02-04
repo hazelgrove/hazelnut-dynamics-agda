@@ -33,16 +33,26 @@ module canonical-value-forms where
   -- this intentionally will make this file fail to typecheck if we added
   -- more types, hopefully forcing us to remember to add canonical forms
   -- lemmas as appropriate
-  canonical-value-forms-coverage : ∀{Δ d τ} →
+  canonical-value-forms-coverage1 : ∀{Δ d τ} →
                                    Δ , ∅ ⊢ d :: τ →
                                    d val →
                                    τ ≠ b →
                                    ((τ1 : htyp) (τ2 : htyp) → τ ≠ (τ1 ==> τ2)) →
                                    ⊥
-  canonical-value-forms-coverage TAConst VConst nb na = nb refl
-  canonical-value-forms-coverage (TAVar x₁) () nb na
-  canonical-value-forms-coverage (TALam wt) VLam nb na = na _ _ refl
-  canonical-value-forms-coverage (TAAp wt wt₁) () nb na
-  canonical-value-forms-coverage (TAEHole x x₁) () nb na
-  canonical-value-forms-coverage (TANEHole x wt x₁) () nb na
-  canonical-value-forms-coverage (TACast wt x) () nb na
+  canonical-value-forms-coverage1 TAConst VConst nb na = nb refl
+  canonical-value-forms-coverage1 (TAVar x₁) () nb na
+  canonical-value-forms-coverage1 (TALam wt) VLam nb na = na _ _ refl
+  canonical-value-forms-coverage1 (TAAp wt wt₁) () nb na
+  canonical-value-forms-coverage1 (TAEHole x x₁) () nb na
+  canonical-value-forms-coverage1 (TANEHole x wt x₁) () nb na
+  canonical-value-forms-coverage1 (TACast wt x) () nb na
+
+  canonical-value-forms-coverage2 : ∀{Δ d} →
+                                   Δ , ∅ ⊢ d :: ⦇⦈ →
+                                   d val →
+                                   ⊥
+  canonical-value-forms-coverage2 (TAVar x₁) ()
+  canonical-value-forms-coverage2 (TAAp wt wt₁) ()
+  canonical-value-forms-coverage2 (TAEHole x x₁) ()
+  canonical-value-forms-coverage2 (TANEHole x wt x₁) ()
+  canonical-value-forms-coverage2 (TACast wt x) ()

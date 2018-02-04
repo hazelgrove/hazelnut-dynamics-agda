@@ -69,7 +69,7 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-arr (TAEHole x x₁) IEHole = Inl (_ , _ , _ , refl , x)
   canonical-indeterminate-forms-arr (TANEHole x wt x₁) (INEHole x₂) = Inr (Inl (_ , _ , _ , _ , _ , refl , x₂ , wt , x ))
   canonical-indeterminate-forms-arr (TACast wt x) (ICastArr x₁ ind) = Inr (Inr (Inr (Inl (_ , _ , _ , _ , _ , refl , ind , x₁))))
-  -- nb: this is the only one that required pattern matching (or equivalently a lemma i didn't bother to state) on premises
+  -- todo / nb: this is the only one that required pattern matching (or equivalently a lemma i didn't bother to state) on premises
   canonical-indeterminate-forms-arr (TACast wt TCHole2) (ICastHoleGround x₁ ind GHole) = Inr (Inr (Inr (Inr (_ , refl , refl , refl , ind , x₁) )))
 
   canonical-indeterminate-forms-hole : ∀{Δ d} →
@@ -118,9 +118,17 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-coverage TAConst () nb na nh
   canonical-indeterminate-forms-coverage (TAVar x₁) () nb na nh
   canonical-indeterminate-forms-coverage (TALam wt) () nb na nh
-  canonical-indeterminate-forms-coverage (TAAp wt wt₁) (IAp x ind x₁) nb na nh = {!!}
-  canonical-indeterminate-forms-coverage (TAEHole x x₁) IEHole nb na nh = {!!}
-  canonical-indeterminate-forms-coverage (TANEHole x wt x₁) (INEHole x₂) nb na nh = {!!}
+  canonical-indeterminate-forms-coverage {τ = b} (TAAp wt wt₁) (IAp x ind x₁) nb na nh = nb refl
+  canonical-indeterminate-forms-coverage {τ = ⦇⦈} (TAAp wt wt₁) (IAp x ind x₁) nb na nh = nh refl
+  canonical-indeterminate-forms-coverage {τ = τ ==> τ₁} (TAAp wt wt₁) (IAp x ind x₁) nb na nh = na τ τ₁ refl
+  canonical-indeterminate-forms-coverage {τ = b} (TAEHole x x₁) IEHole nb na nh = nb refl
+  canonical-indeterminate-forms-coverage {τ = ⦇⦈} (TAEHole x x₁) IEHole nb na nh = nh refl
+  canonical-indeterminate-forms-coverage {τ = τ ==> τ₁} (TAEHole x x₁) IEHole nb na nh = na τ τ₁ refl
+  canonical-indeterminate-forms-coverage {τ = b} (TANEHole x wt x₁) (INEHole x₂) nb na nh = nb refl
+  canonical-indeterminate-forms-coverage {τ = ⦇⦈} (TANEHole x wt x₁) (INEHole x₂) nb na nh = nh refl
+  canonical-indeterminate-forms-coverage {τ = τ ==> τ₁} (TANEHole x wt x₁) (INEHole x₂) nb na nh = na τ τ₁ refl
   canonical-indeterminate-forms-coverage (TACast wt x) (ICastArr x₁ ind) nb na nh = na _ _ refl
   canonical-indeterminate-forms-coverage (TACast wt x) (ICastGroundHole x₁ ind) nb na nh = nh refl
-  canonical-indeterminate-forms-coverage (TACast wt x) (ICastHoleGround x₁ ind x₂) nb na nh = {!!}
+  canonical-indeterminate-forms-coverage {τ = b} (TACast wt x) (ICastHoleGround x₁ ind x₂) nb na nh = nb refl
+  canonical-indeterminate-forms-coverage {τ = ⦇⦈} (TACast wt x) (ICastHoleGround x₁ ind x₂) nb na nh = nh refl
+  canonical-indeterminate-forms-coverage {τ = τ ==> τ₁} (TACast wt x) (ICastHoleGround x₁ ind x₂) nb na nh = na τ τ₁ refl
