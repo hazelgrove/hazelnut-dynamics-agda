@@ -8,8 +8,6 @@ open import lemmas-consistency
 open import canonical-boxed-forms
 open import canonical-indeterminate-forms
 
-open import Agda.Primitive using (Level; lzero; lsuc) renaming (_⊔_ to lmax)
-
 module progress where
   -- this is a little bit of syntactic sugar to avoid many layer nested Inl
   -- and Inrs that you would get from the more literal transcription of the
@@ -57,7 +55,7 @@ module progress where
     with canonical-boxed-forms-arr wt1 v
   ... | Inl (x , d' , refl , qq) = S (_ , Step FHOuter (ITLam (FBoxed v₂)) FHOuter)
   ... | Inr (d' , τ1' , τ2' , refl , neq , qq) = I (IAp {!!} (ICastArr neq {!!}) (FBoxed v₂)) --cyrus
-    where
+
     -- empty holes
   progress (TAEHole x x₁) = I IEHole
 
@@ -86,9 +84,17 @@ module progress where
   progress (TACast wt (TCArr c1 c2)) | V x = V (BVArrCast {!!} x) -- cyrus
 
 
-  -- this would fill two above, but it's false: ⦇⦈ indet but its type, ⦇⦈, is not ground
-  -- lem-groundindet : ∀{ Δ d τ} → Δ , ∅ ⊢ d :: τ → d indet → τ ground
 
+
+  -- this would fill two above, but it's false: ⦇⦈ indet but its type, ⦇⦈, is not ground
+  postulate
+    lem-groundindet : ∀{ Δ d τ} → Δ , ∅ ⊢ d :: τ → d indet → τ ground
+
+  -- this is also false, but tempting looking in two holes above from the ap case
+  postulate
+    lem : ∀{ Δ d1 τ τ'} → Δ , ∅ ⊢ d1 :: (τ ==> τ') →
+                          d1 indet →
+                          ((τ1 τ2 τ3 τ4 : htyp) (d1' : dhexp) → d1 ≠ (d1' ⟨ τ1 ==> τ2 ⇒ τ3 ==> τ4 ⟩))
 
   counter : Σ[ d ∈ dhexp ] Σ[ τ ∈ htyp ] Σ[ τ' ∈ htyp ] Σ[ Δ ∈ hctx ]
                ((d indet) × (Δ , ∅ ⊢ d :: τ ==> τ'))
@@ -96,11 +102,6 @@ module progress where
             b , ⦇⦈ ,  ■ (Z , ∅ , b ==> b ) ,
             ICastArr (λ ()) IEHole , TACast (TAEHole refl (λ x d → λ ())) (TCArr TCRefl TCHole1)
 
-  postulate
-    lem : ∀{ Δ d1 τ τ'} → Δ , ∅ ⊢ d1 :: (τ ==> τ') →
-                          d1 indet →
-                          ((τ1 τ2 τ3 τ4 : htyp) (d1' : dhexp) → d1 ≠ (d1' ⟨ τ1 ==> τ2 ⇒ τ3 ==> τ4 ⟩))
-
-  problem : ⊥
-  problem = lem (π2 (π2 (π2 (π2 (π2 counter)))))
+  oops : ⊥
+  oops = lem (π2 (π2 (π2 (π2 (π2 counter)))))
                 (π1 (π2 (π2 (π2 (π2 counter))))) b b b ⦇⦈ ⦇⦈⟨ Z , ∅ ⟩ refl
