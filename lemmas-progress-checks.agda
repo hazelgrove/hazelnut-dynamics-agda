@@ -4,20 +4,6 @@ open import List
 open import core
 
 module lemmas-progress-checks where
-  indet-not-trans : ∀{d d'} → d indet → d →> d' → ⊥
-  indet-not-trans IEHole ()
-  indet-not-trans (INEHole x) ()
-  indet-not-trans (IAp x₁ () x₂) (ITLam x₃)
-  indet-not-trans (IAp x (ICastArr x₁ ind) x₂) (ITApCast x₃ x₄) = x _ _ _ _ _ refl
-  indet-not-trans (ICastArr x ind) (ITCastID (FBoxed x₁)) = x refl
-  indet-not-trans (ICastArr x ind) (ITCastID (FIndet x₁)) = x refl
-  indet-not-trans (ICastGroundHole () ind) (ITCastID x₁)
-  indet-not-trans (ICastGroundHole x ind) (ITCastSucceed x₁ ())
-  indet-not-trans (ICastGroundHole GHole ind) (ITGround x₁ x₂) = x₂ refl
-  indet-not-trans (ICastHoleGround x ind ()) (ITCastID x₂)
-  indet-not-trans (ICastHoleGround x ind x₁) (ITCastSucceed x₂ x₃) = x _ _ refl
-  indet-not-trans (ICastHoleGround x ind GHole) (ITExpand x₂ x₃) = x₃ refl
-
   boxedval-not-trans : ∀{d d'} → d boxedval → d →> d' → ⊥
   boxedval-not-trans (BVVal VConst) ()
   boxedval-not-trans (BVVal VLam) ()
@@ -25,6 +11,19 @@ module lemmas-progress-checks where
   boxedval-not-trans (BVHoleCast () bv) (ITCastID x₁)
   boxedval-not-trans (BVHoleCast () bv) (ITCastSucceed x₁ x₂)
   boxedval-not-trans (BVHoleCast GHole bv) (ITGround x₁ y ) = y refl
+
+  indet-not-trans : ∀{d d'} → d indet → d →> d' → ⊥
+  indet-not-trans IEHole ()
+  indet-not-trans (INEHole x) ()
+  indet-not-trans (IAp x₁ () x₂) (ITLam x₃)
+  indet-not-trans (IAp x (ICastArr x₁ ind) x₂) (ITApCast x₃ x₄) = x _ _ _ _ _ refl
+  indet-not-trans (ICastArr x ind) (ITCastID _) = x refl
+  indet-not-trans (ICastGroundHole () ind) (ITCastID x₁)
+  indet-not-trans (ICastGroundHole x ind) (ITCastSucceed x₁ ())
+  indet-not-trans (ICastGroundHole GHole ind) (ITGround x₁ x₂) = x₂ refl
+  indet-not-trans (ICastHoleGround x ind ()) (ITCastID x₂)
+  indet-not-trans (ICastHoleGround x ind x₁) (ITCastSucceed x₂ x₃) = x _ _ refl
+  indet-not-trans (ICastHoleGround x ind GHole) (ITExpand x₂ x₃) = x₃ refl
 
   final-not-trans : ∀{d d'} → d final → d →> d' → ⊥
   final-not-trans (FBoxed x) = boxedval-not-trans x
