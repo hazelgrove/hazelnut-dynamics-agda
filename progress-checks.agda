@@ -9,12 +9,17 @@ open import lemmas-progress-checks
 
 -- taken together, the theorems in this file argue that for any expression
 -- d, at most one summand of the labeled sum that results from progress may
--- be true at any time, i.e. that boxed values, indeterminates, cast
--- errors, and expressions that step are pairwise disjoint. (note that as a
--- consequence of currying and comutativity of products, this means that
--- there are six theorems to prove)
+-- be true at any time: that boxed values, indeterminates, cast errors, and
+-- expressions that step are pairwise disjoint.
+--
+-- note that as a consequence of currying and comutativity of products,
+-- this means that there are six theorems to prove. in addition to those,
+-- we also prove several convenince forms that combine theorems about
+-- indeterminate and boxed value forms into the same statement about final
+-- forms, which mirrors the mutual definition of indeterminate and final
+-- and saves some redundant argumentation.
 module progress-checks where
-  -- boxed values and indeterminates are disjoint
+  -- boxed values are not indeterminates
   boxedval-not-indet : ∀{d} → d boxedval → d indet → ⊥
   boxedval-not-indet (BVVal VConst) ()
   boxedval-not-indet (BVVal VLam) ()
@@ -22,7 +27,7 @@ module progress-checks where
   boxedval-not-indet (BVHoleCast x bv) (ICastGroundHole x₁ ind) = boxedval-not-indet bv ind
   boxedval-not-indet (BVHoleCast x bv) (ICastHoleGround x₁ ind x₂) = boxedval-not-indet bv ind
 
-  -- boxed values and errors are disjoint
+  -- boxed values are not errors
   boxedval-not-err : ∀{d} → d boxedval → d casterr → ⊥
   boxedval-not-err (BVVal ()) (CECastFail x₁ x₂ x₃ x₄)
   boxedval-not-err (BVHoleCast x bv) (CECastFail x₁ x₂ () x₄)
@@ -36,7 +41,7 @@ module progress-checks where
   boxedval-not-err (BVVal ()) (CECong (FHNEHole x₁) er)
   boxedval-not-err (BVVal ()) (CECong (FHCast x₁) er)
 
-  -- boxed values and expressions that step are disjoint
+  -- boxed values don't step
   boxedval-not-step : ∀{d} → d boxedval → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
   boxedval-not-step (BVVal VConst) (d' , Step FHOuter () x₃)
   boxedval-not-step (BVVal VLam) (d' , Step FHOuter () x₃)
@@ -51,7 +56,7 @@ module progress-checks where
   -- lem-something : ∀{ d ε d'} → d == ε ⟦ d' ⟧ → P d' → P d
 
   mutual
-    -- indeterminates and errors are disjoint
+    -- indeterminates are not errors
     indet-not-err : ∀{d} → d indet → d casterr → ⊥
     indet-not-err IEHole (CECong FHOuter err) = indet-not-err IEHole err
     indet-not-err (INEHole x) (CECong FHOuter err) = final-not-err x (ce-nehole err)
@@ -77,7 +82,7 @@ module progress-checks where
     final-not-err (FIndet x) err = indet-not-err x err
 
   mutual
-    -- indeterminates and expressions that step are disjoint
+    -- indeterminates don't step
     indet-not-step : ∀{d} → d indet → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
     indet-not-step IEHole (d' , Step FHOuter () FHOuter)
     indet-not-step (INEHole x) (d' , Step FHOuter () FHOuter)
@@ -102,7 +107,7 @@ module progress-checks where
     final-not-step (FBoxed x) stp = boxedval-not-step x stp
     final-not-step (FIndet x) stp = indet-not-step x stp
 
-  -- errors and expressions that step are disjoint
+  -- errors don't step
   err-not-step : ∀{d} → d casterr → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
     -- cast fail cases
   err-not-step (CECastFail x x₁ () x₃) (_ , Step FHOuter (ITCastID x₄) FHOuter)
@@ -116,15 +121,15 @@ module progress-checks where
     -- congruence cases
   err-not-step (CECong FHOuter ce) (π1 , Step FHOuter x₂ FHOuter) = err-not-step ce (π1 , Step FHOuter x₂ FHOuter)
   err-not-step (CECong (FHAp1 FHOuter) (CECong FHOuter ce)) (_ , Step FHOuter (ITLam x₂) FHOuter) = boxedval-not-err (BVVal VLam) ce
-  err-not-step (CECong (FHAp1 x) ce) (_ , Step FHOuter (ITApCast x₁ x₂) FHOuter) = {!!}  -- fe x₁ (CECong {!ce-out-cast ce!} ce)
-  err-not-step (CECong (FHAp2 x x₁) ce) (π1 , Step FHOuter x₂ FHOuter) = {!ce-out-cast ce x₁!}
-  err-not-step (CECong (FHNEHole x) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!}
-  err-not-step (CECong (FHCast x) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!}
+  err-not-step (CECong (FHAp1 x) ce) (_ , Step FHOuter (ITApCast x₁ x₂) FHOuter) = {!!} -- final-not-err x₁ (CECong {!!} ce) -- proably case on x, but get incomplete pattern garbage
+  err-not-step (CECong (FHAp2 x x₁) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!} -- cyrus: possibly another counter example
+  err-not-step (CECong (FHNEHole x) ce) (π1 , Step FHOuter () FHOuter)
+  err-not-step (CECong (FHCast x) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!} -- cyrus: only obvious thing to do is case on x₂, doesn't seem to get anywhere
 
   err-not-step (CECong FHOuter ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃))
     with ce-ap ce
   ... | Inl d1err = err-not-step d1err (_ , Step x₁ x₂ x₃)
-  ... | Inr d2err = {!Step x₁ x₂ x₃!} -- cyrus this is a counter example: d2 is a casterror but d1 isn't yet a value so the whole thing steps
+  ... | Inr d2err = {!Step x₁ x₂ x₃!} -- cyrus: this is a counter example, d2 is a casterror but d1 isn't yet a value so the whole thing steps
   err-not-step (CECong (FHAp1 x) ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = err-not-step (ce-out-cast ce x) (_ , Step x₁ x₂ x₃)
   err-not-step (CECong (FHAp2 x x₁) ce) (_ , Step (FHAp1 x₂) x₃ (FHAp1 x₄)) = final-not-step x (_ , Step x₂ x₃ x₄)
 
@@ -132,11 +137,11 @@ module progress-checks where
     with ce-ap ce
   ... | Inl d1err = final-not-err x₄ d1err
   ... | Inr d2err = err-not-step d2err (_ , Step x₂ x₃ x₅)
-  err-not-step (CECong (FHAp1 x) ce) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅)) = {!!}
-  err-not-step (CECong (FHAp2 x x₁) ce) (_ , Step (FHAp2 x₂ x₃) x₄ (FHAp2 x₅ x₆)) = {!!}
+  err-not-step (CECong (FHAp1 x) ce) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅)) = final-not-err x₁ (ce-out-cast ce x)
+  err-not-step (CECong (FHAp2 x x₁) ce) (_ , Step (FHAp2 x₂ x₃) x₄ (FHAp2 x₅ x₆)) = err-not-step (ce-out-cast ce x₁) (_ , Step x₃ x₄ x₆)
 
   err-not-step (CECong FHOuter ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = err-not-step (ce-nehole ce) (_ , Step x₁ x₂ x₃)
   err-not-step (CECong (FHNEHole x) ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = err-not-step (ce-out-cast ce x) (_ , Step x₁ x₂ x₃)
 
-  err-not-step (CECong FHOuter ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!} -- err-not-step {!!} (_ , Step x₁ x₂ x₃) -- this might not work
+  err-not-step (CECong FHOuter ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!} -- err-not-step {!!} (_ , Step x₁ x₂ x₃)
   err-not-step (CECong (FHCast x) ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = err-not-step (ce-out-cast ce x) (_ , Step x₁ x₂ x₃)
