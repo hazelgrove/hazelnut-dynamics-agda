@@ -23,6 +23,7 @@ open import canonical-value-forms
 open import canonical-boxed-forms
 open import canonical-indeterminate-forms
 
+open import lemmas-progress-checks
 -- open import progress-checks
 -- open import progress
 -- open import preservation

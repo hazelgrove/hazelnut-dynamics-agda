@@ -5,6 +5,7 @@ open import core
 open import contexts
 open import lemmas-consistency
 open import type-assignment-unicity
+open import lemmas-progress-checks
 
 -- taken together, the theorems in this file argue that for any expression
 -- d, at most one summand of the labeled sum that results from progress may
@@ -25,22 +26,9 @@ module progress-checks where
   ve : ∀{d} → d boxedval → d casterr → ⊥
   ve (BVVal ()) (CECastFail x₁ x₂ x₃ x₄)
   ve (BVHoleCast x bv) (CECastFail x₁ x₂ () x₄)
-  ve (BVArrCast x bv) (CECong FHOuter er) = ve bv (lem er)
-    where
-    -- todo: also being used below
-    lem : ∀{d τ1 τ2 τ3 τ4} → (d ⟨ τ1 ==> τ2 ⇒ τ3 ==> τ4 ⟩) casterr → d casterr
-    lem (CECong FHOuter ce) = lem ce
-    lem (CECong (FHCast x₁) ce) = CECong x₁ ce
+  ve (BVArrCast x bv) (CECong FHOuter er) = ve bv (ce-castarr er)
   ve (BVArrCast x bv) (CECong (FHCast x₁) er) = ve bv (CECong x₁ er)
-  ve (BVHoleCast x bv) (CECong FHOuter er) = ve bv (lem er)
-    where
-    --- todo: okay this is now getting reused here and in the case of ie
-    --- below, so this is apparently more of an interesting property than
-    --- i'd thought
-    lem : ∀{d τ} → (d ⟨ τ ⇒ ⦇⦈ ⟩) casterr → d casterr
-    lem (CECastFail x₁ x₂ () x₄)
-    lem (CECong FHOuter ce) = lem ce
-    lem (CECong (FHCast x₁) ce) = CECong x₁ ce
+  ve (BVHoleCast x bv) (CECong FHOuter er) = ve bv (ce-castth er)
   ve (BVHoleCast x bv) (CECong (FHCast x₁) er) = ve bv (CECong x₁ er)
   ve (BVVal x) (CECong FHOuter er) = ve (BVVal x) er
   ve (BVVal ()) (CECong (FHAp1 x₁) er)
@@ -69,45 +57,21 @@ module progress-checks where
     -- indeterminates and errors are disjoint
     ie : ∀{d} → d indet → d casterr → ⊥
     ie IEHole (CECong FHOuter err) = ie IEHole err
-    ie (INEHole x) (CECong FHOuter err) = fe x (lem err)
-      where
-      lem : ∀{d u σ} → ⦇ d ⦈⟨ u , σ ⟩ casterr → d casterr
-      lem (CECong FHOuter ce) = lem ce
-      lem (CECong (FHNEHole x₁) ce) = CECong x₁ ce
+    ie (INEHole x) (CECong FHOuter err) = fe x (ce-nehole err)
     ie (INEHole x) (CECong (FHNEHole x₁) err) = fe x (CECong x₁ err)
     ie (IAp x indet x₁) (CECong FHOuter err)
-      with lem err
-      where
-      lem : ∀{d1 d2} → (d1 ∘ d2) casterr → (d1 casterr + d2 casterr)
-      lem (CECong FHOuter ce) = lem ce
-      lem (CECong (FHAp1 x₂) ce) = Inl (CECong x₂ ce)
-      lem (CECong (FHAp2 x₂ x₃) ce) = Inr (CECong x₃ ce)
+      with ce-ap err
     ... | Inl d1err = ie indet d1err
     ... | Inr d2err = fe x₁ d2err
-      where
     ie (IAp x indet x₁) (CECong (FHAp1 x₂) err) = ie indet (CECong x₂ err)
     ie (IAp x indet x₁) (CECong (FHAp2 x₂ x₃) err) = fe x₁ (CECong x₃ err)
-    ie (ICastArr x indet) (CECong FHOuter err) = ie indet (lem err)
-      where
-      lem : ∀{d τ1 τ2 τ3 τ4} → (d ⟨ τ1 ==> τ2 ⇒ τ3 ==> τ4 ⟩) casterr → d casterr
-      lem (CECong FHOuter ce) = lem ce
-      lem (CECong (FHCast x₁) ce) = CECong x₁ ce
+    ie (ICastArr x indet) (CECong FHOuter err) = ie indet (ce-castarr err)
     ie (ICastArr x indet) (CECong (FHCast x₁) err) = ie indet (CECong x₁ err)
     ie (ICastGroundHole x indet) (CECastFail x₁ x₂ () x₄)
-    ie (ICastGroundHole x indet) (CECong FHOuter err) = ie indet (lem err)
-      where
-      lem : ∀{d τ} → (d ⟨ τ ⇒ ⦇⦈ ⟩) casterr → d casterr
-      lem (CECastFail x₁ x₂ () x₄)
-      lem (CECong FHOuter ce) = lem ce
-      lem (CECong (FHCast x₁) ce) = CECong x₁ ce
+    ie (ICastGroundHole x indet) (CECong FHOuter err) = ie indet (ce-castth err)
     ie (ICastGroundHole x indet) (CECong (FHCast x₁) err) = ie indet (CECong x₁ err)
     ie (ICastHoleGround x indet x₁) (CECastFail x₂ x₃ x₄ x₅) = x _ _ refl
-    ie (ICastHoleGround x indet x₁) (CECong FHOuter err) = ie indet (lem err x)
-      where
-      lem : ∀{d τ} → (d ⟨ ⦇⦈ ⇒ τ ⟩) casterr → ((d' : dhexp) (τ' : htyp) → d ≠ (d' ⟨ τ' ⇒ ⦇⦈ ⟩)) → d casterr
-      lem (CECastFail x₂ x₃ x₄ x₅) f = abort (f _ _ refl)
-      lem (CECong FHOuter ce) = lem ce
-      lem (CECong (FHCast x₂) ce) _ = CECong x₂ ce
+    ie (ICastHoleGround x indet x₁) (CECong FHOuter err) = ie indet (ce-castht err x)
     ie (ICastHoleGround x indet x₁) (CECong (FHCast x₂) err) = ie indet (CECong x₂ err)
 
     -- final expressions are not errors (not one of the 6 cases for progress, just a convenience)
@@ -194,37 +158,26 @@ module progress-checks where
   es (CECastFail x x₁ GHole x₃) (_ , Step FHOuter (ITExpand x₄ x₅) FHOuter) = x₅ refl
   es (CECastFail x x₁ x₂ x₃) (_ , Step (FHCast x₄) x₅ (FHCast x₆)) = {!!} -- es ? (_ , Step x₄ x₅ x₆)
 
-    -- congruence cases -- es ce
-  es (CECong x ce) (_ , Step FHOuter x₂ FHOuter) = {!!}
-  es (CECong x ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = {!x!}
-  es (CECong x ce) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅)) = {!!}
-  es (CECong x ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = {!!}
-  es (CECong x ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!}
+    -- congruence cases
+  es (CECong FHOuter ce) (π1 , Step FHOuter x₂ FHOuter) = es ce (π1 , Step FHOuter x₂ FHOuter)
+  es (CECong (FHAp1 x) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!}
+  es (CECong (FHAp2 x x₁) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!}
+  es (CECong (FHNEHole x) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!}
+  es (CECong (FHCast x) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!}
 
+  es (CECong FHOuter ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = {!!}
+  es (CECong (FHAp1 x) ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = {!!}
+  es (CECong (FHAp2 x x₁) ce) (_ , Step (FHAp1 x₂) x₃ (FHAp1 x₄)) = fs x (_ , Step x₂ x₃ x₄)
 
-  -- es (CECong FHOuter er) (d0' , Step FHOuter x₂ FHOuter) = es er (_ , Step FHOuter x₂ FHOuter)
-  -- es (CECong (FHAp1 x) er) (d0' , Step FHOuter x₂ FHOuter) = {!er!}
-  -- es (CECong (FHAp2 x x₁) er) (d0' , Step FHOuter x₂ FHOuter) = {!!}
-  -- es (CECong (FHNEHole x) er) (d0' , Step FHOuter x₂ FHOuter) = {!!}
-  -- es (CECong (FHCast x) er) (d0' , Step FHOuter x₂ FHOuter) = {!!}
+  es (CECong FHOuter ce) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅))
+    with ce-ap ce
+  ... | Inl d1err = fe x₄ d1err
+  ... | Inr d2err = es d2err (_ , Step x₂ x₃ x₅)
+  es (CECong (FHAp1 x) ce) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅)) = {!!}
+  es (CECong (FHAp2 x x₁) ce) (_ , Step (FHAp2 x₂ x₃) x₄ (FHAp2 x₅ x₆)) = {!!}
 
-  -- es (CECong FHOuter er) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = {!!}
-  -- es (CECong (FHAp1 x) er) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = {!!}
-  -- es (CECong (FHAp2 x x₁) er) (_ , Step (FHAp1 x₂) x₃ (FHAp1 x₄)) = fs x (_ , Step x₂ x₃ x₄)
+  es (CECong FHOuter ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = {!!}
+  es (CECong (FHNEHole x) ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = {!!}
 
-  -- es (CECong FHOuter er) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅)) = {!!}
-  -- es (CECong (FHAp1 x) er) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅)) = {!!}
-  -- es (CECong (FHAp2 x x₁) er) (_ , Step (FHAp2 x₂ x₃) x₄ (FHAp2 x₅ x₆)) = {!!}
-  -- --     with lem {!!}
-  -- --     where
-  -- --     lem : ∀{d1 d2} → (d1 ∘ d2) casterr → (d1 casterr + d2 casterr)
-  -- --     lem (CECong FHOuter ce) = lem ce
-  -- --     lem (CECong (FHAp1 x₂) ce) = Inl (CECong x₂ ce)
-  -- --     lem (CECong (FHAp2 x₂ x₃) ce) = Inr (CECong x₃ ce)
-  -- -- ... | Inl d1err = {!!}
-  -- -- ... | Inr d2err = {!!} -- = es {!!} (_ , Step x₂ x₃ x₅)
-  -- es (CECong FHOuter er) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = {!!}
-  -- es (CECong (FHNEHole x) er) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = {!!}
-
-  -- es (CECong FHOuter er) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!}
-  -- es (CECong (FHCast x) er) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!}
+  es (CECong FHOuter ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!}
+  es (CECong (FHCast x) ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!}
