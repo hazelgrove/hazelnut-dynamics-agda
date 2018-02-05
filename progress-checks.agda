@@ -143,5 +143,5 @@ module progress-checks where
   err-not-step (CECong FHOuter ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = err-not-step (ce-nehole ce) (_ , Step x₁ x₂ x₃)
   err-not-step (CECong (FHNEHole x) ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = err-not-step (ce-out-cast ce x) (_ , Step x₁ x₂ x₃)
 
-  err-not-step (CECong FHOuter ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!} -- err-not-step {!!} (_ , Step x₁ x₂ x₃)
+  err-not-step (CECong FHOuter ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!} -- cyrus not sure how to proceed at all; obvious lemma is probably false
   err-not-step (CECong (FHCast x) ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = err-not-step (ce-out-cast ce x) (_ , Step x₁ x₂ x₃)
