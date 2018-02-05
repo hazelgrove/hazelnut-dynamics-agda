@@ -104,13 +104,16 @@ module progress-checks where
 
   -- errors and expressions that step are disjoint
   err-not-step : ∀{d} → d casterr → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
-    -- cast fail caserr-not-step
+    -- cast fail cases
   err-not-step (CECastFail x x₁ () x₃) (_ , Step FHOuter (ITCastID x₄) FHOuter)
   err-not-step (CECastFail x x₁ x₂ x₃) (_ , Step FHOuter (ITCastSucceed x₄ x₅) FHOuter) = x₃ refl
   err-not-step (CECastFail x x₁ GHole x₃) (_ , Step FHOuter (ITExpand x₄ x₅) FHOuter) = x₅ refl
-  err-not-step (CECastFail x x₁ x₂ x₃) (_ , Step (FHCast x₄) x₅ (FHCast x₆)) = {!!}
+  err-not-step (CECastFail x () x₂ x₃) (_ , Step (FHCast FHOuter) (ITCastID x₄) (FHCast FHOuter))
+  err-not-step (CECastFail x () x₂ x₃) (_ , Step (FHCast FHOuter) (ITCastSucceed x₄ x₅) (FHCast FHOuter))
+  err-not-step (CECastFail x GHole x₂ x₃) (_ , Step (FHCast FHOuter) (ITGround x₄ x₅) (FHCast FHOuter)) = x₅ refl
+  err-not-step (CECastFail x x₁ x₂ x₃) (_ , Step (FHCast (FHCast x₄)) x₅ (FHCast (FHCast x₆))) = final-not-step x (_ , Step x₄ x₅ x₆)
 
-    -- congruence caserr-not-step
+    -- congruence cases
   err-not-step (CECong FHOuter ce) (π1 , Step FHOuter x₂ FHOuter) = err-not-step ce (π1 , Step FHOuter x₂ FHOuter)
   err-not-step (CECong (FHAp1 FHOuter) (CECong FHOuter ce)) (_ , Step FHOuter (ITLam x₂) FHOuter) = boxedval-not-err (BVVal VLam) ce
   err-not-step (CECong (FHAp1 x) ce) (_ , Step FHOuter (ITApCast x₁ x₂) FHOuter) = {!!}  -- fe x₁ (CECong {!ce-out-cast ce!} ce)
@@ -121,7 +124,7 @@ module progress-checks where
   err-not-step (CECong FHOuter ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃))
     with ce-ap ce
   ... | Inl d1err = err-not-step d1err (_ , Step x₁ x₂ x₃)
-  ... | Inr d2err = {!Step x₁ x₂ x₃!} -- this is a counter example: d2 is a casterror but d1 isn't yet a value so the whole thing steps
+  ... | Inr d2err = {!Step x₁ x₂ x₃!} -- cyrus this is a counter example: d2 is a casterror but d1 isn't yet a value so the whole thing steps
   err-not-step (CECong (FHAp1 x) ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = err-not-step (ce-out-cast ce x) (_ , Step x₁ x₂ x₃)
   err-not-step (CECong (FHAp2 x x₁) ce) (_ , Step (FHAp1 x₂) x₃ (FHAp1 x₄)) = final-not-step x (_ , Step x₂ x₃ x₄)
 
