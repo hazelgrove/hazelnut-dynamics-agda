@@ -56,7 +56,7 @@ module preservation where
   pres-lem3 (TANEHole x ta x₁) () -- todo: this is a little surprising; nehole doesn't take a transition but it defieately can still step
   pres-lem3 (TACast ta x) (ITCastID x₁) = {!!}
   pres-lem3 (TACast ta x) (ITCastSucceed x₁ x₂) = {!!}
-  pres-lem3 (TACast ta x) (ITGround x₁) = {!!}
+  pres-lem3 (TACast ta x) (ITGround x₁ y) = {!!}
   pres-lem3 (TACast ta x) (ITExpand x₁ x₂) = {!!}
 
   preservation : {Δ : hctx} {d d' : dhexp} {τ : htyp} →

@@ -322,6 +322,11 @@ module core where
             d == ε ⟦ d' ⟧ →
             d ⟨ τ1 ⇒ τ2 ⟩ == ε ⟨ τ1 ⇒ τ2 ⟩ ⟦ d' ⟧
 
+  data _▸gnd_ : htyp → htyp → Set where
+    MGArr : ∀{τ1 τ2} →
+            (τ1 ==> τ2) ≠ (⦇⦈ ==> ⦇⦈) →
+            (τ1 ==> τ2) ▸gnd (⦇⦈ ==> ⦇⦈)
+
   -- instruction transition judgement
   data _→>_ : (d d' : dhexp) → Set where
     ITLam : ∀{ x τ d1 d2 } →
@@ -338,14 +343,14 @@ module core where
                d1 final →
                d2 final →
                ((d1 ⟨ (τ1 ==> τ2) ⇒ (τ1' ==> τ2')⟩) ∘ d2) →> ((d1 ∘ (d2 ⟨ τ1' ⇒ τ1 ⟩)) ⟨ τ2 ⇒ τ2' ⟩)
-    ITGround : ∀{ d τ1 τ2 } →
+    ITGround : ∀{ d τ τ'} →
                d final →
-               τ1 ==> τ2 ≠ ⦇⦈ ==> ⦇⦈ →
-               (d ⟨ τ1 ==> τ2 ⇒ ⦇⦈ ⟩) →> (d ⟨ τ1 ==> τ2 ⇒ ⦇⦈ ==> ⦇⦈ ⇒ ⦇⦈ ⟩)
-    ITExpand : ∀{d τ1 τ2 } →
+               τ ▸gnd τ' →
+               (d ⟨ τ ⇒ ⦇⦈ ⟩) →> (d ⟨ τ ⇒ τ' ⇒ ⦇⦈ ⟩)
+    ITExpand : ∀{d τ τ' } →
                d final →
-               τ1 ==> τ2 ≠ ⦇⦈ ==> ⦇⦈ →
-               (d ⟨ ⦇⦈ ⇒ τ1 ==> τ2 ⟩) →> (d ⟨ ⦇⦈ ⇒ ⦇⦈ ==> ⦇⦈ ⇒ τ1 ==> τ2 ⟩)
+               τ ▸gnd τ' →
+               (d ⟨ ⦇⦈ ⇒ τ ⟩) →> (d ⟨ ⦇⦈ ⇒ τ' ⇒ τ ⟩)
 
   data _↦_ : (d d' : dhexp) → Set where
     Step : ∀{ d d0 d' d0' ε} →

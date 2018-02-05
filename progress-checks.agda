@@ -49,8 +49,9 @@ module progress-checks where
   boxedval-not-step (BVArrCast x bv) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = boxedval-not-step bv (_ , Step x₁ x₂ x₃)
   boxedval-not-step (BVHoleCast () bv) (d' , Step FHOuter (ITCastID x₁) FHOuter)
   boxedval-not-step (BVHoleCast x bv) (d' , Step FHOuter (ITCastSucceed x₁ ()) FHOuter)
-  boxedval-not-step (BVHoleCast GHole bv) (_ , Step FHOuter (ITGround x₁ x₂) FHOuter) = x₂ refl
+  boxedval-not-step (BVHoleCast GHole bv) (_ , Step FHOuter (ITGround x₁ (MGArr x)) FHOuter) = x refl
   boxedval-not-step (BVHoleCast x bv) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = boxedval-not-step bv (_ , Step x₁ x₂ x₃)
+  boxedval-not-step (BVHoleCast x x₁) (_ , Step FHOuter (ITExpand x₂ ()) FHOuter)
 
   -- todo: what class of P is this true for?
   -- lem-something : ∀{ d ε d'} → d == ε ⟦ d' ⟧ → P d' → P d
@@ -95,12 +96,14 @@ module progress-checks where
     indet-not-step (ICastArr x ind) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = indet-not-step ind (_ , Step x₁ x₂ x₃)
     indet-not-step (ICastGroundHole () ind) (d' , Step FHOuter (ITCastID x₁) FHOuter)
     indet-not-step (ICastGroundHole x ind) (d' , Step FHOuter (ITCastSucceed x₁ ()) FHOuter)
-    indet-not-step (ICastGroundHole GHole ind) (_ , Step FHOuter (ITGround _ y) FHOuter) = y refl
+    indet-not-step (ICastGroundHole GHole ind) (_ , Step FHOuter (ITGround x (MGArr x₁)) FHOuter) = x₁ refl
     indet-not-step (ICastGroundHole x ind) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = indet-not-step ind (_ , Step x₁ x₂ x₃)
     indet-not-step (ICastHoleGround x ind ()) (d' , Step FHOuter (ITCastID x₁) FHOuter)
     indet-not-step (ICastHoleGround x ind g) (d' , Step FHOuter (ITCastSucceed x₁ x₂) FHOuter) = x _ _ refl
-    indet-not-step (ICastHoleGround x ind GHole) (_ , Step FHOuter (ITExpand x₁ x₂) FHOuter) = x₂ refl
+    indet-not-step (ICastHoleGround x ind GHole) (_ , Step FHOuter (ITExpand x₁ (MGArr x₂)) FHOuter) = x₂ refl
     indet-not-step (ICastHoleGround x ind g) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = indet-not-step ind (_ , Step x₁ x₂ x₃)
+    indet-not-step (ICastGroundHole x x₁) (_ , Step FHOuter (ITExpand x₂ ()) FHOuter)
+    indet-not-step (ICastHoleGround x x₁ x₂) (_ , Step FHOuter (ITGround x₃ ()) FHOuter)
 
     -- final expressions don't step
     final-not-step : ∀{d} → d final → Σ[ d' ∈ dhexp ] (d ↦ d') → ⊥
@@ -112,11 +115,14 @@ module progress-checks where
     -- cast fail cases
   err-not-step (CECastFail x x₁ () x₃) (_ , Step FHOuter (ITCastID x₄) FHOuter)
   err-not-step (CECastFail x x₁ x₂ x₃) (_ , Step FHOuter (ITCastSucceed x₄ x₅) FHOuter) = x₃ refl
-  err-not-step (CECastFail x x₁ GHole x₃) (_ , Step FHOuter (ITExpand x₄ x₅) FHOuter) = x₅ refl
+  err-not-step (CECastFail x x₁ GHole x₃) (_ , Step FHOuter (ITExpand x₄ (MGArr x₂)) FHOuter) = x₂ refl
   err-not-step (CECastFail x () x₂ x₃) (_ , Step (FHCast FHOuter) (ITCastID x₄) (FHCast FHOuter))
   err-not-step (CECastFail x () x₂ x₃) (_ , Step (FHCast FHOuter) (ITCastSucceed x₄ x₅) (FHCast FHOuter))
-  err-not-step (CECastFail x GHole x₂ x₃) (_ , Step (FHCast FHOuter) (ITGround x₄ x₅) (FHCast FHOuter)) = x₅ refl
+  err-not-step (CECastFail x GHole x₂ x₃) (_ , Step (FHCast FHOuter) (ITGround x₄ (MGArr x₁)) (FHCast FHOuter)) = x₁ refl
   err-not-step (CECastFail x x₁ x₂ x₃) (_ , Step (FHCast (FHCast x₄)) x₅ (FHCast (FHCast x₆))) = final-not-step x (_ , Step x₄ x₅ x₆)
+  err-not-step (CECastFail x x₁ x₂ x₃) (_ , Step (FHCast x₄) (ITExpand x₅ y) (FHCast x₇)) = {!!} -- this is from adding matching grounds; i don't know why it causes a pattern matching loop
+  err-not-step (CECastFail x x₁ x₂ x₃) (_ , Step FHOuter (ITGround x₄ ()) FHOuter)
+
 
     -- congruence cases
   err-not-step (CECong FHOuter ce) (π1 , Step FHOuter x₂ FHOuter) = err-not-step ce (π1 , Step FHOuter x₂ FHOuter)

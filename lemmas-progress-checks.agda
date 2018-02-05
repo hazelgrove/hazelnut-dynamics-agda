@@ -10,7 +10,8 @@ module lemmas-progress-checks where
   boxedval-not-trans (BVArrCast x bv) (ITCastID x₁) = x refl
   boxedval-not-trans (BVHoleCast () bv) (ITCastID x₁)
   boxedval-not-trans (BVHoleCast () bv) (ITCastSucceed x₁ x₂)
-  boxedval-not-trans (BVHoleCast GHole bv) (ITGround x₁ y ) = y refl
+  boxedval-not-trans (BVHoleCast GHole bv) (ITGround x₁ (MGArr x)) = x refl
+  boxedval-not-trans (BVHoleCast x a) (ITExpand x₁ ())
 
   indet-not-trans : ∀{d d'} → d indet → d →> d' → ⊥
   indet-not-trans IEHole ()
@@ -20,10 +21,13 @@ module lemmas-progress-checks where
   indet-not-trans (ICastArr x ind) (ITCastID _) = x refl
   indet-not-trans (ICastGroundHole () ind) (ITCastID x₁)
   indet-not-trans (ICastGroundHole x ind) (ITCastSucceed x₁ ())
-  indet-not-trans (ICastGroundHole GHole ind) (ITGround x₁ x₂) = x₂ refl
+  indet-not-trans (ICastGroundHole GHole ind) (ITGround x₁ (MGArr x)) = x refl
   indet-not-trans (ICastHoleGround x ind ()) (ITCastID x₂)
   indet-not-trans (ICastHoleGround x ind x₁) (ITCastSucceed x₂ x₃) = x _ _ refl
-  indet-not-trans (ICastHoleGround x ind GHole) (ITExpand x₂ x₃) = x₃ refl
+  indet-not-trans (ICastHoleGround x ind GHole) (ITExpand (FBoxed x₁) (MGArr x₂)) = x₂ refl
+  indet-not-trans (ICastGroundHole x a) (ITExpand x₁ ())
+  indet-not-trans (ICastHoleGround x a x₁) (ITGround x₂ ())
+  indet-not-trans (ICastHoleGround x a GHole) (ITExpand x₂ (MGArr x₃)) = x₃ refl
 
   final-not-trans : ∀{d d'} → d final → d →> d' → ⊥
   final-not-trans (FBoxed x) = boxedval-not-trans x
@@ -79,12 +83,12 @@ module lemmas-progress-checks where
   ce-out-cast z FHOuter = z
   ce-out-cast z y = CECong y z
 
-  ce-cast : ∀{ d τ1 τ2 } → (d ⟨ τ1 ⇒ τ2 ⟩) casterr → d casterr
-  ce-cast (CECastFail x x₁ x₂ x₃) = {!ce-castth!}
-  ce-cast (CECong FHOuter ce) = ce-cast ce
-  ce-cast (CECong (FHCast x) ce) = ce-out-cast ce x
+  -- ce-cast : ∀{ d τ1 τ2 } → (d ⟨ τ1 ⇒ τ2 ⟩) casterr → d casterr
+  -- ce-cast (CECastFail x x₁ x₂ x₃) = {!ce-castth!}
+  -- ce-cast (CECong FHOuter ce) = ce-cast ce
+  -- ce-cast (CECong (FHCast x) ce) = ce-out-cast ce x
 
-  oops : ∀{ d τ} → (d ⟨ τ ⇒ ⦇⦈ ⟩) casterr → ⊥
-  oops (CECastFail x x₁ () x₃)
-  oops (CECong FHOuter ce) = oops ce
-  oops (CECong (FHCast x) ce) = {!ce-out-cast ce x!} -- not an exact bottom, it's not the case that ∀d, d casterr.
+  -- oops : ∀{ d τ} → (d ⟨ τ ⇒ ⦇⦈ ⟩) casterr → ⊥
+  -- oops (CECastFail x x₁ () x₃)
+  -- oops (CECong FHOuter ce) = oops ce
+  -- oops (CECong (FHCast x) ce) = {!ce-out-cast ce x!} -- not an exact bottom, it's not the case that ∀d, d casterr.
