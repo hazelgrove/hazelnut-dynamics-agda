@@ -156,17 +156,21 @@ module progress-checks where
   es (CECastFail x x₁ () x₃) (_ , Step FHOuter (ITCastID x₄) FHOuter)
   es (CECastFail x x₁ x₂ x₃) (_ , Step FHOuter (ITCastSucceed x₄ x₅) FHOuter) = x₃ refl
   es (CECastFail x x₁ GHole x₃) (_ , Step FHOuter (ITExpand x₄ x₅) FHOuter) = x₅ refl
-  es (CECastFail x x₁ x₂ x₃) (_ , Step (FHCast x₄) x₅ (FHCast x₆)) = {!!} -- es ? (_ , Step x₄ x₅ x₆)
+  es (CECastFail x x₁ x₂ x₃) (_ , Step (FHCast x₄) x₅ (FHCast x₆)) = {!!}
 
     -- congruence cases
   es (CECong FHOuter ce) (π1 , Step FHOuter x₂ FHOuter) = es ce (π1 , Step FHOuter x₂ FHOuter)
-  es (CECong (FHAp1 x) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!}
-  es (CECong (FHAp2 x x₁) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!}
+  es (CECong (FHAp1 FHOuter) (CECong FHOuter ce)) (_ , Step FHOuter (ITLam x₂) FHOuter) = ve (BVVal VLam) ce
+  es (CECong (FHAp1 x) ce) (_ , Step FHOuter (ITApCast x₁ x₂) FHOuter) = {!!}  -- fe x₁ (CECong {!ce-out-cast ce!} ce)
+  es (CECong (FHAp2 x x₁) ce) (π1 , Step FHOuter x₂ FHOuter) = {!ce-out-cast ce x₁!}
   es (CECong (FHNEHole x) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!}
   es (CECong (FHCast x) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!}
 
-  es (CECong FHOuter ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = {!!}
-  es (CECong (FHAp1 x) ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = {!!}
+  es (CECong FHOuter ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃))
+    with ce-ap ce
+  ... | Inl d1err = es d1err (_ , Step x₁ x₂ x₃)
+  ... | Inr d2err = {!Step x₁ x₂ x₃!} -- this is a counter example: d2 is a casterror but d1 isn't yet a value so the whole thing steps
+  es (CECong (FHAp1 x) ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = es (ce-out-cast ce x) (_ , Step x₁ x₂ x₃)
   es (CECong (FHAp2 x x₁) ce) (_ , Step (FHAp1 x₂) x₃ (FHAp1 x₄)) = fs x (_ , Step x₂ x₃ x₄)
 
   es (CECong FHOuter ce) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅))
@@ -176,8 +180,8 @@ module progress-checks where
   es (CECong (FHAp1 x) ce) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅)) = {!!}
   es (CECong (FHAp2 x x₁) ce) (_ , Step (FHAp2 x₂ x₃) x₄ (FHAp2 x₅ x₆)) = {!!}
 
-  es (CECong FHOuter ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = {!!}
-  es (CECong (FHNEHole x) ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = {!!}
+  es (CECong FHOuter ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = es (ce-nehole ce) (_ , Step x₁ x₂ x₃)
+  es (CECong (FHNEHole x) ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = es (ce-out-cast ce x) (_ , Step x₁ x₂ x₃)
 
-  es (CECong FHOuter ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!}
-  es (CECong (FHCast x) ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!}
+  es (CECong FHOuter ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!} -- es {!!} (_ , Step x₁ x₂ x₃) -- this might not work
+  es (CECong (FHCast x) ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = es (ce-out-cast ce x) (_ , Step x₁ x₂ x₃)

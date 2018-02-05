@@ -26,3 +26,16 @@ module lemmas-progress-checks where
   ce-castht (CECastFail x₂ x₃ x₄ x₅) f = abort (f _ _ refl)
   ce-castht (CECong FHOuter ce) = ce-castht ce
   ce-castht (CECong (FHCast x₂) ce) _ = CECong x₂ ce
+
+  -- ce-cast : ∀{d τ1 τ2} → (d ⟨ τ1 ⇒ τ2 ⟩) casterr → d casterr
+  -- ce-cast (CECastFail x x₁ x₂ x₃) = {!!}
+  -- ce-cast (CECong x ce) = {!!}
+
+  ce-out-cast : ∀{d d' ε} →
+                d casterr →
+                d' == ε ⟦ d ⟧ →
+                d' casterr
+  ce-out-cast (CECong x ce) FHOuter = ce-out-cast ce x
+  ce-out-cast (CECong x ce) y = CECong y (ce-out-cast ce x)
+  ce-out-cast z FHOuter = z
+  ce-out-cast z y = CECong y z
