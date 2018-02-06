@@ -70,7 +70,7 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-arr (TANEHole x wt x₁) (INEHole x₂) = Inr (Inl (_ , _ , _ , _ , _ , refl , x₂ , wt , x ))
   canonical-indeterminate-forms-arr (TACast wt x) (ICastArr x₁ ind) = Inr (Inr (Inr (Inl (_ , _ , _ , _ , _ , refl , ind , x₁))))
   -- todo / cyrus: this is the only one that required pattern matching (or equivalently a lemma i didn't bother to state) on premises
-  canonical-indeterminate-forms-arr (TACast wt TCHole2) (ICastHoleGround x₁ ind GHole) = Inr (Inr (Inr (Inr (_ , refl , refl , refl , ind , x₁) )))
+  canonical-indeterminate-forms-arr (TACast wt TCHole2) (ICastHoleGround x₁ ind GHole) = Inr (Inr (Inr (Inr (_ , refl , refl , refl , ind , x₁))))
 
   canonical-indeterminate-forms-hole : ∀{Δ d} →
                                        Δ , ∅ ⊢ d :: ⦇⦈ →

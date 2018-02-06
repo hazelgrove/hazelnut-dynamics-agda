@@ -42,8 +42,8 @@ module progress where
     -- if the left is indeterminate, inspect the right
   progress (TAAp wt1 wt2) | I i | S (_ , Step x y z) = S (_ , Step (FHAp2 (FIndet i) x) y (FHAp2 (FIndet i) z))
   progress (TAAp wt1 wt2) | I x | E x₁ = E (CECong (FHAp2 (FIndet x) FHOuter) x₁)
-  progress (TAAp wt1 wt2) | I x | I x₁ = I (IAp {!!} x (FIndet x₁)) -- cyrus (had an idea for a lemma here but it's false; see bottom)
-  progress (TAAp wt1 wt2) | I x | V x₁ = I (IAp {!!} x (FBoxed x₁)) -- cyrus (see bottom)
+  progress (TAAp wt1 wt2) | I x | I x₁ = I (IAp {!!} x (FIndet x₁)) -- todo: check that it's not that form, otherwise the cast can progress maybe
+  progress (TAAp wt1 wt2) | I x | V x₁ = I (IAp {!!} x (FBoxed x₁)) --
     -- if the left is a boxed value, inspect the right
   progress (TAAp wt1 wt2) | V v | S (_ , Step x y z) = S (_ , Step (FHAp2 (FBoxed v) x) y (FHAp2 (FBoxed v) z))
   progress (TAAp wt1 wt2) | V v | E e = E (CECong (FHAp2 (FBoxed v) FHOuter) e)
