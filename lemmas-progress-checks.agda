@@ -82,13 +82,3 @@ module lemmas-progress-checks where
   ce-out-cast (CECong x ce) y = CECong y (ce-out-cast ce x)
   ce-out-cast z FHOuter = z
   ce-out-cast z y = CECong y z
-
-  -- ce-cast : ∀{ d τ1 τ2 } → (d ⟨ τ1 ⇒ τ2 ⟩) casterr → d casterr
-  -- ce-cast (CECastFail x x₁ x₂ x₃) = {!ce-castth!}
-  -- ce-cast (CECong FHOuter ce) = ce-cast ce
-  -- ce-cast (CECong (FHCast x) ce) = ce-out-cast ce x
-
-  -- oops : ∀{ d τ} → (d ⟨ τ ⇒ ⦇⦈ ⟩) casterr → ⊥
-  -- oops (CECastFail x x₁ () x₃)
-  -- oops (CECong FHOuter ce) = oops ce
-  -- oops (CECong (FHCast x) ce) = {!ce-out-cast ce x!} -- not an exact bottom, it's not the case that ∀d, d casterr.

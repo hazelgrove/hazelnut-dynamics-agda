@@ -110,44 +110,44 @@ module progress-checks where
     final-not-step (FBoxed x) stp = boxedval-not-step x stp
     final-not-step (FIndet x) stp = indet-not-step x stp
 
-  -- errors don't step
-  err-not-step : ∀{d} → d casterr → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
-    -- cast fail cases
-  err-not-step (CECastFail x x₁ () x₃) (_ , Step FHOuter (ITCastID x₄) FHOuter)
-  err-not-step (CECastFail x x₁ x₂ x₃) (_ , Step FHOuter (ITCastSucceed x₄ x₅) FHOuter) = x₃ refl
-  err-not-step (CECastFail x x₁ GHole x₃) (_ , Step FHOuter (ITExpand x₄ (MGArr x₂)) FHOuter) = x₂ refl
-  err-not-step (CECastFail x () x₂ x₃) (_ , Step (FHCast FHOuter) (ITCastID x₄) (FHCast FHOuter))
-  err-not-step (CECastFail x () x₂ x₃) (_ , Step (FHCast FHOuter) (ITCastSucceed x₄ x₅) (FHCast FHOuter))
-  err-not-step (CECastFail x GHole x₂ x₃) (_ , Step (FHCast FHOuter) (ITGround x₄ (MGArr x₁)) (FHCast FHOuter)) = x₁ refl
-  err-not-step (CECastFail x x₁ x₂ x₃) (_ , Step (FHCast (FHCast x₄)) x₅ (FHCast (FHCast x₆))) = final-not-step x (_ , Step x₄ x₅ x₆)
-  err-not-step (CECastFail x x₁ x₂ x₃) (_ , Step (FHCast x₄) (ITExpand x₅ y) (FHCast x₇)) = {!!} -- this is from adding matching grounds; i don't know why it causes a pattern matching loop
-  err-not-step (CECastFail x x₁ x₂ x₃) (_ , Step FHOuter (ITGround x₄ ()) FHOuter)
+  -- -- errors don't step
+  -- err-not-step : ∀{d} → d casterr → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
+  --   -- cast fail cases
+  -- err-not-step (CECastFail x x₁ () x₃) (_ , Step FHOuter (ITCastID x₄) FHOuter)
+  -- err-not-step (CECastFail x x₁ x₂ x₃) (_ , Step FHOuter (ITCastSucceed x₄ x₅) FHOuter) = x₃ refl
+  -- err-not-step (CECastFail x x₁ GHole x₃) (_ , Step FHOuter (ITExpand x₄ (MGArr x₂)) FHOuter) = x₂ refl
+  -- err-not-step (CECastFail x () x₂ x₃) (_ , Step (FHCast FHOuter) (ITCastID x₄) (FHCast FHOuter))
+  -- err-not-step (CECastFail x () x₂ x₃) (_ , Step (FHCast FHOuter) (ITCastSucceed x₄ x₅) (FHCast FHOuter))
+  -- err-not-step (CECastFail x GHole x₂ x₃) (_ , Step (FHCast FHOuter) (ITGround x₄ (MGArr x₁)) (FHCast FHOuter)) = x₁ refl
+  -- err-not-step (CECastFail x x₁ x₂ x₃) (_ , Step (FHCast (FHCast x₄)) x₅ (FHCast (FHCast x₆))) = final-not-step x (_ , Step x₄ x₅ x₆)
+  -- err-not-step (CECastFail x x₁ x₂ x₃) (_ , Step (FHCast x₄) (ITExpand x₅ y) (FHCast x₇)) = {!!} -- this is from adding matching grounds; i don't know why it causes a pattern matching loop
+  -- err-not-step (CECastFail x x₁ x₂ x₃) (_ , Step FHOuter (ITGround x₄ ()) FHOuter)
 
 
-    -- congruence cases
-  err-not-step (CECong FHOuter ce) (π1 , Step FHOuter x₂ FHOuter) = err-not-step ce (π1 , Step FHOuter x₂ FHOuter)
-  err-not-step (CECong (FHAp1 FHOuter) (CECong FHOuter ce)) (_ , Step FHOuter (ITLam x₂) FHOuter) = boxedval-not-err (BVVal VLam) ce
-  err-not-step (CECong (FHAp1 x) ce) (_ , Step FHOuter (ITApCast x₁ x₂) FHOuter) = {!!} -- final-not-err x₁ (CECong {!!} ce) -- proably case on x, but get incomplete pattern garbage
-  err-not-step (CECong (FHAp2 x x₁) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!} -- cyrus: possibly another counter example
-  err-not-step (CECong (FHNEHole x) ce) (π1 , Step FHOuter () FHOuter)
-  err-not-step (CECong (FHCast x) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!} -- cyrus: only obvious thing to do is case on x₂, doesn't seem to get anywhere
+  --   -- congruence cases
+  -- err-not-step (CECong FHOuter ce) (π1 , Step FHOuter x₂ FHOuter) = err-not-step ce (π1 , Step FHOuter x₂ FHOuter)
+  -- err-not-step (CECong (FHAp1 FHOuter) (CECong FHOuter ce)) (_ , Step FHOuter (ITLam x₂) FHOuter) = boxedval-not-err (BVVal VLam) ce
+  -- err-not-step (CECong (FHAp1 x) ce) (_ , Step FHOuter (ITApCast x₁ x₂) FHOuter) = {!!} -- final-not-err x₁ (CECong {!!} ce) -- proably case on x, but get incomplete pattern garbage
+  -- err-not-step (CECong (FHAp2 x x₁) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!} -- cyrus: possibly another counter example
+  -- err-not-step (CECong (FHNEHole x) ce) (π1 , Step FHOuter () FHOuter)
+  -- err-not-step (CECong (FHCast x) ce) (π1 , Step FHOuter x₂ FHOuter) = {!!} -- cyrus: only obvious thing to do is case on x₂, doesn't seem to get anywhere
 
-  err-not-step (CECong FHOuter ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃))
-    with ce-ap ce
-  ... | Inl d1err = err-not-step d1err (_ , Step x₁ x₂ x₃)
-  ... | Inr d2err = {!Step x₁ x₂ x₃!} -- cyrus: this is a counter example, d2 is a casterror but d1 isn't yet a value so the whole thing steps
-  err-not-step (CECong (FHAp1 x) ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = err-not-step (ce-out-cast ce x) (_ , Step x₁ x₂ x₃)
-  err-not-step (CECong (FHAp2 x x₁) ce) (_ , Step (FHAp1 x₂) x₃ (FHAp1 x₄)) = final-not-step x (_ , Step x₂ x₃ x₄)
+  -- err-not-step (CECong FHOuter ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃))
+  --   with ce-ap ce
+  -- ... | Inl d1err = err-not-step d1err (_ , Step x₁ x₂ x₃)
+  -- ... | Inr d2err = {!Step x₁ x₂ x₃!} -- cyrus: this is a counter example, d2 is a casterror but d1 isn't yet a value so the whole thing steps
+  -- err-not-step (CECong (FHAp1 x) ce) (_ , Step (FHAp1 x₁) x₂ (FHAp1 x₃)) = err-not-step (ce-out-cast ce x) (_ , Step x₁ x₂ x₃)
+  -- err-not-step (CECong (FHAp2 x x₁) ce) (_ , Step (FHAp1 x₂) x₃ (FHAp1 x₄)) = final-not-step x (_ , Step x₂ x₃ x₄)
 
-  err-not-step (CECong FHOuter ce) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅))
-    with ce-ap ce
-  ... | Inl d1err = final-not-err x₄ d1err
-  ... | Inr d2err = err-not-step d2err (_ , Step x₂ x₃ x₅)
-  err-not-step (CECong (FHAp1 x) ce) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅)) = final-not-err x₁ (ce-out-cast ce x)
-  err-not-step (CECong (FHAp2 x x₁) ce) (_ , Step (FHAp2 x₂ x₃) x₄ (FHAp2 x₅ x₆)) = err-not-step (ce-out-cast ce x₁) (_ , Step x₃ x₄ x₆)
+  -- err-not-step (CECong FHOuter ce) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅))
+  --   with ce-ap ce
+  -- ... | Inl d1err = final-not-err x₄ d1err
+  -- ... | Inr d2err = err-not-step d2err (_ , Step x₂ x₃ x₅)
+  -- err-not-step (CECong (FHAp1 x) ce) (_ , Step (FHAp2 x₁ x₂) x₃ (FHAp2 x₄ x₅)) = final-not-err x₁ (ce-out-cast ce x)
+  -- err-not-step (CECong (FHAp2 x x₁) ce) (_ , Step (FHAp2 x₂ x₃) x₄ (FHAp2 x₅ x₆)) = err-not-step (ce-out-cast ce x₁) (_ , Step x₃ x₄ x₆)
 
-  err-not-step (CECong FHOuter ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = err-not-step (ce-nehole ce) (_ , Step x₁ x₂ x₃)
-  err-not-step (CECong (FHNEHole x) ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = err-not-step (ce-out-cast ce x) (_ , Step x₁ x₂ x₃)
+  -- err-not-step (CECong FHOuter ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = err-not-step (ce-nehole ce) (_ , Step x₁ x₂ x₃)
+  -- err-not-step (CECong (FHNEHole x) ce) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = err-not-step (ce-out-cast ce x) (_ , Step x₁ x₂ x₃)
 
-  err-not-step (CECong FHOuter ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!} -- cyrus not sure how to proceed at all; obvious lemma is probably false
-  err-not-step (CECong (FHCast x) ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = err-not-step (ce-out-cast ce x) (_ , Step x₁ x₂ x₃)
+  -- err-not-step (CECong FHOuter ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = {!!} -- cyrus not sure how to proceed at all; obvious lemma is probably false
+  -- err-not-step (CECong (FHCast x) ce) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = err-not-step (ce-out-cast ce x) (_ , Step x₁ x₂ x₃)
