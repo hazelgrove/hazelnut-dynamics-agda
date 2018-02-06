@@ -295,7 +295,7 @@ module core where
             ε evalctx →
             (ε ∘₁ d) evalctx
     ECAp2 : ∀{d ε} →
-            d final →
+            -- d final → -- red box
             ε evalctx →
             (d ∘₂ ε) evalctx
     ECNEHole : ∀{ε u σ} →
@@ -312,7 +312,7 @@ module core where
            d1 == ε ⟦ d1' ⟧ →
            (d1 ∘ d2) == (ε ∘₁ d2) ⟦ d1' ⟧
     FHAp2 : ∀{d1 d2 d2' ε} →
-           d1 final →
+           -- d1 final → -- red box
            d2 == ε ⟦ d2' ⟧ →
            (d1 ∘ d2) == (d1 ∘₂ ε) ⟦ d2' ⟧
     FHNEHole : ∀{ d d' ε u σ} →
@@ -330,25 +330,25 @@ module core where
   -- instruction transition judgement
   data _→>_ : (d d' : dhexp) → Set where
     ITLam : ∀{ x τ d1 d2 } →
-            d2 final →
-            ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1) -- this is very unlikely to work long term
+            -- d2 final → -- red box
+            ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1) -- todo: this is very unlikely to work long term
     ITCastID : ∀{d τ } →
-               d final →
+               -- d final → -- red box
                (d ⟨ τ ⇒ τ ⟩) →> d
     ITCastSucceed : ∀{d τ } →
-                    d final →
+                    -- d final → -- red box
                     τ ground →
                     (d ⟨ τ ⇒ ⦇⦈ ⇒ τ ⟩) →> d
     ITApCast : ∀{d1 d2 τ1 τ2 τ1' τ2' } →
-               d1 final →
-               d2 final →
+               -- d1 final → -- red box
+               -- d2 final → -- red box
                ((d1 ⟨ (τ1 ==> τ2) ⇒ (τ1' ==> τ2')⟩) ∘ d2) →> ((d1 ∘ (d2 ⟨ τ1' ⇒ τ1 ⟩)) ⟨ τ2 ⇒ τ2' ⟩)
     ITGround : ∀{ d τ τ'} →
-               d final →
+               -- d final → -- red box
                τ ▸gnd τ' →
                (d ⟨ τ ⇒ ⦇⦈ ⟩) →> (d ⟨ τ ⇒ τ' ⇒ ⦇⦈ ⟩)
     ITExpand : ∀{d τ τ' } →
-               d final →
+               -- d final → -- red box
                τ ▸gnd τ' →
                (d ⟨ ⦇⦈ ⇒ τ ⟩) →> (d ⟨ ⦇⦈ ⇒ τ' ⇒ τ ⟩)
 
@@ -368,7 +368,7 @@ module core where
 
   data _casterr : (d : dhexp) → Set where
     CECastFail : ∀ {d τ1 τ2} →
-                  d final →
+                  -- d final → -- red box
                   τ1 ground →
                   τ2 ground →
                   τ1 ≠ τ2 →
