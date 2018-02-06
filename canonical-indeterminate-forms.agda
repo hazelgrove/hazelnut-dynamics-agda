@@ -93,20 +93,13 @@ module canonical-indeterminate-forms where
                                        (Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ]
                                          ((d == d' ⟨ τ' ⇒ ⦇⦈ ⟩) ×
                                           (τ' ground) ×
-                                          (d indet))) --todo / cyrus: this is
-                                                      --interesting; it's
-                                                      --the only clause
-                                                      --that's filled by
-                                                      --multiple patterns
-                                                      --below; maybe we
-                                                      --could say something
-                                                      --more specific?
+                                          (d' indet)))
   canonical-indeterminate-forms-hole (TAVar x₁) ()
   canonical-indeterminate-forms-hole (TAAp wt wt₁) (IAp x ind x₁) = Inr (Inr (Inl (_ , _ , _ , refl , wt , wt₁ , ind , x₁ , x)))
   canonical-indeterminate-forms-hole (TAEHole x x₁) IEHole = Inl (_ , _ , _ , refl , x)
   canonical-indeterminate-forms-hole (TANEHole x wt x₁) (INEHole x₂) = Inr (Inl (_ , _ , _ , _ , _ , refl , x₂ , wt , x ))
-  canonical-indeterminate-forms-hole (TACast wt x) (ICastGroundHole x₁ ind) = Inr (Inr (Inr (_ , _ , refl , x₁ , ICastGroundHole x₁ ind)))
-  canonical-indeterminate-forms-hole (TACast wt x) (ICastHoleGround x₁ ind x₂) = Inr (Inr (Inr (_ , _ , refl , x₂ , ICastGroundHole x₂ ind)))
+  canonical-indeterminate-forms-hole (TACast wt x) (ICastGroundHole x₁ ind) = Inr (Inr (Inr (_ , _ , refl , x₁ , ind)))
+  canonical-indeterminate-forms-hole (TACast wt x) (ICastHoleGround x₁ ind ())
 
   canonical-indeterminate-forms-coverage : ∀{Δ d τ} →
                                            Δ , ∅ ⊢ d :: τ →
