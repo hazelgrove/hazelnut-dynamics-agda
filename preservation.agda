@@ -19,7 +19,7 @@ module preservation where
     with type-assignment-unicity D1 D2
   ... | refl = D3
   pres-lem (FHAp1 eps) D1 D2 D3 (FHAp1 D4) = {!!}
-  pres-lem (FHAp2 x eps) D1 D2 D3 (FHAp2 x₁ D4) = {!!}
+  pres-lem (FHAp2 eps) D1 D2 D3 (FHAp2 D4) = {!!}
   pres-lem (FHNEHole eps) D1 D2 D3 (FHNEHole D4) = {!!}
   pres-lem (FHCast eps) D1 D2 D3 (FHCast D4) = {!!}
 
@@ -34,7 +34,7 @@ module preservation where
 
   pres-lem2 (TAAp ta ta₁) FHOuter = _ , TAAp ta ta₁
   pres-lem2 (TAAp ta ta₁) (FHAp1 eps) = pres-lem2 ta eps
-  pres-lem2 (TAAp ta ta₁) (FHAp2 x eps) = pres-lem2 ta₁ eps
+  pres-lem2 (TAAp ta ta₁) (FHAp2 eps) = pres-lem2 ta₁ eps
 
   pres-lem2 (TAEHole x x₁) FHOuter = _ , TAEHole x x₁
   pres-lem2 (TANEHole x ta x₁) FHOuter = _ , TANEHole x ta x₁
@@ -50,14 +50,14 @@ module preservation where
   pres-lem3 TAConst ()
   pres-lem3 (TAVar x₁) ()
   pres-lem3 (TALam ta) ()
-  pres-lem3 (TAAp ta ta₁) (ITLam x₁) = {!!}
-  pres-lem3 (TAAp ta ta₁) (ITApCast x x₁) = {!!}
+  pres-lem3 (TAAp ta ta₁) (ITLam) = {!!}
+  pres-lem3 (TAAp ta ta₁) (ITApCast) = {!!}
   pres-lem3 (TAEHole x x₁) ()
   pres-lem3 (TANEHole x ta x₁) () -- todo: this is a little surprising; nehole doesn't take a transition but it defieately can still step
-  pres-lem3 (TACast ta x) (ITCastID x₁) = {!!}
-  pres-lem3 (TACast ta x) (ITCastSucceed x₁ x₂) = {!!}
-  pres-lem3 (TACast ta x) (ITGround x₁ y) = {!!}
-  pres-lem3 (TACast ta x) (ITExpand x₁ x₂) = {!!}
+  pres-lem3 (TACast ta x) (ITCastID) = {!!}
+  pres-lem3 (TACast ta x) (ITCastSucceed x₂) = {!!}
+  pres-lem3 (TACast ta x) (ITGround y) = {!!}
+  pres-lem3 (TACast ta x) (ITExpand x₂) = {!!}
 
   preservation : {Δ : hctx} {d d' : dhexp} {τ : htyp} →
              Δ , ∅ ⊢ d :: τ →
