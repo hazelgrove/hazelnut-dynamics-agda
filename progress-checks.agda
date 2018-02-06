@@ -29,15 +29,15 @@ module progress-checks where
 
   -- boxed values are not errors
   boxedval-not-err : ∀{d} → d boxedval → d casterr → ⊥
-  boxedval-not-err (BVVal ()) (CECastFail x₁ x₂ x₃ x₄)
-  boxedval-not-err (BVHoleCast x bv) (CECastFail x₁ x₂ () x₄)
+  boxedval-not-err (BVVal ()) (CECastFail x₂ x₃ x₄)
+  boxedval-not-err (BVHoleCast x bv) (CECastFail x₂ () x₄)
   boxedval-not-err (BVArrCast x bv) (CECong FHOuter er) = boxedval-not-err bv (ce-castarr er)
   boxedval-not-err (BVArrCast x bv) (CECong (FHCast x₁) er) = boxedval-not-err bv (CECong x₁ er)
   boxedval-not-err (BVHoleCast x bv) (CECong FHOuter er) = boxedval-not-err bv (ce-castth er)
   boxedval-not-err (BVHoleCast x bv) (CECong (FHCast x₁) er) = boxedval-not-err bv (CECong x₁ er)
   boxedval-not-err (BVVal x) (CECong FHOuter er) = boxedval-not-err (BVVal x) er
   boxedval-not-err (BVVal ()) (CECong (FHAp1 x₁) er)
-  boxedval-not-err (BVVal ()) (CECong (FHAp2 x₁ x₂) er)
+  boxedval-not-err (BVVal ()) (CECong (FHAp2 x₂) er)
   boxedval-not-err (BVVal ()) (CECong (FHNEHole x₁) er)
   boxedval-not-err (BVVal ()) (CECong (FHCast x₁) er)
 
@@ -45,13 +45,13 @@ module progress-checks where
   boxedval-not-step : ∀{d} → d boxedval → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥
   boxedval-not-step (BVVal VConst) (d' , Step FHOuter () x₃)
   boxedval-not-step (BVVal VLam) (d' , Step FHOuter () x₃)
-  boxedval-not-step (BVArrCast x bv) (d0' , Step FHOuter (ITCastID x₁) FHOuter) = x refl
+  boxedval-not-step (BVArrCast x bv) (d0' , Step FHOuter (ITCastID) FHOuter) = x refl
   boxedval-not-step (BVArrCast x bv) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = boxedval-not-step bv (_ , Step x₁ x₂ x₃)
-  boxedval-not-step (BVHoleCast () bv) (d' , Step FHOuter (ITCastID x₁) FHOuter)
-  boxedval-not-step (BVHoleCast x bv) (d' , Step FHOuter (ITCastSucceed x₁ ()) FHOuter)
-  boxedval-not-step (BVHoleCast GHole bv) (_ , Step FHOuter (ITGround x₁ (MGArr x)) FHOuter) = x refl
+  boxedval-not-step (BVHoleCast () bv) (d' , Step FHOuter (ITCastID) FHOuter)
+  boxedval-not-step (BVHoleCast x bv) (d' , Step FHOuter (ITCastSucceed ()) FHOuter)
+  boxedval-not-step (BVHoleCast GHole bv) (_ , Step FHOuter (ITGround (MGArr x)) FHOuter) = x refl
   boxedval-not-step (BVHoleCast x bv) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = boxedval-not-step bv (_ , Step x₁ x₂ x₃)
-  boxedval-not-step (BVHoleCast x x₁) (_ , Step FHOuter (ITExpand x₂ ()) FHOuter)
+  boxedval-not-step (BVHoleCast x x₁) (_ , Step FHOuter (ITExpand ()) FHOuter)
 
   -- todo: what class of P is this true for?
   -- lem-something : ∀{ d ε d'} → d == ε ⟦ d' ⟧ → P d' → P d
@@ -67,13 +67,13 @@ module progress-checks where
     ... | Inl d1err = indet-not-err indet d1err
     ... | Inr d2err = final-not-err x₁ d2err
     indet-not-err (IAp x indet x₁) (CECong (FHAp1 x₂) err) = indet-not-err indet (CECong x₂ err)
-    indet-not-err (IAp x indet x₁) (CECong (FHAp2 x₂ x₃) err) = final-not-err x₁ (CECong x₃ err)
+    indet-not-err (IAp x indet x₁) (CECong (FHAp2 x₃) err) = final-not-err x₁ (CECong x₃ err)
     indet-not-err (ICastArr x indet) (CECong FHOuter err) = indet-not-err indet (ce-castarr err)
     indet-not-err (ICastArr x indet) (CECong (FHCast x₁) err) = indet-not-err indet (CECong x₁ err)
-    indet-not-err (ICastGroundHole x indet) (CECastFail x₁ x₂ () x₄)
+    indet-not-err (ICastGroundHole x indet) (CECastFail x₂ () x₄)
     indet-not-err (ICastGroundHole x indet) (CECong FHOuter err) = indet-not-err indet (ce-castth err)
     indet-not-err (ICastGroundHole x indet) (CECong (FHCast x₁) err) = indet-not-err indet (CECong x₁ err)
-    indet-not-err (ICastHoleGround x indet x₁) (CECastFail x₂ x₃ x₄ x₅) = x _ _ refl
+    indet-not-err (ICastHoleGround x indet x₁) (CECastFail x₃ x₄ x₅) = x _ _ refl
     indet-not-err (ICastHoleGround x indet x₁) (CECong FHOuter err) = indet-not-err indet (ce-castht err x)
     indet-not-err (ICastHoleGround x indet x₁) (CECong (FHCast x₂) err) = indet-not-err indet (CECong x₂ err)
 
@@ -88,22 +88,22 @@ module progress-checks where
     indet-not-step IEHole (d' , Step FHOuter () FHOuter)
     indet-not-step (INEHole x) (d' , Step FHOuter () FHOuter)
     indet-not-step (INEHole x) (_ , Step (FHNEHole x₁) x₂ (FHNEHole x₃)) = final-sub-not-trans x x₁ x₂
-    indet-not-step (IAp x₁ () x₂) (_ , Step FHOuter (ITLam x₃) FHOuter)
-    indet-not-step (IAp x (ICastArr x₁ ind) x₂) (_ , Step FHOuter (ITApCast x₃ x₄) FHOuter) = x _ _ _ _ _  refl
+    indet-not-step (IAp x₁ () x₂) (_ , Step FHOuter (ITLam) FHOuter)
+    indet-not-step (IAp x (ICastArr x₁ ind) x₂) (_ , Step FHOuter (ITApCast) FHOuter) = x _ _ _ _ _  refl
     indet-not-step (IAp x ind _) (_ , Step (FHAp1 x₂) x₃ (FHAp1 x₄)) = indet-not-step ind (_ , Step x₂ x₃ x₄)
-    indet-not-step (IAp x ind f) (_ , Step (FHAp2 x₂ x₃) x₄ (FHAp2 x₅ x₆)) = final-not-step f (_ , Step x₃ x₄ x₆)
-    indet-not-step (ICastArr x ind) (d0' , Step FHOuter (ITCastID x₁) FHOuter) = x refl
+    indet-not-step (IAp x ind f) (_ , Step (FHAp2 x₃) x₄ (FHAp2 x₆)) = final-not-step f (_ , Step x₃ x₄ x₆)
+    indet-not-step (ICastArr x ind) (d0' , Step FHOuter (ITCastID) FHOuter) = x refl
     indet-not-step (ICastArr x ind) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = indet-not-step ind (_ , Step x₁ x₂ x₃)
-    indet-not-step (ICastGroundHole () ind) (d' , Step FHOuter (ITCastID x₁) FHOuter)
-    indet-not-step (ICastGroundHole x ind) (d' , Step FHOuter (ITCastSucceed x₁ ()) FHOuter)
-    indet-not-step (ICastGroundHole GHole ind) (_ , Step FHOuter (ITGround x (MGArr x₁)) FHOuter) = x₁ refl
+    indet-not-step (ICastGroundHole () ind) (d' , Step FHOuter (ITCastID) FHOuter)
+    indet-not-step (ICastGroundHole x ind) (d' , Step FHOuter (ITCastSucceed ()) FHOuter)
+    indet-not-step (ICastGroundHole GHole ind) (_ , Step FHOuter (ITGround (MGArr x₁)) FHOuter) = x₁ refl
     indet-not-step (ICastGroundHole x ind) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = indet-not-step ind (_ , Step x₁ x₂ x₃)
-    indet-not-step (ICastHoleGround x ind ()) (d' , Step FHOuter (ITCastID x₁) FHOuter)
-    indet-not-step (ICastHoleGround x ind g) (d' , Step FHOuter (ITCastSucceed x₁ x₂) FHOuter) = x _ _ refl
-    indet-not-step (ICastHoleGround x ind GHole) (_ , Step FHOuter (ITExpand x₁ (MGArr x₂)) FHOuter) = x₂ refl
+    indet-not-step (ICastHoleGround x ind ()) (d' , Step FHOuter (ITCastID ) FHOuter)
+    indet-not-step (ICastHoleGround x ind g) (d' , Step FHOuter (ITCastSucceed  x₂) FHOuter) = x _ _ refl
+    indet-not-step (ICastHoleGround x ind GHole) (_ , Step FHOuter (ITExpand (MGArr x₂)) FHOuter) = x₂ refl
     indet-not-step (ICastHoleGround x ind g) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = indet-not-step ind (_ , Step x₁ x₂ x₃)
-    indet-not-step (ICastGroundHole x x₁) (_ , Step FHOuter (ITExpand x₂ ()) FHOuter)
-    indet-not-step (ICastHoleGround x x₁ x₂) (_ , Step FHOuter (ITGround x₃ ()) FHOuter)
+    indet-not-step (ICastGroundHole x x₁) (_ , Step FHOuter (ITExpand ()) FHOuter)
+    indet-not-step (ICastHoleGround x x₁ x₂) (_ , Step FHOuter (ITGround ()) FHOuter)
 
     -- final expressions don't step
     final-not-step : ∀{d} → d final → Σ[ d' ∈ dhexp ] (d ↦ d') → ⊥

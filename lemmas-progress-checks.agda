@@ -7,27 +7,26 @@ module lemmas-progress-checks where
   boxedval-not-trans : ∀{d d'} → d boxedval → d →> d' → ⊥
   boxedval-not-trans (BVVal VConst) ()
   boxedval-not-trans (BVVal VLam) ()
-  boxedval-not-trans (BVArrCast x bv) (ITCastID x₁) = x refl
-  boxedval-not-trans (BVHoleCast () bv) (ITCastID x₁)
-  boxedval-not-trans (BVHoleCast () bv) (ITCastSucceed x₁ x₂)
-  boxedval-not-trans (BVHoleCast GHole bv) (ITGround x₁ (MGArr x)) = x refl
-  boxedval-not-trans (BVHoleCast x a) (ITExpand x₁ ())
+  boxedval-not-trans (BVArrCast x bv) (ITCastID) = x refl
+  boxedval-not-trans (BVHoleCast () bv) (ITCastID)
+  boxedval-not-trans (BVHoleCast () bv) (ITCastSucceed x₁)
+  boxedval-not-trans (BVHoleCast GHole bv) (ITGround (MGArr x)) = x refl
+  boxedval-not-trans (BVHoleCast x a) (ITExpand ())
 
   indet-not-trans : ∀{d d'} → d indet → d →> d' → ⊥
   indet-not-trans IEHole ()
   indet-not-trans (INEHole x) ()
-  indet-not-trans (IAp x₁ () x₂) (ITLam x₃)
-  indet-not-trans (IAp x (ICastArr x₁ ind) x₂) (ITApCast x₃ x₄) = x _ _ _ _ _ refl
-  indet-not-trans (ICastArr x ind) (ITCastID _) = x refl
-  indet-not-trans (ICastGroundHole () ind) (ITCastID x₁)
-  indet-not-trans (ICastGroundHole x ind) (ITCastSucceed x₁ ())
-  indet-not-trans (ICastGroundHole GHole ind) (ITGround x₁ (MGArr x)) = x refl
-  indet-not-trans (ICastHoleGround x ind ()) (ITCastID x₂)
-  indet-not-trans (ICastHoleGround x ind x₁) (ITCastSucceed x₂ x₃) = x _ _ refl
-  indet-not-trans (ICastHoleGround x ind GHole) (ITExpand (FBoxed x₁) (MGArr x₂)) = x₂ refl
-  indet-not-trans (ICastGroundHole x a) (ITExpand x₁ ())
-  indet-not-trans (ICastHoleGround x a x₁) (ITGround x₂ ())
-  indet-not-trans (ICastHoleGround x a GHole) (ITExpand x₂ (MGArr x₃)) = x₃ refl
+  indet-not-trans (IAp x₁ () x₂) (ITLam)
+  indet-not-trans (IAp x (ICastArr x₁ ind) x₂) (ITApCast ) = x _ _ _ _ _ refl
+  indet-not-trans (ICastArr x ind) (ITCastID) = x refl
+  indet-not-trans (ICastGroundHole () ind) (ITCastID)
+  indet-not-trans (ICastGroundHole x ind) (ITCastSucceed ())
+  indet-not-trans (ICastGroundHole GHole ind) (ITGround (MGArr x)) = x refl
+  indet-not-trans (ICastHoleGround x ind ()) (ITCastID)
+  indet-not-trans (ICastHoleGround x ind x₁) (ITCastSucceed x₂) = x _ _ refl
+  indet-not-trans (ICastHoleGround x ind GHole) (ITExpand (MGArr x₂)) = x₂ refl
+  indet-not-trans (ICastGroundHole x a) (ITExpand ())
+  indet-not-trans (ICastHoleGround x a x₁) (ITGround ())
 
   final-not-trans : ∀{d d'} → d final → d →> d' → ⊥
   final-not-trans (FBoxed x) = boxedval-not-trans x
@@ -36,13 +35,13 @@ module lemmas-progress-checks where
   final-sub-final : ∀{d ε x} → d final → d == ε ⟦ x ⟧ → x final
   final-sub-final x FHOuter = x
   final-sub-final (FBoxed (BVVal ())) (FHAp1 eps)
-  final-sub-final (FBoxed (BVVal ())) (FHAp2 x₂ eps)
+  final-sub-final (FBoxed (BVVal ())) (FHAp2 eps)
   final-sub-final (FBoxed (BVVal ())) (FHNEHole eps)
   final-sub-final (FBoxed (BVVal ())) (FHCast eps)
   final-sub-final (FBoxed (BVArrCast x₁ x₂)) (FHCast eps) = final-sub-final (FBoxed x₂) eps
   final-sub-final (FBoxed (BVHoleCast x₁ x₂)) (FHCast eps) = final-sub-final (FBoxed x₂) eps
   final-sub-final (FIndet (IAp x₁ x₂ x₃)) (FHAp1 eps) = final-sub-final (FIndet x₂) eps
-  final-sub-final (FIndet (IAp x₁ x₂ x₃)) (FHAp2 x₄ eps) = final-sub-final x₃ eps
+  final-sub-final (FIndet (IAp x₁ x₂ x₃)) (FHAp2 eps) = final-sub-final x₃ eps
   final-sub-final (FIndet (INEHole x₁)) (FHNEHole eps) = final-sub-final x₁ eps
   final-sub-final (FIndet (ICastArr x₁ x₂)) (FHCast eps) = final-sub-final (FIndet x₂) eps
   final-sub-final (FIndet (ICastGroundHole x₁ x₂)) (FHCast eps) = final-sub-final (FIndet x₂) eps
@@ -56,7 +55,7 @@ module lemmas-progress-checks where
   ce-castarr (CECong (FHCast x₁) ce) = CECong x₁ ce
 
   ce-castth : ∀{d τ} → (d ⟨ τ ⇒ ⦇⦈ ⟩) casterr → d casterr
-  ce-castth (CECastFail x₁ x₂ () x₄)
+  ce-castth (CECastFail x₂ () x₄)
   ce-castth (CECong FHOuter ce) = ce-castth ce
   ce-castth (CECong (FHCast x₁) ce) = CECong x₁ ce
 
@@ -67,10 +66,10 @@ module lemmas-progress-checks where
   ce-ap : ∀{d1 d2} → (d1 ∘ d2) casterr → (d1 casterr + d2 casterr)
   ce-ap (CECong FHOuter ce) = ce-ap ce
   ce-ap (CECong (FHAp1 x₂) ce) = Inl (CECong x₂ ce)
-  ce-ap (CECong (FHAp2 x₂ x₃) ce) = Inr (CECong x₃ ce)
+  ce-ap (CECong (FHAp2 x₃) ce) = Inr (CECong x₃ ce)
 
   ce-castht : ∀{d τ} → (d ⟨ ⦇⦈ ⇒ τ ⟩) casterr → ((d' : dhexp) (τ' : htyp) → d ≠ (d' ⟨ τ' ⇒ ⦇⦈ ⟩)) → d casterr
-  ce-castht (CECastFail x₂ x₃ x₄ x₅) f = abort (f _ _ refl)
+  ce-castht (CECastFail x₃ x₄ x₅) f = abort (f _ _ refl)
   ce-castht (CECong FHOuter ce) = ce-castht ce
   ce-castht (CECong (FHCast x₂) ce) _ = CECong x₂ ce
 
