@@ -40,20 +40,20 @@ module progress where
     -- if the left is an error, the whole thing is an error
   progress (TAAp wt1 wt2) | E x | _ = E (CECong (FHAp1 FHOuter) x)
     -- if the left is indeterminate, inspect the right
-  progress (TAAp wt1 wt2) | I i | S (_ , Step x y z) = S (_ , Step (FHAp2 (FIndet i) x) y (FHAp2 (FIndet i) z))
-  progress (TAAp wt1 wt2) | I x | E x₁ = E (CECong (FHAp2 (FIndet x) FHOuter) x₁)
+  progress (TAAp wt1 wt2) | I i | S (_ , Step x y z) = S (_ , Step (FHAp2 x) y (FHAp2  z))
+  progress (TAAp wt1 wt2) | I x | E x₁ = E (CECong (FHAp2 FHOuter) x₁)
   progress (TAAp wt1 wt2) | I x | I x₁ = I (IAp {!!} x (FIndet x₁)) -- todo: check that it's not that form, otherwise the cast can progress maybe
   progress (TAAp wt1 wt2) | I x | V x₁ = I (IAp {!!} x (FBoxed x₁)) --
     -- if the left is a boxed value, inspect the right
-  progress (TAAp wt1 wt2) | V v | S (_ , Step x y z) = S (_ , Step (FHAp2 (FBoxed v) x) y (FHAp2 (FBoxed v) z))
-  progress (TAAp wt1 wt2) | V v | E e = E (CECong (FHAp2 (FBoxed v) FHOuter) e)
+  progress (TAAp wt1 wt2) | V v | S (_ , Step x y z) = S (_ , Step (FHAp2  x) y (FHAp2  z))
+  progress (TAAp wt1 wt2) | V v | E e = E (CECong (FHAp2 FHOuter) e)
   progress (TAAp wt1 wt2) | V v | I i
     with canonical-boxed-forms-arr wt1 v
-  ... | Inl (x , d' , refl , qq) = S (_ , Step FHOuter (ITLam (FIndet i)) FHOuter)
+  ... | Inl (x , d' , refl , qq) = S (_ , Step FHOuter ITLam FHOuter)
   ... | Inr (d' , τ1' , τ2' , refl , neq , qq) = I (IAp {!!} (ICastArr neq {!!}) (FIndet i)) --cyrus, as below
   progress (TAAp wt1 wt2) | V v | V v₂
     with canonical-boxed-forms-arr wt1 v
-  ... | Inl (x , d' , refl , qq) = S (_ , Step FHOuter (ITLam (FBoxed v₂)) FHOuter)
+  ... | Inl (x , d' , refl , qq) = S (_ , Step FHOuter ITLam FHOuter)
   ... | Inr (d' , τ1' , τ2' , refl , neq , qq) = I (IAp {!!} (ICastArr neq {!!}) (FBoxed v₂)) --cyrus
 
     -- empty holes
@@ -73,35 +73,12 @@ module progress where
   ... | S (_ , Step x y z) = S (_ , Step (FHCast x) y (FHCast z))
   ... | E x = E (CECong (FHCast FHOuter) x)
   -- indet cases, inspect how the casts are realted by consistency
-  progress (TACast wt TCRefl)  | I x = S (_ , Step FHOuter (ITCastID (FIndet x)) FHOuter)
+  progress (TACast wt TCRefl)  | I x = S (_ , Step FHOuter ITCastID FHOuter)
   progress (TACast wt TCHole1) | I x = I (ICastGroundHole {!!} x) -- cyrus
   progress (TACast wt TCHole2) | I x = I (ICastHoleGround {!!} x {!!}) -- cyrus
   progress (TACast wt (TCArr c1 c2)) | I x = I (ICastArr {!!} x) -- cyrus
   -- boxed value cases, inspect how the casts are realted by consistency
-  progress (TACast wt TCRefl)  | V x = S (_ , Step FHOuter (ITCastID (FBoxed x)) FHOuter)
+  progress (TACast wt TCRefl)  | V x = S (_ , Step FHOuter ITCastID FHOuter)
   progress (TACast wt TCHole1) | V x = V (BVHoleCast {!!} x) -- cyrus
   progress (TACast wt TCHole2) | V x = V {!!} -- cyrus: missing rule for boxed values?
   progress (TACast wt (TCArr c1 c2)) | V x = V (BVArrCast {!!} x) -- cyrus
-
-
-
-
-  -- this would fill two above, but it's false: ⦇⦈ indet but its type, ⦇⦈, is not ground
-  postulate
-    lem-groundindet : ∀{ Δ d τ} → Δ , ∅ ⊢ d :: τ → d indet → τ ground
-
-  -- this is also false, but tempting looking in two holes above from the ap case
-  postulate
-    lem : ∀{ Δ d1 τ τ'} → Δ , ∅ ⊢ d1 :: (τ ==> τ') →
-                          d1 indet →
-                          ((τ1 τ2 τ3 τ4 : htyp) (d1' : dhexp) → d1 ≠ (d1' ⟨ τ1 ==> τ2 ⇒ τ3 ==> τ4 ⟩))
-
-  counter : Σ[ d ∈ dhexp ] Σ[ τ ∈ htyp ] Σ[ τ' ∈ htyp ] Σ[ Δ ∈ hctx ]
-               ((d indet) × (Δ , ∅ ⊢ d :: τ ==> τ'))
-  counter = (⦇⦈⟨ Z , ∅ ⟩ ⟨ b ==> b ⇒ b ==> ⦇⦈ ⟩) ,
-            b , ⦇⦈ ,  ■ (Z , ∅ , b ==> b ) ,
-            ICastArr (λ ()) IEHole , TACast (TAEHole refl (λ x d → λ ())) (TCArr TCRefl TCHole1)
-
-  oops : ⊥
-  oops = lem (π2 (π2 (π2 (π2 (π2 counter)))))
-                (π1 (π2 (π2 (π2 (π2 counter))))) b b b ⦇⦈ ⦇⦈⟨ Z , ∅ ⟩ refl
