@@ -42,7 +42,7 @@ module progress where
     -- if the left is indeterminate, inspect the right
   progress (TAAp wt1 wt2) | I i | S (_ , Step x y z) = S (_ , Step (FHAp2 x) y (FHAp2  z))
   progress (TAAp wt1 wt2) | I x | E x₁ = E (CECong (FHAp2 FHOuter) x₁)
-  progress (TAAp wt1 wt2) | I x | I x₁ = I (IAp {!!} x (FIndet x₁)) -- todo: check that it's not that form, otherwise the cast can progress maybe
+  progress (TAAp wt1 wt2) | I x | I x₁ = {!!} -- I (IAp {!!} x (FIndet x₁)) -- todo: check that it's not that form, otherwise the cast can progress maybe
   progress (TAAp wt1 wt2) | I x | V x₁ = I (IAp {!!} x (FBoxed x₁)) --
     -- if the left is a boxed value, inspect the right
   progress (TAAp wt1 wt2) | V v | S (_ , Step x y z) = S (_ , Step (FHAp2  x) y (FHAp2  z))
