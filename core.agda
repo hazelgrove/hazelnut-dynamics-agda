@@ -36,10 +36,15 @@ module core where
       ⦇_⦈⟨_⟩   : dhexp → (Nat × subst) → dhexp
       _∘_      : dhexp → dhexp → dhexp
       _⟨_⇒_⟩   : dhexp → htyp → htyp → dhexp
+      _⟨⦇⦈⇏_⟩   : dhexp → htyp → dhexp
 
   -- notation for chaining together agreeable casts
   _⟨_⇒_⇒_⟩ : dhexp → htyp → htyp → htyp → dhexp
   d ⟨ t1 ⇒ t2 ⇒ t3 ⟩ = d ⟨ t1 ⇒ t2 ⟩ ⟨ t2 ⇒ t3 ⟩
+
+  -- notation for a chained together failing cast into hole
+  _⟨_⇒⦇⦈⇏_⟩ : dhexp → htyp → htyp → dhexp
+  d ⟨ t1 ⇒⦇⦈⇏ t2 ⟩ = d ⟨ t1 ⇒ ⦇⦈ ⟩ ⟨⦇⦈⇏ t2 ⟩
 
   -- type consistency
   data _~_ : (t1 t2 : htyp) → Set where
@@ -185,6 +190,11 @@ module core where
                  Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
                  Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈⟨ u , id Γ  ⟩ :: τ ⊣ (Δ ,, u ::[ Γ ] τ)
 
+  -- ground
+  data _ground : (τ : htyp) → Set where
+    GBase : b ground
+    GHole : ⦇⦈ ==> ⦇⦈ ground
+
   mutual
     -- substitition type assignment
     _,_⊢_:s:_ : hctx → tctx → subst → tctx → Set
@@ -216,6 +226,12 @@ module core where
              Δ , Γ ⊢ d :: τ1 →
              τ1 ~ τ2 →
              Δ , Γ ⊢ d ⟨ τ1 ⇒ τ2 ⟩ :: τ2
+      TAFailedCast : ∀{Δ Γ d τ1 τ2} →
+             Δ , Γ ⊢ d :: τ1 →
+             τ1 ground →
+             τ2 ground →
+             τ1 ≠ τ2 →
+             Δ , Γ ⊢ d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩ :: τ2
 
   -- substitution;; todo: maybe get a premise that it's final; analagous to "value substitution"
   [_/_]_ : dhexp → Nat → dhexp → dhexp
@@ -229,16 +245,12 @@ module core where
   [ d / y ] ⦇ d' ⦈⟨ u , σ  ⟩ =  ⦇ [ d / y ] d' ⦈⟨ u , σ ⟩
   [ d / y ] (d1 ∘ d2) = ([ d / y ] d1) ∘ ([ d / y ] d2)
   [ d / y ] (d' ⟨ τ1 ⇒ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒ τ2 ⟩
+  [ d / y ] (d' ⟨⦇⦈⇏ τ2 ⟩ ) = ([ d / y ] d') ⟨⦇⦈⇏ τ2 ⟩
 
   -- value
   data _val : (d : dhexp) → Set where
     VConst : c val
     VLam   : ∀{x τ d} → (·λ x [ τ ] d) val
-
-  -- ground
-  data _ground : (τ : htyp) → Set where
-    GBase : b ground
-    GHole : ⦇⦈ ==> ⦇⦈ ground
 
   data _boxedval : (d : dhexp) → Set where
     BVVal : ∀{d} → d val → d boxedval
@@ -271,6 +283,12 @@ module core where
                         d indet →
                         τ ground →
                         d ⟨ ⦇⦈ ⇒ τ ⟩ indet
+      IFailedCast : ∀{ d τ1 τ2 } →
+                    d final →
+                    τ1 ground →
+                    τ2 ground →
+                    τ1 ≠ τ2 →
+                    d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩ indet
 
     -- final
     data _final : (d : dhexp) → Set where
@@ -286,7 +304,8 @@ module core where
     _∘₁_ : ectx → dhexp → ectx
     _∘₂_ : dhexp → ectx → ectx
     ⦇_⦈⟨_⟩ : ectx → (Nat × subst ) → ectx
-    _⟨_⇒_⟩   : ectx → htyp → htyp → ectx
+    _⟨_⇒_⟩ : ectx → htyp → htyp → ectx
+    _⟨⦇⦈⇏_⟩ : ectx → htyp → ectx
 
  --ε is an evaluation context
   data _evalctx : (ε : ectx) → Set where
@@ -304,6 +323,9 @@ module core where
     ECCast : ∀{ ε τ1 τ2} →
              ε evalctx →
              (ε ⟨ τ1 ⇒ τ2 ⟩) evalctx
+    ECFailedCast : ∀{ ε τ } →
+                   ε evalctx →
+                   ε ⟨⦇⦈⇏ τ ⟩ evalctx
 
   -- d is the result of filling the hole in ε with d'
   data _==_⟦_⟧ : (d : dhexp) (ε : ectx) (d' : dhexp) → Set where
@@ -321,6 +343,10 @@ module core where
     FHCast : ∀{ d d' ε τ1 τ2 } →
             d == ε ⟦ d' ⟧ →
             d ⟨ τ1 ⇒ τ2 ⟩ == ε ⟨ τ1 ⇒ τ2 ⟩ ⟦ d' ⟧
+    FHFailedCast : --∀{ d d' ε τ} →
+            {d d' : dhexp } {τ : htyp } { ε : ectx } →
+            d == ε ⟦ d' ⟧ →
+            (d ⟨⦇⦈⇏ τ ⟩) == (ε ⟨⦇⦈⇏ τ ⟩) ⟦ d' ⟧
 
   data _▸gnd_ : htyp → htyp → Set where
     MGArr : ∀{τ1 τ2} →
@@ -339,6 +365,12 @@ module core where
                     -- d final → -- red box
                     τ ground →
                     (d ⟨ τ ⇒ ⦇⦈ ⇒ τ ⟩) →> d
+    ITCastFail : ∀{ d τ1 τ2} →
+                 -- d final → -- red box
+                 τ1 ground →
+                 τ2 ground →
+                 τ1 ≠ τ2 →
+                 (d ⟨ τ1 ⇒ ⦇⦈ ⇒ τ2 ⟩) →> (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
     ITApCast : ∀{d1 d2 τ1 τ2 τ1' τ2' } →
                -- d1 final → -- red box
                -- d2 final → -- red box
@@ -365,15 +397,3 @@ module core where
                  d ↦ d' →
                  d' ↦* d'' →
                  d  ↦* d''
-
-  data _casterr : (d : dhexp) → Set where
-    CECastFail : ∀ {d τ1 τ2} →
-                  -- d final → -- red box
-                  τ1 ground →
-                  τ2 ground →
-                  τ1 ≠ τ2 →
-                  d ⟨ τ1 ⇒ ⦇⦈ ⇒ τ2 ⟩ casterr
-    CECong : ∀{ d ε d0} →
-             d == ε ⟦ d0 ⟧ →
-             d0 casterr →
-             d casterr

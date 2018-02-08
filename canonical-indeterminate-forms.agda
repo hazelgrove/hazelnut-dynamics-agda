@@ -34,6 +34,7 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-base (TAEHole x x₁) IEHole = Inl (_ , _ , _ , refl , x)
   canonical-indeterminate-forms-base (TANEHole x wt x₁) (INEHole x₂) = Inr (Inl (_ , _ , _ , _ , _ , refl , x₂ , wt , x))
   canonical-indeterminate-forms-base (TACast wt x) (ICastHoleGround x₁ ind x₂) = Inr (Inr (Inr (_ , refl , ind , x₁)))
+  canonical-indeterminate-forms-base (TAFailedCast x x₁ x₂ x₃) (IFailedCast x₄ x₅ x₆ x₇) = {!!}
 
   canonical-indeterminate-forms-arr : ∀{Δ d τ1 τ2 } →
                                        Δ , ∅ ⊢ d :: (τ1 ==> τ2) →
@@ -69,8 +70,8 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-arr (TAEHole x x₁) IEHole = Inl (_ , _ , _ , refl , x)
   canonical-indeterminate-forms-arr (TANEHole x wt x₁) (INEHole x₂) = Inr (Inl (_ , _ , _ , _ , _ , refl , x₂ , wt , x ))
   canonical-indeterminate-forms-arr (TACast wt x) (ICastArr x₁ ind) = Inr (Inr (Inr (Inl (_ , _ , _ , _ , _ , refl , ind , x₁))))
-  -- todo / cyrus: this is the only one that required pattern matching (or equivalently a lemma i didn't bother to state) on premises
   canonical-indeterminate-forms-arr (TACast wt TCHole2) (ICastHoleGround x₁ ind GHole) = Inr (Inr (Inr (Inr (_ , refl , refl , refl , ind , x₁))))
+  canonical-indeterminate-forms-arr (TAFailedCast x x₁ x₂ x₃) (IFailedCast x₄ x₅ x₆ x₇) = {!!}
 
   canonical-indeterminate-forms-hole : ∀{Δ d} →
                                        Δ , ∅ ⊢ d :: ⦇⦈ →
@@ -100,6 +101,7 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-hole (TANEHole x wt x₁) (INEHole x₂) = Inr (Inl (_ , _ , _ , _ , _ , refl , x₂ , wt , x ))
   canonical-indeterminate-forms-hole (TACast wt x) (ICastGroundHole x₁ ind) = Inr (Inr (Inr (_ , _ , refl , x₁ , ind)))
   canonical-indeterminate-forms-hole (TACast wt x) (ICastHoleGround x₁ ind ())
+  canonical-indeterminate-forms-hole (TAFailedCast x x₁ () x₃) (IFailedCast x₄ x₅ x₆ x₇)
 
   canonical-indeterminate-forms-coverage : ∀{Δ d τ} →
                                            Δ , ∅ ⊢ d :: τ →
@@ -125,3 +127,6 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-coverage {τ = b} (TACast wt x) (ICastHoleGround x₁ ind x₂) nb na nh = nb refl
   canonical-indeterminate-forms-coverage {τ = ⦇⦈} (TACast wt x) (ICastHoleGround x₁ ind x₂) nb na nh = nh refl
   canonical-indeterminate-forms-coverage {τ = τ ==> τ₁} (TACast wt x) (ICastHoleGround x₁ ind x₂) nb na nh = na τ τ₁ refl
+  canonical-indeterminate-forms-coverage {τ = b} (TAFailedCast x x₁ x₂ x₃) (IFailedCast x₄ x₅ x₆ x₇) = λ z _ _₁ → z refl
+  canonical-indeterminate-forms-coverage {τ = ⦇⦈} (TAFailedCast x x₁ x₂ x₃) (IFailedCast x₄ x₅ x₆ x₇) = λ _ _₁ z → z refl
+  canonical-indeterminate-forms-coverage {τ = τ ==> τ₁} (TAFailedCast x x₁ x₂ x₃) (IFailedCast x₄ x₅ x₆ x₇) = λ _ z _₁ → z τ τ₁ refl

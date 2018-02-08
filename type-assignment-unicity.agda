@@ -26,3 +26,6 @@ module type-assignment-unicity where
   type-assignment-unicity (TACast d1 x) (TACast d2 x₁)
     with type-assignment-unicity d1 d2
   ... | refl = refl
+  type-assignment-unicity (TAFailedCast x x₁ x₂ x₃) (TAFailedCast y x₄ x₅ x₆)
+    with type-assignment-unicity x y
+  ... | refl = refl

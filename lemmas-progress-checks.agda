@@ -12,6 +12,7 @@ module lemmas-progress-checks where
   boxedval-not-trans (BVHoleCast () bv) (ITCastSucceed x₁)
   boxedval-not-trans (BVHoleCast GHole bv) (ITGround (MGArr x)) = x refl
   boxedval-not-trans (BVHoleCast x a) (ITExpand ())
+  boxedval-not-trans (BVHoleCast x x₁) (ITCastFail x₂ () x₄)
 
   indet-not-trans : ∀{d d'} → d indet → d →> d' → ⊥
   indet-not-trans IEHole ()
@@ -27,10 +28,17 @@ module lemmas-progress-checks where
   indet-not-trans (ICastHoleGround x ind GHole) (ITExpand (MGArr x₂)) = x₂ refl
   indet-not-trans (ICastGroundHole x a) (ITExpand ())
   indet-not-trans (ICastHoleGround x a x₁) (ITGround ())
+  indet-not-trans (ICastGroundHole x x₁) (ITCastFail x₂ () x₄)
+  indet-not-trans (ICastHoleGround x x₁ x₂) (ITCastFail x₃ x₄ x₅) = x _ _ refl
+  indet-not-trans (IFailedCast x x₁ x₂ x₃) ()
 
   final-not-trans : ∀{d d'} → d final → d →> d' → ⊥
   final-not-trans (FBoxed x) = boxedval-not-trans x
   final-not-trans (FIndet x) = indet-not-trans x
+
+  final-gnd-cast : ∀{ d τ } → d final → τ ground → (d ⟨ τ ⇒ ⦇⦈ ⟩) final
+  final-gnd-cast (FBoxed x) gnd = FBoxed (BVHoleCast gnd x)
+  final-gnd-cast (FIndet x) gnd = FIndet (ICastGroundHole gnd x)
 
   final-sub-final : ∀{d ε x} → d final → d == ε ⟦ x ⟧ → x final
   final-sub-final x FHOuter = x
@@ -38,6 +46,7 @@ module lemmas-progress-checks where
   final-sub-final (FBoxed (BVVal ())) (FHAp2 eps)
   final-sub-final (FBoxed (BVVal ())) (FHNEHole eps)
   final-sub-final (FBoxed (BVVal ())) (FHCast eps)
+  final-sub-final (FBoxed (BVVal ())) (FHFailedCast y)
   final-sub-final (FBoxed (BVArrCast x₁ x₂)) (FHCast eps) = final-sub-final (FBoxed x₂) eps
   final-sub-final (FBoxed (BVHoleCast x₁ x₂)) (FHCast eps) = final-sub-final (FBoxed x₂) eps
   final-sub-final (FIndet (IAp x₁ x₂ x₃)) (FHAp1 eps) = final-sub-final (FIndet x₂) eps
@@ -46,38 +55,8 @@ module lemmas-progress-checks where
   final-sub-final (FIndet (ICastArr x₁ x₂)) (FHCast eps) = final-sub-final (FIndet x₂) eps
   final-sub-final (FIndet (ICastGroundHole x₁ x₂)) (FHCast eps) = final-sub-final (FIndet x₂) eps
   final-sub-final (FIndet (ICastHoleGround x₁ x₂ x₃)) (FHCast eps) = final-sub-final (FIndet x₂) eps
+  final-sub-final (FIndet (IFailedCast x₁ x₂ x₃ x₄)) (FHFailedCast FHOuter) = final-gnd-cast x₁ x₂
+  final-sub-final (FIndet (IFailedCast x₁ x₂ x₃ x₄)) (FHFailedCast (FHCast y)) = final-sub-final x₁ y
 
   final-sub-not-trans : ∀{d d' d'' ε} →  d final → d == ε ⟦ d' ⟧ → d' →> d'' → ⊥
   final-sub-not-trans f sub step = final-not-trans (final-sub-final f sub) step
-
-  ce-castarr : ∀{d τ1 τ2 τ3 τ4} → (d ⟨ τ1 ==> τ2 ⇒ τ3 ==> τ4 ⟩) casterr → d casterr
-  ce-castarr (CECong FHOuter ce) = ce-castarr ce
-  ce-castarr (CECong (FHCast x₁) ce) = CECong x₁ ce
-
-  ce-castth : ∀{d τ} → (d ⟨ τ ⇒ ⦇⦈ ⟩) casterr → d casterr
-  ce-castth (CECastFail x₂ () x₄)
-  ce-castth (CECong FHOuter ce) = ce-castth ce
-  ce-castth (CECong (FHCast x₁) ce) = CECong x₁ ce
-
-  ce-nehole : ∀{d u σ} → ⦇ d ⦈⟨ u , σ ⟩ casterr → d casterr
-  ce-nehole (CECong FHOuter ce) = ce-nehole ce
-  ce-nehole (CECong (FHNEHole x₁) ce) = CECong x₁ ce
-
-  ce-ap : ∀{d1 d2} → (d1 ∘ d2) casterr → (d1 casterr + d2 casterr)
-  ce-ap (CECong FHOuter ce) = ce-ap ce
-  ce-ap (CECong (FHAp1 x₂) ce) = Inl (CECong x₂ ce)
-  ce-ap (CECong (FHAp2 x₃) ce) = Inr (CECong x₃ ce)
-
-  ce-castht : ∀{d τ} → (d ⟨ ⦇⦈ ⇒ τ ⟩) casterr → ((d' : dhexp) (τ' : htyp) → d ≠ (d' ⟨ τ' ⇒ ⦇⦈ ⟩)) → d casterr
-  ce-castht (CECastFail x₃ x₄ x₅) f = abort (f _ _ refl)
-  ce-castht (CECong FHOuter ce) = ce-castht ce
-  ce-castht (CECong (FHCast x₂) ce) _ = CECong x₂ ce
-
-  ce-out-cast : ∀{d d' ε} →
-                d casterr →
-                d' == ε ⟦ d ⟧ →
-                d' casterr
-  ce-out-cast (CECong x ce) FHOuter = ce-out-cast ce x
-  ce-out-cast (CECong x ce) y = CECong y (ce-out-cast ce x)
-  ce-out-cast z FHOuter = z
-  ce-out-cast z y = CECong y z

@@ -14,6 +14,7 @@ module canonical-value-forms where
   canonical-value-forms-b (TAEHole x x₁) ()
   canonical-value-forms-b (TANEHole x wt x₁) ()
   canonical-value-forms-b (TACast wt x) ()
+  canonical-value-forms-b (TAFailedCast wt x x₁ x₂) ()
 
   canonical-value-forms-arr : ∀{Δ d τ1 τ2} →
                               Δ , ∅ ⊢ d :: (τ1 ==> τ2) →
@@ -26,8 +27,7 @@ module canonical-value-forms where
   canonical-value-forms-arr (TAEHole x x₁) ()
   canonical-value-forms-arr (TANEHole x wt x₁) ()
   canonical-value-forms-arr (TACast wt x) ()
-
-
+  canonical-value-forms-arr (TAFailedCast x x₁ x₂ x₃) ()
 
   -- this argues (somewhat informally) that we didn't miss any cases above;
   -- this intentionally will make this file fail to typecheck if we added
@@ -39,13 +39,14 @@ module canonical-value-forms where
                                    τ ≠ b →
                                    ((τ1 : htyp) (τ2 : htyp) → τ ≠ (τ1 ==> τ2)) →
                                    ⊥
-  canonical-value-forms-coverage1 TAConst VConst nb na = nb refl
-  canonical-value-forms-coverage1 (TAVar x₁) () nb na
-  canonical-value-forms-coverage1 (TALam wt) VLam nb na = na _ _ refl
-  canonical-value-forms-coverage1 (TAAp wt wt₁) () nb na
-  canonical-value-forms-coverage1 (TAEHole x x₁) () nb na
-  canonical-value-forms-coverage1 (TANEHole x wt x₁) () nb na
-  canonical-value-forms-coverage1 (TACast wt x) () nb na
+  canonical-value-forms-coverage1 TAConst VConst = λ z _ → z refl
+  canonical-value-forms-coverage1 (TAVar x₁) ()
+  canonical-value-forms-coverage1 (TALam wt) VLam = λ _ z → z _ _ refl
+  canonical-value-forms-coverage1 (TAAp wt wt₁) ()
+  canonical-value-forms-coverage1 (TAEHole x x₁) ()
+  canonical-value-forms-coverage1 (TANEHole x wt x₁) ()
+  canonical-value-forms-coverage1 (TACast wt x) ()
+  canonical-value-forms-coverage1 (TAFailedCast wt x x₁ x₂) ()
 
   canonical-value-forms-coverage2 : ∀{Δ d} →
                                    Δ , ∅ ⊢ d :: ⦇⦈ →
@@ -56,3 +57,4 @@ module canonical-value-forms where
   canonical-value-forms-coverage2 (TAEHole x x₁) ()
   canonical-value-forms-coverage2 (TANEHole x wt x₁) ()
   canonical-value-forms-coverage2 (TACast wt x) ()
+  canonical-value-forms-coverage2 (TAFailedCast wt x x₁ x₂) ()

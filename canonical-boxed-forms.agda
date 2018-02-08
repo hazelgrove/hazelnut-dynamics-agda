@@ -11,10 +11,6 @@ module canonical-boxed-forms where
                             d boxedval →
                             d == c
   canonical-boxed-forms-b (TAVar _) (BVVal ())
-  canonical-boxed-forms-b (TAAp _ _) (BVVal ())
-  canonical-boxed-forms-b (TAEHole _ _) (BVVal ())
-  canonical-boxed-forms-b (TANEHole _ _ _) (BVVal ())
-  canonical-boxed-forms-b (TACast _ _) (BVVal ())
   canonical-boxed-forms-b wt (BVVal v) = canonical-value-forms-b wt v
 
   canonical-boxed-forms-arr : ∀{Δ d τ1 τ2 } →
@@ -32,6 +28,7 @@ module canonical-boxed-forms where
   canonical-boxed-forms-arr (TANEHole x wt x₁) (BVVal ())
   canonical-boxed-forms-arr (TACast wt x) (BVVal ())
   canonical-boxed-forms-arr (TACast wt x) (BVArrCast x₁ bv) = Inr (_ , _ , _ , refl , x₁ , wt)
+  canonical-boxed-forms-arr (TAFailedCast x x₁ x₂ x₃) (BVVal ())
 
   canonical-boxed-forms-hole : ∀{Δ d} →
                                Δ , ∅ ⊢ d :: ⦇⦈ →
@@ -45,6 +42,7 @@ module canonical-boxed-forms where
   canonical-boxed-forms-hole (TANEHole x wt x₁) (BVVal ())
   canonical-boxed-forms-hole (TACast wt x) (BVVal ())
   canonical-boxed-forms-hole (TACast wt x) (BVHoleCast x₁ bv) = _ , _ , refl , x₁ , wt
+  canonical-boxed-forms-hole (TAFailedCast x x₁ x₂ x₃) (BVVal ())
 
   canonical-boxed-forms-coverage : ∀{Δ d τ} →
                                    Δ , ∅ ⊢ d :: τ →
@@ -62,3 +60,4 @@ module canonical-boxed-forms where
   canonical-boxed-forms-coverage (TACast wt x) (BVVal ()) nb na nh
   canonical-boxed-forms-coverage (TACast wt x) (BVArrCast x₁ bv) nb na nh = na _ _ refl
   canonical-boxed-forms-coverage (TACast wt x) (BVHoleCast x₁ bv) nb na nh = nh refl
+  canonical-boxed-forms-coverage (TAFailedCast x x₁ x₂ x₃) (BVVal ())

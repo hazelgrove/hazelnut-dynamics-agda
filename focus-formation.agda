@@ -7,3 +7,4 @@ module focus-formation where
   focus-formation (FHAp2 sub) = ECAp2 (focus-formation sub)
   focus-formation (FHNEHole sub) = ECNEHole (focus-formation sub)
   focus-formation (FHCast sub) = ECCast (focus-formation sub)
+  focus-formation (FHFailedCast x) = ECFailedCast (focus-formation x)
