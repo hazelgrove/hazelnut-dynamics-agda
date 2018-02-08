@@ -22,6 +22,7 @@ module preservation where
   pres-lem (FHAp2 eps) D1 D2 D3 (FHAp2 D4) = {!!}
   pres-lem (FHNEHole eps) D1 D2 D3 (FHNEHole D4) = {!!}
   pres-lem (FHCast eps) D1 D2 D3 (FHCast D4) = {!!}
+  pres-lem (FHFailedCast eps) D1 D2 D3 (FHFailedCast D4) = {!!}
 
   -- todo: rename
   pres-lem2 : ∀{ ε Δ Γ d τ d' } →
@@ -41,6 +42,7 @@ module preservation where
   pres-lem2 (TANEHole x ta x₁) (FHNEHole eps) = pres-lem2 ta eps
   pres-lem2 (TACast ta x) FHOuter = _ , TACast ta x
   pres-lem2 (TACast ta x) (FHCast eps) = pres-lem2 ta eps
+  pres-lem2 (TAFailedCast x y z w) eps = {!!}
 
   -- todo: rename
   pres-lem3 : ∀{ Δ Γ d τ d' } →
@@ -58,6 +60,8 @@ module preservation where
   pres-lem3 (TACast ta x) (ITCastSucceed x₂) = {!!}
   pres-lem3 (TACast ta x) (ITGround y) = {!!}
   pres-lem3 (TACast ta x) (ITExpand x₂) = {!!}
+  pres-lem3 (TACast ta x) (ITCastFail w y z) = {!!}
+  pres-lem3 (TAFailedCast x y z q) xx  = {!!}
 
   preservation : {Δ : hctx} {d d' : dhexp} {τ : htyp} →
              Δ , ∅ ⊢ d :: τ →
