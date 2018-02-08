@@ -6,7 +6,8 @@ open import contexts
 open import lemmas-consistency
 
 open import canonical-boxed-forms
--- open import canonical-indeterminate-forms
+open import canonical-value-forms
+open import canonical-indeterminate-forms
 
 module progress where
   -- this is a little bit of syntactic sugar to avoid many layer nested Inl

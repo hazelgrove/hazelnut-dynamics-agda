@@ -27,51 +27,61 @@ module canonical-indeterminate-forms where
                                        (Σ[ d' ∈ dhexp ]
                                          ((d == d' ⟨ ⦇⦈ ⇒ b ⟩) ×
                                           (d' indet) ×
-                                          ((d'' : dhexp) (τ' : htyp) → d' ≠ (d'' ⟨ τ' ⇒ ⦇⦈ ⟩))))
+                                          ((d'' : dhexp) (τ' : htyp) → d' ≠ (d'' ⟨ τ' ⇒ ⦇⦈ ⟩)))) +
+                                       (Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ]
+                                         ((d == d' ⟨ τ' ⇒⦇⦈⇏ b ⟩) ×
+                                          (τ' ground) ×
+                                          (τ' ≠ b) ×
+                                          (Δ , ∅ ⊢ d' :: τ')))
   canonical-indeterminate-forms-base TAConst ()
   canonical-indeterminate-forms-base (TAVar x₁) ()
   canonical-indeterminate-forms-base (TAAp wt wt₁) (IAp x ind x₁) = Inr (Inr (Inl (_ , _ , _ , refl , wt , wt₁ , ind , x₁ , x)))
   canonical-indeterminate-forms-base (TAEHole x x₁) IEHole = Inl (_ , _ , _ , refl , x)
   canonical-indeterminate-forms-base (TANEHole x wt x₁) (INEHole x₂) = Inr (Inl (_ , _ , _ , _ , _ , refl , x₂ , wt , x))
-  canonical-indeterminate-forms-base (TACast wt x) (ICastHoleGround x₁ ind x₂) = Inr (Inr (Inr (_ , refl , ind , x₁)))
-  canonical-indeterminate-forms-base (TAFailedCast x x₁ x₂ x₃) (IFailedCast x₄ x₅ x₆ x₇) = {!!}
+  canonical-indeterminate-forms-base (TACast wt x) (ICastHoleGround x₁ ind x₂) = Inr (Inr (Inr (Inl (_ , refl , ind , x₁))))
+  canonical-indeterminate-forms-base (TAFailedCast x x₁ x₂ x₃) (IFailedCast x₄ x₅ x₆ x₇) = Inr (Inr (Inr (Inr (_ , _  , refl , x₅ , x₇ , x))))
 
   canonical-indeterminate-forms-arr : ∀{Δ d τ1 τ2 } →
                                        Δ , ∅ ⊢ d :: (τ1 ==> τ2) →
                                        d indet →
-                                       ((Σ[ u ∈ Nat ] Σ[ σ ∈ subst ] Σ[ Γ' ∈ tctx ]
+                                       (Σ[ u ∈ Nat ] Σ[ σ ∈ subst ] Σ[ Γ' ∈ tctx ]
                                          ((d == ⦇⦈⟨ u , σ ⟩) ×
                                           ((u ::[ Γ' ] (τ1 ==> τ2)) ∈ Δ))) +
-                                        (Σ[ u ∈ Nat ] Σ[ σ ∈ subst ] Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ] Σ[ Γ' ∈ tctx ]
+                                       (Σ[ u ∈ Nat ] Σ[ σ ∈ subst ] Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ] Σ[ Γ' ∈ tctx ]
                                          ((d == ⦇ d' ⦈⟨ u , σ ⟩) ×
                                           (d' final) ×
                                           (Δ , ∅ ⊢ d' :: τ') ×
                                           ((u ::[ Γ' ] (τ1 ==> τ2)) ∈ Δ))) +
-                                        (Σ[ d1 ∈ dhexp ] Σ[ d2 ∈ dhexp ] Σ[ τ ∈ htyp ] Σ[ τ1' ∈ htyp ] Σ[ τ2' ∈ htyp ]
+                                       (Σ[ d1 ∈ dhexp ] Σ[ d2 ∈ dhexp ] Σ[ τ ∈ htyp ] Σ[ τ1' ∈ htyp ] Σ[ τ2' ∈ htyp ]
                                          ((d == d1 ∘ d2) ×
                                           (Δ , ∅ ⊢ d1 :: τ ==> (τ1' ==> τ2')) ×
                                           (Δ , ∅ ⊢ d2 :: τ) ×
                                           (d1 indet) ×
                                           (d2 final) ×
                                           ((τ1 τ2 τ3 τ4 : htyp) (d1' : dhexp) → d1 ≠ (d1' ⟨ τ1 ==> τ2 ⇒ τ3 ==> τ4 ⟩)))) +
-                                        (Σ[ d' ∈ dhexp ] Σ[ τ1 ∈ htyp ] Σ[ τ2 ∈ htyp ] Σ[ τ3 ∈ htyp ] Σ[ τ4 ∈ htyp ]
+                                       (Σ[ d' ∈ dhexp ] Σ[ τ1 ∈ htyp ] Σ[ τ2 ∈ htyp ] Σ[ τ3 ∈ htyp ] Σ[ τ4 ∈ htyp ]
                                           ((d == d' ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩) ×
                                            (d' indet) ×
                                            ((τ1 ==> τ2) ≠ (τ3 ==> τ4)))) +
-                                        (Σ[ d' ∈ dhexp ]
+                                       (Σ[ d' ∈ dhexp ]
                                           ((τ1 == ⦇⦈) ×
                                            (τ2 == ⦇⦈) ×
                                            (d == (d' ⟨ ⦇⦈ ⇒ ⦇⦈ ==> ⦇⦈ ⟩)) ×
                                            (d' indet) ×
-                                           ((d'' : dhexp) (τ' : htyp) → d' ≠ (d'' ⟨ τ' ⇒ ⦇⦈ ⟩)))))
+                                           ((d'' : dhexp) (τ' : htyp) → d' ≠ (d'' ⟨ τ' ⇒ ⦇⦈ ⟩)))) +
+                                        (Σ[ d' ∈ dhexp ] Σ[ τ ∈ htyp ]
+                                           ((d == (d' ⟨ τ ⇒⦇⦈⇏ ⦇⦈ ==> ⦇⦈ ⟩) ) ×
+                                             (τ ground) ×
+                                             (τ ≠ (⦇⦈ ==> ⦇⦈)) ×
+                                             (Δ , ∅ ⊢ d' :: τ)))
   canonical-indeterminate-forms-arr (TAVar x₁) ()
   canonical-indeterminate-forms-arr (TALam wt) ()
   canonical-indeterminate-forms-arr (TAAp wt wt₁) (IAp x ind x₁) = Inr (Inr (Inl (_ , _ , _ , _ , _ , refl , wt , wt₁ , ind , x₁ , x)))
   canonical-indeterminate-forms-arr (TAEHole x x₁) IEHole = Inl (_ , _ , _ , refl , x)
   canonical-indeterminate-forms-arr (TANEHole x wt x₁) (INEHole x₂) = Inr (Inl (_ , _ , _ , _ , _ , refl , x₂ , wt , x ))
   canonical-indeterminate-forms-arr (TACast wt x) (ICastArr x₁ ind) = Inr (Inr (Inr (Inl (_ , _ , _ , _ , _ , refl , ind , x₁))))
-  canonical-indeterminate-forms-arr (TACast wt TCHole2) (ICastHoleGround x₁ ind GHole) = Inr (Inr (Inr (Inr (_ , refl , refl , refl , ind , x₁))))
-  canonical-indeterminate-forms-arr (TAFailedCast x x₁ x₂ x₃) (IFailedCast x₄ x₅ x₆ x₇) = {!!}
+  canonical-indeterminate-forms-arr (TACast wt TCHole2) (ICastHoleGround x₁ ind GHole) = Inr (Inr (Inr (Inr (Inl (_ , refl , refl , refl , ind , x₁)))))
+  canonical-indeterminate-forms-arr (TAFailedCast x x₁ GHole x₃) (IFailedCast x₄ x₅ GHole x₇) = Inr (Inr (Inr (Inr (Inr (_ , _ , refl , x₅ , x₃ , x)))))
 
   canonical-indeterminate-forms-hole : ∀{Δ d} →
                                        Δ , ∅ ⊢ d :: ⦇⦈ →
