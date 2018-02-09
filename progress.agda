@@ -61,12 +61,12 @@ module progress where
   progress (TAAp wt1 wt2) | V v | S (_ , Step x y z) = S (_ , Step (FHAp2  x) y (FHAp2  z))
   progress (TAAp wt1 wt2) | V v | I i
     with canonical-boxed-forms-arr wt1 v
-  ... | Inl (x , d' , refl , qq) = S (_ , Step FHOuter ITLam FHOuter)
-  ... | Inr (d' , τ1' , τ2' , refl , neq , qq) = S (_ , Step FHOuter ITApCast FHOuter)
+  ... | Inl (_ , _ , refl , _)         = S (_ , Step FHOuter ITLam FHOuter)
+  ... | Inr (_ , _ , _ , refl , _ , _) = S (_ , Step FHOuter ITApCast FHOuter)
   progress (TAAp wt1 wt2) | V v | V v₂
     with canonical-boxed-forms-arr wt1 v
-  ... | Inl (x , d' , refl , qq) = S (_ , Step FHOuter ITLam FHOuter)
-  ... | Inr (d' , τ1' , τ2' , refl , neq , qq) = S (_ , Step FHOuter ITApCast FHOuter)
+  ... | Inl (_ , _ , refl , _)         = S (_ , Step FHOuter ITLam FHOuter)
+  ... | Inr (_ , _ , _ , refl , _ , _) = S (_ , Step FHOuter ITApCast FHOuter)
 
     -- empty holes
   progress (TAEHole x x₁) = I IEHole
