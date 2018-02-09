@@ -42,14 +42,21 @@ module progress where
     -- if they're both indeterminate, step when the cast steps and indet otherwise
   progress (TAAp wt1 wt2) | I x | I x₁
     with canonical-indeterminate-forms-arr wt1 x
-  progress (TAAp wt1 wt2) | I x | I x₂ | Inl (_ , _ , _ , refl , _) = I (IAp (λ _ _ _ _ _ ()) x (FIndet x₂))
-  progress (TAAp wt1 wt2) | I x | I x₂ | Inr (Inl (_ , _ , _ , _ , _ , refl , _)) = I (IAp (λ _ _ _ _ _ ()) x (FIndet x₂))
-  progress (TAAp wt1 wt2) | I x | I x₂ | Inr (Inr (Inl (_ , _ , _ , _ , _ , refl , _))) = I (IAp (λ _ _ _ _ _ ()) x (FIndet x₂))
-  progress (TAAp wt1 wt2) | I x | I x₂ | Inr (Inr (Inr (Inl (d' , τ1 , τ2 , τ3 , τ4 , refl , d'' , ne )))) = S (_ , Step FHOuter ITApCast FHOuter )
-  progress (TAAp wt1 wt2) | I x | I x₂ | Inr (Inr (Inr (Inr (Inl (_ , refl , refl , refl , _ ))))) = I (IAp (λ _ _ _ _ _ ()) x (FIndet x₂))
-  progress (TAAp wt1 wt2) | I x | I x₂ | Inr (Inr (Inr (Inr (Inr (_ , _ , refl , _ ))))) = I (IAp (λ _ _ _ _ _ ()) x (FIndet x₂))
+  progress (TAAp wt1 wt2) | I x | I x₂ | CIFACast (d' , τ1 , τ2 , τ3 , τ4 , refl , d'' , ne ) = S (_ , Step FHOuter ITApCast FHOuter)
+  progress (TAAp wt1 wt2) | I x | I x₂ | CIFAEHole (_ , _ , _ , refl , _)           = I (IAp (λ _ _ _ _ _ ()) x (FIndet x₂))
+  progress (TAAp wt1 wt2) | I x | I x₂ | CIFANEHole (_ , _ , _ , _ , _ , refl , _)  = I (IAp (λ _ _ _ _ _ ()) x (FIndet x₂))
+  progress (TAAp wt1 wt2) | I x | I x₂ | CIFAAp (_ , _ , _ , _ , _ , refl , _)      = I (IAp (λ _ _ _ _ _ ()) x (FIndet x₂))
+  progress (TAAp wt1 wt2) | I x | I x₂ | CIFACastHole (_ , refl , refl , refl , _ ) = I (IAp (λ _ _ _ _ _ ()) x (FIndet x₂))
+  progress (TAAp wt1 wt2) | I x | I x₂ | CIFAFailedCast (_ , _ , refl , _ )         = I (IAp (λ _ _ _ _ _ ()) x (FIndet x₂))
     -- if the left is indetermiante but the right is a value
-  progress (TAAp wt1 wt2) | I x | V x₁ = {!!} -- I (IAp {!!} x (FBoxed x₁)) --
+  progress (TAAp wt1 wt2) | I x | V x₁
+    with canonical-indeterminate-forms-arr wt1 x
+  progress (TAAp wt1 wt2) | I x | V x₂ | CIFACast (d' , τ1 , τ2 , τ3 , τ4 , refl , d'' , ne ) = S (_ , Step FHOuter ITApCast FHOuter)
+  progress (TAAp wt1 wt2) | I x | V x₂ | CIFAEHole (_ , _ , _ , refl , _)           = I (IAp (λ _ _ _ _ _ ()) x (FBoxed x₂))
+  progress (TAAp wt1 wt2) | I x | V x₂ | CIFANEHole (_ , _ , _ , _ , _ , refl , _)  = I (IAp (λ _ _ _ _ _ ()) x (FBoxed x₂))
+  progress (TAAp wt1 wt2) | I x | V x₂ | CIFAAp (_ , _ , _ , _ , _ , refl , _)      = I (IAp (λ _ _ _ _ _ ()) x (FBoxed x₂))
+  progress (TAAp wt1 wt2) | I x | V x₂ | CIFACastHole (_ , refl , refl , refl , _ ) = I (IAp (λ _ _ _ _ _ ()) x (FBoxed x₂))
+  progress (TAAp wt1 wt2) | I x | V x₂ | CIFAFailedCast (_ , _ , refl , _ )         = I (IAp (λ _ _ _ _ _ ()) x (FBoxed x₂))
     -- if the left is a boxed value, inspect the right
   progress (TAAp wt1 wt2) | V v | S (_ , Step x y z) = S (_ , Step (FHAp2  x) y (FHAp2  z))
   progress (TAAp wt1 wt2) | V v | I i
