@@ -62,11 +62,11 @@ module progress where
   progress (TAAp wt1 wt2) | V v | I i
     with canonical-boxed-forms-arr wt1 v
   ... | Inl (x , d' , refl , qq) = S (_ , Step FHOuter ITLam FHOuter)
-  ... | Inr (d' , τ1' , τ2' , refl , neq , qq) = I (IAp {!!} (ICastArr neq {!!}) (FIndet i)) --cyrus, as below
+  ... | Inr (d' , τ1' , τ2' , refl , neq , qq) = S (_ , Step FHOuter ITApCast FHOuter)
   progress (TAAp wt1 wt2) | V v | V v₂
     with canonical-boxed-forms-arr wt1 v
   ... | Inl (x , d' , refl , qq) = S (_ , Step FHOuter ITLam FHOuter)
-  ... | Inr (d' , τ1' , τ2' , refl , neq , qq) = I (IAp {!!} (ICastArr neq {!!}) (FBoxed v₂)) --cyrus
+  ... | Inr (d' , τ1' , τ2' , refl , neq , qq) = S (_ , Step FHOuter ITApCast FHOuter)
 
     -- empty holes
   progress (TAEHole x x₁) = I IEHole
@@ -90,7 +90,7 @@ module progress where
   -- boxed value cases, inspect how the casts are realted by consistency
   progress (TACast wt TCRefl)  | V x = S (_ , Step FHOuter ITCastID FHOuter)
   progress (TACast wt TCHole1) | V x = V (BVHoleCast {!!} x) -- cyrus
-  progress (TACast wt TCHole2) | V x = V {!!} -- cyrus: missing rule for boxed values?
+  progress (TACast wt TCHole2) | V x = {!!} -- I {!!} -- cyrus: missing rule for boxed values?
   progress (TACast wt (TCArr c1 c2)) | V x = V (BVArrCast {!!} x) -- cyrus
 
    -- failed casts
