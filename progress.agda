@@ -14,7 +14,7 @@ module progress where
   -- and Inrs that you would get from the more literal transcription of the
   -- consequent of progress as:
   --
-  -- d boxedval + d indet + d casterr[ Δ ] + Σ[ d' ∈ dhexp ] (d ↦ d')
+  -- d boxedval + d indet + Σ[ d' ∈ dhexp ] (d ↦ d')
   data ok : (d : dhexp) (Δ : hctx) → Set where
     S : ∀{d Δ} → Σ[ d' ∈ dhexp ] (d ↦ d') → ok d Δ
     I : ∀{d Δ} → d indet → ok d Δ
@@ -37,7 +37,6 @@ module progress where
     with progress wt1 | progress wt2
     -- if the left steps, the whole thing steps
   progress (TAAp wt1 wt2) | S (_ , Step x y z) | _ = S (_ , Step (FHAp1 x) y (FHAp1 z))
-    -- if the left is an error, the whole thing is an error
     -- if the left is indeterminate, inspect the right
   progress (TAAp wt1 wt2) | I i | S (_ , Step x y z) = S (_ , Step (FHAp2 x) y (FHAp2  z))
   progress (TAAp wt1 wt2) | I x | I x₁ = {!!} -- I (IAp {!!} x (FIndet x₁)) -- todo: check that it's not that form, otherwise the cast can progress maybe
@@ -79,4 +78,8 @@ module progress where
   progress (TACast wt (TCArr c1 c2)) | V x = V (BVArrCast {!!} x) -- cyrus
 
    -- failed casts
-  progress (TAFailedCast x y z w) = {!!}
+  progress (TAFailedCast wt y z w)
+    with progress wt
+  progress (TAFailedCast wt y z w) | S (_ , Step x a q) = S (_ , Step {!!} (ITCastFail y z w) {!!} )
+  progress (TAFailedCast wt y z w) | I x = I (IFailedCast (FIndet x) y z w)
+  progress (TAFailedCast wt y z w) | V x = I (IFailedCast (FBoxed x) y z w)
