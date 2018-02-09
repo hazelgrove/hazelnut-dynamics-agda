@@ -37,10 +37,19 @@ module progress where
     with progress wt1 | progress wt2
     -- if the left steps, the whole thing steps
   progress (TAAp wt1 wt2) | S (_ , Step x y z) | _ = S (_ , Step (FHAp1 x) y (FHAp1 z))
-    -- if the left is indeterminate, inspect the right
+    -- if the left is indeterminate, step the right
   progress (TAAp wt1 wt2) | I i | S (_ , Step x y z) = S (_ , Step (FHAp2 x) y (FHAp2  z))
-  progress (TAAp wt1 wt2) | I x | I x₁ = {!!} -- I (IAp {!!} x (FIndet x₁)) -- todo: check that it's not that form, otherwise the cast can progress maybe
-  progress (TAAp wt1 wt2) | I x | V x₁ = I (IAp {!!} x (FBoxed x₁)) --
+    -- if they're both indeterminate, step when the cast steps and indet otherwise
+  progress (TAAp wt1 wt2) | I x | I x₁
+    with canonical-indeterminate-forms-arr wt1 x
+  progress (TAAp wt1 wt2) | I x | I x₂ | Inl (_ , _ , _ , refl , _) = I (IAp (λ _ _ _ _ _ ()) x (FIndet x₂))
+  progress (TAAp wt1 wt2) | I x | I x₂ | Inr (Inl (_ , _ , _ , _ , _ , refl , _)) = I (IAp (λ _ _ _ _ _ ()) x (FIndet x₂))
+  progress (TAAp wt1 wt2) | I x | I x₂ | Inr (Inr (Inl (_ , _ , _ , _ , _ , refl , _))) = I (IAp (λ _ _ _ _ _ ()) x (FIndet x₂))
+  progress (TAAp wt1 wt2) | I x | I x₂ | Inr (Inr (Inr (Inl (d' , τ1 , τ2 , τ3 , τ4 , refl , d'' , ne )))) = S (_ , Step FHOuter ITApCast FHOuter )
+  progress (TAAp wt1 wt2) | I x | I x₂ | Inr (Inr (Inr (Inr (Inl (_ , refl , refl , refl , _ ))))) = I (IAp (λ _ _ _ _ _ ()) x (FIndet x₂))
+  progress (TAAp wt1 wt2) | I x | I x₂ | Inr (Inr (Inr (Inr (Inr (_ , _ , refl , _ ))))) = I (IAp (λ _ _ _ _ _ ()) x (FIndet x₂))
+    -- if the left is indetermiante but the right is a value
+  progress (TAAp wt1 wt2) | I x | V x₁ = {!!} -- I (IAp {!!} x (FBoxed x₁)) --
     -- if the left is a boxed value, inspect the right
   progress (TAAp wt1 wt2) | V v | S (_ , Step x y z) = S (_ , Step (FHAp2  x) y (FHAp2  z))
   progress (TAAp wt1 wt2) | V v | I i
