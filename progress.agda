@@ -5,6 +5,8 @@ open import core
 open import contexts
 open import lemmas-consistency
 
+open import progress-checks
+
 open import canonical-boxed-forms
 open import canonical-value-forms
 open import canonical-indeterminate-forms
@@ -85,12 +87,27 @@ module progress where
   -- indet cases, inspect how the casts are realted by consistency
   progress (TACast wt TCRefl)  | I x = S (_ , Step FHOuter ITCastID FHOuter)
   progress (TACast wt TCHole1) | I x = I (ICastGroundHole {!!} x) -- cyrus
-  progress (TACast wt TCHole2) | I x = I (ICastHoleGround {!!} x {!!}) -- cyrus
+  progress (TACast wt TCHole2) | I x -- I (ICastHoleGround {!!} x {!!}) -- cyrus
+    with canonical-indeterminate-forms-hole wt x
+  progress (TACast wt TCHole2) | I x | Inl (_ , _ , _ , refl , f) = {!!}
+  progress (TACast wt TCHole2) | I x | Inr (Inl (_ , _ , _ , _ , _ , refl , _ , _ , _)) = {!!}
+  progress (TACast wt TCHole2) | I x | Inr (Inr (Inl (_ , _ , _ , refl , _ , _ , _ , _ , _))) = {!!}
+  progress (TACast wt TCHole2) | I x | Inr (Inr (Inr (_ , _ , refl , _ , _ ))) = {!!}
   progress (TACast wt (TCArr c1 c2)) | I x = I (ICastArr {!!} x) -- cyrus
   -- boxed value cases, inspect how the casts are realted by consistency
   progress (TACast wt TCRefl)  | V x = S (_ , Step FHOuter ITCastID FHOuter)
   progress (TACast wt TCHole1) | V x = V (BVHoleCast {!!} x) -- cyrus
-  progress (TACast wt TCHole2) | V x = {!!} -- I {!!} -- cyrus: missing rule for boxed values?
+  progress (TACast wt TCHole2) | V x = {!!}
+  --   with canonical-boxed-forms-hole wt x
+  -- progress (TACast wt TCHole2) | V (BVVal ()) | π1 , π2 , refl , π4 , π5
+  -- progress (TACast (TACast wt TCRefl) TCHole2) | V (BVHoleCast () x₂) | d' , .⦇⦈ , refl , gnd , wt'
+  -- progress (TACast (TACast wt TCHole1) TCHole2) | V (BVHoleCast x₁ x₂) | d' , τ , refl , gnd , wt' with progress (TACast wt TCHole1)
+  -- progress (TACast (TACast wt TCHole1) TCHole2) | V (BVHoleCast x₁ x₂) | d' , τ , refl , gnd , wt' | S (d0' , Step FHOuter yy FHOuter) = S (_ , Step (FHCast FHOuter) yy (FHCast FHOuter))
+  -- progress (TACast (TACast wt TCHole1) TCHole2) | V (BVHoleCast x₁ x₂) | d , τ1 , refl , gnd , wt' | S (π1 , Step (FHCast xx) yy zz) = S (_ , Step (FHCast (FHCast xx)) yy (FHCast zz)) -- abort (boxedval-not-step x₂ {!!})
+  -- progress (TACast (TACast wt TCHole1) TCHole2) | V (BVHoleCast x₁ x₂) | d' , τ , refl , gnd , wt' | I x = I {!ICastArr!}
+  -- progress (TACast (TACast wt TCHole1) TCHole2) | V (BVHoleCast x₁ x₂) | d' , τ , refl , gnd , wt' | V (BVVal ())
+  -- progress (TACast (TACast wt TCHole1) TCHole2) | V (BVHoleCast x₂ x₃) | d' , τ , refl , gnd , wt' | V (BVHoleCast x x₁) = {!!}
+  -- progress (TACast (TACast wt TCHole2) TCHole2) | V (BVHoleCast () x₂) | d' , .⦇⦈ , refl , gnd , wt'
   progress (TACast wt (TCArr c1 c2)) | V x = V (BVArrCast {!!} x) -- cyrus
 
    -- failed casts
