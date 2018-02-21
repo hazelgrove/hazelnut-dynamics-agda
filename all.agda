@@ -6,6 +6,7 @@ open import contexts
 open import core
 
 open import focus-formation
+open import ground-decidable
 open import matched-ground-invariant
 open import finality
 
