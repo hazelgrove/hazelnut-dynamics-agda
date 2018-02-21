@@ -307,6 +307,15 @@ module core where
     _⟨_⇒_⟩ : ectx → htyp → htyp → ectx
     _⟨⦇⦈⇏_⟩ : ectx → htyp → ectx
 
+ -- todo/ note: this judgement is redundant now; in the absence of the
+ -- premises in the red brackets in the notes PDF, all syntactically well
+ -- formed ectxs are valid; with finality premises, that's not true. so it
+ -- might make sense to remove this judgement entirely, but need to make
+ -- sure to describe why we don't have the redbox things and how we'd patch
+ -- it up if we wanted to force a particular evaluation order in some
+ -- document somewhere (probably a README for this repo, or a sentence in
+ -- the paper text or both)
+
  --ε is an evaluation context
   data _evalctx : (ε : ectx) → Set where
     ECDot : ⊙ evalctx
