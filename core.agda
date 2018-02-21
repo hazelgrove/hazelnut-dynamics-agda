@@ -83,7 +83,7 @@ module core where
   id : tctx → subst
   id ctx x with ctx x
   id ctx x | Some τ = Some (X x)
-  id ctx x | None = None
+  id ctx x | None   = None
 
   -- this is just fancy notation to match the paper
   _::[_]_ : Nat → tctx → htyp → (Nat × (tctx × htyp))
@@ -200,7 +200,7 @@ module core where
     _,_⊢_:s:_ : hctx → tctx → subst → tctx → Set
     Δ , Γ ⊢ σ :s: Γ' =
         (x : Nat) (d : dhexp) (xd∈σ : (x , d) ∈ σ) →
-            Σ[ τ ∈ htyp ] (Γ' x == Some τ × Δ , Γ ⊢ d :: τ)
+            Σ[ τ ∈ htyp ] ((Γ' x == Some τ × (Δ , Γ ⊢ d :: τ)))
 
     -- type assignment
     data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (d : dhexp) (τ : htyp) → Set where

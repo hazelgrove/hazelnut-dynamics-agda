@@ -11,6 +11,9 @@ open import canonical-boxed-forms
 open import canonical-value-forms
 open import canonical-indeterminate-forms
 
+open import ground-decidable
+open import htype-decidable
+
 module progress where
   -- this is a little bit of syntactic sugar to avoid many layer nested Inl
   -- and Inrs that you would get from the more literal transcription of the
@@ -97,18 +100,30 @@ module progress where
   -- boxed value cases, inspect how the casts are realted by consistency
   progress (TACast wt TCRefl)  | V x = S (_ , Step FHOuter ITCastID FHOuter)
   progress (TACast wt TCHole1) | V x = V (BVHoleCast {!!} x) -- cyrus
-  progress (TACast wt TCHole2) | V x = {!!}
-  --   with canonical-boxed-forms-hole wt x
-  -- progress (TACast wt TCHole2) | V (BVVal ()) | π1 , π2 , refl , π4 , π5
-  -- progress (TACast (TACast wt TCRefl) TCHole2) | V (BVHoleCast () x₂) | d' , .⦇⦈ , refl , gnd , wt'
-  -- progress (TACast (TACast wt TCHole1) TCHole2) | V (BVHoleCast x₁ x₂) | d' , τ , refl , gnd , wt' with progress (TACast wt TCHole1)
-  -- progress (TACast (TACast wt TCHole1) TCHole2) | V (BVHoleCast x₁ x₂) | d' , τ , refl , gnd , wt' | S (d0' , Step FHOuter yy FHOuter) = S (_ , Step (FHCast FHOuter) yy (FHCast FHOuter))
-  -- progress (TACast (TACast wt TCHole1) TCHole2) | V (BVHoleCast x₁ x₂) | d , τ1 , refl , gnd , wt' | S (π1 , Step (FHCast xx) yy zz) = S (_ , Step (FHCast (FHCast xx)) yy (FHCast zz)) -- abort (boxedval-not-step x₂ {!!})
-  -- progress (TACast (TACast wt TCHole1) TCHole2) | V (BVHoleCast x₁ x₂) | d' , τ , refl , gnd , wt' | I x = I {!ICastArr!}
-  -- progress (TACast (TACast wt TCHole1) TCHole2) | V (BVHoleCast x₁ x₂) | d' , τ , refl , gnd , wt' | V (BVVal ())
-  -- progress (TACast (TACast wt TCHole1) TCHole2) | V (BVHoleCast x₂ x₃) | d' , τ , refl , gnd , wt' | V (BVHoleCast x x₁) = {!!}
-  -- progress (TACast (TACast wt TCHole2) TCHole2) | V (BVHoleCast () x₂) | d' , .⦇⦈ , refl , gnd , wt'
-  progress (TACast wt (TCArr c1 c2)) | V x = V (BVArrCast {!!} x) -- cyrus
+
+  -- this is the case i was working on on friday; this part seems ok if maybe redundant
+  progress {τ = τ} (TACast wt TCHole2) | V x
+    with ground-decidable τ | canonical-boxed-forms-hole wt x
+  progress {τ = τ} (TACast wt TCHole2) | V x₁ | Inl x | d' , τ' , refl , gnd , wt'
+    with htype-dec τ' τ
+  progress (TACast wt TCHole2) | V x₁ | Inl x₂ | d' , τ , refl , gnd , wt'  | Inl refl = S (_ , Step FHOuter (ITCastSucceed gnd) FHOuter )
+  progress (TACast wt TCHole2) | V x₁ | Inl x₂ | d' , τ' , refl , gnd , wt' | Inr x    = S (_ , Step FHOuter (ITCastFail gnd x₂ x) FHOuter )
+  progress {τ = τ} (TACast wt TCHole2) | V x₁ | Inr x  | d' , τ' , refl , gnd , wt' -- this case goes off the rails here
+    with htype-dec τ' τ
+  progress (TACast wt TCHole2) | V x₁ | Inr x₂ | d' , τ , refl , gnd , wt'  | Inl refl = abort (x₂ gnd)
+  progress (TACast wt TCHole2) | V x₁ | Inr x₂ | d' , τ' , refl , gnd , wt' | Inr x = {!!}
+
+  -- progress (TACast wt TCHole2) | V x₁ | Inr x₂ | d' , .b , refl , GBase , wt' | Inr x = {!!}
+  -- progress {τ = b} (TACast wt TCHole2) | V x₁ | Inr x₂ | d' , .(⦇⦈ ==> ⦇⦈) , refl , GHole , wt' | Inr x = abort (x₂ GBase)
+  -- progress {τ = ⦇⦈} (TACast wt TCHole2) | V x₁ | Inr x₂ | d' , .(⦇⦈ ==> ⦇⦈) , refl , GHole , wt' | Inr x = {!!} -- S (_ , Step (FHCast FHOuter) {!ground-arr-lem _ x₂ !} (FHCast FHOuter))
+  -- progress {τ = τ1 ==> τ2} (TACast wt TCHole2) | V x₁ | Inr x₂ | d' , .(⦇⦈ ==> ⦇⦈) , refl , GHole , wt' | Inr x = {!!}
+
+  -- this is the beginning of the next case -- cyrus
+  progress (TACast wt (TCArr c1 c2)) | V x = {!!}
+
+
+-- S {!!} --S ( _ , Step (FHCast FHOuter) (ITGround {!!}) (FHCast FHOuter))
+
 
    -- failed casts
   progress (TAFailedCast wt y z w)

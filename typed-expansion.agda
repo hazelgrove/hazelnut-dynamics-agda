@@ -8,7 +8,9 @@ open import lemmas-consistency
 
 module typed-expansion where
   lem-idsub : ∀{Δ Γ} → Δ , Γ ⊢ id Γ :s: Γ
-  lem-idsub = {!!}
+  lem-idsub {Δ} {Γ} x d xd∈σ with (id Γ) x
+  lem-idsub x y refl | Some .y = {!!}
+  lem-idsub x d xd∈σ | None = abort (somenotnone (! xd∈σ))
 
   lem-subweak : ∀{Δ Γ Γ' Δ' σ} → Δ , Γ ⊢ σ :s: Γ' → (Δ ∪ Δ') , Γ ⊢ σ :s: Γ'
   lem-subweak sub x d xd∈σ with sub x d xd∈σ
