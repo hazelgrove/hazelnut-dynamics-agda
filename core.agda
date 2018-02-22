@@ -352,8 +352,7 @@ module core where
     FHCast : ∀{ d d' ε τ1 τ2 } →
             d == ε ⟦ d' ⟧ →
             d ⟨ τ1 ⇒ τ2 ⟩ == ε ⟨ τ1 ⇒ τ2 ⟩ ⟦ d' ⟧
-    FHFailedCast : --∀{ d d' ε τ} →
-            {d d' : dhexp } {τ : htyp } { ε : ectx } →
+    FHFailedCast : ∀{ d d' ε τ} →
             d == ε ⟦ d' ⟧ →
             (d ⟨⦇⦈⇏ τ ⟩) == (ε ⟨⦇⦈⇏ τ ⟩) ⟦ d' ⟧
 
