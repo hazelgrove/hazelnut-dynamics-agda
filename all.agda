@@ -28,7 +28,7 @@ open import canonical-indeterminate-forms
 
 open import lemmas-progress-checks
 open import progress-checks
--- open import progress
+open import progress
 -- open import preservation
 
 open import complete-preservation

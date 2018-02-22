@@ -15,3 +15,11 @@ postulates:   4
 red boxes:    10
 bug @cyrus-:  5
 ```
+
+```
+Status as of  Thu Feb 22 17:17:33 EST 2018
+todos:        22
+postulates:   4
+red boxes:    10
+bug @cyrus-:  0
+```

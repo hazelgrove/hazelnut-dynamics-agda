@@ -138,21 +138,19 @@ module progress where
     with (htype-dec  (τ1 ==> τ2) (⦇⦈ ==> ⦇⦈))
   progress (TACast wt (TCHole1 {.⦇⦈ ==> .⦇⦈})) | BV x₂ | Inr x₁ | Inl refl = BV (BVHoleCast GHole x₂)
   progress (TACast wt (TCHole1 {τ1 ==> τ2})) | BV x₂ | Inr x₁ | Inr x = S (_ , Step FHOuter (ITGround (MGArr x)) FHOuter)
-
-
-  -- this is the case i was working on on friday; this part seems ok if maybe redundant
   progress {τ = τ} (TACast wt TCHole2) | BV x
-    with ground-decidable τ | canonical-boxed-forms-hole wt x
-  progress {τ = τ} (TACast wt TCHole2) | BV x₁ | Inl x | d' , τ' , refl , gnd , wt'
-    with htype-dec τ' τ
-  progress (TACast wt TCHole2) | BV x₁ | Inl x₂ | d' , τ , refl , gnd , wt'  | Inl refl = S (_ , Step FHOuter (ITCastSucceed gnd) FHOuter )
-  progress (TACast wt TCHole2) | BV x₁ | Inl x₂ | d' , τ' , refl , gnd , wt' | Inr x    = S (_ , Step FHOuter (ITCastFail gnd x₂ x) FHOuter )
-  progress {τ = τ} (TACast wt TCHole2) | BV x₁ | Inr x  | d' , τ' , refl , gnd , wt' -- this case goes off the rails here
-    with htype-dec τ' τ
-  progress (TACast wt TCHole2) | BV x₁ | Inr x₂ | d' , τ , refl , gnd , wt'  | Inl refl = abort (x₂ gnd)
-  progress (TACast wt TCHole2) | BV x₁ | Inr x₂ | d' , τ' , refl , gnd , wt' | Inr x = {!!} -- S (_ , Step {!!} (ITCastFail gnd {!!} x) {!!})
+    with canonical-boxed-forms-hole wt x
+  progress {τ = τ} (TACast wt TCHole2) | BV x | d' , τ' , refl , gnd , wt'
+    with htype-dec τ τ'
+  progress (TACast wt TCHole2) | BV x₁ | d' , τ , refl , gnd , wt' | Inl refl = S (_  , Step FHOuter (ITCastSucceed gnd) FHOuter)
+  progress {τ = τ} (TACast wt TCHole2) | BV x₁ | d' , τ' , refl , gnd , wt' | Inr x
+    with ground-decidable τ
+  progress (TACast wt TCHole2) | BV x₂ | d' , τ' , refl , gnd , wt' | Inr x₁ | Inl x = S(_ , Step FHOuter (ITCastFail gnd x (flip x₁)) FHOuter)
+  progress (TACast wt TCHole2) | BV x₂ | d' , τ' , refl , gnd , wt' | Inr x₁ | Inr x
+    with notground x
+  progress (TACast wt TCHole2) | BV x₃ | d' , τ' , refl , gnd , wt' | Inr x₂ | Inr x | Inl refl = S (_ , Step FHOuter ITCastID FHOuter)
+  progress (TACast wt TCHole2) | BV x₃ | d' , τ' , refl , gnd , wt' | Inr x₂ | Inr x | Inr (τ1 , τ2 , refl) = S(_ , Step FHOuter (ITExpand (MGArr (ground-arr-not-hole x))) FHOuter )
 
-  -- this is the beginning of the next case
   progress (TACast wt (TCArr {τ1} {τ2} {τ1'} {τ2'} c1 c2)) | BV x
     with htype-dec (τ1 ==> τ2) (τ1' ==> τ2')
   progress (TACast wt (TCArr c1 c2)) | BV x₁ | Inl refl = S (_ , Step FHOuter ITCastID FHOuter)
