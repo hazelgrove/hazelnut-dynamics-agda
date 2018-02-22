@@ -150,10 +150,13 @@ module progress where
   progress {τ = τ} (TACast wt TCHole2) | BV x₁ | Inr x  | d' , τ' , refl , gnd , wt' -- this case goes off the rails here
     with htype-dec τ' τ
   progress (TACast wt TCHole2) | BV x₁ | Inr x₂ | d' , τ , refl , gnd , wt'  | Inl refl = abort (x₂ gnd)
-  progress (TACast wt TCHole2) | BV x₁ | Inr x₂ | d' , τ' , refl , gnd , wt' | Inr x = {!ITCastFail ? ? x!}
+  progress (TACast wt TCHole2) | BV x₁ | Inr x₂ | d' , τ' , refl , gnd , wt' | Inr x = {!!} -- S (_ , Step {!!} (ITCastFail gnd {!!} x) {!!})
 
-  -- this is the beginning of the next case -- cyrus
-  progress (TACast wt (TCArr c1 c2)) | BV x = {!!}
+  -- this is the beginning of the next case
+  progress (TACast wt (TCArr {τ1} {τ2} {τ1'} {τ2'} c1 c2)) | BV x
+    with htype-dec (τ1 ==> τ2) (τ1' ==> τ2')
+  progress (TACast wt (TCArr c1 c2)) | BV x₁ | Inl refl = S (_ , Step FHOuter ITCastID FHOuter)
+  progress (TACast wt (TCArr c1 c2)) | BV x₁ | Inr x = BV (BVArrCast x x₁)
 
    -- failed casts
   progress (TAFailedCast wt y z w)
