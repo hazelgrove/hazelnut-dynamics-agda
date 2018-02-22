@@ -4,6 +4,7 @@ open import List
 open import core
 open import contexts
 
+open import lemmas-consistency
 open import type-assignment-unicity
 
 module preservation where
@@ -18,9 +19,9 @@ module preservation where
   pres-lem FHOuter D1 D2 D3 FHOuter
     with type-assignment-unicity D1 D2
   ... | refl = D3
-  pres-lem (FHAp1 eps) D1 D2 D3 (FHAp1 D4) = {!!}
-  pres-lem (FHAp2 eps) D1 D2 D3 (FHAp2 D4) = {!!}
-  pres-lem (FHNEHole eps) D1 D2 D3 (FHNEHole D4) = {!!}
+  pres-lem (FHAp1 eps) D1 D2 D3 (FHAp1 D4) = TAAp {!!} {!!}
+  pres-lem (FHAp2 eps) D1 D2 D3 (FHAp2 D4) = TAAp {!!} {!!}
+  pres-lem (FHNEHole eps) D1 D2 D3 (FHNEHole D4) = TANEHole {!!} {!!} {!!}
   pres-lem (FHCast eps) D1 D2 D3 (FHCast D4) = {!!}
   pres-lem (FHFailedCast eps) D1 D2 D3 (FHFailedCast D4) = {!!}
 
@@ -42,7 +43,9 @@ module preservation where
   pres-lem2 (TANEHole x ta x₁) (FHNEHole eps) = pres-lem2 ta eps
   pres-lem2 (TACast ta x) FHOuter = _ , TACast ta x
   pres-lem2 (TACast ta x) (FHCast eps) = pres-lem2 ta eps
-  pres-lem2 (TAFailedCast x y z w) eps = {!!}
+  pres-lem2 (TAFailedCast x y z w) FHOuter = _ , TAFailedCast x y z w
+  pres-lem2 (TAFailedCast x y z w) (FHFailedCast FHOuter) = _ , TACast x TCHole1
+  pres-lem2 (TAFailedCast x y z w) (FHFailedCast (FHCast eps)) = pres-lem2 x eps
 
   -- todo: rename
   pres-lem3 : ∀{ Δ Γ d τ d' } →
@@ -52,16 +55,17 @@ module preservation where
   pres-lem3 TAConst ()
   pres-lem3 (TAVar x₁) ()
   pres-lem3 (TALam ta) ()
-  pres-lem3 (TAAp ta ta₁) (ITLam) = {!!}
-  pres-lem3 (TAAp ta ta₁) (ITApCast) = {!!}
+  pres-lem3 (TAAp (TALam ta) ta₁) ITLam = {!!} -- todo: this is a lemma
+  pres-lem3 (TAAp (TACast ta TCRefl) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ TCRefl)) TCRefl
+  pres-lem3 (TAAp (TACast ta (TCArr x x₁)) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ (~sym x))) x₁
   pres-lem3 (TAEHole x x₁) ()
-  pres-lem3 (TANEHole x ta x₁) () -- todo: this is a little surprising; nehole doesn't take a transition but it defieately can still step
-  pres-lem3 (TACast ta x) (ITCastID) = {!!}
-  pres-lem3 (TACast ta x) (ITCastSucceed x₂) = {!!}
-  pres-lem3 (TACast ta x) (ITGround y) = {!!}
-  pres-lem3 (TACast ta x) (ITExpand x₂) = {!!}
-  pres-lem3 (TACast ta x) (ITCastFail w y z) = {!!}
-  pres-lem3 (TAFailedCast x y z q) xx  = {!!}
+  pres-lem3 (TANEHole x ta x₁) ()
+  pres-lem3 (TACast ta x) (ITCastID) = ta
+  pres-lem3 (TACast (TACast ta x) x₁) (ITCastSucceed x₂) = ta
+  pres-lem3 (TACast ta x) (ITGround (MGArr x₁)) = TACast (TACast ta (TCArr TCHole1 TCHole1)) TCHole1
+  pres-lem3 (TACast ta TCHole2) (ITExpand (MGArr x₁)) = TACast (TACast ta TCHole2) (TCArr TCHole2 TCHole2)
+  pres-lem3 (TACast (TACast ta x) x₁) (ITCastFail w y z) = TAFailedCast ta w y z
+  pres-lem3 (TAFailedCast x y z q) ()
 
   preservation : {Δ : hctx} {d d' : dhexp} {τ : htyp} →
              Δ , ∅ ⊢ d :: τ →
