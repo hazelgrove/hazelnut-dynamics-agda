@@ -127,10 +127,18 @@ module progress where
   progress (TACast wt (TCArr c1 c2)) | I x₁ | Inl refl = S (_ , Step FHOuter ITCastID FHOuter)
   progress (TACast wt (TCArr c1 c2)) | I x₁ | Inr x = I (ICastArr x x₁)
 
-
   -- boxed value cases, inspect how the casts are realted by consistency
   progress (TACast wt TCRefl)  | BV x = S (_ , Step FHOuter ITCastID FHOuter)
-  progress (TACast wt TCHole1) | BV x = {!canonical-boxed-forms!} -- BV (BVHoleCast {!!} x) -- cyrus
+  progress (TACast wt (TCHole1 {τ = τ})) | BV x
+    with ground-decidable τ
+  progress (TACast wt TCHole1) | BV x₁ | Inl g = BV (BVHoleCast g x₁)
+  progress (TACast wt (TCHole1 {b})) | BV x₁ | Inr x = abort (x GBase)
+  progress (TACast wt (TCHole1 {⦇⦈})) | BV x₁ | Inr x = S (_ , Step FHOuter ITCastID FHOuter)
+  progress (TACast wt (TCHole1 {τ1 ==> τ2})) | BV x₁ | Inr x
+    with (htype-dec  (τ1 ==> τ2) (⦇⦈ ==> ⦇⦈))
+  progress (TACast wt (TCHole1 {.⦇⦈ ==> .⦇⦈})) | BV x₂ | Inr x₁ | Inl refl = BV (BVHoleCast GHole x₂)
+  progress (TACast wt (TCHole1 {τ1 ==> τ2})) | BV x₂ | Inr x₁ | Inr x = S (_ , Step FHOuter (ITGround (MGArr x)) FHOuter)
+
 
   -- this is the case i was working on on friday; this part seems ok if maybe redundant
   progress {τ = τ} (TACast wt TCHole2) | BV x
@@ -142,12 +150,7 @@ module progress where
   progress {τ = τ} (TACast wt TCHole2) | BV x₁ | Inr x  | d' , τ' , refl , gnd , wt' -- this case goes off the rails here
     with htype-dec τ' τ
   progress (TACast wt TCHole2) | BV x₁ | Inr x₂ | d' , τ , refl , gnd , wt'  | Inl refl = abort (x₂ gnd)
-  progress (TACast wt TCHole2) | BV x₁ | Inr x₂ | d' , τ' , refl , gnd , wt' | Inr x = {!!}
-
-  -- progress (TACast wt TCHole2) | BV x₁ | Inr x₂ | d' , .b , refl , GBase , wt' | Inr x = {!!}
-  -- progress {τ = b} (TACast wt TCHole2) | BV x₁ | Inr x₂ | d' , .(⦇⦈ ==> ⦇⦈) , refl , GHole , wt' | Inr x = abort (x₂ GBase)
-  -- progress {τ = ⦇⦈} (TACast wt TCHole2) | BV x₁ | Inr x₂ | d' , .(⦇⦈ ==> ⦇⦈) , refl , GHole , wt' | Inr x = {!!} -- S (_ , Step (FHCast FHOuter) {!ground-arr-lem _ x₂ !} (FHCast FHOuter))
-  -- progress {τ = τ1 ==> τ2} (TACast wt TCHole2) | BV x₁ | Inr x₂ | d' , .(⦇⦈ ==> ⦇⦈) , refl , GHole , wt' | Inr x = {!!}
+  progress (TACast wt TCHole2) | BV x₁ | Inr x₂ | d' , τ' , refl , gnd , wt' | Inr x = {!ITCastFail ? ? x!}
 
   -- this is the beginning of the next case -- cyrus
   progress (TACast wt (TCArr c1 c2)) | BV x = {!!}
