@@ -7,10 +7,17 @@ open import contexts
 open import lemmas-consistency
 
 module typed-expansion where
+  lem : (Γ : tctx) (x : Nat) → (((id Γ) x) == Some (X x) × (Σ[ τ ∈ htyp ]((Γ x) == Some τ)))
+                             + (((id Γ) x) == None)
+  lem Γ x with Γ x
+  lem Γ x | Some x₁ = Inl (refl , x₁ , refl)
+  lem Γ x | None = Inr refl
+
   lem-idsub : ∀{Δ Γ} → Δ , Γ ⊢ id Γ :s: Γ
-  lem-idsub {Δ} {Γ} x d xd∈σ with (id Γ) x
-  lem-idsub x y refl | Some .y = {!!}
-  lem-idsub x d xd∈σ | None = abort (somenotnone (! xd∈σ))
+  lem-idsub {Δ} {Γ} x d xin with lem Γ x
+  lem-idsub {Δ} {Γ} x d xin | Inl (w , y , z) with (! xin) · w
+  lem-idsub x .(X x) xin | Inl (w , y , z) | refl = y , z , TAVar z
+  lem-idsub x d xin | Inr x₁ = abort (somenotnone ((! xin) · x₁))
 
   lem-subweak : ∀{Δ Γ Γ' Δ' σ} → Δ , Γ ⊢ σ :s: Γ' → (Δ ∪ Δ') , Γ ⊢ σ :s: Γ'
   lem-subweak sub x d xd∈σ with sub x d xd∈σ
