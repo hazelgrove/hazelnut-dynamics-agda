@@ -100,13 +100,13 @@ module progress where
   progress (TACast wt TCHole1) | I x₁ | τ11 ==> τ12 | Inr x =  S (_ , Step FHOuter (ITGround (MGArr (ground-arr-not-hole x))) FHOuter)
   progress (TACast wt (TCHole2 {b})) | I x
     with canonical-indeterminate-forms-hole wt x
-  progress (TACast wt (TCHole2 {b})) | I x | Inl (_ , _ , _ , refl , f) = I (ICastHoleGround (λ d' τ' → λ ()) x GBase)
-  progress (TACast wt (TCHole2 {b})) | I x | Inr (Inl (_ , _ , _ , _ , _ , refl , _ , _ , _)) = I (ICastHoleGround (λ d' τ' → λ ()) x GBase)
-  progress (TACast wt (TCHole2 {b})) | I x | Inr (Inr (Inl (_ , _ , _ , refl , _ , _ , _ , _ , _))) = I (ICastHoleGround (λ d' τ' → λ ()) x GBase)
-  progress (TACast wt (TCHole2 {b})) | I x | Inr (Inr (Inr (d' , τ , refl , gnd , ind )))
+  progress (TACast wt (TCHole2 {b})) | I x | Inl (_ , _ , _ , refl , f)                             = I (ICastHoleGround (λ _ _ ()) x GBase)
+  progress (TACast wt (TCHole2 {b})) | I x | Inr (Inl (_ , _ , _ , _ , _ , refl , _ , _ , _))       = I (ICastHoleGround (λ _ _ ()) x GBase)
+  progress (TACast wt (TCHole2 {b})) | I x | Inr (Inr (Inl (_ , _ , _ , refl , _ , _ , _ , _ , _))) = I (ICastHoleGround (λ _ _ ()) x GBase)
+  progress (TACast wt (TCHole2 {b})) | I x | Inr (Inr (Inr (_ , τ , refl , _ , _)))
     with htype-dec τ b
-  progress (TACast wt (TCHole2 {b})) | I x₁ | Inr (Inr (Inr (d' , .b , refl , gnd , ind))) | Inl refl = S (_ , Step FHOuter (ITCastSucceed gnd) FHOuter)
-  progress (TACast wt (TCHole2 {b})) | I x₁ | Inr (Inr (Inr (d' , τ , refl , gnd , ind)))  | Inr x = S (_ , Step FHOuter (ITCastFail gnd GBase x) FHOuter)
+  progress (TACast wt (TCHole2 {b})) | I x₁ | Inr (Inr (Inr (_ , ._ , refl , gnd , _))) | Inl refl = S (_ , Step FHOuter (ITCastSucceed gnd) FHOuter)
+  progress (TACast wt (TCHole2 {b})) | I x₁ | Inr (Inr (Inr (_ , _ , refl , gnd , _)))  | Inr neq = S (_ , Step FHOuter (ITCastFail gnd GBase neq) FHOuter)
 
   progress (TACast wt (TCHole2 {⦇⦈})) | I x = S (_ , Step FHOuter ITCastID FHOuter)
 
@@ -114,18 +114,13 @@ module progress where
     with ground-decidable (τ11 ==> τ12)
   progress (TACast wt (TCHole2 {.⦇⦈ ==> .⦇⦈})) | I x₁ | Inl GHole
     with canonical-indeterminate-forms-hole wt x₁
-  progress (TACast wt (TCHole2 {.⦇⦈ ==> .⦇⦈})) | I x | Inl GHole | Inl (_ , _ , _ , refl , f) = I (ICastHoleGround (λ d' τ' → λ ()) x GHole)
-  progress (TACast wt (TCHole2 {.⦇⦈ ==> .⦇⦈})) | I x | Inl GHole | Inr (Inl (_ , _ , _ , _ , _ , refl , _ , _ , _)) = I (ICastHoleGround (λ d' τ' → λ ()) x GHole)
-  progress (TACast wt (TCHole2 {.⦇⦈ ==> .⦇⦈})) | I x | Inl GHole | Inr (Inr (Inl (_ , _ , _ , refl , _ , _ , _ , _ , _))) = I (ICastHoleGround (λ d' τ' → λ ()) x GHole)
-  progress (TACast wt (TCHole2 {.⦇⦈ ==> .⦇⦈})) | I x | Inl GHole | Inr (Inr (Inr (d' , .b , refl , GBase , ind))) = S (_ , Step FHOuter (ITCastFail GBase GHole (λ ())) FHOuter )
-  progress (TACast wt (TCHole2 {.⦇⦈ ==> .⦇⦈})) | I x | Inl GHole | Inr (Inr (Inr (d' , .(⦇⦈ ==> ⦇⦈) , refl , GHole , ind))) = S (_ , Step FHOuter (ITCastSucceed GHole) FHOuter)
+  progress (TACast wt (TCHole2 {.⦇⦈ ==> .⦇⦈})) | I x | Inl GHole | Inl (_ , _ , _ , refl , _)                             = I (ICastHoleGround (λ _ _ ()) x GHole)
+  progress (TACast wt (TCHole2 {.⦇⦈ ==> .⦇⦈})) | I x | Inl GHole | Inr (Inl (_ , _ , _ , _ , _ , refl , _ , _ , _))       = I (ICastHoleGround (λ _ _ ()) x GHole)
+  progress (TACast wt (TCHole2 {.⦇⦈ ==> .⦇⦈})) | I x | Inl GHole | Inr (Inr (Inl (_ , _ , _ , refl , _ , _ , _ , _ , _))) = I (ICastHoleGround (λ _ _ ()) x GHole)
+  progress (TACast wt (TCHole2 {.⦇⦈ ==> .⦇⦈})) | I x | Inl GHole | Inr (Inr (Inr (_ , ._ , refl , GBase , _))) = S (_ , Step FHOuter (ITCastFail GBase GHole (λ ())) FHOuter )
+  progress (TACast wt (TCHole2 {.⦇⦈ ==> .⦇⦈})) | I x | Inl GHole | Inr (Inr (Inr (_ , ._ , refl , GHole , _))) = S (_ , Step FHOuter (ITCastSucceed GHole) FHOuter)
 
   progress (TACast wt (TCHole2 {τ11 ==> τ12})) | I x₁ | Inr x = S (_ , Step FHOuter (ITExpand (MGArr (ground-arr-not-hole x))) FHOuter)
-
-  -- progress (TACast wt TCHole2) | I x | Inl (_ , _ , _ , refl , f) = {!!}
-  -- progress (TACast wt TCHole2) | I x | Inr (Inl (_ , _ , _ , _ , _ , refl , _ , _ , _)) = {!!}
-  -- progress (TACast wt TCHole2) | I x | Inr (Inr (Inl (_ , _ , _ , refl , _ , _ , _ , _ , _))) = {!!}
-  -- progress (TACast wt TCHole2) | I x | Inr (Inr (Inr (_ , _ , refl , _ , _ ))) = {!!}
 
   progress (TACast wt (TCArr {τ1} {τ2} {τ1'} {τ2'} c1 c2)) | I x
     with htype-dec (τ1 ==> τ2)  (τ1' ==> τ2')
@@ -135,7 +130,7 @@ module progress where
 
   -- boxed value cases, inspect how the casts are realted by consistency
   progress (TACast wt TCRefl)  | BV x = S (_ , Step FHOuter ITCastID FHOuter)
-  progress (TACast wt TCHole1) | BV x = {!canonical-boxed-value!} -- BV (BVHoleCast {!!} x) -- cyrus
+  progress (TACast wt TCHole1) | BV x = {!canonical-boxed-forms!} -- BV (BVHoleCast {!!} x) -- cyrus
 
   -- this is the case i was working on on friday; this part seems ok if maybe redundant
   progress {τ = τ} (TACast wt TCHole2) | BV x
