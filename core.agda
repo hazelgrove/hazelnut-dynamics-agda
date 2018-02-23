@@ -235,7 +235,7 @@ module core where
   [ d / y ] X x
     with natEQ x y
   [ d / y ] X .y | Inl refl = d
-  [ d / y ] X x  | Inr neq = X y
+  [ d / y ] X x  | Inr neq = X x
   [ d / y ] (·λ x [ x₁ ] d') = ·λ x [ x₁ ] ( [ d / y ] d') -- TODO: i *think* barendrecht's saves us here, or at least i want it to. may need to reformulat this as a relation --> set
   [ d / y ] ⦇⦈⟨ u , σ ⟩ = ⦇⦈⟨ u , σ ⟩
   [ d / y ] ⦇ d' ⦈⟨ u , σ  ⟩ =  ⦇ [ d / y ] d' ⦈⟨ u , σ ⟩
