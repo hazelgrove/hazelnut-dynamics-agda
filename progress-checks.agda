@@ -68,7 +68,7 @@ module progress-checks where
     indet-not-step (ICastGroundHole x x₁) (_ , Step FHOuter (ITCastFail x₂ () x₄) FHOuter)
     indet-not-step (ICastHoleGround x x₁ x₂) (_ , Step FHOuter (ITCastFail x₃ x₄ x₅) FHOuter) = x _ _ refl
     indet-not-step (IFailedCast x x₁ x₂ x₃) (d' , Step FHOuter () FHOuter)
-    indet-not-step (IFailedCast x x₁ x₂ x₃) (_ , Step (FHFailedCast x₄) x₅ (FHFailedCast x₆)) = final-not-step (final-gnd-cast x x₁) (_ , Step x₄ x₅ x₆)
+    indet-not-step (IFailedCast x x₁ x₂ x₃) (_ , Step (FHFailedCast x₄) x₅ (FHFailedCast x₆)) = final-not-step x (_ , Step x₄ x₅ x₆)
 
     -- final expressions don't step
     final-not-step : ∀{d} → d final → Σ[ d' ∈ dhexp ] (d ↦ d') → ⊥

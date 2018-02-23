@@ -23,8 +23,7 @@ module preservation where
   pres-lem (FHAp2 eps) (TAAp D1 D2) D3 D4 (FHAp2 D5) = TAAp D1 (pres-lem eps D2 D3 D4 D5)
   pres-lem (FHNEHole eps) (TANEHole x D1 x₁) D2 D3 (FHNEHole D4) = TANEHole x (pres-lem eps D1 D2 D3 D4) x₁
   pres-lem (FHCast eps) (TACast D1 x) D2 D3 (FHCast D4) = TACast (pres-lem eps D1 D2 D3 D4) x
-  pres-lem (FHFailedCast FHOuter) (TAFailedCast D1 x x₁ x₂) (TACast D2 x₃) D3 (FHFailedCast FHOuter) = {!!}
-  pres-lem (FHFailedCast (FHCast eps)) (TAFailedCast D1 x x₁ x₂) D2 D3 (FHFailedCast (FHCast D4)) = TAFailedCast (pres-lem eps D1 D2 D3 D4) x x₁ x₂
+  pres-lem (FHFailedCast x) (TAFailedCast y x₁ x₂ x₃) D3 D4 (FHFailedCast eps) = TAFailedCast (pres-lem x y D3 D4 eps) x₁ x₂ x₃
 
   -- todo: rename
   pres-lem2 : ∀{ ε Δ Γ d τ d' } →
@@ -45,8 +44,7 @@ module preservation where
   pres-lem2 (TACast ta x) FHOuter = _ , TACast ta x
   pres-lem2 (TACast ta x) (FHCast eps) = pres-lem2 ta eps
   pres-lem2 (TAFailedCast x y z w) FHOuter = _ , TAFailedCast x y z w
-  pres-lem2 (TAFailedCast x y z w) (FHFailedCast FHOuter) = _ , TACast x TCHole1
-  pres-lem2 (TAFailedCast x y z w) (FHFailedCast (FHCast eps)) = pres-lem2 x eps
+  pres-lem2 (TAFailedCast x x₁ x₂ x₃) (FHFailedCast y) = pres-lem2 x y
 
   -- this is the literal contents of the hole in lem3; it might not go
   -- through exactly like this.

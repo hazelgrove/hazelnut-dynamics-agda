@@ -36,15 +36,11 @@ module core where
       ⦇_⦈⟨_⟩   : dhexp → (Nat × subst) → dhexp
       _∘_      : dhexp → dhexp → dhexp
       _⟨_⇒_⟩   : dhexp → htyp → htyp → dhexp
-      _⟨⦇⦈⇏_⟩   : dhexp → htyp → dhexp
+      _⟨_⇒⦇⦈⇏_⟩   : dhexp → htyp → htyp → dhexp
 
   -- notation for chaining together agreeable casts
   _⟨_⇒_⇒_⟩ : dhexp → htyp → htyp → htyp → dhexp
   d ⟨ t1 ⇒ t2 ⇒ t3 ⟩ = d ⟨ t1 ⇒ t2 ⟩ ⟨ t2 ⇒ t3 ⟩
-
-  -- notation for a chained together failing cast into hole
-  _⟨_⇒⦇⦈⇏_⟩ : dhexp → htyp → htyp → dhexp
-  d ⟨ t1 ⇒⦇⦈⇏ t2 ⟩ = d ⟨ t1 ⇒ ⦇⦈ ⟩ ⟨⦇⦈⇏ t2 ⟩
 
   -- type consistency
   data _~_ : (t1 t2 : htyp) → Set where
@@ -245,7 +241,7 @@ module core where
   [ d / y ] ⦇ d' ⦈⟨ u , σ  ⟩ =  ⦇ [ d / y ] d' ⦈⟨ u , σ ⟩
   [ d / y ] (d1 ∘ d2) = ([ d / y ] d1) ∘ ([ d / y ] d2)
   [ d / y ] (d' ⟨ τ1 ⇒ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒ τ2 ⟩
-  [ d / y ] (d' ⟨⦇⦈⇏ τ2 ⟩ ) = ([ d / y ] d') ⟨⦇⦈⇏ τ2 ⟩
+  [ d / y ] (d' ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩
 
   -- value
   data _val : (d : dhexp) → Set where
@@ -305,7 +301,7 @@ module core where
     _∘₂_ : dhexp → ectx → ectx
     ⦇_⦈⟨_⟩ : ectx → (Nat × subst ) → ectx
     _⟨_⇒_⟩ : ectx → htyp → htyp → ectx
-    _⟨⦇⦈⇏_⟩ : ectx → htyp → ectx
+    _⟨_⇒⦇⦈⇏_⟩ : ectx → htyp → htyp → ectx
 
  -- todo/ note: this judgement is redundant now; in the absence of the
  -- premises in the red brackets in the notes PDF, all syntactically well
@@ -332,13 +328,13 @@ module core where
     ECCast : ∀{ ε τ1 τ2} →
              ε evalctx →
              (ε ⟨ τ1 ⇒ τ2 ⟩) evalctx
-    ECFailedCast : ∀{ ε τ } →
+    ECFailedCast : ∀{ ε τ1 τ2 } →
                    ε evalctx →
-                   ε ⟨⦇⦈⇏ τ ⟩ evalctx
+                   ε ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩ evalctx
 
   -- d is the result of filling the hole in ε with d'
   data _==_⟦_⟧ : (d : dhexp) (ε : ectx) (d' : dhexp) → Set where
-    FHOuter : ∀{d} → d == ⊙ ⟦ d ⟧ -- this used to a have a premise of being final for some reason
+    FHOuter : ∀{d} → d == ⊙ ⟦ d ⟧
     FHAp1 : ∀{d1 d1' d2 ε} →
            d1 == ε ⟦ d1' ⟧ →
            (d1 ∘ d2) == (ε ∘₁ d2) ⟦ d1' ⟧
@@ -352,9 +348,9 @@ module core where
     FHCast : ∀{ d d' ε τ1 τ2 } →
             d == ε ⟦ d' ⟧ →
             d ⟨ τ1 ⇒ τ2 ⟩ == ε ⟨ τ1 ⇒ τ2 ⟩ ⟦ d' ⟧
-    FHFailedCast : ∀{ d d' ε τ} →
+    FHFailedCast : ∀{ d d' ε τ1 τ2} →
             d == ε ⟦ d' ⟧ →
-            (d ⟨⦇⦈⇏ τ ⟩) == (ε ⟨⦇⦈⇏ τ ⟩) ⟦ d' ⟧
+            (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) == (ε ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) ⟦ d' ⟧
 
   data _▸gnd_ : htyp → htyp → Set where
     MGArr : ∀{τ1 τ2} →

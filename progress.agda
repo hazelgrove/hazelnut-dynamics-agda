@@ -159,6 +159,6 @@ module progress where
    -- failed casts
   progress (TAFailedCast wt y z w)
     with progress wt
-  progress (TAFailedCast wt y z w) | S (d' , Step x a q) = S(_ , Step (FHFailedCast (FHCast x)) a (FHFailedCast (FHCast q)))
+  progress (TAFailedCast wt y z w) | S (d' , Step x a q) = S (_ , Step (FHFailedCast x) a (FHFailedCast q))
   progress (TAFailedCast wt y z w) | I x = I (IFailedCast (FIndet x) y z w)
   progress (TAFailedCast wt y z w) | BV x = I (IFailedCast (FBoxed x) y z w)

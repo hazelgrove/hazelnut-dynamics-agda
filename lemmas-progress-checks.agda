@@ -55,8 +55,7 @@ module lemmas-progress-checks where
   final-sub-final (FIndet (ICastArr x₁ x₂)) (FHCast eps) = final-sub-final (FIndet x₂) eps
   final-sub-final (FIndet (ICastGroundHole x₁ x₂)) (FHCast eps) = final-sub-final (FIndet x₂) eps
   final-sub-final (FIndet (ICastHoleGround x₁ x₂ x₃)) (FHCast eps) = final-sub-final (FIndet x₂) eps
-  final-sub-final (FIndet (IFailedCast x₁ x₂ x₃ x₄)) (FHFailedCast FHOuter) = final-gnd-cast x₁ x₂
-  final-sub-final (FIndet (IFailedCast x₁ x₂ x₃ x₄)) (FHFailedCast (FHCast y)) = final-sub-final x₁ y
+  final-sub-final (FIndet (IFailedCast x₁ x₂ x₃ x₄)) (FHFailedCast y) = final-sub-final x₁ y
 
   final-sub-not-trans : ∀{d d' d'' ε} →  d final → d == ε ⟦ d' ⟧ → d' →> d'' → ⊥
   final-sub-not-trans f sub step = final-not-trans (final-sub-final f sub) step
