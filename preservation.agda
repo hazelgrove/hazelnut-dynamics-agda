@@ -19,11 +19,12 @@ module preservation where
   pres-lem FHOuter D1 D2 D3 FHOuter
     with type-assignment-unicity D1 D2
   ... | refl = D3
-  pres-lem (FHAp1 eps) D1 D2 D3 (FHAp1 D4) = TAAp {!!} {!!}
-  pres-lem (FHAp2 eps) D1 D2 D3 (FHAp2 D4) = TAAp {!!} {!!}
-  pres-lem (FHNEHole eps) D1 D2 D3 (FHNEHole D4) = TANEHole {!!} {!!} {!!}
-  pres-lem (FHCast eps) D1 D2 D3 (FHCast D4) = {!!}
-  pres-lem (FHFailedCast eps) D1 D2 D3 (FHFailedCast D4) = {!!}
+  pres-lem (FHAp1 eps) (TAAp D1 D2) D3 D4 (FHAp1 D5) = TAAp (pres-lem eps D1 D3 D4 D5) D2
+  pres-lem (FHAp2 eps) (TAAp D1 D2) D3 D4 (FHAp2 D5) = TAAp D1 (pres-lem eps D2 D3 D4 D5)
+  pres-lem (FHNEHole eps) (TANEHole x D1 x₁) D2 D3 (FHNEHole D4) = TANEHole x (pres-lem eps D1 D2 D3 D4) x₁
+  pres-lem (FHCast eps) (TACast D1 x) D2 D3 (FHCast D4) = TACast (pres-lem eps D1 D2 D3 D4) x
+  pres-lem (FHFailedCast FHOuter) (TAFailedCast D1 x x₁ x₂) (TACast D2 x₃) D3 (FHFailedCast FHOuter) = {!!}
+  pres-lem (FHFailedCast (FHCast eps)) (TAFailedCast D1 x x₁ x₂) D2 D3 (FHFailedCast (FHCast D4)) = TAFailedCast (pres-lem eps D1 D2 D3 D4) x x₁ x₂
 
   -- todo: rename
   pres-lem2 : ∀{ ε Δ Γ d τ d' } →
@@ -47,6 +48,14 @@ module preservation where
   pres-lem2 (TAFailedCast x y z w) (FHFailedCast FHOuter) = _ , TACast x TCHole1
   pres-lem2 (TAFailedCast x y z w) (FHFailedCast (FHCast eps)) = pres-lem2 x eps
 
+  -- this is the literal contents of the hole in lem3; it might not go
+  -- through exactly like this.
+  lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } →
+              Δ , Γ ,, (x , τ1) ⊢ d1 :: τ →
+              Δ , Γ ⊢ d2 :: τ1 →
+              Δ , Γ ⊢ [ d2 / x ] d1 :: τ
+  lem-subst D1 D2 = {!!}
+
   -- todo: rename
   pres-lem3 : ∀{ Δ Γ d τ d' } →
             Δ , Γ ⊢ d :: τ →
@@ -55,7 +64,7 @@ module preservation where
   pres-lem3 TAConst ()
   pres-lem3 (TAVar x₁) ()
   pres-lem3 (TALam ta) ()
-  pres-lem3 (TAAp (TALam ta) ta₁) ITLam = {!!} -- todo: this is a lemma
+  pres-lem3 (TAAp (TALam ta) ta₁) ITLam = lem-subst ta ta₁
   pres-lem3 (TAAp (TACast ta TCRefl) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ TCRefl)) TCRefl
   pres-lem3 (TAAp (TACast ta (TCArr x x₁)) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ (~sym x))) x₁
   pres-lem3 (TAEHole x x₁) ()
