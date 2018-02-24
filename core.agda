@@ -24,7 +24,7 @@ module core where
     _∘_     : hexp → hexp → hexp
 
   mutual
-    subst : Set -- todo: no idea if this is right; mutual thing is weird
+    subst : Set
     subst = dhexp ctx
 
     -- expressions without ascriptions but with casts
@@ -101,8 +101,8 @@ module core where
                  τ1 ▸arr τ2 ==> τ →
                  Γ ⊢ e2 <= τ2 →
                  Γ ⊢ (e1 ∘ e2) => τ
-      SEHole  : {Γ : tctx} {u : Nat} → Γ ⊢ ⦇⦈[ u ] => ⦇⦈     -- todo: uniqueness of u?
-      SNEHole : {Γ : tctx} {e : hexp} {τ : htyp} {u : Nat} → -- todo: uniqueness of u?
+      SEHole  : {Γ : tctx} {u : Nat} → Γ ⊢ ⦇⦈[ u ] => ⦇⦈
+      SNEHole : {Γ : tctx} {e : hexp} {τ : htyp} {u : Nat} →
                  Γ ⊢ e => τ →
                  Γ ⊢ ⦇ e ⦈[ u ] => ⦇⦈
       SLam    : {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} {x : Nat} →
@@ -122,25 +122,27 @@ module core where
                  (Γ ,, (x , τ1)) ⊢ e <= τ2 →
                  Γ ⊢ (·λ x e) <= τ
 
-  -- todo: do we care about completeness of hexp or e-umlauts? should this
-  -- be judgemental rather than functional?
-
   -- those types without holes anywhere
-  tcomplete : htyp → Set
-  tcomplete b         = ⊤
-  tcomplete ⦇⦈        = ⊥
-  tcomplete (τ1 ==> τ2) = tcomplete τ1 × tcomplete τ2
+  data _tcomplete : htyp → Set where
+    TCBase : b tcomplete
+    TCArr : ∀{τ1 τ2} → τ1 tcomplete → τ2 tcomplete → (τ1 ==> τ2) tcomplete
 
   -- those expressions without holes anywhere
-  ecomplete : hexp → Set
-  ecomplete c = ⊤
-  ecomplete (e1 ·: τ)  = ecomplete e1 × tcomplete τ
-  ecomplete (X _)      = ⊤
-  ecomplete (·λ _ e1)  = ecomplete e1
-  ecomplete ⦇⦈[ u ]       = ⊥
-  ecomplete ⦇ e1 ⦈[ u ]   = ⊥
-  ecomplete (e1 ∘ e2)  = ecomplete e1 × ecomplete e2
-  ecomplete (·λ x [ τ ] e) = tcomplete τ × ecomplete e
+  data _ecomplete : hexp → Set where
+    ECConst : c ecomplete
+    ECAsc : ∀{τ e} → τ tcomplete → e ecomplete → (e ·: τ) ecomplete
+    ECVar : ∀{x} → (X x) ecomplete
+    ECLam1 : ∀{x e} → e ecomplete → (·λ x e) ecomplete
+    ECLam2 : ∀{x e τ} → e ecomplete → τ tcomplete → (·λ x [ τ ] e) ecomplete
+    ECAp : ∀{e1 e2} → e1 ecomplete → e2 ecomplete → (e1 ∘ e2) ecomplete
+
+  data _dcomplete : dhexp → Set where
+    DCVar : ∀{x} → (X x) dcomplete
+    DCConst : c dcomplete
+    DCLam : ∀{x τ d} → d dcomplete → τ tcomplete → (·λ x [ τ ] d) dcomplete
+    DCAp : ∀{d1 d2} → d1 dcomplete → d2 dcomplete → (d1 ∘ d2) dcomplete
+    DCCast : ∀{d τ1 τ2} → d dcomplete → τ1 tcomplete → τ2 tcomplete → (d ⟨ τ1 ⇒ τ2 ⟩) dcomplete
+    DCFailedCast : ∀{d τ1 τ2} → d dcomplete → τ1 tcomplete → τ2 tcomplete → (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) dcomplete
 
   -- expansion
   mutual
