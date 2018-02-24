@@ -20,7 +20,8 @@ module canonical-value-forms where
                               Δ , ∅ ⊢ d :: (τ1 ==> τ2) →
                               d val →
                               Σ[ x ∈ Nat ] Σ[ d' ∈ dhexp ]
-                                ((d == (·λ x [ τ1 ] d')) × (Δ , ■ (x , τ1) ⊢ d' :: τ2))
+                                ((d == (·λ x [ τ1 ] d')) ×
+                                 (Δ , ■ (x , τ1) ⊢ d' :: τ2))
   canonical-value-forms-arr (TAVar x₁) ()
   canonical-value-forms-arr (TALam wt) VLam = _ , _ , refl , wt
   canonical-value-forms-arr (TAAp wt wt₁) ()
@@ -29,10 +30,11 @@ module canonical-value-forms where
   canonical-value-forms-arr (TACast wt x) ()
   canonical-value-forms-arr (TAFailedCast x x₁ x₂ x₃) ()
 
-  -- this argues (somewhat informally) that we didn't miss any cases above;
-  -- this intentionally will make this file fail to typecheck if we added
-  -- more types, hopefully forcing us to remember to add canonical forms
-  -- lemmas as appropriate
+  -- this argues (somewhat informally, because you still have to inspect
+  -- the types of the theorems above and manually verify this property)
+  -- that we didn't miss any cases above; this intentionally will make this
+  -- file fail to typecheck if we added more types, hopefully forcing us to
+  -- remember to add canonical forms lemmas as appropriate
   canonical-value-forms-coverage1 : ∀{Δ d τ} →
                                    Δ , ∅ ⊢ d :: τ →
                                    d val →

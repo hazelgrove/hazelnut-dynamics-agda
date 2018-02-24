@@ -13,29 +13,40 @@ module canonical-boxed-forms where
   canonical-boxed-forms-b (TAVar _) (BVVal ())
   canonical-boxed-forms-b wt (BVVal v) = canonical-value-forms-b wt v
 
+  -- this type gives somewhat nicer syntax for the output of the canonical
+  -- forms lemma for boxed values at arrow type
+  data cbf-arr : (Δ : hctx) (d : dhexp) (τ1 τ2 : htyp) → Set where
+    CBFLam : ∀{Δ d τ1 τ2} →
+      (Σ[ x ∈ Nat ] Σ[ d' ∈ dhexp ]
+         (d == (·λ x [ τ1 ] d') × Δ , ■ (x , τ1) ⊢ d' :: τ2))
+      → cbf-arr Δ d τ1 τ2
+    CBFCastArr : ∀{Δ d τ1 τ2} →
+      (Σ[ d' ∈ dhexp ] Σ[ τ1' ∈ htyp ] Σ[ τ2' ∈ htyp ]
+         (d == (d' ⟨ τ1' ==> τ2' ⇒ τ1 ==> τ2 ⟩) ×
+         (τ1' ==> τ2' ≠ τ1 ==> τ2) ×
+         (Δ , ∅ ⊢ d' :: τ1' ==> τ2')))
+      → cbf-arr Δ d τ1 τ2
+
   canonical-boxed-forms-arr : ∀{Δ d τ1 τ2 } →
                             Δ , ∅ ⊢ d :: (τ1 ==> τ2)  →
                             d boxedval →
-                            (Σ[ x ∈ Nat ] Σ[ d' ∈ dhexp ] (d == (·λ x [ τ1 ] d') ×
-                                                           Δ , ■ (x , τ1) ⊢ d' :: τ2)) +
-                            (Σ[ d' ∈ dhexp ] Σ[ τ1' ∈ htyp ] Σ[ τ2' ∈ htyp ] (d == (d' ⟨ τ1' ==> τ2' ⇒ τ1 ==> τ2 ⟩) ×
-                                                                             (τ1' ==> τ2' ≠ τ1 ==> τ2) ×
-                                                                             (Δ , ∅ ⊢ d' :: τ1' ==> τ2')))
+                            cbf-arr Δ d τ1 τ2
   canonical-boxed-forms-arr (TAVar x₁) (BVVal ())
-  canonical-boxed-forms-arr (TALam wt) (BVVal v) = Inl (canonical-value-forms-arr (TALam wt) v)
+  canonical-boxed-forms-arr (TALam wt) (BVVal v) = CBFLam (canonical-value-forms-arr (TALam wt) v)
   canonical-boxed-forms-arr (TAAp wt wt₁) (BVVal ())
   canonical-boxed-forms-arr (TAEHole x x₁) (BVVal ())
   canonical-boxed-forms-arr (TANEHole x wt x₁) (BVVal ())
   canonical-boxed-forms-arr (TACast wt x) (BVVal ())
-  canonical-boxed-forms-arr (TACast wt x) (BVArrCast x₁ bv) = Inr (_ , _ , _ , refl , x₁ , wt)
+  canonical-boxed-forms-arr (TACast wt x) (BVArrCast x₁ bv) = CBFCastArr (_ , _ , _ , refl , x₁ , wt)
   canonical-boxed-forms-arr (TAFailedCast x x₁ x₂ x₃) (BVVal ())
 
   canonical-boxed-forms-hole : ∀{Δ d} →
                                Δ , ∅ ⊢ d :: ⦇⦈ →
                                d boxedval →
-                               Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ] ((d == d' ⟨ τ' ⇒ ⦇⦈ ⟩) ×
-                                                               (τ' ground) ×
-                                                               (Δ , ∅ ⊢ d' :: τ'))
+                               Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ]
+                                 ((d == d' ⟨ τ' ⇒ ⦇⦈ ⟩) ×
+                                  (τ' ground) ×
+                                  (Δ , ∅ ⊢ d' :: τ'))
   canonical-boxed-forms-hole (TAVar x₁) (BVVal ())
   canonical-boxed-forms-hole (TAAp wt wt₁) (BVVal ())
   canonical-boxed-forms-hole (TAEHole x x₁) (BVVal ())
