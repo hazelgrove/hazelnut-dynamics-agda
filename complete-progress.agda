@@ -21,10 +21,6 @@ module complete-progress where
   lem-ind-comp (DCCast comp x x₁) (ICastArr x₂ ind) = lem-ind-comp comp ind
   lem-ind-comp (DCCast comp x x₁) (ICastGroundHole x₂ ind) = lem-ind-comp comp ind
   lem-ind-comp (DCCast comp x x₁) (ICastHoleGround x₂ ind x₃) = lem-ind-comp comp ind
-  lem-ind-comp (DCFailedCast comp x x₁) (IFailedCast x₂ GBase GBase x₅) = x₅ refl
-  lem-ind-comp (DCFailedCast comp x (TCArr () x₂)) (IFailedCast x₃ GBase GHole x₅)
-  lem-ind-comp (DCFailedCast comp (TCArr x ()) x₂) (IFailedCast x₃ GHole GBase x₅)
-  lem-ind-comp (DCFailedCast comp x x₁) (IFailedCast x₂ GHole GHole x₅) = x₅ refl
 
   complete-progress : {Δ : hctx} {d : dhexp} {τ : htyp} →
                        Δ , ∅ ⊢ d :: τ →
@@ -36,7 +32,13 @@ module complete-progress where
 
   complete-progress wt comp | I x = abort (lem-ind-comp comp x)
   complete-progress (TACast wt x) (DCCast comp x₃ ()) | BV (BVHoleCast x₁ x₂)
-  complete-progress (TACast wt con) (DCCast comp (TCArr x₃ x₄) (TCArr x₅ x₆)) | BV (BVArrCast x₁ x₂) = {!!}
+  complete-progress (TACast (TAVar x₁) con) (DCCast comp (TCArr x₄ x₅) (TCArr x₆ x₇)) | BV (BVArrCast x₂ x₃) = {!!}
+  complete-progress (TACast (TALam wt) con) (DCCast comp (TCArr x₃ x₄) (TCArr x₅ x₆)) | BV (BVArrCast x₁ x₂) = {!!}
+  complete-progress (TACast (TAAp wt wt₁) con) (DCCast comp (TCArr x₃ x₄) (TCArr x₅ x₆)) | BV (BVArrCast x₁ x₂) = {!!}
+  complete-progress (TACast (TAEHole x x₁) con) (DCCast comp (TCArr x₄ x₅) (TCArr x₆ x₇)) | BV (BVArrCast x₂ x₃) = {!!}
+  complete-progress (TACast (TANEHole x wt x₁) con) (DCCast comp (TCArr x₄ x₅) (TCArr x₆ x₇)) | BV (BVArrCast x₂ x₃) = {!!}
+  complete-progress (TACast (TACast wt x) con) (DCCast comp (TCArr x₃ x₄) (TCArr x₅ x₆)) | BV (BVArrCast x₁ x₂) = {!!}
+  complete-progress (TACast (TAFailedCast wt x x₁ x₂) con) (DCCast comp (TCArr x₅ x₆) (TCArr x₇ x₈)) | BV (BVArrCast x₃ x₄) = {!!}
   --   with complete-progress wt comp
   -- complete-progress (TACast wt con) (DCCast comp (TCArr x₃ x₄) (TCArr x₅ x₆)) | BV (BVArrCast x₁ x₂) | V x = {!!}
   -- complete-progress (TACast wt con) (DCCast comp (TCArr x₃ x₄) (TCArr x₅ x₆)) | BV (BVArrCast x₁ x₂) | S x = {!!}
