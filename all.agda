@@ -32,4 +32,4 @@ open import progress
 -- open import preservation
 
 open import complete-preservation
--- open import complete-progress
+open import complete-progress
