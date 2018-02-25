@@ -7,4 +7,6 @@ module commutativity where
                   -- probably need a premise that d0 is well typed
                   d0 ↦* d1 →
                   (⟦ d / u ⟧ d0) ↦* (⟦ d / u ⟧ d1)
-  commutativity = {!!}
+  commutativity MSRefl = MSRefl
+  commutativity (MSStep x stp) with commutativity stp
+  ... | ih = MSStep {!!} {!!}
