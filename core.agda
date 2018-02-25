@@ -145,7 +145,7 @@ module core where
 
   -- contexts that only know about complete types
   _gcomplete : tctx → Set
-  Γ gcomplete = (x : Nat) (t : htyp) → (Γ x) == Some t → t tcomplete
+  Γ gcomplete = {x : Nat} {t : htyp} → (Γ x) == Some t → t tcomplete
 
 
   -- expansion

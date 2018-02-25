@@ -5,7 +5,7 @@ open import core
 module complete-expansion where
   complete-ta : ∀{Γ Δ d τ} → Γ gcomplete → Δ , Γ ⊢ d :: τ → d dcomplete → τ tcomplete
   complete-ta gc TAConst comp = TCBase
-  complete-ta gc (TAVar x₁) DCVar = gc _ _ x₁
+  complete-ta gc (TAVar x₁) DCVar = gc x₁
   complete-ta gc (TALam wt) (DCLam comp x₁) = TCArr x₁ (complete-ta gc {!wt!} {!!}) -- TCArr x₁ (complete-ta gc wt comp)
   complete-ta gc (TAAp wt wt₁) (DCAp comp comp₁) with complete-ta gc wt comp
   complete-ta gc (TAAp wt wt₁) (DCAp comp comp₁) | TCArr qq qq₁ = qq₁
