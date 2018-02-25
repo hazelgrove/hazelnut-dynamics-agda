@@ -22,6 +22,7 @@ module complete-expansion where
         typed-expansion-ana : {Γ : tctx} {e : hexp} {τ τ' : htyp} {d : dhexp} {Δ : hctx} →
                           Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                           (τ' ~ τ) × (Δ , Γ ⊢ d :: τ')
+
   -- todo: this might make it go, or do it for closed terms only?
   _gcomplete : tctx → Set
   Γ gcomplete = (x : Nat) (t : htyp) → (Γ x) == Some t → t tcomplete
@@ -34,8 +35,10 @@ module complete-expansion where
     complete-expansion-synth ec ESConst = DCConst
     complete-expansion-synth ec (ESVar x₁) = DCVar
     complete-expansion-synth (ECLam2 ec x₁) (ESLam x₂ exp) = DCLam (complete-expansion-synth ec exp) x₁
-    complete-expansion-synth (ECAp ec ec₁) (ESAp x x₁ x₂ x₃) = DCAp (DCCast {!!} {!!} {!!})
-                                                                    (DCCast {!!} {!!} {!!})
+    complete-expansion-synth (ECAp ec ec₁) (ESAp x MAHole x₂ x₃) = {!!}
+    complete-expansion-synth (ECAp ec ec₁) (ESAp x MAArr x₂ x₃) = {!!}
+                             -- = DCAp (DCCast (complete-expansion-ana ec x₂) {!!} {!!})
+                             --        (DCCast (complete-expansion-ana ec₁ x₃) {!!} {!!})
     complete-expansion-synth () ESEHole
     complete-expansion-synth () (ESNEHole exp)
     complete-expansion-synth (ECAsc x ec) (ESAsc x₁) = DCCast {!complete-expansion-ana!} {!!} x
