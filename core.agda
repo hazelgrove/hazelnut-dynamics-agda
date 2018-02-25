@@ -408,6 +408,20 @@ module core where
                  d' ↦* d'' →
                  d  ↦* d''
 
+  -- application of a substution to a term
+  postulate
+    apply : subst → dhexp → dhexp
+  -- apply σ c = c
+  -- apply σ (X x) with σ x
+  -- apply σ (X x) | Some d' = d'
+  -- apply σ (X x) | None = X x
+  -- apply σ (·λ x [ τ ] d) = (·λ x [ τ ] (apply σ d))
+  -- apply σ ⦇⦈⟨ u , σ' ⟩ =  ⦇⦈⟨ u , {!!} ⟩ -- (λ x → (lift (apply σ)) (σ x))
+  -- apply σ ⦇ d ⦈⟨ u , σ' ⟩ = ⦇ apply σ d ⦈⟨ u ,{!!} ⟩
+  -- apply σ (d1 ∘ d2) = ((apply σ d1) ∘ (apply σ d2))
+  -- apply σ (d ⟨ τ1 ⇒ τ2 ⟩) = ((apply σ d) ⟨ τ1 ⇒ τ2 ⟩)
+  -- apply σ (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) = ((apply σ d) ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
+
   --hole instantiation; todo: judgemental or functional?
   ⟦_/_⟧_ : dhexp → Nat → dhexp → dhexp
   ⟦ d / u ⟧ c = c
@@ -415,11 +429,11 @@ module core where
   ⟦ d / u ⟧ (·λ x [ τ ] d') = ·λ x [ τ ] (⟦ d / u ⟧ d')
   ⟦ d / u ⟧ ⦇⦈⟨ n , σ ⟩
     with natEQ n u
-  ⟦ d / u ⟧ ⦇⦈⟨ .u , σ ⟩ | Inl refl = c -- todo: this is very wrong, just a placeholder
+  ⟦ d / u ⟧ ⦇⦈⟨ .u , σ ⟩ | Inl refl = apply σ d
   ⟦ d / u ⟧ ⦇⦈⟨ n , σ ⟩  | Inr x = ⦇⦈⟨ n , σ ⟩
   ⟦ d / u ⟧ ⦇ d' ⦈⟨ n , σ ⟩
     with natEQ n u
-  ⟦ d / u ⟧ ⦇ d' ⦈⟨ .u , σ ⟩ | Inl refl = c -- todo: this is very wrong, just a placeholder
+  ⟦ d / u ⟧ ⦇ d' ⦈⟨ .u , σ ⟩ | Inl refl = apply σ d
   ⟦ d / u ⟧ ⦇ d' ⦈⟨ n , σ ⟩ | Inr x = ⦇ d' ⦈⟨ n , σ ⟩
   ⟦ d / u ⟧ (d1 ∘ d2) = (⟦ d / u ⟧ d1) ∘ (⟦ d / u ⟧ d2)
   ⟦ d / u ⟧ (d' ⟨ τ1 ⇒ τ2 ⟩) = (⟦ d / u ⟧ d') ⟨ τ1 ⇒ τ2 ⟩

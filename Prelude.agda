@@ -99,3 +99,8 @@ module Prelude where
   _≃_ : Set → Set → Set
   _≃_ A B = Σ[ f ∈ (A → B) ] Σ[ g ∈ (B → A) ]
              (((a : A) → g (f a) == a) × (((b : B) → f (g b) == b)))
+
+
+  lift : {A B : Set} → (A → B) → (Maybe A → Maybe B)
+  lift f (Some x) = Some (f x)
+  lift f None = None
