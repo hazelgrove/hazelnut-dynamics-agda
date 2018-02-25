@@ -1,11 +1,9 @@
 open import Prelude
 open import core
 
-module finality where
-  -- todo: this will come from progress checks, once that's all squared away
-  postulate
-    fs : ∀{d} → d final → Σ[ d' ∈ dhexp ] (d ↦ d') → ⊥
+open import progress-checks
 
+module finality where
   finality : ∀{d d'} → d final → d ↦* d' → d == d'
   finality fin MSRefl = refl
-  finality fin (MSStep x ms) = abort (fs fin (_ , x))
+  finality fin (MSStep x ms) = abort (final-not-step fin (_ , x))
