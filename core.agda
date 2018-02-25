@@ -402,3 +402,20 @@ module core where
                  d ↦ d' →
                  d' ↦* d'' →
                  d  ↦* d''
+
+  --hole instantiation; todo: judgemental or functional?
+  ⟦_/_⟧_ : dhexp → Nat → dhexp → dhexp
+  ⟦ d / u ⟧ c = c
+  ⟦ d / u ⟧ X x = X x
+  ⟦ d / u ⟧ (·λ x [ τ ] d') = ·λ x [ τ ] (⟦ d / u ⟧ d')
+  ⟦ d / u ⟧ ⦇⦈⟨ n , σ ⟩
+    with natEQ n u
+  ⟦ d / u ⟧ ⦇⦈⟨ .u , σ ⟩ | Inl refl = c -- todo: this is very wrong, just a placeholder
+  ⟦ d / u ⟧ ⦇⦈⟨ n , σ ⟩  | Inr x = ⦇⦈⟨ n , σ ⟩
+  ⟦ d / u ⟧ ⦇ d' ⦈⟨ n , σ ⟩
+    with natEQ n u
+  ⟦ d / u ⟧ ⦇ d' ⦈⟨ .u , σ ⟩ | Inl refl = c -- todo: this is very wrong, just a placeholder
+  ⟦ d / u ⟧ ⦇ d' ⦈⟨ n , σ ⟩ | Inr x = ⦇ d' ⦈⟨ n , σ ⟩
+  ⟦ d / u ⟧ (d1 ∘ d2) = (⟦ d / u ⟧ d1) ∘ (⟦ d / u ⟧ d2)
+  ⟦ d / u ⟧ (d' ⟨ τ1 ⇒ τ2 ⟩) = (⟦ d / u ⟧ d') ⟨ τ1 ⇒ τ2 ⟩
+  ⟦ d / u ⟧ (d' ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) = (⟦ d / u ⟧ d') ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩
