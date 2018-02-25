@@ -6,7 +6,7 @@ open import contexts
 open import correspondence
 
 module complete-expansion where
-  -- todo pull this into a lemmas file once it's complete and then include that in complete preservation
+  -- todo: do you really need this? didn't in complete preservation; come back to this
   gcomp-extend : ∀{Γ τ x} → Γ gcomplete → τ tcomplete → (Γ ,, (x , τ)) gcomplete
   gcomp-extend {x = x} gc tc x₁ t x₂ with natEQ x₁ x
   gcomp-extend {Γ = Γ} gc tc x t x₃ | Inl refl with Γ x
