@@ -39,3 +39,4 @@ open import complete-progress
 -- open import commutativity
 -- open import confluence
 open import final-confluence
+open import resumption
