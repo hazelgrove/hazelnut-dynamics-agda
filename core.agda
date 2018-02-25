@@ -143,6 +143,11 @@ module core where
     DCAp : ∀{d1 d2} → d1 dcomplete → d2 dcomplete → (d1 ∘ d2) dcomplete
     DCCast : ∀{d τ1 τ2} → d dcomplete → τ1 tcomplete → τ2 tcomplete → (d ⟨ τ1 ⇒ τ2 ⟩) dcomplete
 
+  -- contexts that only know about complete types
+  _gcomplete : tctx → Set
+  Γ gcomplete = (x : Nat) (t : htyp) → (Γ x) == Some t → t tcomplete
+
+
   -- expansion
   mutual
     data _⊢_⇒_~>_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (Δ : hctx) → Set where
