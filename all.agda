@@ -38,3 +38,4 @@ open import complete-progress
 -- open import instantiation
 -- open import commutativity
 -- open import confluence
+open import final-confluence
