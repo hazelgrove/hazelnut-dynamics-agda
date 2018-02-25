@@ -145,7 +145,7 @@ module core where
 
   -- contexts that only know about complete types
   _gcomplete : tctx → Set
-  Γ gcomplete = {x : Nat} {t : htyp} → (Γ x) == Some t → t tcomplete
+  Γ gcomplete = (x : Nat) (t : htyp) → (Γ x) == Some t → t tcomplete
 
 
   -- expansion
@@ -416,7 +416,7 @@ module core where
   -- apply σ (X x) | Some d' = d'
   -- apply σ (X x) | None = X x
   -- apply σ (·λ x [ τ ] d) = (·λ x [ τ ] (apply σ d))
-  -- apply σ ⦇⦈⟨ u , σ' ⟩ =  ⦇⦈⟨ u , {!!} ⟩ -- (λ x → (lift (apply σ)) (σ x))
+  -- apply σ ⦇⦈⟨ u , σ' ⟩ =  ⦇⦈⟨ u , ((λ x → (lift (apply σ)) (σ' x))) ⟩ -- (λ x → (lift (apply σ)) (σ' x))
   -- apply σ ⦇ d ⦈⟨ u , σ' ⟩ = ⦇ apply σ d ⦈⟨ u ,{!!} ⟩
   -- apply σ (d1 ∘ d2) = ((apply σ d1) ∘ (apply σ d2))
   -- apply σ (d ⟨ τ1 ⇒ τ2 ⟩) = ((apply σ d) ⟨ τ1 ⇒ τ2 ⟩)
