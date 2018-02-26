@@ -25,8 +25,8 @@ module contexts where
 
   -- disjointness for contexts
   _##_ : {A : Set} → A ctx → A ctx → Set
-  _##_ {A} Γ Γ'  = ((n : Nat) (a : A) → Γ n == Some a → Γ' n == None) ×
-                   ((n : Nat) (a : A) → Γ' n == Some a → Γ n == None)
+  _##_ {A} Γ Γ'  = ((n : Nat) (a : A) → Γ n  == Some a → n # Γ') ×
+                   ((n : Nat) (a : A) → Γ' n == Some a → n # Γ )
 
   -- without: remove a variable from a context
   _//_ : {A : Set} → A ctx → Nat → A ctx
@@ -69,10 +69,20 @@ module contexts where
 
   infixl 10 _,,_
 
-  x∈∪1 : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ → (n , x) ∈ (Γ ∪ Γ')
-  x∈∪1 Γ Γ' n x xin with Γ n
-  x∈∪1 Γ Γ' n x₁ xin | Some x = xin
-  x∈∪1 Γ Γ' n x ()   | None
+  x∈∪l : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ → (n , x) ∈ (Γ ∪ Γ')
+  x∈∪l Γ Γ' n x xin with Γ n
+  x∈∪l Γ Γ' n x₁ xin | Some x = xin
+  x∈∪l Γ Γ' n x ()   | None
+
+  lem-stop : {A : Set} (Γ : A ctx) (x : Nat) → (Σ[ a ∈ A ] ((x , a) ∈ Γ)) + (x # Γ)
+  lem-stop Γ x with Γ x
+  lem-stop Γ x | Some x₁ = Inl (x₁ , refl)
+  lem-stop Γ x | None = Inr refl
+
+
+  -- x∈∪r Γ Γ' n x xin d with lem-stop Γ n
+  -- x∈∪r Γ Γ' n x₁ xin d | Inl (a , ain) = {!ain!}
+  -- x∈∪r Γ Γ' n x₁ xin d | Inr x = {!!}
 
 
   x∈■ : {A : Set} (n : Nat) (a : A) → (n , a) ∈ (■ (n , a))
@@ -80,25 +90,15 @@ module contexts where
   x∈■ n a | Inl refl = refl
   x∈■ n a | Inr x = abort (x refl)
 
+
   postulate -- TODO
-    x∈sing : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ,, (n , a))
     ∪comm : {A : Set} → (C1 C2 : A ctx) → (C1 ∪ C2) == (C2 ∪ C1)
+    x∈sing : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ,, (n , a))
+    x∈∪r : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ' → Γ ## Γ' → (n , x) ∈ (Γ ∪ Γ')
 
--- x∈sing Γ n x with Γ n
-  -- x∈sing Γ n x  | Some y with natEQ n n
-  -- x∈sing Γ n x₁ | Some y | Inl refl = {!!}
-  -- x∈sing Γ n x₁ | Some y | Inr x = abort (x refl)
-  -- x∈sing Γ n x  | None with natEQ n n
-  -- x∈sing Γ n x₁ | None | Inl refl = refl
-  -- x∈sing Γ n x₁ | None | Inr x = abort (x refl)
-
-  -- x∈∪2 : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ' → (n , x) ∈ (Γ ∪ Γ')
-  -- x∈∪2 Γ Γ' n x xin with Γ' n | Γ n
-  -- x∈∪2 Γ Γ' n x₂ xin | Some x | Some x₁ = {!!}
-  -- x∈∪2 Γ Γ' n x refl | Some .x | None = {!!}
   -- x∈∪2 Γ Γ' n x₁ xin | None   | _ = abort (somenotnone (! xin))
 
--- x∈∪■ : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ∪ (■ (n , a)))
+  -- x∈∪■ : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ∪ (■ (n , a)))
   -- x∈∪■ Γ n a with natEQ n n
   -- x∈∪■ Γ n a | Inl refl = {!!} -- it might be in Γ because i don't know that they're disjoint. this is where that premise gets you
   -- x∈∪■ Γ n a | Inr x = {!!}
