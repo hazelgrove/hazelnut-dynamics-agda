@@ -8,5 +8,4 @@ module commutativity where
                   d0 ↦* d1 →
                   (⟦ d / u ⟧ d0) ↦* (⟦ d / u ⟧ d1)
   commutativity MSRefl = MSRefl
-  commutativity (MSStep x stp) with commutativity stp
-  ... | ih = MSStep {!!} {!!}
+  commutativity {d0} {d1} (MSStep x y) = {!!}
