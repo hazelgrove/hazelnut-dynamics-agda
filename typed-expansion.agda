@@ -28,14 +28,13 @@ module typed-expansion where
   lem-weakenΔ1 (TAVar x₁) = TAVar x₁
   lem-weakenΔ1 (TALam D) = TALam (lem-weakenΔ1 D)
   lem-weakenΔ1 (TAAp D D₁) = TAAp (lem-weakenΔ1 D) (lem-weakenΔ1 D₁)
-  lem-weakenΔ1 (TAEHole {Δ = Δ} x y) = TAEHole (x∈∪1 Δ _ _ _ x) (lem-subweak y)
-  lem-weakenΔ1 (TANEHole {Δ = Δ} D x y) = TANEHole (x∈∪1 Δ _ _ _ D) (lem-weakenΔ1 x) (lem-subweak y)
+  lem-weakenΔ1 (TAEHole {Δ = Δ} x y) = TAEHole (x∈∪l Δ _ _ _ x) (lem-subweak y)
+  lem-weakenΔ1 (TANEHole {Δ = Δ} D x y) = TANEHole (x∈∪l Δ _ _ _ D) (lem-weakenΔ1 x) (lem-subweak y)
   lem-weakenΔ1 (TACast D x) = TACast (lem-weakenΔ1 D) x
   lem-weakenΔ1 (TAFailedCast x y z w) = TAFailedCast (lem-weakenΔ1 x) y z w
 
   lem-weakenΔ2 : ∀{Δ1 Δ2 Γ d τ} → Δ2 , Γ ⊢ d :: τ → (Δ1 ∪ Δ2) , Γ ⊢ d :: τ
   lem-weakenΔ2 {Δ1} {Δ2} {Γ} {d} {τ} D = tr (λ q → q , Γ ⊢ d :: τ) (∪comm Δ2 Δ1) (lem-weakenΔ1 D)
-
 
   mutual
     typed-expansion-synth : {Γ : tctx} {e : hexp} {τ : htyp} {d : dhexp} {Δ : hctx} →
