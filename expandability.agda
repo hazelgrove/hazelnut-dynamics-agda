@@ -19,7 +19,7 @@ module expandability where
     expandability-synth (SVar {n = n} x) = _ , _ , ESVar x
     expandability-synth (SAp wt1 m wt2)
       with expandability-ana (ASubsume wt1 (match-consist m)) | expandability-ana wt2
-    ... | _ , _ , _ , D1 | _ , _ , _ , D2 = _ , _ , ESAp wt1 m D1 D2
+    ... | _ , _ , _ , D1 | _ , _ , _ , D2 = _ , _ , ESAp {!!} wt1 m D1 D2
     expandability-synth SEHole = _ , _ , ESEHole
     expandability-synth (SNEHole wt)
       with expandability-synth wt

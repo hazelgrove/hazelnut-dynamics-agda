@@ -22,7 +22,7 @@ module expansion-unicity where
     expansion-unicity-synth (ESLam apt1 d1) (ESLam apt2 d2)
       with expansion-unicity-synth d1 d2
     ... | ih1 , ih2 , ih3 = ap1 _ ih1  , ap1 _ ih2 , ih3
-    expansion-unicity-synth (ESAp x x₁ x₂ x₃) (ESAp x₄ x₅ x₆ x₇)
+    expansion-unicity-synth (ESAp _ x x₁ x₂ x₃) (ESAp _ x₄ x₅ x₆ x₇)
       with synthunicity x x₄
     ... | refl with match-unicity x₁ x₅
     ... | refl with expansion-unicity-ana x₂ x₆

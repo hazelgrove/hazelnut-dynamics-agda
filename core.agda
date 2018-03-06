@@ -159,7 +159,7 @@ module core where
                      (Γ ,, (x , τ1)) ⊢ e ⇒ τ2 ~> d ⊣ Δ →
                       Γ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ Δ
       ESAp : ∀{Γ e1 τ τ1 τ1' τ2 τ2' d1 Δ1 e2 d2 Δ2 } →
-              -- Δ1 ## Δ2 → -- todo: need to think about disjointness and context rep
+              Δ1 ## Δ2 →
               Γ ⊢ e1 => τ1 →
               τ1 ▸arr τ2 ==> τ →
               Γ ⊢ e1 ⇐ (τ2 ==> τ) ~> d1 :: τ1' ⊣ Δ1 →

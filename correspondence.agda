@@ -12,7 +12,7 @@ module correspondence where
     correspondence-synth (ESVar x₁) = SVar x₁
     correspondence-synth (ESLam apt ex) with correspondence-synth ex
     ... | ih = SLam apt ih
-    correspondence-synth (ESAp a x₁ x₂ x₃) = SAp a x₁ (correspondence-ana x₃)
+    correspondence-synth (ESAp _ a x₁ x₂ x₃) = SAp a x₁ (correspondence-ana x₃)
     correspondence-synth ESEHole = SEHole
     correspondence-synth (ESNEHole ex) = SNEHole (correspondence-synth ex)
     correspondence-synth (ESAsc x) = SAsc (correspondence-ana x)

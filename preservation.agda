@@ -71,7 +71,7 @@ module preservation where
   --lem-subst {x = x} (TAVar {x = x'} x₃) D2 | None | Inr x₂ with natEQ x x'
   -- lem-subst (TAVar x₄) D2 | None | Inr x₃ | Inl x₂ = abort ((flip x₃) x₂)
   -- lem-subst (TAVar x₄) D2 | None | Inr x₃ | Inr x₂ = abort (somenotnone (! x₄))
-  lem-subst {Γ = Γ} {x = x} (TALam {x = x'} D1) D2 = TALam {!!}
+  lem-subst {Γ = Γ} {x = x} (TALam {x = x'} D1) D2 = {!!}
   lem-subst (TAAp D1 D2) D3 = TAAp (lem-subst D1 D3) (lem-subst D2 D3)
   lem-subst (TAEHole x₁ x₂) D2 = TAEHole x₁ {!!}
   lem-subst (TANEHole x₁ D1 x₂) D2 = TANEHole x₁ (lem-subst D1 D2) {!!}
