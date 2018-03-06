@@ -94,7 +94,7 @@ module contexts where
   postulate -- TODO
     ∪comm : {A : Set} → (C1 C2 : A ctx) → (C1 ∪ C2) == (C2 ∪ C1)
     x∈sing : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ,, (n , a))
-    x∈∪r : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ' → Γ ## Γ' → (n , x) ∈ (Γ ∪ Γ')
+    x∈∪r : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ' → Γ ## Γ' → (n , x) ∈ (Γ ∪ Γ') -- follows from comm?
 
   -- x∈∪2 Γ Γ' n x₁ xin | None   | _ = abort (somenotnone (! xin))
 

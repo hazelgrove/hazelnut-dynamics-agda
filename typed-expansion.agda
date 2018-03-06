@@ -21,7 +21,7 @@ module typed-expansion where
 
   lem-subweak : ∀{Δ Γ Γ' Δ' σ} → Δ , Γ ⊢ σ :s: Γ' → (Δ ∪ Δ') , Γ ⊢ σ :s: Γ'
   lem-subweak sub x d xd∈σ with sub x d xd∈σ
-  ... | τ , some , sub' = τ , some , {!!}
+  lem-subweak sub x d xd∈σ | π1 , π2 , π3 = {!!}
 
   lem-weakenΔ1 : ∀{Δ1 Δ2 Γ d τ} → Δ1 , Γ ⊢ d :: τ → (Δ1 ∪ Δ2) , Γ ⊢ d :: τ
   lem-weakenΔ1 TAConst = TAConst
