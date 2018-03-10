@@ -66,9 +66,9 @@ module complete-expansion where
     complete-expansion-synth gc ec ESConst = DCConst
     complete-expansion-synth gc ec (ESVar x₁) = DCVar
     complete-expansion-synth gc (ECLam2 ec x₁) (ESLam x₂ exp) = DCLam (complete-expansion-synth (gcomp-extend gc x₁) ec exp) x₁
-    complete-expansion-synth gc (ECAp ec ec₁) (ESAp x MAHole x₂ x₃) with comp-synth gc ec x
+    complete-expansion-synth gc (ECAp ec ec₁) (ESAp _ x MAHole x₂ x₃) with comp-synth gc ec x
     ... | ()
-    complete-expansion-synth gc (ECAp ec ec₁) (ESAp x MAArr x₂ x₃)
+    complete-expansion-synth gc (ECAp ec ec₁) (ESAp _ x MAArr x₂ x₃)
       with complete-expansion-ana gc ec x₂ | complete-expansion-ana gc ec₁ x₃ | comp-synth gc ec x
     ... | ih1 | ih2 | TCArr c1 c2 = DCAp (DCCast ih1 (comp-ana gc x₂ ih1) (TCArr c1 c2))
                                          (DCCast ih2 (comp-ana gc x₃ ih2) c1)

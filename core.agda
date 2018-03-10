@@ -97,13 +97,13 @@ module core where
                  (n , τ) ∈ Γ →
                  Γ ⊢ X n => τ
       SAp     : {Γ : tctx} {e1 e2 : hexp} {τ τ1 τ2 : htyp} →
-                 Γ ⊢ e1 => τ1 →
+                 Γ ⊢ e1 => τ1 → -- need a premise that the hole names are disjoint and something to relate that to the dom(Δ)s in expansion
                  τ1 ▸arr τ2 ==> τ →
                  Γ ⊢ e2 <= τ2 →
                  Γ ⊢ (e1 ∘ e2) => τ
       SEHole  : {Γ : tctx} {u : Nat} → Γ ⊢ ⦇⦈[ u ] => ⦇⦈
       SNEHole : {Γ : tctx} {e : hexp} {τ : htyp} {u : Nat} →
-                 Γ ⊢ e => τ →
+                 Γ ⊢ e => τ →   -- premise here that u is disjoint from hole names of e
                  Γ ⊢ ⦇ e ⦈[ u ] => ⦇⦈
       SLam    : {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} {x : Nat} →
                  x # Γ →
@@ -409,6 +409,7 @@ module core where
                  d  ↦* d''
 
   -- application of a substution to a term
+  -- todo: this is currently not well-founded! fun!
   postulate
     apply : subst → dhexp → dhexp
   -- apply σ c = c

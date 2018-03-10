@@ -78,6 +78,7 @@ module contexts where
   x∈■ n a | Inl refl = refl
   x∈■ n a | Inr x = abort (x refl)
 
+  -- todo: this is almost a proof of ∪comm
   -- ∪comm'guts : {A : Set} → (C1 C2 : A ctx) → (C1 ## C2) → (x : Nat) → ((C1 ∪ C2) x) == ((C2 ∪ C1) x)
   -- ∪comm'guts C1 C2 disj x with lem-stop C1 x | lem-stop C2 x
   -- ∪comm'guts C1 C2 disj x | Inl x₁ | Inl x₂ = abort (somenotnone (! (π2 x₂) · (π1 disj) x x₁))
@@ -88,8 +89,3 @@ module contexts where
 
   -- ∪comm' : {A : Set} → (C1 C2 : A ctx) → (C1 ## C2) → (C1 ∪ C2) == (C2 ∪ C1)
   -- ∪comm' C1 C2 disj = funext (∪comm'guts C1 C2 disj)
-
-  postulate -- TODO
-    ∪comm : {A : Set} → (C1 C2 : A ctx) → C1 ## C2 → (C1 ∪ C2) == (C2 ∪ C1)
-    x∈sing : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ,, (n , a))
-    x∈∪r : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ' → Γ ## Γ' → (n , x) ∈ (Γ ∪ Γ') -- follows from comm?
