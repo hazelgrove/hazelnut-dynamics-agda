@@ -36,7 +36,4 @@ open import complete-progress
 -- open import complete-expansion
 
 -- open import instantiation
--- open import commutativity -- in resumption
--- open import confluence -- in final-confluence
-open import final-confluence
-open import resumption
+-- open import commutativity
