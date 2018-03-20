@@ -4,6 +4,7 @@ open import Prelude
 
 open import contexts
 open import core
+open import structural-assumptions -- remove this eventually
 
 open import focus-formation
 open import ground-decidable
