@@ -10,7 +10,7 @@ theorem is currently fully proven. The theorems listed in
 
 ## Prelude and Datatypes
 
-These files give definitions and syntacitc sugar for common elements of
+These files give definitions and syntactic sugar for common elements of
 type theory (sum types, products, sigmas, etc.) and data structures
 (natural numbers and lists) that are used pervasively throughout the rest
 of the development.
@@ -33,7 +33,7 @@ of the development.
   cleanly with `Agda version 2.5.1.1`; we have not tested it on any other
   version.
 - [structural-assumptions.agda](structural-assumptions.agda) is a file of
-  postulates for standard strucutral properties about contexts and
+  postulates for standard structural properties about contexts and
   judgements that we have not yet proven. This will not be included in the
   final version of this mechanization, but it's helpful to have one place
   to look to know exactly what is being taken on faith and what's really
@@ -45,7 +45,7 @@ of the development.
 
 These files contain small technical lemmas for the corresponding judgement
 or theorem. They are generally not surprising once stated, although it's
-perhaps not immdiately why they're needed, and tend to obfuscate the actual
+perhaps not immediately why they're needed, and tend to obfuscate the actual
 proof text. They are corralled into their own modules in an effort to aid
 readability.
 
@@ -94,7 +94,7 @@ each type getting its own theorem, for usability later.
 ### Type Safety
 
 These first three files contain proofs of type safety for the core
-langauge, where terms and types may both have holes in them and still step.
+language, where terms and types may both have holes in them and still step.
 
 - [progress.agda](progress.agda) argues that any `dhexp` that gets assigned
   a type either steps, is a boxed value, or is indeterminate
