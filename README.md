@@ -82,7 +82,7 @@ each type getting its own theorem, for usability later.
 
 ### Metatheory of Expansion
 
-- [correspondence.agda](correspondence.agda) argues that the expansion
+- [expansion-generality.agda](expansion-generality.agda) argues that the expansion
   judgements respect the bidirectional typing system.
 - [expandability.agda](expandability.agda) argues that any well typed term
   can be expanded to a dynamic term.

@@ -3,7 +3,6 @@ open import Prelude
 open import List
 open import core
 open import contexts
-open import correspondence
 open import synth-unicity
 open import lemmas-matching
 

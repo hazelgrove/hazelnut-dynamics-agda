@@ -3,8 +3,6 @@ open import Prelude
 open import core
 open import contexts
 
-open import correspondence
-
 module complete-expansion where
   -- todo remove when you've proven typed expansion
   postulate

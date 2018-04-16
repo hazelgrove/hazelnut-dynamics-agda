@@ -17,7 +17,7 @@ open import lemmas-matching
 open import synth-unicity
 open import htype-decidable
 
-open import correspondence
+open import expansion-generality
 -- open import expandability
 open import expansion-unicity
 open import type-assignment-unicity

@@ -2,7 +2,6 @@ open import Nat
 open import Prelude
 open import List
 open import core
-open import correspondence
 open import contexts
 open import lemmas-consistency
 
