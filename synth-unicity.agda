@@ -20,7 +20,7 @@ module synth-unicity where
   synthunicity (SAp _ D1 MAArr _) (SAp _ D2 MAArr y) with synthunicity D1 D2
   ... | refl = refl
   synthunicity SEHole SEHole = refl
-  synthunicity (SNEHole _) (SNEHole _) = refl
+  synthunicity (SNEHole _ _) (SNEHole _ _) = refl
   synthunicity SConst SConst = refl
   synthunicity (SLam _ D1) (SLam _ D2) with synthunicity D1 D2
   synthunicity (SLam x₁ D1) (SLam x₂ D2) | refl = refl

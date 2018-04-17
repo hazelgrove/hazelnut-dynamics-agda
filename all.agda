@@ -22,7 +22,7 @@ open import expansion-generality
 open import expandability
 open import expansion-unicity
 open import type-assignment-unicity
--- open import typed-expansion -- in complete-expansion
+open import typed-expansion -- in complete-expansion
 
 open import canonical-value-forms
 open import canonical-boxed-forms

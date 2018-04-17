@@ -3,15 +3,9 @@ open import Prelude
 open import List
 open import core
 open import contexts
+open import preservation
 
 module complete-preservation where
-  -- TODO: convert this into a module imports once proven
-  postulate
-      preservation : {Δ : hctx} {d d' : dhexp} {τ : htyp} →
-             Δ , ∅ ⊢ d :: τ →
-             d ↦ d' →
-             Δ , ∅ ⊢ d' :: τ
-
   cp-subst : ∀ {x d1 d2} →
            d1 dcomplete →
            d2 dcomplete →

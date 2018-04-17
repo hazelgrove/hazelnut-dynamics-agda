@@ -35,6 +35,14 @@ postulate
           Γ ⊢ e1 ⇐ τ1 ~> e1' :: τ1' ⊣ Δ1 →
           Γ ⊢ e2 ⇐ τ2 ~> e2' :: τ2' ⊣ Δ2 →
           Δ1 ## Δ2
+  expand-new-disjoint : ∀ { e u τ d Δ Γ τ'} →
+                        hole-name-new e u →
+                        Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
+                        Δ ## (■ (u , Γ , τ'))
+  expand-disjoint-new : ∀{ e τ d Δ u Γ τ'} →
+                      Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
+                      Δ ## (■ (u , Γ , τ')) →
+                      hole-name-new e u
 
 -- structural properties of hypothetical judgements
 postulate

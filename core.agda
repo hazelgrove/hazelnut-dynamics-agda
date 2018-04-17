@@ -87,6 +87,7 @@ module core where
 
   postulate
     holes-disjoint : hexp → hexp → Set
+    hole-name-new  : hexp → Nat → Set
 
   -- bidirectional type checking judgements for hexp
   mutual
@@ -100,13 +101,14 @@ module core where
                  (n , τ) ∈ Γ →
                  Γ ⊢ X n => τ
       SAp     : {Γ : tctx} {e1 e2 : hexp} {τ τ1 τ2 : htyp} →
-                 holes-disjoint e1 e2 →
-                 Γ ⊢ e1 => τ1 → -- need a premise that the hole names are disjoint and something to relate that to the dom(Δ)s in expansion
+                 holes-disjoint e1 e2 → -- need a premise that the hole names are disjoint and something to relate that to the dom(Δ)s in expansion
+                 Γ ⊢ e1 => τ1 →
                  τ1 ▸arr τ2 ==> τ →
                  Γ ⊢ e2 <= τ2 →
                  Γ ⊢ (e1 ∘ e2) => τ
       SEHole  : {Γ : tctx} {u : Nat} → Γ ⊢ ⦇⦈[ u ] => ⦇⦈
       SNEHole : {Γ : tctx} {e : hexp} {τ : htyp} {u : Nat} →
+                 hole-name-new e u →
                  Γ ⊢ e => τ →   -- premise here that u is disjoint from hole names of e
                  Γ ⊢ ⦇ e ⦈[ u ] => ⦇⦈
       SLam    : {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} {x : Nat} →
@@ -173,6 +175,7 @@ module core where
       ESEHole : ∀{ Γ u } →
                 Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , id Γ ⟩ ⊣  ■ (u ::[ Γ ] ⦇⦈)
       ESNEHole : ∀{ Γ e τ d u Δ } →
+                 Δ ## (■ (u , Γ , ⦇⦈)) →
                  Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
                  Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈⟨ u , id Γ  ⟩ ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
       ESAsc : ∀ {Γ e τ d τ' Δ} →
@@ -194,6 +197,7 @@ module core where
       EAEHole : ∀{ Γ u τ  } →
                 Γ ⊢ ⦇⦈[ u ] ⇐ τ ~> ⦇⦈⟨ u , id Γ  ⟩ :: τ ⊣ ■ (u ::[ Γ ] τ)
       EANEHole : ∀{ Γ e u τ d τ' Δ  } →
+                 Δ ## (■ (u , Γ , τ)) →
                  Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
                  Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈⟨ u , id Γ  ⟩ :: τ ⊣ (Δ ,, u ::[ Γ ] τ)
 

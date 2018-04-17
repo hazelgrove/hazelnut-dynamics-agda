@@ -28,7 +28,7 @@ module expansion-unicity where
     ... | refl , refl , refl with expansion-unicity-ana x₃ x₇
     ... | refl , refl , refl = refl , refl , refl
     expansion-unicity-synth ESEHole ESEHole = refl , refl , refl
-    expansion-unicity-synth (ESNEHole d1) (ESNEHole d2)
+    expansion-unicity-synth (ESNEHole _ d1) (ESNEHole _ d2)
       with expansion-unicity-synth d1 d2
     ... | ih1 , ih2 , ih3 = refl , ap1 _ ih2 , ap1 _ ih3
     expansion-unicity-synth (ESAsc x) (ESAsc x₁)
@@ -49,10 +49,10 @@ module expansion-unicity where
       with expansion-unicity-synth x₂ x₆
     ... | refl , refl , refl = refl , refl , refl
     expansion-unicity-ana (EASubsume x x₁ x₂ x₃) EAEHole = abort (x _ refl)
-    expansion-unicity-ana (EASubsume x x₁ x₂ x₃) (EANEHole x₄) = abort (x₁ _ _ refl)
+    expansion-unicity-ana (EASubsume x x₁ x₂ x₃) (EANEHole _ x₄) = abort (x₁ _ _ refl)
     expansion-unicity-ana EAEHole (EASubsume x x₁ x₂ x₃) = abort (x _ refl)
     expansion-unicity-ana EAEHole EAEHole = refl , refl , refl
-    expansion-unicity-ana (EANEHole x) (EASubsume x₁ x₂ x₃ x₄) = abort (x₂ _ _ refl)
-    expansion-unicity-ana (EANEHole x) (EANEHole x₁)
+    expansion-unicity-ana (EANEHole _ x) (EASubsume x₁ x₂ x₃ x₄) = abort (x₂ _ _ refl)
+    expansion-unicity-ana (EANEHole _ x) (EANEHole _ x₁)
       with expansion-unicity-synth x x₁
     ... | refl , refl , refl = refl , refl , refl

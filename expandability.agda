@@ -23,9 +23,9 @@ module expandability where
       with expandability-ana (ASubsume wt1 (match-consist m)) | expandability-ana wt2
     ... | _ , _ , _ , D1 | _ , _ , _ , D2 = _ , _ , ESAp dis (expand-ana-disjoint dis D1 D2) wt1 m D1 D2
     expandability-synth SEHole = _ , _ , ESEHole
-    expandability-synth (SNEHole wt)
+    expandability-synth (SNEHole new wt)
       with expandability-synth wt
-    ... | d' , Δ' , wt' = _ , _ , ESNEHole wt'
+    ... | d' , Δ' , wt' = _ , _ , ESNEHole (expand-new-disjoint new wt') wt'
     expandability-synth (SLam x₁ wt)
       with expandability-synth wt
     ... | d' , Δ' , wt' = _ , _ , ESLam x₁ wt'
@@ -44,8 +44,9 @@ module expandability where
     expandability-ana {e = ·λ x [ x₁ ] e} (ASubsume D x₂)        | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₂
     expandability-ana {e = e1 ∘ e2} (ASubsume D x₁)              | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁
     -- the two holes are special-cased
-    expandability-ana {e = ⦇⦈[ x ]} (ASubsume _ _ )              | _ , _ , _  = _ , _ , _ , EAEHole
-    expandability-ana {e = ⦇ e ⦈[ x ]} (ASubsume (SNEHole wt) _) | _ , _ , _  = _ , _ , _ , EANEHole (π2( π2 (expandability-synth wt)))
+    expandability-ana {e = ⦇⦈[ x ]} (ASubsume _ _ )                   | _ , _ , _  = _ , _ , _ , EAEHole
+    expandability-ana {Γ} {⦇ e ⦈[ x ]} (ASubsume (SNEHole new wt) x₂) | _ , _ , ESNEHole x₁ D' with expandability-synth wt
+    ... | w , y , z =  _ , _ , _ , EANEHole (expand-new-disjoint new z) z
     -- the lambda cases
     expandability-ana (ALam x₁ m wt)
       with expandability-ana wt

@@ -2,20 +2,10 @@ open import Nat
 open import Prelude
 open import core
 open import contexts
-
+open import typed-expansion
 open import structural-assumptions
 
 module complete-expansion where
-  -- todo remove when you've proven typed expansion
-  postulate
-        typed-expansion-synth : {Γ : tctx} {e : hexp} {τ : htyp} {d : dhexp} {Δ : hctx} →
-                            Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
-                            Δ , Γ ⊢ d :: τ
-        typed-expansion-ana : {Γ : tctx} {e : hexp} {τ τ' : htyp} {d : dhexp} {Δ : hctx} →
-                          Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
-                          (τ' ~ τ) × (Δ , Γ ⊢ d :: τ')
-
-
   -- this might be derivable from things below and a fact about => and ::
   -- that we seem to have not proven
   complete-ta : ∀{Γ Δ d τ} → (Γ gcomplete) → (Δ , Γ ⊢ d :: τ) → d dcomplete → τ tcomplete
@@ -42,7 +32,7 @@ module complete-expansion where
   comp-synth gc (ECAp ec ec₁) (SAp _ wt MAArr x₁) with comp-synth gc ec wt
   comp-synth gc (ECAp ec ec₁) (SAp _ wt MAArr x₁) | TCArr qq qq₁ = qq₁
   comp-synth gc () SEHole
-  comp-synth gc () (SNEHole wt)
+  comp-synth gc () (SNEHole _ wt)
   comp-synth gc (ECLam2 ec x₁) (SLam x₂ wt) = TCArr x₁ (comp-synth (gcomp-extend gc x₁) ec wt)
 
   mutual
@@ -61,7 +51,7 @@ module complete-expansion where
     ... | ih1 | ih2 | TCArr c1 c2 = DCAp (DCCast ih1 (comp-ana gc x₂ ih1) (TCArr c1 c2))
                                          (DCCast ih2 (comp-ana gc x₃ ih2) c1)
     complete-expansion-synth gc () ESEHole
-    complete-expansion-synth gc () (ESNEHole exp)
+    complete-expansion-synth gc () (ESNEHole _ exp)
     complete-expansion-synth gc (ECAsc x ec) (ESAsc x₁)
       with complete-expansion-ana gc ec x₁
     ... | ih = DCCast ih (comp-ana gc x₁ ih) x
