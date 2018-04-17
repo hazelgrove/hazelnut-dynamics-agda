@@ -7,6 +7,8 @@ open import contexts
 open import lemmas-consistency
 open import type-assignment-unicity
 
+open import structural-assumptions
+
 module preservation where
   -- if d and d' both result from filling the hole in ε with terms of the
   -- same type, they too have the same type.
@@ -47,36 +49,6 @@ module preservation where
   wt-filling (TACast ta x) (FHCast eps) = wt-filling ta eps
   wt-filling (TAFailedCast x y z w) FHOuter = _ , TAFailedCast x y z w
   wt-filling (TAFailedCast x x₁ x₂ x₃) (FHFailedCast y) = wt-filling x y
-
-  -- replacing a variable in a term with contents of the appropriate type
-  -- preserves type and contracts the context
-  lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } →
-              Δ , Γ ,, (x , τ1) ⊢ d1 :: τ →
-              Δ , Γ ⊢ d2 :: τ1 →
-              Δ , Γ ⊢ [ d2 / x ] d1 :: τ
-  lem-subst TAConst D2 = TAConst
-  lem-subst {Γ = Γ} {x = x'} (TAVar {x = x} x₂) D2 with natEQ x x'
-  lem-subst {Γ = Γ} {x = x} {τ1 = τ1} (TAVar x₃) D2 | Inl refl = {!!}
-  lem-subst {Γ = Γ} {x = x} {τ1 = τ1} (TAVar {x = x'} x₃) D2 | Inr x₂ = {!x∈sing!}
-  -- ... | qq = TAVar {!!}
-  --   with Γ x
-  -- lem-subst {x = x} (TAVar {x = x'} x₃) D2 | Some x₁ = {!!}
-  --   with natEQ x' x
-  -- lem-subst (TAVar xin) D2 | Some x₃ | Inl refl = {!!}
-  -- lem-subst (TAVar refl) D2 | Some x₃ | Inr x₂ = {!!}
-  -- lem-subst {x = x} (TAVar {x = x'} x₂) D2 | None with natEQ x' x
-  --lem-subst {x = x} (TAVar x₃) D2 | None | Inl refl with natEQ x x
-  -- lem-subst (TAVar refl) D2 | None | Inl refl | Inl refl = D2
-  -- lem-subst (TAVar x₃) D2 | None | Inl refl | Inr x₁ = abort (somenotnone (! x₃))
-  --lem-subst {x = x} (TAVar {x = x'} x₃) D2 | None | Inr x₂ with natEQ x x'
-  -- lem-subst (TAVar x₄) D2 | None | Inr x₃ | Inl x₂ = abort ((flip x₃) x₂)
-  -- lem-subst (TAVar x₄) D2 | None | Inr x₃ | Inr x₂ = abort (somenotnone (! x₄))
-  lem-subst {Γ = Γ} {x = x} (TALam {x = x'} D1) D2 = {!!}
-  lem-subst (TAAp D1 D2) D3 = TAAp (lem-subst D1 D3) (lem-subst D2 D3)
-  lem-subst (TAEHole x₁ x₂) D2 = TAEHole x₁ {!!}
-  lem-subst (TANEHole x₁ D1 x₂) D2 = TANEHole x₁ (lem-subst D1 D2) {!!}
-  lem-subst (TACast D1 x₁) D2 = TACast (lem-subst D1 D2) x₁
-  lem-subst (TAFailedCast D1 x₁ x₂ x₃) D2 = TAFailedCast (lem-subst D1 D2) x₁ x₂ x₃
 
   -- instruction transitions preserve type
   preserve-trans : ∀{ Δ Γ d τ d' } →

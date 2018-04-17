@@ -20,16 +20,6 @@ module typed-expansion where
   idsub x .(X x) xin | Inl (w , y , z) | refl = y , z , TAVar z
   idsub x d xin | Inr x₁ = abort (somenotnone ((! xin) · x₁))
 
-  lem-weakenΔ1 : ∀{Δ1 Δ2 Γ d τ} → Δ1 ## Δ2 → Δ1 , Γ ⊢ d :: τ → (Δ1 ∪ Δ2) , Γ ⊢ d :: τ
-  lem-weakenΔ1 d TAConst = TAConst
-  lem-weakenΔ1 d (TAVar x₁) = TAVar x₁
-  lem-weakenΔ1 d (TALam D) = TALam (lem-weakenΔ1 d D)
-  lem-weakenΔ1 d (TAAp D D₁) = TAAp (lem-weakenΔ1 d D) (lem-weakenΔ1 d D₁)
-  lem-weakenΔ1 d (TAEHole {Δ = Δ} x y) = TAEHole (x∈∪l Δ _ _ _ x) (subst-weaken {!!} y)
-  lem-weakenΔ1 d (TANEHole {Δ = Δ} D x y) = TANEHole (x∈∪l Δ _ _ _ D) (lem-weakenΔ1 d x) (subst-weaken {!!} y)
-  lem-weakenΔ1 d (TACast D x) = TACast (lem-weakenΔ1 d D) x
-  lem-weakenΔ1 d (TAFailedCast x y z w) = TAFailedCast (lem-weakenΔ1 d x) y z w
-
   lem-weakenΔ2 : ∀{Δ1 Δ2 Γ d τ} → Δ1 ## Δ2 → Δ2 , Γ ⊢ d :: τ → (Δ1 ∪ Δ2) , Γ ⊢ d :: τ
   lem-weakenΔ2 {Δ1} {Δ2} {Γ} {d} {τ} disj D = tr (λ q → q , Γ ⊢ d :: τ) (∪comm Δ2 Δ1 (##-comm disj)) (lem-weakenΔ1 (##-comm disj) D)
 
@@ -40,7 +30,7 @@ module typed-expansion where
     typed-expansion-synth ESConst = TAConst
     typed-expansion-synth (ESVar x₁) = TAVar x₁
     typed-expansion-synth (ESLam x₁ ex) = TALam (typed-expansion-synth ex)
-    typed-expansion-synth (ESAp {Δ1 = Δ1} d x₁ x₂ x₃ x₄)
+    typed-expansion-synth (ESAp {Δ1 = Δ1} _ d x₁ x₂ x₃ x₄)
       with typed-expansion-ana x₃ | typed-expansion-ana x₄
     ... | con1 , ih1 | con2 , ih2  = TAAp (TACast (lem-weakenΔ1 d ih1) con1) (TACast (lem-weakenΔ2 {Δ1 = Δ1} d ih2) con2)
     typed-expansion-synth (ESEHole {Γ = Γ} {u = u})  = TAEHole (x∈sing ∅ u (Γ , ⦇⦈)) idsub

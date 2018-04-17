@@ -12,12 +12,12 @@ module synth-unicity where
                 → t == t'
   synthunicity (SAsc _) (SAsc _) = refl
   synthunicity {Γ = G} (SVar in1) (SVar in2) = ctxunicity {Γ = G} in1 in2
-  synthunicity (SAp D1 MAHole _) (SAp D2 MAHole y) = refl
-  synthunicity (SAp D1 MAHole _) (SAp D2 MAArr y) with synthunicity D1 D2
+  synthunicity (SAp _  D1 MAHole _) (SAp _ D2 MAHole y) = refl
+  synthunicity (SAp _ D1 MAHole _) (SAp _ D2 MAArr y) with synthunicity D1 D2
   ... | ()
-  synthunicity (SAp D1 MAArr _) (SAp D2 MAHole y) with synthunicity D1 D2
+  synthunicity (SAp _ D1 MAArr _) (SAp _ D2 MAHole y) with synthunicity D1 D2
   ... | ()
-  synthunicity (SAp D1 MAArr _) (SAp D2 MAArr y) with synthunicity D1 D2
+  synthunicity (SAp _ D1 MAArr _) (SAp _ D2 MAArr y) with synthunicity D1 D2
   ... | refl = refl
   synthunicity SEHole SEHole = refl
   synthunicity (SNEHole _) (SNEHole _) = refl

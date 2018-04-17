@@ -85,6 +85,9 @@ module core where
   _::[_]_ : Nat → tctx → htyp → (Nat × (tctx × htyp))
   u ::[ Γ ] τ = u , (Γ , τ)
 
+  postulate
+    holes-disjoint : hexp → hexp → Set
+
   -- bidirectional type checking judgements for hexp
   mutual
     -- synthesis
@@ -97,6 +100,7 @@ module core where
                  (n , τ) ∈ Γ →
                  Γ ⊢ X n => τ
       SAp     : {Γ : tctx} {e1 e2 : hexp} {τ τ1 τ2 : htyp} →
+                 holes-disjoint e1 e2 →
                  Γ ⊢ e1 => τ1 → -- need a premise that the hole names are disjoint and something to relate that to the dom(Δ)s in expansion
                  τ1 ▸arr τ2 ==> τ →
                  Γ ⊢ e2 <= τ2 →
@@ -159,6 +163,7 @@ module core where
                      (Γ ,, (x , τ1)) ⊢ e ⇒ τ2 ~> d ⊣ Δ →
                       Γ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ Δ
       ESAp : ∀{Γ e1 τ τ1 τ1' τ2 τ2' d1 Δ1 e2 d2 Δ2 } →
+              holes-disjoint e1 e2 →
               Δ1 ## Δ2 →
               Γ ⊢ e1 => τ1 →
               τ1 ▸arr τ2 ==> τ →

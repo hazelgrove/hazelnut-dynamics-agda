@@ -12,7 +12,7 @@ module expansion-generality where
     expansion-generality-synth (ESVar x₁) = SVar x₁
     expansion-generality-synth (ESLam apt ex) with expansion-generality-synth ex
     ... | ih = SLam apt ih
-    expansion-generality-synth (ESAp _ a x₁ x₂ x₃) = SAp a x₁ (expansion-generality-ana x₃)
+    expansion-generality-synth (ESAp dis _ a x₁ x₂ x₃) = SAp dis a x₁ (expansion-generality-ana x₃)
     expansion-generality-synth ESEHole = SEHole
     expansion-generality-synth (ESNEHole ex) = SNEHole (expansion-generality-synth ex)
     expansion-generality-synth (ESAsc x) = SAsc (expansion-generality-ana x)

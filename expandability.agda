@@ -6,6 +6,8 @@ open import contexts
 open import htype-decidable
 open import lemmas-matching
 
+open import structural-assumptions -- todo remove this
+
 module expandability where
   mutual
     expandability-synth : {Γ : tctx} {e : hexp} {τ : htyp} →
@@ -17,9 +19,9 @@ module expandability where
       with expandability-ana wt
     ... | _ , _ , τ' , D  = _ , _ , ESAsc D
     expandability-synth (SVar {n = n} x) = _ , _ , ESVar x
-    expandability-synth (SAp wt1 m wt2)
+    expandability-synth (SAp dis wt1 m wt2)
       with expandability-ana (ASubsume wt1 (match-consist m)) | expandability-ana wt2
-    ... | _ , _ , _ , D1 | _ , _ , _ , D2 = _ , _ , ESAp {!!} wt1 m D1 D2
+    ... | _ , _ , _ , D1 | _ , _ , _ , D2 = _ , _ , ESAp dis (expand-ana-disjoint dis D1 D2) wt1 m D1 D2
     expandability-synth SEHole = _ , _ , ESEHole
     expandability-synth (SNEHole wt)
       with expandability-synth wt

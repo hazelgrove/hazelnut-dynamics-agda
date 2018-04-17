@@ -3,6 +3,8 @@ open import Prelude
 open import core
 open import contexts
 
+open import structural-assumptions
+
 module complete-expansion where
   -- todo remove when you've proven typed expansion
   postulate
@@ -13,18 +15,6 @@ module complete-expansion where
                           Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                           (τ' ~ τ) × (Δ , Γ ⊢ d :: τ')
 
-  gcomp-extend : ∀{Γ τ x} → Γ gcomplete → τ tcomplete → (Γ ,, (x , τ)) gcomplete
-  gcomp-extend {x = x} gc tc x₁ t x₂ with natEQ x₁ x
-  gcomp-extend {Γ = Γ} gc tc x t x₃ | Inl refl with Γ x
-  gcomp-extend gc tc x x₁ refl | Inl refl | Some .x₁ = {!!} -- stupid context stuff again
-  gcomp-extend gc tc x t x₃ | Inl refl | None with natEQ x x
-  gcomp-extend gc tc x τ refl | Inl refl | None | Inl refl = tc
-  gcomp-extend gc tc x t x₃ | Inl refl | None | Inr x₁ = abort (somenotnone (! x₃))
-  gcomp-extend {Γ = Γ} gc tc x₁ t x₃ | Inr x₂ with Γ x₁
-  gcomp-extend gc tc x₁ t x₄ | Inr x₃ | Some x = {!tc!} -- ditto
-  gcomp-extend {x = x} gc tc x₁ t x₃ | Inr x₂ | None with natEQ x x₁
-  gcomp-extend gc tc x t refl | Inr x₃ | None | Inl refl = tc
-  gcomp-extend gc tc x₁ t x₄ | Inr x₃ | None | Inr x₂ = abort (somenotnone (! x₄))
 
   -- this might be derivable from things below and a fact about => and ::
   -- that we seem to have not proven
@@ -47,10 +37,10 @@ module complete-expansion where
   comp-synth gc ec SConst = TCBase
   comp-synth gc (ECAsc x ec) (SAsc x₁) = x
   comp-synth gc ec (SVar x) = gc _ _ x
-  comp-synth gc (ECAp ec ec₁) (SAp wt MAHole x₁) with comp-synth gc ec wt
+  comp-synth gc (ECAp ec ec₁) (SAp _ wt MAHole x₁) with comp-synth gc ec wt
   ... | ()
-  comp-synth gc (ECAp ec ec₁) (SAp wt MAArr x₁) with comp-synth gc ec wt
-  comp-synth gc (ECAp ec ec₁) (SAp wt MAArr x₁) | TCArr qq qq₁ = qq₁
+  comp-synth gc (ECAp ec ec₁) (SAp _ wt MAArr x₁) with comp-synth gc ec wt
+  comp-synth gc (ECAp ec ec₁) (SAp _ wt MAArr x₁) | TCArr qq qq₁ = qq₁
   comp-synth gc () SEHole
   comp-synth gc () (SNEHole wt)
   comp-synth gc (ECLam2 ec x₁) (SLam x₂ wt) = TCArr x₁ (comp-synth (gcomp-extend gc x₁) ec wt)
@@ -64,9 +54,9 @@ module complete-expansion where
     complete-expansion-synth gc ec ESConst = DCConst
     complete-expansion-synth gc ec (ESVar x₁) = DCVar
     complete-expansion-synth gc (ECLam2 ec x₁) (ESLam x₂ exp) = DCLam (complete-expansion-synth (gcomp-extend gc x₁) ec exp) x₁
-    complete-expansion-synth gc (ECAp ec ec₁) (ESAp _ x MAHole x₂ x₃) with comp-synth gc ec x
+    complete-expansion-synth gc (ECAp ec ec₁) (ESAp _ _ x MAHole x₂ x₃) with comp-synth gc ec x
     ... | ()
-    complete-expansion-synth gc (ECAp ec ec₁) (ESAp _ x MAArr x₂ x₃)
+    complete-expansion-synth gc (ECAp ec ec₁) (ESAp _ _ x MAArr x₂ x₃)
       with complete-expansion-ana gc ec x₂ | complete-expansion-ana gc ec₁ x₃ | comp-synth gc ec x
     ... | ih1 | ih2 | TCArr c1 c2 = DCAp (DCCast ih1 (comp-ana gc x₂ ih1) (TCArr c1 c2))
                                          (DCCast ih2 (comp-ana gc x₃ ih2) c1)
