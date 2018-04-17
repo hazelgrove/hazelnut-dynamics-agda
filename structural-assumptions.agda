@@ -11,10 +11,12 @@ module structural-assumptions where
 -- believe that they are true, especially since they're all standard, but
 -- have not yet proven them for our specific choices of implementations.
 
--- the only postualte not in this file is for function extensionality in
--- Prelude.agda. funext is known to be independent of Agda, and we have no
--- intension of removing it.
-
+-- the only postulates not in this file are 1) for function
+-- extensionality in Prelude.agda; funext is known to be independent
+-- of Agda, and we have no intension of removing it, and 2) the
+-- signature of the disjointness judgements in core.agda used below to
+-- break a circular module dependency, and 3) the signature of
+-- applying a substitition to a hole in core.agda
 
 
 -- assumptions about contexts

@@ -40,32 +40,36 @@ module complete-expansion where
                                Γ gcomplete →
                                e ecomplete →
                                Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
-                               d dcomplete
-    complete-expansion-synth gc ec ESConst = DCConst
-    complete-expansion-synth gc ec (ESVar x₁) = DCVar
-    complete-expansion-synth gc (ECLam2 ec x₁) (ESLam x₂ exp) = DCLam (complete-expansion-synth (gcomp-extend gc x₁) ec exp) x₁
+                               (d dcomplete × τ tcomplete)
+    complete-expansion-synth gc ec ESConst = DCConst , TCBase
+    complete-expansion-synth gc ec (ESVar x₁) = DCVar , gc _ _ x₁
+    complete-expansion-synth gc (ECLam2 ec x₁) (ESLam x₂ exp) with complete-expansion-synth (gcomp-extend gc x₁) ec exp
+    ... | ih1 , ih2 = DCLam ih1 x₁ , TCArr x₁ ih2
     complete-expansion-synth gc (ECAp ec ec₁) (ESAp _ _ x MAHole x₂ x₃) with comp-synth gc ec x
     ... | ()
     complete-expansion-synth gc (ECAp ec ec₁) (ESAp _ _ x MAArr x₂ x₃)
-      with complete-expansion-ana gc ec x₂ | complete-expansion-ana gc ec₁ x₃ | comp-synth gc ec x
-    ... | ih1 | ih2 | TCArr c1 c2 = DCAp (DCCast ih1 (comp-ana gc x₂ ih1) (TCArr c1 c2))
-                                         (DCCast ih2 (comp-ana gc x₃ ih2) c1)
+      with comp-synth gc ec x
+    ... | TCArr t1 t2
+      with complete-expansion-ana gc ec (TCArr t1 t2) x₂ | complete-expansion-ana gc ec₁ t1 x₃
+    ... | ih1 | ih2 = DCAp (DCCast ih1 (comp-ana gc x₂ ih1) (TCArr t1 t2)) (DCCast ih2 (comp-ana gc x₃ ih2) t1) , t2
+
     complete-expansion-synth gc () ESEHole
     complete-expansion-synth gc () (ESNEHole _ exp)
     complete-expansion-synth gc (ECAsc x ec) (ESAsc x₁)
-      with complete-expansion-ana gc ec x₁
-    ... | ih = DCCast ih (comp-ana gc x₁ ih) x
+      with complete-expansion-ana gc ec x x₁
+    ... | ih = DCCast ih (comp-ana gc x₁ ih) x , x
 
     complete-expansion-ana : ∀{e τ τ' Γ Δ d} →
                              Γ gcomplete →
                              e ecomplete →
+                             τ tcomplete →
                              Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                              d dcomplete
-    complete-expansion-ana gc (ECLam1 ec) (EALam x₁ MAHole exp) = {!!} -- not an ih because the ctx isn't gcomplete,
-    complete-expansion-ana gc (ECLam1 ec) (EALam x₁ MAArr exp) -- since this is the unannotated lambda form, τ1 comes out of the sky with no premise about completeness
-      with complete-expansion-ana (gcomp-extend gc {!!}) ec exp
-    ... | ih = DCLam ih {!!}
-    complete-expansion-ana gc ec (EASubsume x x₁ x₂ x₃) = complete-expansion-synth gc ec x₂
+    complete-expansion-ana gc (ECLam1 ec) () (EALam x₁ MAHole exp)
+    complete-expansion-ana gc (ECLam1 ec) (TCArr t1 t2)  (EALam x₁ MAArr exp)
+      with complete-expansion-ana (gcomp-extend gc t1) ec t2 exp
+    ... | ih = DCLam ih t1
+    complete-expansion-ana gc ec tc (EASubsume x x₁ x₂ x₃) = π1(complete-expansion-synth gc ec x₂)
 
     --this is just a convenience since it shows up a few times above
     comp-ana : ∀{Γ e τ d τ' Δ} →

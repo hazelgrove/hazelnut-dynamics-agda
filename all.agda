@@ -12,6 +12,7 @@ open import ground-decidable
 open import matched-ground-invariant
 open import finality
 
+open import lemmas-subst-ta
 open import lemmas-ground
 open import lemmas-consistency
 open import lemmas-matching
@@ -35,7 +36,7 @@ open import preservation -- in complete-preservation
 
 open import complete-preservation
 open import complete-progress
--- open import complete-expansion
+open import complete-expansion
 
 -- open import instantiation
 -- open import commutativity
