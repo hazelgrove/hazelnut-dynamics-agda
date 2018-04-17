@@ -271,7 +271,7 @@ module core where
                        d1 ≠ (d1' ⟨(τ1 ==> τ2) ⇒ (τ3 ==> τ4)⟩)) →
                        d1 indet →
                        d2 final →
-                       (d1 ∘ d2) indet -- todo: should there be two ap rules?
+                       (d1 ∘ d2) indet
       ICastArr : ∀{d τ1 τ2 τ3 τ4} →
                  τ1 ==> τ2 ≠ τ3 ==> τ4 →
                  d indet →
@@ -298,7 +298,7 @@ module core where
       FIndet : ∀{d} → d indet → d final
 
 
- --  -- contextual dynamics
+  -- contextual dynamics
 
   -- evaluation contexts
   data ectx : Set where
@@ -367,7 +367,7 @@ module core where
   data _→>_ : (d d' : dhexp) → Set where
     ITLam : ∀{ x τ d1 d2 } →
             -- d2 final → -- red box
-            ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1) -- todo: this is very unlikely to work long term
+            ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1)
     ITCastID : ∀{d τ } →
                -- d final → -- red box
                (d ⟨ τ ⇒ τ ⟩) →> d
@@ -409,7 +409,7 @@ module core where
                  d  ↦* d''
 
   -- application of a substution to a term
-  -- todo: this is currently not well-founded! fun!
+  -- todo: this is not well-founded with the current representation of σs
   postulate
     apply : subst → dhexp → dhexp
   -- apply σ c = c
