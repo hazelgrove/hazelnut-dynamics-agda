@@ -31,14 +31,16 @@ module complete-progress where
   ne-factor ne | Inr x | Inl x₁ = Inl x
   ne-factor ne | Inr x | Inr x₁ = Inl x
 
-  -- disequal complete types are not consistent
-  eq-com-con : ∀{τ1 τ2} → τ1 tcomplete → τ2 tcomplete → τ1 ≠ τ2 → τ1 ~ τ2 → ⊥
-  eq-com-con tc1 tc2 ne TCRefl = ne refl
-  eq-com-con tc1 () ne TCHole1
-  eq-com-con () tc2 ne TCHole2
-  eq-com-con (TCArr tc1 tc2) (TCArr tc3 tc4) ne (TCArr con con₁) with ne-factor ne
-  eq-com-con (TCArr tc1 tc2) (TCArr tc3 tc4) ne (TCArr con con₁) | Inl x = eq-com-con tc1 tc3 x con
-  eq-com-con (TCArr tc1 tc2) (TCArr tc3 tc4) ne (TCArr con con₁) | Inr x = eq-com-con tc2 tc4 x con₁
+  -- complete types that are consistent are equal
+  eq-complete-consist : ∀{τ1 τ2} → τ1 tcomplete → τ2 tcomplete → τ1 ~ τ2 → τ1 == τ2
+  eq-complete-consist TCBase TCBase consis = refl
+  eq-complete-consist TCBase (TCArr tc2 tc3) ()
+  eq-complete-consist (TCArr tc1 tc2) TCBase ()
+  eq-complete-consist (TCArr tc1 tc2) (TCArr tc3 tc4) TCRefl = refl
+  eq-complete-consist (TCArr tc1 tc2) (TCArr tc3 tc4) (TCArr consis1 consis2)
+    with eq-complete-consist tc1 tc3 consis1
+  ... | refl with eq-complete-consist tc2 tc4 consis2
+  ... | refl = refl
 
   complete-progress : {Δ : hctx} {d : dhexp} {τ : htyp} →
                        Δ , ∅ ⊢ d :: τ →
@@ -49,4 +51,4 @@ module complete-progress where
   complete-progress wt comp | S x = S x
   complete-progress wt comp | BV (BVVal x) = V x
   complete-progress wt (DCCast comp x₂ ()) | BV (BVHoleCast x x₁)
-  complete-progress (TACast wt x) (DCCast comp x₃ x₄) | BV (BVArrCast x₁ x₂) = abort (eq-com-con x₃ x₄ x₁ x)
+  complete-progress (TACast wt x) (DCCast comp x₃ x₄) | BV (BVArrCast x₁ x₂) = abort (x₁ (eq-complete-consist x₃ x₄ x))
