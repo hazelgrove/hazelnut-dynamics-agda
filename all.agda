@@ -5,6 +5,7 @@ open import Prelude
 open import contexts
 open import core
 
+open import lemmas-disjointness
 open import disjointness
 
 open import structural-assumptions -- prove everything in here and then remove this file

@@ -31,9 +31,6 @@ module contexts where
   _##_ : {A : Set} → A ctx → A ctx → Set
   _##_ {A} Γ Γ'  = ((n : Nat) → dom Γ n → n # Γ') × ((n : Nat) → dom Γ' n → n # Γ)
 
-  ##-comm : {A : Set} {Δ1 Δ2 : A ctx} → Δ1 ## Δ2 → Δ2 ## Δ1
-  ##-comm (π1 , π2) = π2 , π1
-
   -- contexts give at most one binding for each variable
   ctxunicity : {A : Set} → {Γ : A ctx} {n : Nat} {t t' : A} →
                (n , t) ∈ Γ →
@@ -42,16 +39,6 @@ module contexts where
   ctxunicity {n = n} p q with natEQ n n
   ctxunicity p q | Inl refl = someinj (! p · q)
   ctxunicity _ _ | Inr x≠x = abort (x≠x refl)
-
-  -- the empty context is disjoint from any context
-  empty-disj : {A : Set} (Γ : A ctx) → ∅ ## Γ
-  empty-disj Γ = ed1 , ed2
-   where
-    ed1 : {A : Set} (n : Nat) → dom {A} ∅ n → n # Γ
-    ed1 n (π1 , ())
-
-    ed2 : {A : Set} (n : Nat) → dom Γ n →  _#_ {A} n ∅
-    ed2 _ _ = refl
 
   -- warning: this is union, but it assumes WITHOUT CHECKING that the
   -- domains are disjoint.

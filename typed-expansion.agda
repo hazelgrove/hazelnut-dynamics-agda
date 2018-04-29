@@ -4,6 +4,7 @@ open import List
 open import core
 open import contexts
 open import lemmas-consistency
+open import lemmas-disjointness
 
 open import structural-assumptions
 open import structural
