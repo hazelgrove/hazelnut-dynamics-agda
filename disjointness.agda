@@ -3,6 +3,7 @@ open import Nat
 open import core
 open import contexts
 
+open import structural
 
 module disjointness where
   mutual
@@ -112,20 +113,28 @@ module disjointness where
       d32 : (n : Nat) → dom Γ3 n → n # (Γ1 ∪ Γ2)
       d32 n D = union-parts Γ1 Γ2 n (π2 D13 n D) (π2 D23 n D)
 
-  expand-ana-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ1' τ2' Γ Δ1 Δ2 } →
+  mutual
+    -- this looks good but may not work because of the weakening calls
+    expand-ana-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ1' τ2' Γ Δ1 Δ2 } →
           holes-disjoint e1 e2 →
           Γ ⊢ e1 ⇐ τ1 ~> e1' :: τ1' ⊣ Δ1 →
           Γ ⊢ e2 ⇐ τ2 ~> e2' :: τ2' ⊣ Δ2 →
           Δ1 ## Δ2
-  expand-ana-disjoint HDConst (EASubsume x x₁ ESConst x₃) E2 = empty-disj _
-  expand-ana-disjoint (HDAsc hd) (EASubsume x x₁ (ESAsc x₂) x₃) E2 = expand-ana-disjoint hd x₂ E2
-  expand-ana-disjoint HDVar (EASubsume x₁ x₂ (ESVar x₃) x₄) E2 = empty-disj _
-  expand-ana-disjoint (HDLam1 hd) (EALam x₁ x₂ E1) E2 = {!!}
-  expand-ana-disjoint (HDLam1 hd) (EASubsume x₁ x₂ () x₄) E2
-  expand-ana-disjoint (HDLam2 hd) (EASubsume x₁ x₂ (ESLam x₃ x₄) x₅) E2 = {!!}
-  expand-ana-disjoint (HDHole x) (EASubsume x₁ x₂ ESEHole x₄) E2 = ##-comm (expand-new-disjoint-ana x E2)
-  expand-ana-disjoint (HDHole x) EAEHole E2 = ##-comm (expand-new-disjoint-ana x E2)
-  expand-ana-disjoint (HDNEHole x hd) (EASubsume x₁ x₂ (ESNEHole x₃ x₄) x₅) E2 = {!!}
-  expand-ana-disjoint (HDNEHole x hd) (EANEHole x₁ x₂) E2 = {!!}
-  expand-ana-disjoint (HDAp hd hd₁) (EASubsume x x₁ (ESAp x₂ x₃ x₄ x₅ x₆ x₇) x₈) E2 = disj3 (expand-ana-disjoint hd x₆ E2)
-                                                                                            (expand-ana-disjoint hd₁ x₇ E2)
+    expand-ana-disjoint hd (EASubsume x x₁ x₂ x₃) E2 = expand-synth-disjoint hd x₂ E2
+    expand-ana-disjoint (HDLam1 hd) (EALam x₁ x₂ ex1) E2 = expand-ana-disjoint hd ex1 (weaken-ana-expand x₁ E2)
+    expand-ana-disjoint (HDHole x) EAEHole E2 = ##-comm (expand-new-disjoint-ana x E2)
+    expand-ana-disjoint (HDNEHole x hd) (EANEHole x₁ x₂) E2 = disj3 (expand-synth-disjoint hd x₂ E2) (##-comm (expand-new-disjoint-ana x E2))
+
+    expand-synth-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ2' Γ Δ1 Δ2 } →
+          holes-disjoint e1 e2 →
+          Γ ⊢ e1 ⇒ τ1 ~> e1' ⊣ Δ1 →
+          Γ ⊢ e2 ⇐ τ2 ~> e2' :: τ2' ⊣ Δ2 →
+          Δ1 ## Δ2
+    expand-synth-disjoint HDConst ESConst ana = empty-disj _
+    expand-synth-disjoint (HDAsc hd) (ESAsc x) ana = expand-ana-disjoint hd x ana
+    expand-synth-disjoint HDVar (ESVar x₁) ana = empty-disj _
+    expand-synth-disjoint (HDLam1 hd) () ana
+    expand-synth-disjoint (HDLam2 hd) (ESLam x₁ synth) ana = expand-synth-disjoint hd synth (weaken-ana-expand x₁ ana)
+    expand-synth-disjoint (HDHole x) ESEHole ana = ##-comm (expand-new-disjoint-ana x ana)
+    expand-synth-disjoint (HDNEHole x hd) (ESNEHole x₁ synth) ana = disj3 (expand-synth-disjoint hd synth ana) (##-comm (expand-new-disjoint-ana x ana))
+    expand-synth-disjoint (HDAp hd hd₁) (ESAp x x₁ x₂ x₃ x₄ x₅) ana = disj3 (expand-ana-disjoint hd x₄ ana) (expand-ana-disjoint hd₁ x₅ ana)
