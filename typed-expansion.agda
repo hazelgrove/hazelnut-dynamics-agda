@@ -6,6 +6,7 @@ open import contexts
 open import lemmas-consistency
 
 open import structural-assumptions
+open import structural
 
 module typed-expansion where
   lem : (Γ : tctx) (x : Nat) → (((id Γ) x) == Some (X x) × (Σ[ τ ∈ htyp ]((Γ x) == Some τ)))

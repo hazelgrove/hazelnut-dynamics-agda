@@ -5,6 +5,8 @@ open import Prelude
 open import contexts
 open import core
 
+open import disjointness
+
 open import structural-assumptions -- prove everything in here and then remove this file
 open import structural -- this too, really
 

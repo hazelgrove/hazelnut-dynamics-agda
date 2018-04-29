@@ -5,8 +5,7 @@ open import core
 open import contexts
 open import htype-decidable
 open import lemmas-matching
-
-open import structural-assumptions -- todo remove this
+open import disjointness
 
 module expandability where
   mutual
@@ -25,7 +24,7 @@ module expandability where
     expandability-synth SEHole = _ , _ , ESEHole
     expandability-synth (SNEHole new wt)
       with expandability-synth wt
-    ... | d' , Δ' , wt' = _ , _ , ESNEHole (expand-new-disjoint new wt') wt'
+    ... | d' , Δ' , wt' = _ , _ , ESNEHole (expand-new-disjoint-synth new wt') wt'
     expandability-synth (SLam x₁ wt)
       with expandability-synth wt
     ... | d' , Δ' , wt' = _ , _ , ESLam x₁ wt'
@@ -46,7 +45,7 @@ module expandability where
     -- the two holes are special-cased
     expandability-ana {e = ⦇⦈[ x ]} (ASubsume _ _ )                   | _ , _ , _  = _ , _ , _ , EAEHole
     expandability-ana {Γ} {⦇ e ⦈[ x ]} (ASubsume (SNEHole new wt) x₂) | _ , _ , ESNEHole x₁ D' with expandability-synth wt
-    ... | w , y , z =  _ , _ , _ , EANEHole (expand-new-disjoint new z) z
+    ... | w , y , z =  _ , _ , _ , EANEHole (expand-new-disjoint-synth new z) z
     -- the lambda cases
     expandability-ana (ALam x₁ m wt)
       with expandability-ana wt

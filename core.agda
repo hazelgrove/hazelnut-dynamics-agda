@@ -98,10 +98,10 @@ module core where
              hole-name-new e u →
              hole-name-new (·λ x [ τ ] e) u
     HNHole : ∀{u u'} →
-             (u == u' → ⊥) →
+             u' ≠ u →
              hole-name-new (⦇⦈[ u' ]) u
     HNNEHole : ∀{u u' e} →
-               (u == u' → ⊥) →
+               u' ≠ u →
                hole-name-new e u →
                hole-name-new (⦇ e ⦈[ u' ]) u
     HNAp : ∀{ u e1 e2 } →
