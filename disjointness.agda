@@ -92,6 +92,25 @@ module disjointness where
     expand-disjoint-new-ana EAEHole disj = HNHole {!!}
     expand-disjoint-new-ana (EANEHole x x₁) disj = HNNEHole {!!} (expand-disjoint-new-synth x₁ {!!})
 
+  disj3 : {A : Set} {Γ1 Γ2 Γ3 : A ctx} → Γ1 ## Γ3 → Γ2 ## Γ3 → (Γ1 ∪ Γ2) ## Γ3
+  disj3 {_} {Γ1} {Γ2} {Γ3} D13 D23 = d31 , d32
+    where
+      dom-split : {A : Set} → (Γ1 Γ2 : A ctx) (n : Nat) → dom (Γ1 ∪ Γ2) n → dom Γ1 n + dom Γ2 n
+      dom-split Γ4 Γ5 n (π1 , π2) with Γ4 n
+      dom-split Γ4 Γ5 n (π1 , π2) | Some x = Inl (x , refl)
+      dom-split Γ4 Γ5 n (π1 , π2) | None = Inr (π1 , π2)
+
+      d31 : (n : Nat) → dom (Γ1 ∪ Γ2) n → n # Γ3
+      d31 n D with dom-split Γ1 Γ2 n D
+      d31 n D | Inl x = π1 D13 n x
+      d31 n D | Inr x = π1 D23 n x
+
+      union-parts : {A : Set} (Γ1 Γ2 : A ctx) (n : Nat) → n # Γ1 → n # Γ2 → n # (Γ1 ∪ Γ2)
+      union-parts Γ1 Γ2 n apt1 apt2 with Γ1 n
+      union-parts _ _ n refl apt2 | .None = apt2
+
+      d32 : (n : Nat) → dom Γ3 n → n # (Γ1 ∪ Γ2)
+      d32 n D = union-parts Γ1 Γ2 n (π2 D13 n D) (π2 D23 n D)
 
   expand-ana-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ1' τ2' Γ Δ1 Δ2 } →
           holes-disjoint e1 e2 →
@@ -104,10 +123,9 @@ module disjointness where
   expand-ana-disjoint (HDLam1 hd) (EALam x₁ x₂ E1) E2 = {!!}
   expand-ana-disjoint (HDLam1 hd) (EASubsume x₁ x₂ () x₄) E2
   expand-ana-disjoint (HDLam2 hd) (EASubsume x₁ x₂ (ESLam x₃ x₄) x₅) E2 = {!!}
-  expand-ana-disjoint (HDHole x) (EASubsume x₁ x₂ ESEHole x₄) E2 = {!!}
-  expand-ana-disjoint (HDHole x) EAEHole E2 = {!!}
+  expand-ana-disjoint (HDHole x) (EASubsume x₁ x₂ ESEHole x₄) E2 = ##-comm (expand-new-disjoint-ana x E2)
+  expand-ana-disjoint (HDHole x) EAEHole E2 = ##-comm (expand-new-disjoint-ana x E2)
   expand-ana-disjoint (HDNEHole x hd) (EASubsume x₁ x₂ (ESNEHole x₃ x₄) x₅) E2 = {!!}
   expand-ana-disjoint (HDNEHole x hd) (EANEHole x₁ x₂) E2 = {!!}
-  expand-ana-disjoint (HDAp hd hd₁) (EASubsume x x₁ (ESAp x₂ x₃ x₄ x₅ x₆ x₇) x₈) E2
-    with expand-ana-disjoint x₂ x₆ x₇
-  ... | ih1 = {!!}
+  expand-ana-disjoint (HDAp hd hd₁) (EASubsume x x₁ (ESAp x₂ x₃ x₄ x₅ x₆ x₇) x₈) E2 = disj3 (expand-ana-disjoint hd x₆ E2)
+                                                                                            (expand-ana-disjoint hd₁ x₇ E2)
