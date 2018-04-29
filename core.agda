@@ -85,9 +85,51 @@ module core where
   _::[_]_ : Nat → tctx → htyp → (Nat × (tctx × htyp))
   u ::[ Γ ] τ = u , (Γ , τ)
 
-  postulate
-    holes-disjoint : hexp → hexp → Set
-    hole-name-new  : hexp → Nat → Set
+  data hole-name-new : (e : hexp) (u : Nat) → Set where
+    HNConst : ∀{u} → hole-name-new c u
+    HNAsc : ∀{e τ u} →
+            hole-name-new e u →
+            hole-name-new (e ·: τ) u
+    HNVar : ∀{x u} → hole-name-new (X x) u
+    HNLam1 : ∀{x e u} →
+             hole-name-new e u →
+             hole-name-new (·λ x e) u
+    HNLam2 : ∀{x e u τ} →
+             hole-name-new e u →
+             hole-name-new (·λ x [ τ ] e) u
+    HNHole : ∀{u u'} →
+             (u == u' → ⊥) →
+             hole-name-new (⦇⦈[ u' ]) u
+    HNNEHole : ∀{u u' e} →
+               (u == u' → ⊥) →
+               hole-name-new e u →
+               hole-name-new (⦇ e ⦈[ u' ]) u
+    HNAp : ∀{ u e1 e2 } →
+           hole-name-new e1 u →
+           hole-name-new e2 u →
+           hole-name-new (e1 ∘ e2) u
+
+  -- this is one way to write the function that we encode below as a
+  -- judgement so that we can pattern match on proofs of it
+  -- holes-disjoint : hexp → hexp → Set
+  -- holes-disjoint c e2 = ⊤
+  -- holes-disjoint (e1 ·: τ) e2 = holes-disjoint e1 e2
+  -- holes-disjoint (X x) e2 = ⊤
+  -- holes-disjoint (·λ x e1) e2 = holes-disjoint e1 e2
+  -- holes-disjoint (·λ x [ τ ] e1) e2 = holes-disjoint e1 e2
+  -- holes-disjoint ⦇⦈[ u ] e2 = hole-name-new e2 u
+  -- holes-disjoint ⦇ e1 ⦈[ u ] e2 = holes-disjoint e1 e2 × hole-name-new e2 u
+  -- holes-disjoint (e1 ∘ e2) e3 = holes-disjoint e1 e3 × holes-disjoint e2 e3
+
+  data holes-disjoint : (e1 : hexp) → (e2 : hexp) → Set where
+    HDConst : ∀{e} → holes-disjoint c e
+    HDAsc : ∀{e1 e2 τ} → holes-disjoint e1 e2 → holes-disjoint (e1 ·: τ) e2
+    HDVar : ∀{x e} → holes-disjoint (X x) e
+    HDLam1 : ∀{x e1 e2} → holes-disjoint e1 e2 → holes-disjoint (·λ x e1) e2
+    HDLam2 : ∀{x e1 e2 τ} → holes-disjoint e1 e2 → holes-disjoint (·λ x [ τ ] e1) e2
+    HDHole : ∀{u e2} → hole-name-new e2 u → holes-disjoint (⦇⦈[ u ]) e2
+    HDNEHole : ∀{u e1 e2} → hole-name-new e2 u → holes-disjoint e1 e2 → holes-disjoint (⦇ e1 ⦈[ u ]) e2
+    HDAp :  ∀{e1 e2 e3} → holes-disjoint e1 e3 → holes-disjoint e2 e3 → holes-disjoint (e1 ∘ e2) e3
 
   -- bidirectional type checking judgements for hexp
   mutual
@@ -101,7 +143,7 @@ module core where
                  (n , τ) ∈ Γ →
                  Γ ⊢ X n => τ
       SAp     : {Γ : tctx} {e1 e2 : hexp} {τ τ1 τ2 : htyp} →
-                 holes-disjoint e1 e2 → -- need a premise that the hole names are disjoint and something to relate that to the dom(Δ)s in expansion
+                 holes-disjoint e1 e2 →
                  Γ ⊢ e1 => τ1 →
                  τ1 ▸arr τ2 ==> τ →
                  Γ ⊢ e2 <= τ2 →
@@ -109,7 +151,7 @@ module core where
       SEHole  : {Γ : tctx} {u : Nat} → Γ ⊢ ⦇⦈[ u ] => ⦇⦈
       SNEHole : {Γ : tctx} {e : hexp} {τ : htyp} {u : Nat} →
                  hole-name-new e u →
-                 Γ ⊢ e => τ →   -- premise here that u is disjoint from hole names of e
+                 Γ ⊢ e => τ →
                  Γ ⊢ ⦇ e ⦈[ u ] => ⦇⦈
       SLam    : {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} {x : Nat} →
                  x # Γ →
