@@ -85,6 +85,7 @@ module core where
   _::[_]_ : Nat → tctx → htyp → (Nat × (tctx × htyp))
   u ::[ Γ ] τ = u , (Γ , τ)
 
+  -- defines when a name for a hole does not yet appear in a term
   data hole-name-new : (e : hexp) (u : Nat) → Set where
     HNConst : ∀{u} → hole-name-new c u
     HNAsc : ∀{e τ u} →
@@ -109,18 +110,8 @@ module core where
            hole-name-new e2 u →
            hole-name-new (e1 ∘ e2) u
 
-  -- this is one way to write the function that we encode below as a
-  -- judgement so that we can pattern match on proofs of it
-  -- holes-disjoint : hexp → hexp → Set
-  -- holes-disjoint c e2 = ⊤
-  -- holes-disjoint (e1 ·: τ) e2 = holes-disjoint e1 e2
-  -- holes-disjoint (X x) e2 = ⊤
-  -- holes-disjoint (·λ x e1) e2 = holes-disjoint e1 e2
-  -- holes-disjoint (·λ x [ τ ] e1) e2 = holes-disjoint e1 e2
-  -- holes-disjoint ⦇⦈[ u ] e2 = hole-name-new e2 u
-  -- holes-disjoint ⦇ e1 ⦈[ u ] e2 = holes-disjoint e1 e2 × hole-name-new e2 u
-  -- holes-disjoint (e1 ∘ e2) e3 = holes-disjoint e1 e3 × holes-disjoint e2 e3
-
+  -- describes when the collection of hole names used in two terms do
+  -- not overlap
   data holes-disjoint : (e1 : hexp) → (e2 : hexp) → Set where
     HDConst : ∀{e} → holes-disjoint c e
     HDAsc : ∀{e1 e2 τ} → holes-disjoint e1 e2 → holes-disjoint (e1 ·: τ) e2
@@ -195,7 +186,6 @@ module core where
   _gcomplete : tctx → Set
   Γ gcomplete = (x : Nat) (τ : htyp) → (x , τ) ∈ Γ → τ tcomplete
 
-
   -- expansion
   mutual
     data _⊢_⇒_~>_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (Δ : hctx) → Set where
@@ -203,7 +193,7 @@ module core where
       ESVar   : ∀{Γ x τ} → (x , τ) ∈ Γ →
                          Γ ⊢ X x ⇒ τ ~> X x ⊣ ∅
       ESLam   : ∀{Γ x τ1 τ2 e d Δ } →
-                     (x # Γ) → -- todo: i added this
+                     (x # Γ) →
                      (Γ ,, (x , τ1)) ⊢ e ⇒ τ2 ~> d ⊣ Δ →
                       Γ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ Δ
       ESAp : ∀{Γ e1 τ τ1 τ1' τ2 τ2' d1 Δ1 e2 d2 Δ2 } →
@@ -300,11 +290,12 @@ module core where
   [ d / y ] (d' ⟨ τ1 ⇒ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒ τ2 ⟩
   [ d / y ] (d' ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩
 
-  -- value
+  -- values
   data _val : (d : dhexp) → Set where
     VConst : c val
     VLam   : ∀{x τ d} → (·λ x [ τ ] d) val
 
+  -- boxed values
   data _boxedval : (d : dhexp) → Set where
     BVVal : ∀{d} → d val → d boxedval
     BVArrCast : ∀{ d τ1 τ2 τ3 τ4 } →
@@ -314,7 +305,7 @@ module core where
     BVHoleCast : ∀{ τ d } → τ ground → d boxedval → d ⟨ τ ⇒ ⦇⦈ ⟩ boxedval
 
   mutual
-    -- indeterminate
+    -- indeterminate forms
     data _indet : (d : dhexp) → Set where
       IEHole : ∀{u σ} → ⦇⦈⟨ u , σ ⟩ indet
       INEHole : ∀{d u σ} → d final → ⦇ d ⦈⟨ u , σ ⟩ indet
@@ -343,7 +334,7 @@ module core where
                     τ1 ≠ τ2 →
                     d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩ indet
 
-    -- final
+    -- final expressions
     data _final : (d : dhexp) → Set where
       FBoxed : ∀{d} → d boxedval → d final
       FIndet : ∀{d} → d indet → d final
@@ -360,16 +351,16 @@ module core where
     _⟨_⇒_⟩ : ectx → htyp → htyp → ectx
     _⟨_⇒⦇⦈⇏_⟩ : ectx → htyp → htyp → ectx
 
- -- todo/ note: this judgement is redundant now; in the absence of the
- -- premises in the red brackets in the notes PDF, all syntactically well
- -- formed ectxs are valid; with finality premises, that's not true. so it
- -- might make sense to remove this judgement entirely, but need to make
- -- sure to describe why we don't have the redbox things and how we'd patch
- -- it up if we wanted to force a particular evaluation order in some
- -- document somewhere (probably a README for this repo, or a sentence in
- -- the paper text or both)
+  -- note: this judgement is redundant now; in the absence of the
+  -- premises in the red brackets in the notes PDF, all syntactically
+  -- well formed ectxs are valid; with finality premises, that's not
+  -- true. so it might make sense to remove this judgement entirely,
+  -- but need to make sure to describe why we don't have the redbox
+  -- things and how we'd patch it up if we wanted to force a
+  -- particular evaluation order in some document somewhere (probably
+  -- a README for this repo, or a sentence in the paper text or both)
 
- --ε is an evaluation context
+   --ε is an evaluation context
   data _evalctx : (ε : ectx) → Set where
     ECDot : ⊙ evalctx
     ECAp1 : ∀{d ε} →
@@ -409,6 +400,7 @@ module core where
             d == ε ⟦ d' ⟧ →
             (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) == (ε ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) ⟦ d' ⟧
 
+  -- matched ground types
   data _▸gnd_ : htyp → htyp → Set where
     MGArr : ∀{τ1 τ2} →
             (τ1 ==> τ2) ≠ (⦇⦈ ==> ⦇⦈) →
@@ -445,6 +437,7 @@ module core where
                τ ▸gnd τ' →
                (d ⟨ ⦇⦈ ⇒ τ ⟩) →> (d ⟨ ⦇⦈ ⇒ τ' ⇒ τ ⟩)
 
+  -- single step (in contextual evaluation sense)
   data _↦_ : (d d' : dhexp) → Set where
     Step : ∀{ d d0 d' d0' ε} →
            d == ε ⟦ d0 ⟧ →
@@ -452,6 +445,7 @@ module core where
            d' == ε ⟦ d0' ⟧ →
            d ↦ d'
 
+  -- reflexive transitive closure of single steps into multi steps
   data _↦*_ : (d d' : dhexp) → Set where
     MSRefl : ∀{d} → d ↦* d
     MSStep : ∀{d d' d''} →

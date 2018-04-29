@@ -40,9 +40,6 @@ module progress-checks where
   boxedval-not-step (BVHoleCast x x₁) (_ , Step FHOuter (ITExpand ()) FHOuter)
   boxedval-not-step (BVHoleCast x x₁) (_ , Step FHOuter (ITCastFail x₂ () x₄) FHOuter)
 
-  -- todo: what class of P is this true for?
-  -- lem-something : ∀{ d ε d'} → d == ε ⟦ d' ⟧ → P d' → P d
-
   mutual
     -- indeterminates don't step
     indet-not-step : ∀{d} → d indet → (Σ[ d' ∈ dhexp ] (d ↦ d')) → ⊥

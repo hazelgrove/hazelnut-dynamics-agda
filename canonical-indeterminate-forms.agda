@@ -153,7 +153,7 @@ module canonical-indeterminate-forms where
                                        cif-hole Δ d
   canonical-indeterminate-forms-hole (TAVar x₁) ()
   canonical-indeterminate-forms-hole (TAAp wt wt₁) (IAp x ind x₁) = CIFHAp (_ , _ , _ , refl , wt , wt₁ , ind , x₁ , x)
-  canonical-indeterminate-forms-hole (TAEHole x x₁) IEHole = CIFHEHole (_ , _ , _ , refl , x) -- todo: this doesn't export x₁
+  canonical-indeterminate-forms-hole (TAEHole x x₁) IEHole = CIFHEHole (_ , _ , _ , refl , x)
   canonical-indeterminate-forms-hole (TANEHole x wt x₁) (INEHole x₂) = CIFHNEHole (_ , _ , _ , _ , _ , refl , x₂ , wt , x )
   canonical-indeterminate-forms-hole (TACast wt x) (ICastGroundHole x₁ ind) = CIFHCast (_ , _ , refl , x₁ , ind)
   canonical-indeterminate-forms-hole (TACast wt x) (ICastHoleGround x₁ ind ())
