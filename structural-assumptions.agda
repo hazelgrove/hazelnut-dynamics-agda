@@ -18,18 +18,16 @@ module structural-assumptions where
 -- break a circular module dependency, and 3) the signature of
 -- applying a substitition to a hole in core.agda
 
-
--- assumptions about contexts
 postulate
   ∪comm : {A : Set} → (C1 C2 : A ctx) → C1 ## C2 → (C1 ∪ C2) == (C2 ∪ C1)
+postulate
   x∈sing : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ,, (n , a))
+postulate
   x∈∪r : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ' → Γ ## Γ' → (n , x) ∈ (Γ ∪ Γ') -- follows from comm?
+postulate
   gcomp-extend : ∀{Γ τ x} → Γ gcomplete → τ tcomplete → (Γ ,, (x , τ)) gcomplete
-
 postulate
   subst-weaken : ∀{Δ Γ Γ' Δ' σ} → Δ ## Δ' → Δ , Γ ⊢ σ :s: Γ' → (Δ ∪ Δ') , Γ ⊢ σ :s: Γ'
-
--- assumptions about substitution
 postulate
   lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } →
               Δ , Γ ,, (x , τ1) ⊢ d1 :: τ →

@@ -4,7 +4,6 @@ open import core
 open import contexts
 
 module structural where
-
   postulate
        weaken-ana-expand : ∀{ Γ e τ e' τ' Δ x τ* } →
                         -- todo: there's a freshness concern here; i'm
