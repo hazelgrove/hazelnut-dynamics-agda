@@ -43,6 +43,16 @@ module contexts where
   ctxunicity p q | Inl refl = someinj (! p · q)
   ctxunicity _ _ | Inr x≠x = abort (x≠x refl)
 
+  -- the empty context is disjoint from any context
+  empty-disj : {A : Set} (Γ : A ctx) → ∅ ## Γ
+  empty-disj Γ = ed1 , ed2
+   where
+    ed1 : {A : Set} (n : Nat) → dom {A} ∅ n → n # Γ
+    ed1 n (π1 , ())
+
+    ed2 : {A : Set} (n : Nat) → dom Γ n →  _#_ {A} n ∅
+    ed2 _ _ = refl
+
   -- warning: this is union, but it assumes WITHOUT CHECKING that the
   -- domains are disjoint.
   _∪_ : {A : Set} → A ctx → A ctx → A ctx
