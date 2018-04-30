@@ -69,10 +69,18 @@ module contexts where
   x∈∪l Γ Γ' n x₁ xin | Some x = xin
   x∈∪l Γ Γ' n x ()   | None
 
-  lem-stop : {A : Set} (Γ : A ctx) (x : Nat) → (Σ[ a ∈ A ] (Γ x == Some a) + (Γ x == None))
-  lem-stop Γ x with Γ x
-  lem-stop Γ x | Some x₁ = Inl (x₁ , refl)
-  lem-stop Γ x | None = Inr refl
+  -- this packages up an appeal to context memebership into a form
+  -- that lets us retain more information in some settings, and
+  -- therefore be able to use things like context unicity
+  ctxindirect : {A : Set} (Γ : A ctx) (n : Nat) → Σ[ a ∈ A ] (Γ n == Some a) + Γ n == None
+  ctxindirect Γ n with Γ n
+  ctxindirect Γ n | Some x = Inl (x , refl)
+  ctxindirect Γ n | None = Inr refl
+
+  ctxindirect' : {A : Set} (Γ : A ctx) (n : Nat) → Σ[ a ∈ A ] ((Γ n == Some a) × ((b : A) → Γ n == Some b → a == b)) + Γ n == None
+  ctxindirect' Γ n with Γ n
+  ctxindirect' Γ n | Some x = Inl (x , refl , (λ b x₁ → someinj x₁))
+  ctxindirect' Γ n | None = Inr refl
 
   x∈■ : {A : Set} (n : Nat) (a : A) → (n , a) ∈ (■ (n , a))
   x∈■ n a with natEQ n n

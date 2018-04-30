@@ -21,12 +21,17 @@ module structural-assumptions where
 
 postulate
   ∪comm : {A : Set} → (C1 C2 : A ctx) → C1 ## C2 → (C1 ∪ C2) == (C2 ∪ C1)
-postulate
-  gcomp-extend : ∀{Γ τ x} → Γ gcomplete → τ tcomplete → (Γ ,, (x , τ)) gcomplete
+-- postulate
+--   gcomp-extend : ∀{Γ τ x} → Γ gcomplete → τ tcomplete → (Γ ,, (x , τ)) gcomplete
 postulate
   subst-weaken : ∀{Δ Γ Γ' Δ' σ} → Δ ## Δ' → Δ , Γ ⊢ σ :s: Γ' → (Δ ∪ Δ') , Γ ⊢ σ :s: Γ'
 postulate
   lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } → Δ , Γ ,, (x , τ1) ⊢ d1 :: τ → Δ , Γ ⊢ d2 :: τ1 → Δ , Γ ⊢ [ d2 / x ] d1 :: τ
+
+
+----- former assumptions that have now been proven, at least up to the
+----- assumptions above, but not placed in their rightful files
+----- because of cyclic dependency junk
 
 
 -- todo: this belongs in contexts once the above are proven and the
@@ -34,7 +39,7 @@ postulate
 x∈∪r : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ' → Γ' ## Γ → (n , x) ∈ (Γ ∪ Γ')
 x∈∪r Γ Γ' n x nx∈ disj = tr (λ qq → (n , x) ∈ qq) (∪comm _ _ disj) (x∈∪l Γ' Γ n x nx∈)
 
--- see below; this is copied code
+-- todo : see below; this is copied code
 lem-deleteme : {A : Set} (y : A) (n m : Nat) → dom (■ (m , y)) n → n == m
 lem-deleteme y n m (π1 , π2) with natEQ m n
 lem-deleteme y n .n (π1 , π2) | Inl refl = refl
@@ -55,6 +60,51 @@ lem-apart-sing-disj {A} {n} {a} {Γ} apt = asd1 , asd2
     asd2 .n (π1 , π2) | Inl refl = abort (somenotnone (! π2 · apt ))
     asd2 m (π1 , π2) | Inr x = refl
 
--- proably belongs in contexts
+-- todo: belongs in contexts
 ctx-top : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n # Γ) → (n , a) ∈ (Γ ,, (n , a))
 ctx-top Γ n a apt = x∈∪r Γ (■ (n , a)) n a (x∈■ n a) (lem-apart-sing-disj apt)
+
+-- todo: belongs in contexts
+lem-insingeq : {A : Set} {x x' : Nat} {τ τ' : A} → (■ (x , τ)) x' == Some τ' → τ == τ'
+lem-insingeq {A} {x} {x'} {τ} {τ'} eq with lem-deleteme τ x' x (τ' , eq)
+lem-insingeq {A} {x} {.x} {τ} {τ'} eq | refl with natEQ x x
+lem-insingeq refl | refl | Inl refl = refl
+lem-insingeq eq | refl | Inr x₁ = abort (somenotnone (! eq))
+
+lem-apart-union-eq : {A : Set} {Γ : A ctx} {x x' : Nat} {τ τ' : A} → x' # Γ → (Γ ∪ ■ (x , τ)) x' == Some τ' → τ == τ'
+lem-apart-union-eq {A} {Γ} {x} {x'} {τ} {τ'} apart eq with Γ x'
+lem-apart-union-eq apart eq | Some x = abort (somenotnone apart)
+lem-apart-union-eq apart eq | None = lem-insingeq eq
+
+lem-neq-union-eq : {A : Set} {Γ : A ctx} {x x' : Nat} {τ τ' : A} → x' ≠ x → (Γ ∪ ■ (x , τ)) x' == Some τ' → Γ x' == Some τ'
+lem-neq-union-eq {A} {Γ} {x} {x'} {τ} {τ'} neq eq with Γ x'
+lem-neq-union-eq neq eq | Some x = eq
+lem-neq-union-eq {A} {Γ} {x} {x'} {τ} {τ'} neq eq | None with natEQ x x'
+lem-neq-union-eq neq eq | None | Inl x₁ = abort ((flip neq) x₁)
+lem-neq-union-eq neq eq | None | Inr x₁ = abort (somenotnone (! eq))
+
+-- we need this apartness premise because it's false otherwise, given
+-- the particular implementation of ,, which is backed by ∪, which
+-- queries one side first.
+gcomp-extend : ∀{Γ τ x} → Γ gcomplete → τ tcomplete → x # Γ → (Γ ,, (x , τ)) gcomplete
+gcomp-extend {Γ} {τ} {x} gc tc apart x_query τ_query x₁ with natEQ x x_query
+gcomp-extend {Γ} {τ} {x} gc tc apart .x τ_query x₂ | Inl refl = tr (λ qq → qq tcomplete) (lem-apart-union-eq {Γ = Γ} apart x₂) tc
+gcomp-extend {Γ} {τ} {x} gc tc apart x_query τ_query x₂ | Inr x₁ = gc x_query τ_query (lem-neq-union-eq {Γ = Γ} (flip x₁) x₂ )
+
+-- gcomp-extend {Γ} {τ} {x} gc tc aprt x₁ τ₁ x₂ with Γ x
+-- gcomp-extend gc tc aprt x₂ τ₁ x₃ | Some x₁ = abort (somenotnone aprt)
+-- gcomp-extend {Γ} {τ} {x} gc tc aprt x₁ τ₁ x₂ | None with ctxindirect' Γ x₁
+-- gcomp-extend {Γ} {τ} {x} gc tc aprt x₁ τ₁ x₃ | None | Inl (a , eq , inj) with lem-poop {Γ = Γ} {!!}  x₃
+-- gcomp-extend gc tc aprt x₁ τ₁ x₃ | None | Inl (a , eq , inj) | refl = tc
+-- gcomp-extend gc tc aprt x₁ τ₁ x₃ | None | Inr x = {!!}
+
+-- gcomp-extend {Γ} {τ} {x} gc apt tc x' τ' mem with Γ x
+-- gcomp-extend gc apt tc x' τ' mem | Some x₁ = abort (somenotnone tc)
+-- gcomp-extend {Γ} gc apt refl x' τ' mem | None with ctxindirect Γ x'
+-- gcomp-extend {Γ} {x = y} gc tc refl x' τ' mem | None | Inl (a , x) = tr (λ qq → qq tcomplete) (ctxunicity x {!!}) (gc x' a x)
+-- gcomp-extend {Γ} gc tc refl x' τ' mem | None | Inr neq with Γ x'
+-- gcomp-extend gc tc refl x' τ' mem | None | Inr neq | Some x = abort (somenotnone neq)
+-- gcomp-extend gc tc refl x' τ' mem | None | Inr refl | None with lem-insingeq mem
+-- gcomp-extend gc tc refl x' τ' mem | None | Inr refl | None | refl = tc
+
+-- (Γ ∪ ■ (x , τ) x₁ | Γ x₁) == Some τ₁

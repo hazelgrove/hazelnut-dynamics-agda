@@ -80,3 +80,21 @@ deadline madness code snippets that i removed
 
   -- ∪comm' : {A : Set} → (C1 C2 : A ctx) → (C1 ## C2) → (C1 ∪ C2) == (C2 ∪ C1)
   -- ∪comm' C1 C2 disj = funext (∪comm'guts C1 C2 disj)
+
+
+-----
+version of this lemma where the union in ,, is flipped; probably useless
+-- ctx-top : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ,, (n , a))
+-- ctx-top Γ n a with natEQ n n
+-- ctx-top Γ n a | Inl refl = refl
+-- ctx-top Γ n a | Inr x = abort (x refl)
+
+
+ditto
+-- gcomp-extend {Γ} {τ} {x} gc tc x₁ τ₁ x₂ with natEQ x₁ x
+-- gcomp-extend gc tc x τ₁ x₃ | Inl refl with natEQ x x
+-- gcomp-extend gc tc x τ refl | Inl refl | Inl refl = tc
+-- gcomp-extend gc tc x τ₁ x₃ | Inl refl | Inr x₁ = gc x τ₁ x₃
+-- gcomp-extend {Γ} {τ} {x} gc tc x₁ τ₁ x₃ | Inr x₂ with natEQ x x₁
+-- gcomp-extend gc tc x τ₁ refl | Inr x₃ | Inl refl = tc
+-- gcomp-extend gc tc x₁ τ₁ x₄ | Inr x₃ | Inr x₂ = gc x₁ τ₁ x₄
