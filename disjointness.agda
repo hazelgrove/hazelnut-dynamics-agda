@@ -87,7 +87,13 @@ module disjointness where
     expand-synth-disjoint (HDAp hd hd₁) (ESAp x x₁ x₂ x₃ x₄ x₅) ana = disjoint-parts (expand-ana-disjoint hd x₄ ana) (expand-ana-disjoint hd₁ x₅ ana)
 
 
-
+  -- these lemmas are all structurally recursive. morally, they
+  -- establish the properties about reduction that would be obvious /
+  -- baked into Agda if holes-disjoint was defined as a function
+  -- rather than a judgement (datatype), or if we had defined all the
+  -- O(n^2) cases rather than relying on a little indirection to only
+  -- have O(n) cases. that work has to go somewhwere, and we prefer
+  -- that it goes here.
   ds-lem-asc : ∀{e1 e2 τ} → holes-disjoint e2 e1 → holes-disjoint e2 (e1 ·: τ)
   ds-lem-asc HDConst = HDConst
   ds-lem-asc (HDAsc hd) = HDAsc (ds-lem-asc hd)
@@ -118,6 +124,27 @@ module disjointness where
   ds-lem-lam2 (HDNEHole x₁ hd) = HDNEHole (HNLam2 x₁) (ds-lem-lam2 hd)
   ds-lem-lam2 (HDAp hd hd₁) = HDAp (ds-lem-lam2 hd) (ds-lem-lam2 hd₁)
 
+  ds-lem-nehole : ∀{e e1 u} → holes-disjoint e e1 → hole-name-new e u → holes-disjoint e ⦇ e1 ⦈[ u ]
+  ds-lem-nehole HDConst ν = HDConst
+  ds-lem-nehole (HDAsc hd) (HNAsc ν) = HDAsc (ds-lem-nehole hd ν)
+  ds-lem-nehole HDVar ν = HDVar
+  ds-lem-nehole (HDLam1 hd) (HNLam1 ν) = HDLam1 (ds-lem-nehole hd ν)
+  ds-lem-nehole (HDLam2 hd) (HNLam2 ν) = HDLam2 (ds-lem-nehole hd ν)
+  ds-lem-nehole (HDHole x) (HNHole x₁) = HDHole (HNNEHole (flip x₁) x)
+  ds-lem-nehole (HDNEHole x hd) (HNNEHole x₁ ν) = HDNEHole (HNNEHole (flip x₁) x) (ds-lem-nehole hd ν)
+  ds-lem-nehole (HDAp hd hd₁) (HNAp ν ν₁) = HDAp (ds-lem-nehole hd ν) (ds-lem-nehole hd₁ ν₁)
+
+  ds-lem-ap : ∀{e1 e2 e3} → holes-disjoint e3 e1 → holes-disjoint e3 e2 → holes-disjoint e3 (e1 ∘ e2)
+  ds-lem-ap HDConst hd2 = HDConst
+  ds-lem-ap (HDAsc hd1) (HDAsc hd2) = HDAsc (ds-lem-ap hd1 hd2)
+  ds-lem-ap HDVar hd2 = HDVar
+  ds-lem-ap (HDLam1 hd1) (HDLam1 hd2) = HDLam1 (ds-lem-ap hd1 hd2)
+  ds-lem-ap (HDLam2 hd1) (HDLam2 hd2) = HDLam2 (ds-lem-ap hd1 hd2)
+  ds-lem-ap (HDHole x) (HDHole x₁) = HDHole (HNAp x x₁)
+  ds-lem-ap (HDNEHole x hd1) (HDNEHole x₁ hd2) = HDNEHole (HNAp x x₁) (ds-lem-ap hd1 hd2)
+  ds-lem-ap (HDAp hd1 hd2) (HDAp hd3 hd4) = HDAp (ds-lem-ap hd1 hd3) (ds-lem-ap hd2 hd4)
+
+  -- holes-disjoint is symmetric
   disjoint-sym : (e1 e2 : hexp) → holes-disjoint e1 e2 → holes-disjoint e2 e1
   disjoint-sym .c c HDConst = HDConst
   disjoint-sym .c (e2 ·: x) HDConst = HDAsc (disjoint-sym _ _ HDConst)
@@ -193,22 +220,34 @@ module disjointness where
                                                     (disjoint-sym ⦇⦈[ _ ] e3 (HDHole x₁))
 
   disjoint-sym _ c (HDNEHole x hd) = HDConst
-  disjoint-sym _ (e2 ·: x) (HDNEHole x₁ hd) = HDAsc {!!}
+  disjoint-sym _ (e2 ·: x) (HDNEHole x₁ hd) with disjoint-sym _ _ hd
+  disjoint-sym _ (e ·: x) (HDNEHole (HNAsc x₁) hd) | HDAsc ih = HDAsc (ds-lem-nehole ih x₁)
   disjoint-sym _ (X x) (HDNEHole x₁ hd) = HDVar
-  disjoint-sym _ (·λ x e2) (HDNEHole x₁ hd) = {!!}
-  disjoint-sym _ (·λ x [ x₁ ] e2) (HDNEHole x₂ hd) = {!!}
-  disjoint-sym _ ⦇⦈[ x ] (HDNEHole x₁ hd) = {!!}
-  disjoint-sym _ ⦇ e2 ⦈[ x ] (HDNEHole x₁ hd) = {!!}
-  disjoint-sym _ (e2 ∘ e3) (HDNEHole x hd) = {!!}
+  disjoint-sym _ (·λ x e2) (HDNEHole x₁ hd) with disjoint-sym _ _ hd
+  disjoint-sym _ (·λ x e2) (HDNEHole (HNLam1 x₁) hd) | HDLam1 ih = HDLam1 (ds-lem-nehole ih x₁)
+  disjoint-sym _ (·λ x [ x₁ ] e2) (HDNEHole x₂ hd) with disjoint-sym _ _ hd
+  disjoint-sym _ (·λ x [ x₁ ] e2) (HDNEHole (HNLam2 x₂) hd) | HDLam2 ih = HDLam2 (ds-lem-nehole ih x₂)
+  disjoint-sym _ ⦇⦈[ x ] (HDNEHole x₁ hd) with disjoint-sym _ _ hd
+  disjoint-sym _ ⦇⦈[ x ] (HDNEHole (HNHole x₂) hd) | HDHole x₁ = HDHole (HNNEHole (flip x₂) x₁)
+  disjoint-sym _ ⦇ e2 ⦈[ x ] (HDNEHole x₁ hd) with disjoint-sym _ _ hd
+  disjoint-sym _ ⦇ e2 ⦈[ x ] (HDNEHole (HNNEHole x₂ x₃) hd) | HDNEHole x₁ ih = HDNEHole (HNNEHole (flip x₂) x₁) (ds-lem-nehole ih x₃)
+  disjoint-sym _ (e2 ∘ e3) (HDNEHole x hd) with disjoint-sym _ _ hd
+  disjoint-sym _ (e1 ∘ e3) (HDNEHole (HNAp x x₁) hd) | HDAp ih ih₁ = HDAp (ds-lem-nehole ih x) (ds-lem-nehole ih₁ x₁)
 
   disjoint-sym _ c (HDAp hd hd₁) = HDConst
-  disjoint-sym _ (e3 ·: x) (HDAp hd hd₁) = {!!}
+  disjoint-sym _ (e3 ·: x) (HDAp hd hd₁) with disjoint-sym _ _ hd | disjoint-sym _ _ hd₁
+  disjoint-sym _ (e3 ·: x) (HDAp hd hd₁) | HDAsc ih | HDAsc ih1 = HDAsc (ds-lem-ap ih ih1)
   disjoint-sym _ (X x) (HDAp hd hd₁) = HDVar
-  disjoint-sym _ (·λ x e3) (HDAp hd hd₁) = {!!}
-  disjoint-sym _ (·λ x [ x₁ ] e3) (HDAp hd hd₁) = {!!}
-  disjoint-sym _ ⦇⦈[ x ] (HDAp hd hd₁) = {!!}
-  disjoint-sym _ ⦇ e3 ⦈[ x ] (HDAp hd hd₁) = {!!}
-  disjoint-sym _ (e3 ∘ e4) (HDAp hd hd₁) = {!!}
+  disjoint-sym _ (·λ x e3) (HDAp hd hd₁) with disjoint-sym _ _ hd | disjoint-sym _ _ hd₁
+  disjoint-sym _ (·λ x e3) (HDAp hd hd₁) | HDLam1 ih | HDLam1 ih1 = HDLam1 (ds-lem-ap ih ih1)
+  disjoint-sym _ (·λ x [ x₁ ] e3) (HDAp hd hd₁) with disjoint-sym _ _ hd | disjoint-sym _ _ hd₁
+  disjoint-sym _ (·λ x [ x₁ ] e3) (HDAp hd hd₁) | HDLam2 ih | HDLam2 ih1 = HDLam2 (ds-lem-ap ih ih1)
+  disjoint-sym _ ⦇⦈[ x ] (HDAp hd hd₁) with disjoint-sym _ _ hd | disjoint-sym _ _ hd₁
+  disjoint-sym _ ⦇⦈[ x ] (HDAp hd hd₁) | HDHole x₁ | HDHole x₂ = HDHole (HNAp x₁ x₂)
+  disjoint-sym _ ⦇ e3 ⦈[ x ] (HDAp hd hd₁) with disjoint-sym _ _ hd | disjoint-sym _ _ hd₁
+  disjoint-sym _ ⦇ e3 ⦈[ x ] (HDAp hd hd₁) | HDNEHole x₁ ih | HDNEHole x₂ ih1 = HDNEHole (HNAp x₁ x₂) (ds-lem-ap ih ih1)
+  disjoint-sym _ (e3 ∘ e4) (HDAp hd hd₁) with disjoint-sym _ _ hd | disjoint-sym _ _ hd₁
+  disjoint-sym _ (e3 ∘ e4) (HDAp hd hd₁) | HDAp ih ih₁ | HDAp ih1 ih2 = HDAp (ds-lem-ap ih ih1) (ds-lem-ap ih₁ ih2)
 
 
 
