@@ -87,8 +87,7 @@ module Prelude where
   -- function extensionality, used to reason about contexts as finite
   -- functions.
   postulate
-     funext : {A : Set} {B : A → Set} {f g : (x : A) → (B x)} →
-              ((x : A) → f x == g x) → f == g
+     funext : {A : Set} {B : A → Set} {f g : (x : A) → (B x)} → ((x : A) → f x == g x) → f == g
 
   -- non-equality is commutative
   flip : {A : Set} {x y : A} → (x == y → ⊥) → (y == x → ⊥)
