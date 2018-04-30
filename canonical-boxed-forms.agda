@@ -32,7 +32,7 @@ module canonical-boxed-forms where
                             d boxedval →
                             cbf-arr Δ d τ1 τ2
   canonical-boxed-forms-arr (TAVar x₁) (BVVal ())
-  canonical-boxed-forms-arr (TALam wt) (BVVal v) = CBFLam (canonical-value-forms-arr (TALam wt) v)
+  canonical-boxed-forms-arr (TALam f wt) (BVVal v) = CBFLam (canonical-value-forms-arr (TALam f wt) v)
   canonical-boxed-forms-arr (TAAp wt wt₁) (BVVal ())
   canonical-boxed-forms-arr (TAEHole x x₁) (BVVal ())
   canonical-boxed-forms-arr (TANEHole x wt x₁) (BVVal ())
@@ -64,7 +64,7 @@ module canonical-boxed-forms where
                                    ⊥
   canonical-boxed-forms-coverage TAConst (BVVal x) nb na nh = nb refl
   canonical-boxed-forms-coverage (TAVar x₁) (BVVal ()) nb na nh
-  canonical-boxed-forms-coverage (TALam wt) (BVVal x₁) nb na nh = na _ _ refl
+  canonical-boxed-forms-coverage (TALam _ wt) (BVVal x₁) nb na nh = na _ _ refl
   canonical-boxed-forms-coverage (TAAp wt wt₁) (BVVal ()) nb na nh
   canonical-boxed-forms-coverage (TAEHole x x₁) (BVVal ()) nb na nh
   canonical-boxed-forms-coverage (TANEHole x wt x₁) (BVVal ()) nb na nh

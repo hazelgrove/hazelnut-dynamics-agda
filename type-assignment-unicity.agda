@@ -11,7 +11,7 @@ module type-assignment-unicity where
                               τ == τ'
   type-assignment-unicity TAConst TAConst = refl
   type-assignment-unicity {Γ = Γ} (TAVar x₁) (TAVar x₂) = ctxunicity {Γ = Γ} x₁ x₂
-  type-assignment-unicity (TALam d1) (TALam d2)
+  type-assignment-unicity (TALam _ d1) (TALam _ d2)
     with type-assignment-unicity d1 d2
   ... | refl = refl
   type-assignment-unicity (TAAp x x₁) (TAAp y y₁)

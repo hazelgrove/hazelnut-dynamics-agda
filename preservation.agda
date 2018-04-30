@@ -36,7 +36,7 @@ module preservation where
              Σ[ τ' ∈ htyp ] (Δ , Γ ⊢ d' :: τ')
   wt-filling TAConst FHOuter = _ , TAConst
   wt-filling (TAVar x₁) FHOuter = _ , TAVar x₁
-  wt-filling (TALam ta) FHOuter = _ , TALam ta
+  wt-filling (TALam f ta) FHOuter = _ , TALam f ta
 
   wt-filling (TAAp ta ta₁) FHOuter = _ , TAAp ta ta₁
   wt-filling (TAAp ta ta₁) (FHAp1 eps) = wt-filling ta eps
@@ -57,8 +57,8 @@ module preservation where
             Δ , Γ ⊢ d' :: τ
   preserve-trans TAConst ()
   preserve-trans (TAVar x₁) ()
-  preserve-trans (TALam ta) ()
-  preserve-trans (TAAp (TALam ta) ta₁) ITLam = lem-subst ta ta₁
+  preserve-trans (TALam _ ta) ()
+  preserve-trans (TAAp (TALam apt ta) ta₁) ITLam = lem-subst ta ta₁
   preserve-trans (TAAp (TACast ta TCRefl) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ TCRefl)) TCRefl
   preserve-trans (TAAp (TACast ta (TCArr x x₁)) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ (~sym x))) x₁
   preserve-trans (TAEHole x x₁) ()

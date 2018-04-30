@@ -250,6 +250,7 @@ module core where
       TAConst : ∀{Δ Γ} → Δ , Γ ⊢ c :: b
       TAVar : ∀{Δ Γ x τ} → (x , τ) ∈ Γ → Δ , Γ ⊢ X x :: τ
       TALam : ∀{ Δ Γ x τ1 d τ2} →
+              x # Γ →
               Δ , (Γ ,, (x , τ1)) ⊢ d :: τ2 →
               Δ , Γ ⊢ ·λ x [ τ1 ] d :: (τ1 ==> τ2)
       TAAp : ∀{ Δ Γ d1 d2 τ1 τ} →

@@ -27,7 +27,7 @@ postulate
   subst-weaken : ∀{Δ Γ Γ' Δ' σ} → Δ ## Δ' → Δ , Γ ⊢ σ :s: Γ' → (Δ ∪ Δ') , Γ ⊢ σ :s: Γ'
 postulate
   lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } → Δ , Γ ,, (x , τ1) ⊢ d1 :: τ → Δ , Γ ⊢ d2 :: τ1 → Δ , Γ ⊢ [ d2 / x ] d1 :: τ
-
+  -- can also get an apartness premise here, i think; see callsite in preserve-trans in preservation
 
 ----- former assumptions that have now been proven, at least up to the
 ----- assumptions above, but not placed in their rightful files

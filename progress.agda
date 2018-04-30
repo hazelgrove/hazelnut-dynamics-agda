@@ -34,7 +34,7 @@ module progress where
   progress (TAVar x₁) = abort (somenotnone (! x₁))
 
     -- lambdas
-  progress (TALam wt) = BV (BVVal VLam)
+  progress (TALam _ wt) = BV (BVVal VLam)
 
     -- applications
   progress (TAAp wt1 wt2)

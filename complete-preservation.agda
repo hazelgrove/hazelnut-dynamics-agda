@@ -25,7 +25,7 @@ module complete-preservation where
              d' dcomplete
   cp-rhs dc TAConst (Step FHOuter () FHOuter)
   cp-rhs dc (TAVar x₁) stp = abort (somenotnone (! x₁))
-  cp-rhs dc (TALam wt) (Step FHOuter () FHOuter)
+  cp-rhs dc (TALam _ wt) (Step FHOuter () FHOuter)
   cp-rhs (DCAp dc dc₁) (TAAp wt wt₁) (Step FHOuter ITLam FHOuter) with cp-subst dc dc₁
   cp-rhs (DCAp dc dc₁) (TAAp wt wt₁) (Step FHOuter ITLam FHOuter) | DCLam qq x₁ = qq
   cp-rhs (DCAp (DCCast dc (TCArr x x₁) (TCArr x₂ x₃)) dc₁) (TAAp (TACast wt x₄) wt₁) (Step FHOuter ITApCast FHOuter) = DCCast (DCAp dc (DCCast dc₁ x₂ x)) x₁ x₃

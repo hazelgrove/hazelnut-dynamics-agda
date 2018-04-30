@@ -23,7 +23,7 @@ module canonical-value-forms where
                                 ((d == (·λ x [ τ1 ] d')) ×
                                  (Δ , ■ (x , τ1) ⊢ d' :: τ2))
   canonical-value-forms-arr (TAVar x₁) ()
-  canonical-value-forms-arr (TALam wt) VLam = _ , _ , refl , wt
+  canonical-value-forms-arr (TALam _ wt) VLam = _ , _ , refl , wt
   canonical-value-forms-arr (TAAp wt wt₁) ()
   canonical-value-forms-arr (TAEHole x x₁) ()
   canonical-value-forms-arr (TANEHole x wt x₁) ()
@@ -43,7 +43,7 @@ module canonical-value-forms where
                                    ⊥
   canonical-value-forms-coverage1 TAConst VConst = λ z _ → z refl
   canonical-value-forms-coverage1 (TAVar x₁) ()
-  canonical-value-forms-coverage1 (TALam wt) VLam = λ _ z → z _ _ refl
+  canonical-value-forms-coverage1 (TALam _ wt) VLam = λ _ z → z _ _ refl
   canonical-value-forms-coverage1 (TAAp wt wt₁) ()
   canonical-value-forms-coverage1 (TAEHole x x₁) ()
   canonical-value-forms-coverage1 (TANEHole x wt x₁) ()

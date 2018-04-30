@@ -11,7 +11,7 @@ module complete-expansion where
   complete-ta : ∀{Γ Δ d τ} → (Γ gcomplete) → (Δ , Γ ⊢ d :: τ) → d dcomplete → τ tcomplete
   complete-ta gc TAConst comp = TCBase
   complete-ta gc (TAVar x₁) DCVar = gc _ _ x₁
-  complete-ta gc (TALam wt) (DCLam comp x₁) = TCArr x₁ (complete-ta (gcomp-extend gc x₁) wt comp)
+  complete-ta gc (TALam a wt) (DCLam comp x₁) = TCArr x₁ (complete-ta (gcomp-extend gc x₁ a ) wt comp)
   complete-ta gc (TAAp wt wt₁) (DCAp comp comp₁) with complete-ta gc wt comp
   complete-ta gc (TAAp wt wt₁) (DCAp comp comp₁) | TCArr qq qq₁ = qq₁
   complete-ta gc (TAEHole x x₁) ()
@@ -33,7 +33,7 @@ module complete-expansion where
   comp-synth gc (ECAp ec ec₁) (SAp _ wt MAArr x₁) | TCArr qq qq₁ = qq₁
   comp-synth gc () SEHole
   comp-synth gc () (SNEHole _ wt)
-  comp-synth gc (ECLam2 ec x₁) (SLam x₂ wt) = TCArr x₁ (comp-synth (gcomp-extend gc x₁) ec wt)
+  comp-synth gc (ECLam2 ec x₁) (SLam x₂ wt) = TCArr x₁ (comp-synth (gcomp-extend gc x₁ x₂) ec wt)
 
   mutual
     complete-expansion-synth : ∀{e τ Γ Δ d} →
@@ -43,7 +43,7 @@ module complete-expansion where
                                (d dcomplete × τ tcomplete)
     complete-expansion-synth gc ec ESConst = DCConst , TCBase
     complete-expansion-synth gc ec (ESVar x₁) = DCVar , gc _ _ x₁
-    complete-expansion-synth gc (ECLam2 ec x₁) (ESLam x₂ exp) with complete-expansion-synth (gcomp-extend gc x₁) ec exp
+    complete-expansion-synth gc (ECLam2 ec x₁) (ESLam x₂ exp) with complete-expansion-synth (gcomp-extend gc x₁ x₂) ec exp
     ... | ih1 , ih2 = DCLam ih1 x₁ , TCArr x₁ ih2
     complete-expansion-synth gc (ECAp ec ec₁) (ESAp _ _ x MAHole x₂ x₃) with comp-synth gc ec x
     ... | ()
@@ -67,7 +67,7 @@ module complete-expansion where
                              d dcomplete
     complete-expansion-ana gc (ECLam1 ec) () (EALam x₁ MAHole exp)
     complete-expansion-ana gc (ECLam1 ec) (TCArr t1 t2)  (EALam x₁ MAArr exp)
-      with complete-expansion-ana (gcomp-extend gc t1) ec t2 exp
+      with complete-expansion-ana (gcomp-extend gc t1 x₁) ec t2 exp
     ... | ih = DCLam ih t1
     complete-expansion-ana gc ec tc (EASubsume x x₁ x₂ x₃) = π1(complete-expansion-synth gc ec x₂)
 
