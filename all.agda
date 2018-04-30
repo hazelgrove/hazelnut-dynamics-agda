@@ -5,6 +5,8 @@ open import Prelude
 open import contexts
 open import core
 
+open import lemmas-gcomplete
+
 open import lemmas-disjointness
 open import disjointness
 

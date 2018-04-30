@@ -55,33 +55,6 @@ deadline madness code snippets that i removed
 
 -- complete expansion
 
-  gcomp-extend : ∀{Γ τ x} → Γ gcomplete → τ tcomplete → (Γ ,, (x , τ)) gcomplete
-  gcomp-extend {x = x} gc tc x₁ t x₂ with natEQ x₁ x
-  gcomp-extend {Γ = Γ} gc tc x t x₃ | Inl refl with Γ x
-  gcomp-extend gc tc x x₁ refl | Inl refl | Some .x₁ = {!!} -- stupid context stuff again
-  gcomp-extend gc tc x t x₃ | Inl refl | None with natEQ x x
-  gcomp-extend gc tc x τ refl | Inl refl | None | Inl refl = tc
-  gcomp-extend gc tc x t x₃ | Inl refl | None | Inr x₁ = abort (somenotnone (! x₃))
-  gcomp-extend {Γ = Γ} gc tc x₁ t x₃ | Inr x₂ with Γ x₁
-  gcomp-extend gc tc x₁ t x₄ | Inr x₃ | Some x = {!tc!} -- ditto
-  gcomp-extend {x = x} gc tc x₁ t x₃ | Inr x₂ | None with natEQ x x₁
-  gcomp-extend gc tc x t refl | Inr x₃ | None | Inl refl = tc
-  gcomp-extend gc tc x₁ t x₄ | Inr x₃ | None | Inr x₂ = abort (somenotnone (! x₄))
-
-
-  -- todo: this is almost a proof of ∪comm
-  -- ∪comm'guts : {A : Set} → (C1 C2 : A ctx) → (C1 ## C2) → (x : Nat) → ((C1 ∪ C2) x) == ((C2 ∪ C1) x)
-  -- ∪comm'guts C1 C2 disj x with lem-stop C1 x | lem-stop C2 x
-  -- ∪comm'guts C1 C2 disj x | Inl x₁ | Inl x₂ = abort (somenotnone (! (π2 x₂) · (π1 disj) x x₁))
-  -- ∪comm'guts C1 C2 disj x | Inl x₁ | Inr x₂ = {!!}
-  -- ∪comm'guts C1 C2 disj x | Inr x₁ | Inl x₂ = {!!}
-  -- ∪comm'guts C1 C2 disj x | Inr x₁ | Inr x₂ with x₁ · (! x₂)
-  -- ... | qq = {!ap1 (λ ff → C1 ∪ ff == C2 ∪ ff) !}
-
-  -- ∪comm' : {A : Set} → (C1 C2 : A ctx) → (C1 ## C2) → (C1 ∪ C2) == (C2 ∪ C1)
-  -- ∪comm' C1 C2 disj = funext (∪comm'guts C1 C2 disj)
-
-
 -----
 version of this lemma where the union in ,, is flipped; probably useless
 -- ctx-top : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ,, (n , a))

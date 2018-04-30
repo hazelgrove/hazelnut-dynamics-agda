@@ -22,19 +22,14 @@ module lemmas-disjointness where
   disjoint-singles : {A : Set} {x y : A} {u1 u2 : Nat} → u1 ≠ u2 → (■ (u1 , x)) ## (■ (u2 , y))
   disjoint-singles {_} {x} {y} {u1} {u2} neq = ds1 , ds2
     where
-      lem : {A : Set} (y : A) (n m : Nat) → dom (■ (m , y)) n → n == m
-      lem y n m (π1 , π2) with natEQ m n
-      lem y n .n (π1 , π2) | Inl refl = refl
-      lem y n m (π1 , π2) | Inr x = abort (somenotnone (! π2))
-
       ds1 : (n : Nat) → dom (■ (u1 , x)) n → n # (■ (u2 , y))
-      ds1 n d with lem _ _ _ d
+      ds1 n d with lem-dom-eq _ _ _ d
       ds1 .u1 d | refl with natEQ u2 u1
       ds1 .u1 d | refl | Inl xx = abort (neq (! xx))
       ds1 .u1 d | refl | Inr x₁ = refl
 
       ds2 : (n : Nat) → dom (■ (u2 , y)) n → n # (■ (u1 , x))
-      ds2 n d with lem _ _ _ d
+      ds2 n d with lem-dom-eq _ _ _ d
       ds2 .u2 d | refl with natEQ u1 u2
       ds2 .u2 d | refl | Inl x₁ = abort (neq x₁)
       ds2 .u2 d | refl | Inr x₁ = refl

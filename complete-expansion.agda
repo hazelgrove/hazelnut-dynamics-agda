@@ -3,7 +3,7 @@ open import Prelude
 open import core
 open import contexts
 open import typed-expansion
-open import structural-assumptions
+open import lemmas-gcomplete
 
 module complete-expansion where
   -- this might be derivable from things below and a fact about => and ::
