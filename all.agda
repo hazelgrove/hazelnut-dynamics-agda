@@ -8,8 +8,8 @@ open import core
 open import lemmas-disjointness
 open import disjointness
 
-open import structural-assumptions -- prove everything in here and then remove this file
-open import structural -- this too, really
+open import structural-assumptions
+open import structural
 
 open import focus-formation
 open import ground-decidable
@@ -27,7 +27,7 @@ open import expansion-generality
 open import expandability
 open import expansion-unicity
 open import type-assignment-unicity
-open import typed-expansion -- in complete-expansion
+open import typed-expansion
 
 open import canonical-value-forms
 open import canonical-boxed-forms
@@ -36,7 +36,7 @@ open import canonical-indeterminate-forms
 open import lemmas-progress-checks
 open import progress-checks
 open import progress
-open import preservation -- in complete-preservation
+open import preservation
 
 open import complete-preservation
 open import complete-progress

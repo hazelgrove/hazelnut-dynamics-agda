@@ -1,0 +1,69 @@
+copied from all.agda so that i can ignore comments
+-------------------------------------------------
+open import structural-assumptions -- prove everything in here and then remove this file
+open import structural -- this too, really
+open import typed-expansion -- in complete-expansion
+open import preservation -- in complete-preservation
+
+
+deadline madness code snippets that i removed
+---------------------------------------------
+-- this goes in preservation.agda
+
+-- replacing a variable in a term with contents of the appropriate type
+ -- preserves type and contracts the context
+  lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } →
+              Δ , Γ ,, (x , τ1) ⊢ d1 :: τ →
+              Δ , Γ ⊢ d2 :: τ1 →
+              Δ , Γ ⊢ [ d2 / x ] d1 :: τ
+  lem-subst TAConst D2 = TAConst
+  lem-subst {Γ = Γ} {x = x'} (TAVar {x = x} x₂) D2 with natEQ x x'
+  lem-subst {Γ = Γ} {x = x} {τ1 = τ1} (TAVar x₃) D2 | Inl refl = {!!}
+  lem-subst {Γ = Γ} {x = x} {τ1 = τ1} (TAVar {x = x'} x₃) D2 | Inr x₂ = {!x∈sing!}
+  -- ... | qq = TAVar {!!}
+  --   with Γ x
+  -- lem-subst {x = x} (TAVar {x = x'} x₃) D2 | Some x₁ = {!!}
+  --   with natEQ x' x
+  -- lem-subst (TAVar xin) D2 | Some x₃ | Inl refl = {!!}
+  -- lem-subst (TAVar refl) D2 | Some x₃ | Inr x₂ = {!!}
+  -- lem-subst {x = x} (TAVar {x = x'} x₂) D2 | None with natEQ x' x
+  --lem-subst {x = x} (TAVar x₃) D2 | None | Inl refl with natEQ x x
+  -- lem-subst (TAVar refl) D2 | None | Inl refl | Inl refl = D2
+  -- lem-subst (TAVar x₃) D2 | None | Inl refl | Inr x₁ = abort (somenotnone (! x₃))
+  --lem-subst {x = x} (TAVar {x = x'} x₃) D2 | None | Inr x₂ with natEQ x x'
+  -- lem-subst (TAVar x₄) D2 | None | Inr x₃ | Inl x₂ = abort ((flip x₃) x₂)
+  -- lem-subst (TAVar x₄) D2 | None | Inr x₃ | Inr x₂ = abort (somenotnone (! x₄))
+  lem-subst {Γ = Γ} {x = x} (TALam {x = x'} D1) D2 = {!!}
+  lem-subst (TAAp D1 D2) D3 = TAAp (lem-subst D1 D3) (lem-subst D2 D3)
+  lem-subst (TAEHole x₁ x₂) D2 = TAEHole x₁ {!!}
+  lem-subst (TANEHole x₁ D1 x₂) D2 = TANEHole x₁ (lem-subst D1 D2) {!!}
+  lem-subst (TACast D1 x₁) D2 = TACast (lem-subst D1 D2) x₁
+  lem-subst (TAFailedCast D1 x₁ x₂ x₃) D2 = TAFailedCast (lem-subst D1 D2) x₁ x₂ x₃
+
+-- this goes in typed expansion (or maybe a lemmas file)
+
+  lem-weakenΔ1 : ∀{Δ1 Δ2 Γ d τ} → Δ1 ## Δ2 → Δ1 , Γ ⊢ d :: τ → (Δ1 ∪ Δ2) , Γ ⊢ d :: τ
+  lem-weakenΔ1 d TAConst = TAConst
+  lem-weakenΔ1 d (TAVar x₁) = TAVar x₁
+  lem-weakenΔ1 d (TALam D) = TALam (lem-weakenΔ1 d D)
+  lem-weakenΔ1 d (TAAp D D₁) = TAAp (lem-weakenΔ1 d D) (lem-weakenΔ1 d D₁)
+  lem-weakenΔ1 d (TAEHole {Δ = Δ} x y) = TAEHole (x∈∪l Δ _ _ _ x) (subst-weaken {!!} y)
+  lem-weakenΔ1 d (TANEHole {Δ = Δ} D x y) = TANEHole (x∈∪l Δ _ _ _ D) (lem-weakenΔ1 d x) (subst-weaken {!!} y)
+  lem-weakenΔ1 d (TACast D x) = TACast (lem-weakenΔ1 d D) x
+  lem-weakenΔ1 d (TAFailedCast x y z w) = TAFailedCast (lem-weakenΔ1 d x) y z w
+
+
+-- complete expansion
+
+  gcomp-extend : ∀{Γ τ x} → Γ gcomplete → τ tcomplete → (Γ ,, (x , τ)) gcomplete
+  gcomp-extend {x = x} gc tc x₁ t x₂ with natEQ x₁ x
+  gcomp-extend {Γ = Γ} gc tc x t x₃ | Inl refl with Γ x
+  gcomp-extend gc tc x x₁ refl | Inl refl | Some .x₁ = {!!} -- stupid context stuff again
+  gcomp-extend gc tc x t x₃ | Inl refl | None with natEQ x x
+  gcomp-extend gc tc x τ refl | Inl refl | None | Inl refl = tc
+  gcomp-extend gc tc x t x₃ | Inl refl | None | Inr x₁ = abort (somenotnone (! x₃))
+  gcomp-extend {Γ = Γ} gc tc x₁ t x₃ | Inr x₂ with Γ x₁
+  gcomp-extend gc tc x₁ t x₄ | Inr x₃ | Some x = {!tc!} -- ditto
+  gcomp-extend {x = x} gc tc x₁ t x₃ | Inr x₂ | None with natEQ x x₁
+  gcomp-extend gc tc x t refl | Inr x₃ | None | Inl refl = tc
+  gcomp-extend gc tc x₁ t x₄ | Inr x₃ | None | Inr x₂ = abort (somenotnone (! x₄))
