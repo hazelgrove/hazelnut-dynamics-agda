@@ -60,6 +60,10 @@ module contexts where
 
   infixl 10 _,,_
 
+  -- this is a little odd; it doesn't require disjointness as a
+  -- premise, which is just an artifact of the exact implemenation of
+  -- ∪ above. any time we use this, we really ought to be able to
+  -- produce a disjointness premise as well.
   x∈∪l : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ → (n , x) ∈ (Γ ∪ Γ')
   x∈∪l Γ Γ' n x xin with Γ n
   x∈∪l Γ Γ' n x₁ xin | Some x = xin
@@ -74,15 +78,3 @@ module contexts where
   x∈■ n a with natEQ n n
   x∈■ n a | Inl refl = refl
   x∈■ n a | Inr x = abort (x refl)
-
-  -- todo: this is almost a proof of ∪comm
-  -- ∪comm'guts : {A : Set} → (C1 C2 : A ctx) → (C1 ## C2) → (x : Nat) → ((C1 ∪ C2) x) == ((C2 ∪ C1) x)
-  -- ∪comm'guts C1 C2 disj x with lem-stop C1 x | lem-stop C2 x
-  -- ∪comm'guts C1 C2 disj x | Inl x₁ | Inl x₂ = abort (somenotnone (! (π2 x₂) · (π1 disj) x x₁))
-  -- ∪comm'guts C1 C2 disj x | Inl x₁ | Inr x₂ = {!!}
-  -- ∪comm'guts C1 C2 disj x | Inr x₁ | Inl x₂ = {!!}
-  -- ∪comm'guts C1 C2 disj x | Inr x₁ | Inr x₂ with x₁ · (! x₂)
-  -- ... | qq = {!ap1 (λ ff → C1 ∪ ff == C2 ∪ ff) !}
-
-  -- ∪comm' : {A : Set} → (C1 C2 : A ctx) → (C1 ## C2) → (C1 ∪ C2) == (C2 ∪ C1)
-  -- ∪comm' C1 C2 disj = funext (∪comm'guts C1 C2 disj)
