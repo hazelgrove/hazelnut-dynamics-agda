@@ -94,7 +94,7 @@ gcomp-extend {Γ} {τ} {x} gc tc apart x_query τ_query x₂ | Inr x₁ = gc x_q
 -- gcomp-extend {Γ} {τ} {x} gc tc aprt x₁ τ₁ x₂ with Γ x
 -- gcomp-extend gc tc aprt x₂ τ₁ x₃ | Some x₁ = abort (somenotnone aprt)
 -- gcomp-extend {Γ} {τ} {x} gc tc aprt x₁ τ₁ x₂ | None with ctxindirect' Γ x₁
--- gcomp-extend {Γ} {τ} {x} gc tc aprt x₁ τ₁ x₃ | None | Inl (a , eq , inj) with lem-poop {Γ = Γ} {!!}  x₃
+-- gcomp-extend {Γ} {τ} {x} gc tc aprt x₁ τ₁ x₃ | None | Inl (a , eq , inj) with lem-apart-union-eq {Γ = Γ} {!!}  x₃
 -- gcomp-extend gc tc aprt x₁ τ₁ x₃ | None | Inl (a , eq , inj) | refl = tc
 -- gcomp-extend gc tc aprt x₁ τ₁ x₃ | None | Inr x = {!!}
 
