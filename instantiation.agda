@@ -11,7 +11,7 @@ module instantiation where
                       Δ , Γ ⊢ ⟦ d' / u ⟧ d :: τ
   instantiation TAConst cont wt2 = TAConst
   instantiation (TAVar x₁) cont wt2 = TAVar x₁
-  instantiation (TALam wt1) cont wt2 = TALam {!!}
+  instantiation (TALam apt wt1) cont wt2 = TALam apt {!!}
   instantiation (TAAp wt1 wt2) cont wt3 = TAAp (instantiation wt1 cont wt3)
                                                (instantiation wt2 cont wt3)
   instantiation (TAEHole x x₁) cont wt2 = {!!}

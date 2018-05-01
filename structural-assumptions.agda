@@ -22,5 +22,4 @@ module structural-assumptions where
 postulate
   subst-weaken : ∀{Δ Γ Γ' Δ' σ} → Δ ## Δ' → Δ , Γ ⊢ σ :s: Γ' → (Δ ∪ Δ') , Γ ⊢ σ :s: Γ'
 postulate
-  lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } → Δ , Γ ,, (x , τ1) ⊢ d1 :: τ → Δ , Γ ⊢ d2 :: τ1 → Δ , Γ ⊢ [ d2 / x ] d1 :: τ
-  -- can also get an apartness premise here, i think; see callsite in preserve-trans in preservation. probably need it.
+  lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } → x # Γ → Δ , Γ ,, (x , τ1) ⊢ d1 :: τ → Δ , Γ ⊢ d2 :: τ1 → Δ , Γ ⊢ [ d2 / x ] d1 :: τ

@@ -58,7 +58,7 @@ module preservation where
   preserve-trans TAConst ()
   preserve-trans (TAVar x₁) ()
   preserve-trans (TALam _ ta) ()
-  preserve-trans (TAAp (TALam apt ta) ta₁) ITLam = lem-subst ta ta₁
+  preserve-trans (TAAp (TALam apt ta) ta₁) ITLam = lem-subst apt ta ta₁
   preserve-trans (TAAp (TACast ta TCRefl) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ TCRefl)) TCRefl
   preserve-trans (TAAp (TACast ta (TCArr x x₁)) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ (~sym x))) x₁
   preserve-trans (TAEHole x x₁) ()
