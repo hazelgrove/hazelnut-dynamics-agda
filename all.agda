@@ -18,7 +18,7 @@ open import ground-decidable
 open import matched-ground-invariant
 open import finality
 
-open import lemmas-subst-ta
+-- open import lemmas-subst-ta
 open import lemmas-ground
 open import lemmas-consistency
 open import lemmas-matching

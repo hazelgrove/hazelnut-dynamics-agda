@@ -169,3 +169,21 @@ module contexts where
   -- that index.
   ctx-top : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n # Γ) → (n , a) ∈ (Γ ,, (n , a))
   ctx-top Γ n a apt = x∈∪r Γ (■ (n , a)) n a (x∈■ n a) (lem-apart-sing-disj apt)
+
+  -- if a union of a singleton and a ctx produces no result, the argument
+  -- index must be apart from the ctx and disequal to the index of the
+  -- singleton
+  lem-union-none : {A : Set} {Γ : A ctx} {a : A} {x x' : Nat}
+                      → (Γ ∪ ■ (x , a)) x' == None
+                      → x ≠ x' × x' # Γ
+  lem-union-none {A} {Γ} {a} {x} {x'} emp with ctxindirect Γ x'
+  lem-union-none {A} {Γ} {a} {x} {x'} emp | Inl (π1 , π2) with Γ x'
+  lem-union-none emp | Inl (π1 , π2) | Some x = abort (somenotnone emp)
+  lem-union-none {A} {Γ} {a} {x} {x'} emp | Inl (π1 , π2) | None with natEQ x x'
+  lem-union-none emp | Inl (π1 , π2) | None | Inl x₁ = abort (somenotnone (! π2))
+  lem-union-none emp | Inl (π1 , π2) | None | Inr x₁ = x₁ , refl
+  lem-union-none {A} {Γ} {a} {x} {x'} emp | Inr y with Γ x'
+  lem-union-none emp | Inr y | Some x = abort (somenotnone emp)
+  lem-union-none {A} {Γ} {a} {x} {x'} emp | Inr y | None with natEQ x x'
+  lem-union-none emp | Inr y | None | Inl refl = abort (somenotnone emp)
+  lem-union-none emp | Inr y | None | Inr x₁ = x₁ , refl
