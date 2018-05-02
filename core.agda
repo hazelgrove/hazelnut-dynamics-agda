@@ -186,6 +186,17 @@ module core where
   _gcomplete : tctx → Set
   Γ gcomplete = (x : Nat) (τ : htyp) → (x , τ) ∈ Γ → τ tcomplete
 
+  -- those d for which every cast inside is the identity cast and there are
+  -- no failed casts
+  data cast-id : dhexp → Set where
+    CIConst  : cast-id c
+    CIVar    : ∀{x} → cast-id (X x)
+    CILam    : ∀{x τ d} → cast-id d → cast-id (·λ x [ τ ] d)
+    CIHole   : ∀{u} → cast-id (⦇⦈⟨ u ⟩)
+    CINEHole : ∀{d u} → cast-id d → cast-id (⦇ d ⦈⟨ u ⟩)
+    CIAp     : ∀{d1 d2} → cast-id d1 → cast-id d2 → cast-id (d1 ∘ d2)
+    CICast   : ∀{d τ} → cast-id d → cast-id (d ⟨ τ ⇒ τ ⟩)
+
   -- expansion
   mutual
     data _⊢_⇒_~>_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (Δ : hctx) → Set where
