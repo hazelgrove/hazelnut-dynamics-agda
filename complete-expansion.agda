@@ -4,7 +4,6 @@ open import core
 open import contexts
 open import typed-expansion
 open import lemmas-gcomplete
-
 open import lemmas-complete
 
 module complete-expansion where
@@ -56,29 +55,3 @@ module complete-expansion where
        d dcomplete →
        τ' tcomplete
     comp-ana gc ex dc = complete-ta gc (π2 (typed-expansion-ana ex)) dc
-
-  -- if a term is compelete and well typed, then the casts inside are all
-  -- identity casts and there are no failed casts
-  complete-idcast : ∀{Δ Γ d τ} →
-                  Γ gcomplete →
-                  d dcomplete →
-                  τ tcomplete →
-                  Δ , Γ ⊢ d :: τ →
-                  cast-id d
-  complete-idcast gc dc tc TAConst = CIConst
-  complete-idcast gc dc tc (TAVar x₁) = CIVar
-  complete-idcast gc (DCLam dc x₁) (TCArr tc tc₁) (TALam x₂ wt) = CILam (complete-idcast (gcomp-extend gc x₁ x₂) dc tc₁ wt)
-  complete-idcast gc (DCAp dc dc₁) TCBase (TAAp wt wt₁)
-    with complete-ta gc wt₁ dc₁
-  ... | cτ = CIAp (complete-idcast gc dc (TCArr cτ TCBase) wt)
-                  (complete-idcast gc dc₁ cτ wt₁)
-  complete-idcast gc (DCAp dc dc₁) (TCArr tc tc₁) (TAAp wt wt₁)
-    with (complete-ta gc wt₁ dc₁)
-  ... | cτ3 = CIAp (complete-idcast gc dc (TCArr cτ3 (TCArr tc tc₁)) wt)
-                   (complete-idcast gc dc₁ cτ3 wt₁)
-  complete-idcast gc () tc (TAEHole x x₁)
-  complete-idcast gc () tc (TANEHole x wt x₁)
-  complete-idcast gc (DCCast dc x x₁) tc (TACast wt x₂)
-    with eq-complete-consist x x₁ x₂
-  ... | refl = CICast (complete-idcast gc dc tc wt)
-  complete-idcast gc () tc (TAFailedCast wt x x₁ x₂)
