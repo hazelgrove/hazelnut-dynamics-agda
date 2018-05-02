@@ -28,7 +28,10 @@ module lemmas-complete where
   ... | refl = refl
 
   -- a well typed complete term is assigned a complete type
-  complete-ta : ∀{Γ Δ d τ} → (Γ gcomplete) → (Δ , Γ ⊢ d :: τ) → d dcomplete → τ tcomplete
+  complete-ta : ∀{Γ Δ d τ} → (Γ gcomplete) →
+                             (Δ , Γ ⊢ d :: τ) →
+                             d dcomplete →
+                             τ tcomplete
   complete-ta gc TAConst comp = TCBase
   complete-ta gc (TAVar x₁) DCVar = gc _ _ x₁
   complete-ta gc (TALam a wt) (DCLam comp x₁) = TCArr x₁ (complete-ta (gcomp-extend gc x₁ a ) wt comp)
