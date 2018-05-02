@@ -75,13 +75,13 @@ module core where
   hctx : Set
   hctx = (htyp ctx × htyp) ctx
 
-  -- todo: this probably belongs in contexts, but need to abstract it.
+  -- the identity substition with respect to a type context
   id : tctx → subst
   id ctx x with ctx x
   id ctx x | Some τ = Some (X x)
   id ctx x | None   = None
 
-  -- this is just fancy notation to match the paper
+  -- this is just fancy notation for a triple to match the CMTT syntax
   _::[_]_ : Nat → tctx → htyp → (Nat × (tctx × htyp))
   u ::[ Γ ] τ = u , (Γ , τ)
 
@@ -277,14 +277,18 @@ module core where
              τ1 ≠ τ2 →
              Δ , Γ ⊢ d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩ :: τ2
 
-  -- substitution;; todo: maybe get a premise that it's final; analagous to "value substitution"
+  -- substitution
+  --
+  -- todo: if substitution lemma is hard to prove, maybe get a premise that
+  -- it's final; analagous to "value substitution". or define it
+  -- judgementally instead of as a function.
   [_/_]_ : dhexp → Nat → dhexp → dhexp
   [ d / y ] c = c
   [ d / y ] X x
     with natEQ x y
   [ d / y ] X .y | Inl refl = d
   [ d / y ] X x  | Inr neq = X x
-  [ d / y ] (·λ x [ x₁ ] d') = ·λ x [ x₁ ] ( [ d / y ] d') -- TODO: i *think* barendrecht's saves us here, or at least i want it to. may need to reformulat this as a relation --> set
+  [ d / y ] (·λ x [ x₁ ] d') = ·λ x [ x₁ ] ( [ d / y ] d')
   [ d / y ] ⦇⦈⟨ u , σ ⟩ = ⦇⦈⟨ u , σ ⟩
   [ d / y ] ⦇ d' ⦈⟨ u , σ  ⟩ =  ⦇ [ d / y ] d' ⦈⟨ u , σ ⟩
   [ d / y ] (d1 ∘ d2) = ([ d / y ] d1) ∘ ([ d / y ] d2)
@@ -338,7 +342,7 @@ module core where
     -- final expressions
     data _final : (d : dhexp) → Set where
       FBoxed : ∀{d} → d boxedval → d final
-      FIndet : ∀{d} → d indet → d final
+      FIndet : ∀{d} → d indet    → d final
 
 
   -- contextual dynamics
@@ -352,14 +356,12 @@ module core where
     _⟨_⇒_⟩ : ectx → htyp → htyp → ectx
     _⟨_⇒⦇⦈⇏_⟩ : ectx → htyp → htyp → ectx
 
-  -- note: this judgement is redundant now; in the absence of the
-  -- premises in the red brackets in the notes PDF, all syntactically
-  -- well formed ectxs are valid; with finality premises, that's not
-  -- true. so it might make sense to remove this judgement entirely,
-  -- but need to make sure to describe why we don't have the redbox
-  -- things and how we'd patch it up if we wanted to force a
-  -- particular evaluation order in some document somewhere (probably
-  -- a README for this repo, or a sentence in the paper text or both)
+  -- note: this judgement is redundant: in the absence of the premises in
+  -- the red brackets, all syntactically well formed ectxs are valid. with
+  -- finality premises, that's not true, and that would propagate through
+  -- additions to the calculus. so we leave it here for clarity but note
+  -- that, as written, in any use case its either trival to prove or
+  -- provides no additional information
 
    --ε is an evaluation context
   data _evalctx : (ε : ectx) → Set where
@@ -368,7 +370,7 @@ module core where
             ε evalctx →
             (ε ∘₁ d) evalctx
     ECAp2 : ∀{d ε} →
-            -- d final → -- red box
+            -- d final → -- red brackets
             ε evalctx →
             (d ∘₂ ε) evalctx
     ECNEHole : ∀{ε u σ} →
@@ -388,7 +390,7 @@ module core where
            d1 == ε ⟦ d1' ⟧ →
            (d1 ∘ d2) == (ε ∘₁ d2) ⟦ d1' ⟧
     FHAp2 : ∀{d1 d2 d2' ε} →
-           -- d1 final → -- red box
+           -- d1 final → -- red brackets
            d2 == ε ⟦ d2' ⟧ →
            (d1 ∘ d2) == (d1 ∘₂ ε) ⟦ d2' ⟧
     FHNEHole : ∀{ d d' ε u σ} →
@@ -410,31 +412,31 @@ module core where
   -- instruction transition judgement
   data _→>_ : (d d' : dhexp) → Set where
     ITLam : ∀{ x τ d1 d2 } →
-            -- d2 final → -- red box
+            -- d2 final → -- red brackets
             ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1)
     ITCastID : ∀{d τ } →
-               -- d final → -- red box
+               -- d final → -- red brackets
                (d ⟨ τ ⇒ τ ⟩) →> d
     ITCastSucceed : ∀{d τ } →
-                    -- d final → -- red box
+                    -- d final → -- red brackets
                     τ ground →
                     (d ⟨ τ ⇒ ⦇⦈ ⇒ τ ⟩) →> d
     ITCastFail : ∀{ d τ1 τ2} →
-                 -- d final → -- red box
+                 -- d final → -- red brackets
                  τ1 ground →
                  τ2 ground →
                  τ1 ≠ τ2 →
                  (d ⟨ τ1 ⇒ ⦇⦈ ⇒ τ2 ⟩) →> (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
     ITApCast : ∀{d1 d2 τ1 τ2 τ1' τ2' } →
-               -- d1 final → -- red box
-               -- d2 final → -- red box
+               -- d1 final → -- red brackets
+               -- d2 final → -- red brackets
                ((d1 ⟨ (τ1 ==> τ2) ⇒ (τ1' ==> τ2')⟩) ∘ d2) →> ((d1 ∘ (d2 ⟨ τ1' ⇒ τ1 ⟩)) ⟨ τ2 ⇒ τ2' ⟩)
     ITGround : ∀{ d τ τ'} →
-               -- d final → -- red box
+               -- d final → -- red brackets
                τ ▸gnd τ' →
                (d ⟨ τ ⇒ ⦇⦈ ⟩) →> (d ⟨ τ ⇒ τ' ⇒ ⦇⦈ ⟩)
     ITExpand : ∀{d τ τ' } →
-               -- d final → -- red box
+               -- d final → -- red brackets
                τ ▸gnd τ' →
                (d ⟨ ⦇⦈ ⇒ τ ⟩) →> (d ⟨ ⦇⦈ ⇒ τ' ⇒ τ ⟩)
 
@@ -469,7 +471,11 @@ module core where
   -- apply σ (d ⟨ τ1 ⇒ τ2 ⟩) = ((apply σ d) ⟨ τ1 ⇒ τ2 ⟩)
   -- apply σ (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) = ((apply σ d) ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
 
-  --hole instantiation; todo: judgemental or functional?
+  -- hole instantiation
+  --
+  -- todo: as with substition, it may make sense to make this judgemental
+  -- rather than a metafunction. this probably also depends on how we solve
+  -- the problem with definition apply, above.
   ⟦_/_⟧_ : dhexp → Nat → dhexp → dhexp
   ⟦ d / u ⟧ c = c
   ⟦ d / u ⟧ X x = X x
