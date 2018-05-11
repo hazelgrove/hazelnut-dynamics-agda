@@ -253,11 +253,11 @@ module core where
 
     -- todo: clean up above, dom?
     data _,_⊢_:s:_ : hctx → tctx → env → tctx → Set where
-      STAId : ∀{Γ Γ' Δ} → ((x : Nat) (τ : htyp) → (x , τ) ∈ Γ' → (x , τ) ∈ Γ)
-                        → Δ , Γ ⊢ Id Γ' :s: Γ'
+      STAId : ∀{Γ Γ' Δ} →
+                  ((x : Nat) (τ : htyp) → (x , τ) ∈ Γ' → (x , τ) ∈ Γ) →
+                  Δ , Γ ⊢ Id Γ' :s: Γ'
       STASubst : ∀{Γ Δ σ y Γ' d τ } →
-               -- Γ' y == Some τ →
-               Δ , Γ ⊢ σ :s: Γ' →
+               Δ , Γ ,, (y , τ) ⊢ σ :s: Γ' →
                Δ , Γ ⊢ d :: τ →
                Δ , Γ ⊢ Subst d y σ :s: Γ'
 
@@ -304,7 +304,10 @@ module core where
     with natEQ x y
   [ d / y ] X .y | Inl refl = d
   [ d / y ] X x  | Inr neq = X x
-  [ d / y ] (·λ x [ x₁ ] d') = ·λ x [ x₁ ] ( [ d / y ] d')
+  [ d / y ] (·λ x [ x₁ ] d')
+    with natEQ x y
+  [ d / y ] (·λ .y [ τ ] d') | Inl refl = ·λ y [ τ ] d'
+  [ d / y ] (·λ x [ τ ] d')  | Inr x₁ = ·λ x [ τ ] ( [ d / y ] d')
   [ d / y ] ⦇⦈⟨ u , σ ⟩ = ⦇⦈⟨ u , Subst d y σ ⟩
   [ d / y ] ⦇ d' ⦈⟨ u , σ  ⟩ =  ⦇ [ d / y ] d' ⦈⟨ u , Subst d y σ ⟩
   [ d / y ] (d1 ∘ d2) = ([ d / y ] d1) ∘ ([ d / y ] d2)
