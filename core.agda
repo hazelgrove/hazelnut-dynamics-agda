@@ -23,17 +23,21 @@ module core where
     ⦇_⦈[_]  : hexp → Nat → hexp
     _∘_     : hexp → hexp → hexp
 
+  tctx : Set
+  tctx = htyp ctx
+
   mutual
-    subst : Set
-    subst = dhexp ctx
+    data env : Set where
+      Id : (Γ : tctx) → env
+      Subst : (d : dhexp) → (y : Nat) → env → env
 
     -- expressions without ascriptions but with casts
     data dhexp : Set where
       c        : dhexp
       X        : Nat → dhexp
       ·λ_[_]_  : Nat → htyp → dhexp → dhexp
-      ⦇⦈⟨_⟩    : (Nat × subst) → dhexp
-      ⦇_⦈⟨_⟩   : dhexp → (Nat × subst) → dhexp
+      ⦇⦈⟨_⟩    : (Nat × env) → dhexp
+      ⦇_⦈⟨_⟩   : dhexp → (Nat × env) → dhexp
       _∘_      : dhexp → dhexp → dhexp
       _⟨_⇒_⟩   : dhexp → htyp → htyp → dhexp
       _⟨_⇒⦇⦈⇏_⟩   : dhexp → htyp → htyp → dhexp
@@ -69,17 +73,8 @@ module core where
     MAArr  : {τ1 τ2 : htyp} → τ1 ==> τ2 ▸arr τ1 ==> τ2
 
   -- aliases for type and hole contexts
-  tctx : Set
-  tctx = htyp ctx
-
   hctx : Set
   hctx = (htyp ctx × htyp) ctx
-
-  -- the identity substition with respect to a type context
-  id : tctx → subst
-  id ctx x with ctx x
-  id ctx x | Some τ = Some (X x)
-  id ctx x | None   = None
 
   -- this is just fancy notation for a triple to match the CMTT syntax
   _::[_]_ : Nat → tctx → htyp → (Nat × (tctx × htyp))
@@ -216,11 +211,11 @@ module core where
               Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2' ⊣ Δ2 →
               Γ ⊢ e1 ∘ e2 ⇒ τ ~> (d1 ⟨ τ1' ⇒ τ2 ==> τ ⟩) ∘ (d2 ⟨ τ2' ⇒ τ2 ⟩) ⊣ (Δ1 ∪ Δ2)
       ESEHole : ∀{ Γ u } →
-                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , id Γ ⟩ ⊣  ■ (u ::[ Γ ] ⦇⦈)
+                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , Id Γ ⟩ ⊣  ■ (u ::[ Γ ] ⦇⦈)
       ESNEHole : ∀{ Γ e τ d u Δ } →
                  Δ ## (■ (u , Γ , ⦇⦈)) →
                  Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈⟨ u , id Γ  ⟩ ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈⟨ u , Id Γ  ⟩ ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
       ESAsc : ∀ {Γ e τ d τ' Δ} →
                  Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                  Γ ⊢ (e ·: τ) ⇒ τ ~> d ⟨ τ' ⇒ τ ⟩ ⊣ Δ
@@ -238,11 +233,11 @@ module core where
                   τ ~ τ' →
                   Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
       EAEHole : ∀{ Γ u τ  } →
-                Γ ⊢ ⦇⦈[ u ] ⇐ τ ~> ⦇⦈⟨ u , id Γ  ⟩ :: τ ⊣ ■ (u ::[ Γ ] τ)
+                Γ ⊢ ⦇⦈[ u ] ⇐ τ ~> ⦇⦈⟨ u , Id Γ  ⟩ :: τ ⊣ ■ (u ::[ Γ ] τ)
       EANEHole : ∀{ Γ e u τ d τ' Δ  } →
                  Δ ## (■ (u , Γ , τ)) →
                  Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈⟨ u , id Γ  ⟩ :: τ ⊣ (Δ ,, u ::[ Γ ] τ)
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈⟨ u , Id Γ  ⟩ :: τ ⊣ (Δ ,, u ::[ Γ ] τ)
 
   -- ground
   data _ground : (τ : htyp) → Set where
@@ -251,10 +246,20 @@ module core where
 
   mutual
     -- substitition type assignment
-    _,_⊢_:s:_ : hctx → tctx → subst → tctx → Set
-    Δ , Γ ⊢ σ :s: Γ' =
-        (x : Nat) (d : dhexp) (xd∈σ : (x , d) ∈ σ) →
-            Σ[ τ ∈ htyp ] ((Γ' x == Some τ × (Δ , Γ ⊢ d :: τ)))
+    -- _,_⊢_:s:_ : hctx → tctx → env → tctx → Set
+    -- Δ , Γ ⊢ Id Γ1 :s: Γ2 = Γ1 == Γ2
+    -- Δ , Γ ⊢ Subst d y σ :s: Γ' = (Δ , Γ ⊢ σ :s: (Γ' \\ y))
+    --                 × Σ[ τ ∈ htyp ] (Γ' y == Some τ × Δ , Γ ⊢ d :: τ) -- todo: dom here
+
+    -- todo: clean up above, dom?
+    data _,_⊢_:s:_ : hctx → tctx → env → tctx → Set where
+      STAId : ∀{Γ Γ' Δ} → ((x : Nat) (τ : htyp) → (x , τ) ∈ Γ' → (x , τ) ∈ Γ)
+                        → Δ , Γ ⊢ Id Γ' :s: Γ'
+      STASubst : ∀{Γ Δ σ y Γ' d τ } →
+               -- Γ' y == Some τ →
+               Δ , Γ ⊢ σ :s: Γ' →
+               Δ , Γ ⊢ d :: τ →
+               Δ , Γ ⊢ Subst d y σ :s: Γ'
 
     -- type assignment
     data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (d : dhexp) (τ : htyp) → Set where
@@ -300,11 +305,17 @@ module core where
   [ d / y ] X .y | Inl refl = d
   [ d / y ] X x  | Inr neq = X x
   [ d / y ] (·λ x [ x₁ ] d') = ·λ x [ x₁ ] ( [ d / y ] d')
-  [ d / y ] ⦇⦈⟨ u , σ ⟩ = ⦇⦈⟨ u , σ ⟩
-  [ d / y ] ⦇ d' ⦈⟨ u , σ  ⟩ =  ⦇ [ d / y ] d' ⦈⟨ u , σ ⟩
+  [ d / y ] ⦇⦈⟨ u , σ ⟩ = ⦇⦈⟨ u , Subst d y σ ⟩
+  [ d / y ] ⦇ d' ⦈⟨ u , σ  ⟩ =  ⦇ [ d / y ] d' ⦈⟨ u , Subst d y σ ⟩
   [ d / y ] (d1 ∘ d2) = ([ d / y ] d1) ∘ ([ d / y ] d2)
   [ d / y ] (d' ⟨ τ1 ⇒ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒ τ2 ⟩
   [ d / y ] (d' ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩
+
+  -- applying an environment to an expression
+  apply-env : env → dhexp → dhexp
+  apply-env (Id Γ) d = d
+  apply-env (Subst d y σ) d' = [ d / y ] ( apply-env σ d')
+
 
   -- values
   data _val : (d : dhexp) → Set where
@@ -363,7 +374,7 @@ module core where
     ⊙ : ectx
     _∘₁_ : ectx → dhexp → ectx
     _∘₂_ : dhexp → ectx → ectx
-    ⦇_⦈⟨_⟩ : ectx → (Nat × subst ) → ectx
+    ⦇_⦈⟨_⟩ : ectx → (Nat × env ) → ectx
     _⟨_⇒_⟩ : ectx → htyp → htyp → ectx
     _⟨_⇒⦇⦈⇏_⟩ : ectx → htyp → htyp → ectx
 
@@ -470,7 +481,7 @@ module core where
   -- application of a substution to a term
   -- todo: this is not well-founded with the current representation of σs
   postulate
-    apply : subst → dhexp → dhexp
+    apply : env → dhexp → dhexp
   -- apply σ c = c
   -- apply σ (X x) with σ x
   -- apply σ (X x) | Some d' = d'

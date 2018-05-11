@@ -19,6 +19,12 @@ module contexts where
   dom : {A : Set} → A ctx → Nat → Set
   dom {A} Γ x = Σ[ τ ∈ A ] (Γ x == Some τ)
 
+  -- remove a variable from a context
+  _\\_ : {A : Set} → A ctx → Nat → A ctx
+  (Γ \\ x) y with natEQ x y
+  (Γ \\ x) .x | Inl refl = None
+  (Γ \\ x) y  | Inr neq  = Γ y
+
   -- membership, or presence, in a context
   _∈_ : {A : Set} (p : Nat × A) → (Γ : A ctx) → Set
   (x , y) ∈ Γ = (Γ x) == Some y

@@ -10,12 +10,12 @@ module canonical-indeterminate-forms where
   -- forms lemma for indeterminates at base type
   data cif-base : (Δ : hctx) (d : dhexp) → Set where
     CIFBEHole : ∀ {Δ d} →
-      Σ[ u ∈ Nat ] Σ[ σ ∈ subst ] Σ[ Γ' ∈ tctx ]
+      Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇⦈⟨ u , σ ⟩) ×
         ((u ::[ Γ' ] b) ∈ Δ))
        → cif-base Δ d
     CIFBNEHole : ∀ {Δ d} →
-      Σ[ u ∈ Nat ] Σ[ σ ∈ subst ] Σ[ Γ' ∈ tctx ] Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ]
+      Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ Γ' ∈ tctx ] Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ]
         ((d == ⦇ d' ⦈⟨ u , σ ⟩) ×
         (d' final) ×
         (Δ , ∅ ⊢ d' :: τ') ×
@@ -60,12 +60,12 @@ module canonical-indeterminate-forms where
   -- forms lemma for indeterminates at arrow type
   data cif-arr : (Δ : hctx) (d : dhexp) (τ1 τ2 : htyp) → Set where
     CIFAEHole : ∀{d Δ τ1 τ2} →
-      (Σ[ u ∈ Nat ] Σ[ σ ∈ subst ] Σ[ Γ' ∈ tctx ]
+      (Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇⦈⟨ u , σ ⟩) ×
         ((u ::[ Γ' ] (τ1 ==> τ2)) ∈ Δ)))
         → cif-arr Δ d τ1 τ2
     CIFANEHole : ∀{d Δ τ1 τ2} →
-      (Σ[ u ∈ Nat ] Σ[ σ ∈ subst ] Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ] Σ[ Γ' ∈ tctx ]
+      (Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇ d' ⦈⟨ u , σ ⟩) ×
         (d' final) ×
         (Δ , ∅ ⊢ d' :: τ') ×
@@ -120,12 +120,12 @@ module canonical-indeterminate-forms where
   -- forms lemma for indeterminates at hole type
   data cif-hole : (Δ : hctx) (d : dhexp) → Set where
     CIFHEHole : ∀ {Δ d} →
-      (Σ[ u ∈ Nat ] Σ[ σ ∈ subst ] Σ[ Γ' ∈ tctx ]
+      (Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇⦈⟨ u , σ ⟩) ×
          ((u ::[ Γ' ] ⦇⦈) ∈ Δ)))
       → cif-hole Δ d
     CIFHNEHole : ∀ {Δ d} →
-      (Σ[ u ∈ Nat ] Σ[ σ ∈ subst ] Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ] Σ[ Γ' ∈ tctx ]
+      (Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇ d' ⦈⟨ u , σ ⟩) ×
          (d' final) ×
          (Δ , ∅ ⊢ d' :: τ') ×
