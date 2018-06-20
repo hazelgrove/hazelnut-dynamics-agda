@@ -40,7 +40,7 @@ module lemmas-disjointness where
   lem-domsingle p q | Inl refl = q , refl
   lem-domsingle p q | Inr x₁ = abort (x₁ refl)
 
-  -- if single contexts are disjoint, their indices must be disequal
+  -- if singleton contexts are disjoint, their indices must be disequal
   singles-notequal : {A : Set} {x y : A} {u1 u2 : Nat} → (■ (u1 , x)) ## (■ (u2 , y)) → u1 ≠ u2
   singles-notequal {A} {x} {y} {u1} {u2} (d1 , d2) = lem2 u1 u2 y (d1 u1 (lem-domsingle u1 x))
     where
@@ -49,8 +49,7 @@ module lemmas-disjointness where
       lem2 p .p q apt | Inl refl = abort (somenotnone apt)
       lem2 p r q apt | Inr x₁ = flip x₁
 
-  -- if both parts of a union are disjoint with a target, so is the
-  -- union
+  -- if both parts of a union are disjoint with a target, so is the union
   disjoint-parts : {A : Set} {Γ1 Γ2 Γ3 : A ctx} → Γ1 ## Γ3 → Γ2 ## Γ3 → (Γ1 ∪ Γ2) ## Γ3
   disjoint-parts {_} {Γ1} {Γ2} {Γ3} D13 D23 = d31 , d32
     where
