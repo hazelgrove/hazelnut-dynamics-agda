@@ -14,7 +14,7 @@ module complete-preservation where
   cp-subst DCVar dc2 | Inl refl = dc2
   cp-subst DCVar dc2 | Inr x₂ = DCVar
   cp-subst DCConst dc2 = DCConst
-  cp-subst (DCLam dc1 x₂) dc2 = DCLam (cp-subst dc1 dc2) x₂
+  cp-subst (DCLam dc1 x₂) dc2 = {!!} -- DCLam (cp-subst dc1 dc2) x₂
   cp-subst (DCAp dc1 dc2) dc3 = DCAp (cp-subst dc1 dc3) (cp-subst dc2 dc3)
   cp-subst (DCCast dc1 x₁ x₂) dc2 = DCCast (cp-subst dc1 dc2) x₁ x₂
 
@@ -27,7 +27,7 @@ module complete-preservation where
   cp-rhs dc (TAVar x₁) stp = abort (somenotnone (! x₁))
   cp-rhs dc (TALam _ wt) (Step FHOuter () FHOuter)
   cp-rhs (DCAp dc dc₁) (TAAp wt wt₁) (Step FHOuter ITLam FHOuter) with cp-subst dc dc₁
-  cp-rhs (DCAp dc dc₁) (TAAp wt wt₁) (Step FHOuter ITLam FHOuter) | DCLam qq x₁ = qq
+  cp-rhs (DCAp dc dc₁) (TAAp wt wt₁) (Step FHOuter ITLam FHOuter) | qq = {!!}
   cp-rhs (DCAp (DCCast dc (TCArr x x₁) (TCArr x₂ x₃)) dc₁) (TAAp (TACast wt x₄) wt₁) (Step FHOuter ITApCast FHOuter) = DCCast (DCAp dc (DCCast dc₁ x₂ x)) x₁ x₃
   cp-rhs (DCAp dc dc₁) (TAAp wt wt₁) (Step (FHAp1 x) x₁ (FHAp1 x₂)) = DCAp (cp-rhs dc wt (Step x x₁ x₂)) dc₁
   cp-rhs (DCAp dc dc₁) (TAAp wt wt₁) (Step (FHAp2 x) x₁ (FHAp2 x₂)) = DCAp dc (cp-rhs dc₁ wt₁ (Step x x₁ x₂))

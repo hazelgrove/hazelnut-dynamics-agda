@@ -15,34 +15,44 @@ module lemmas-subst-ta where
   exchange-subst-Γ : ∀{Δ Γ x y τ1 τ2 σ Γ'} →
                    Δ , (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ σ :s: Γ' →
                    Δ , (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ σ :s: Γ'
-  exchange-subst-Γ = {!!}
+  exchange-subst-Γ = {!!} -- probably by transport
 
-  data fresh : Nat → dhexp → Set where
-    FConst : ∀{x} → fresh x c
-    FVar   : ∀{x y} → x ≠ y → fresh x (X y)
-    FLam   : ∀{x y τ d} → x ≠ y → fresh x (·λ y [ τ ] d)
-    FHole  : ∀{x u σ} → fresh x (⦇⦈⟨ u , σ ⟩)-- todo: should this check into σ, too?
-    FNEHole : ∀{x d u σ} → fresh x d → fresh x (⦇ d ⦈⟨ u , σ ⟩)
-    FAp     : ∀{x d1 d2} → fresh x d1 → fresh x d2 → fresh x (d1 ∘ d2)
-    FCast   : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒ τ2 ⟩)
-    FFailedCast : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
+  mutual
+    data envfresh : Nat → env → Set where
+      EFId : ∀{x Γ} → x # Γ → envfresh x (Id Γ)
+      EFSubst : ∀{x d σ y} → fresh x d
+                           → envfresh x σ
+                           → x ≠ y -- todo: maybe?
+                           → envfresh x (Subst d y σ)
 
-  apart-fresh : ∀{ x Γ Δ d τ} →
-                x # Γ →
-                Δ , Γ ⊢ d :: τ →
-                fresh x d
-  apart-fresh aprt TAConst = FConst
-  apart-fresh {x = x} aprt (TAVar {x = y} x₂) with natEQ x y
-  apart-fresh aprt (TAVar x₃) | Inl refl = abort (somenotnone (! x₃ · aprt))
-  apart-fresh aprt (TAVar x₃) | Inr x₂ = FVar x₂
-  apart-fresh {x = x} aprt (TALam {x = y} x₂ wt) with natEQ x y
-  apart-fresh aprt (TALam x₃ wt) | Inl refl = {!!}
-  apart-fresh aprt (TALam x₃ wt) | Inr x₂ = FLam x₂
-  apart-fresh aprt (TAAp wt wt₁) = FAp (apart-fresh aprt wt) (apart-fresh aprt wt₁)
-  apart-fresh aprt (TAEHole x₁ x₂) = FHole
-  apart-fresh aprt (TANEHole x₁ wt x₂) = FNEHole (apart-fresh aprt wt)
-  apart-fresh aprt (TACast wt x₁) = FCast (apart-fresh aprt wt)
-  apart-fresh aprt (TAFailedCast wt x₁ x₂ x₃) = FFailedCast (apart-fresh aprt wt)
+    data fresh : Nat → dhexp → Set where
+      FConst : ∀{x} → fresh x c
+      FVar   : ∀{x y} → x ≠ y → fresh x (X y)
+      FLam   : ∀{x y τ d} → x ≠ y → fresh x d → fresh x (·λ y [ τ ] d)
+      FHole  : ∀{x u σ} → envfresh x σ → fresh x (⦇⦈⟨ u , σ ⟩)
+      FNEHole : ∀{x d u σ} → envfresh x σ → fresh x d → fresh x (⦇ d ⦈⟨ u , σ ⟩)
+      FAp     : ∀{x d1 d2} → fresh x d1 → fresh x d2 → fresh x (d1 ∘ d2)
+      FCast   : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒ τ2 ⟩)
+      FFailedCast : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
+
+  -- this is false
+  --
+  -- apart-fresh : ∀{ x Γ Δ d τ} →
+  --               x # Γ →
+  --               Δ , Γ ⊢ d :: τ →
+  --               fresh x d
+  -- apart-fresh aprt TAConst = FConst
+  -- apart-fresh {x = x} aprt (TAVar {x = y} x₂) with natEQ x y
+  -- apart-fresh aprt (TAVar x₃) | Inl refl = abort (somenotnone (! x₃ · aprt))
+  -- apart-fresh aprt (TAVar x₃) | Inr x₂ = FVar x₂
+  -- apart-fresh {x = x} aprt (TALam {x = y} x₂ wt) with natEQ x y
+  -- apart-fresh aprt (TALam x₃ wt) | Inl refl = {!!}
+  -- apart-fresh aprt (TALam x₃ wt) | Inr x₂ = FLam x₂
+  -- apart-fresh aprt (TAAp wt wt₁) = FAp (apart-fresh aprt wt) (apart-fresh aprt wt₁)
+  -- apart-fresh aprt (TAEHole x₁ x₂) = FHole {!!}
+  -- apart-fresh aprt (TANEHole x₁ wt x₂) = FNEHole {!!} (apart-fresh aprt wt)
+  -- apart-fresh aprt (TACast wt x₁) = FCast (apart-fresh aprt wt)
+  -- apart-fresh aprt (TAFailedCast wt x₁ x₂ x₃) = FFailedCast (apart-fresh aprt wt)
 
 
   mutual
@@ -50,26 +60,48 @@ module lemmas-subst-ta where
                      x # Γ →
                      Δ , Γ ⊢ σ :s: Γ' →
                      Δ , (Γ ,, (x , τ)) ⊢ σ :s: Γ'
-    weaken-subst-Γ {x = x} {Γ = Γ} {τ = τ1} apt (STAId x₁) = STAId (λ y τ2 x₂ → x∈∪l Γ (■ (x , τ1)) _ _ (x₁ y τ2 x₂))
-    weaken-subst-Γ {x = x} {Γ = Γ} {τ = τ1} apt (STASubst {y = y} {τ = τ2} s x₁) with natEQ x y
-    weaken-subst-Γ {x = x} {Γ = Γ} {τ = τ1} apt (STASubst {τ = τ2} s x₂) | Inl refl = STASubst {!!} (weaken-ta apt x₂)
-    weaken-subst-Γ apt (STASubst s x₂) | Inr x₁ = STASubst {!!} (weaken-ta apt x₂)
+    weaken-subst-Γ = {!!}
+    -- weaken-subst-Γ {x = x} {Γ = Γ} {τ = τ1} apt (STAId x₁) = STAId (λ y τ2 x₂ → x∈∪l Γ (■ (x , τ1)) _ _ (x₁ y τ2 x₂))
+    -- weaken-subst-Γ {x = x} {Γ = Γ} {τ = τ1} apt (STASubst {y = y} {τ = τ2} s x₁) with natEQ x y
+    -- weaken-subst-Γ {x = x} {Γ = Γ} {τ = τ1} apt (STASubst {τ = τ2} s x₂) | Inl refl = STASubst {!!} (weaken-ta apt x₂)
+    -- weaken-subst-Γ apt (STASubst s x₂) | Inr x₁ = STASubst {!!} (weaken-ta apt x₂)
     -- = STASubst {!!} (weaken-ta apt x₁)
 
       -- STASubst (weaken-subst-Γ {x = y} {Γ = Γ ,, (x , τ1)} {τ = τ2} {!!} {!!}) (weaken-ta apt x₁)
 
+    -- todo: this is copied from lemmas-disjointness
+    apart-parts : {A : Set} (Γ1 Γ2 : A ctx) (n : Nat) → n # Γ1 → n # Γ2 → n # (Γ1 ∪ Γ2)
+    apart-parts Γ1 Γ2 n apt1 apt2 with Γ1 n
+    apart-parts _ _ n refl apt2 | .None = apt2
+
+    apart-singleton : {A : Set} → ∀{x y} → {τ : A} →
+                          x ≠ y →
+                          x # (■ (y , τ))
+    apart-singleton neq = {!!}
+
     weaken-ta : ∀{x Γ Δ d τ τ'} →
-                x # Γ →
+                fresh x d →
+                -- x # Γ ?
                 Δ , Γ ⊢ d :: τ →
                 Δ , Γ ,, (x , τ') ⊢ d :: τ
-    weaken-ta apt TAConst = TAConst
-    weaken-ta {x = x} {Γ = Γ} {τ' = τ'} apt (TAVar x₂) = TAVar (x∈∪l Γ  (■ (x , τ')) _ _ x₂)
-    weaken-ta apt (TALam x₂ wt) = {!!}
-    weaken-ta apt (TAAp wt wt₁) = TAAp (weaken-ta apt wt) (weaken-ta apt wt₁)
-    weaken-ta apt (TAEHole x₁ x₂) = TAEHole x₁ (weaken-subst-Γ apt x₂)
-    weaken-ta apt (TANEHole x₁ wt x₂) = TANEHole x₁ (weaken-ta apt wt) (weaken-subst-Γ apt x₂)
-    weaken-ta apt (TACast wt x₁) = TACast (weaken-ta apt wt) x₁
-    weaken-ta apt (TAFailedCast wt x₁ x₂ x₃) = TAFailedCast (weaken-ta apt wt) x₁ x₂ x₃
+    weaken-ta frsh TAConst = TAConst
+    weaken-ta frsh (TAVar x₂) = {!!}
+    weaken-ta {x = x} frsh (TALam {x = y} x₂ wt) with natEQ x y
+    weaken-ta (FLam x₁ x₂) (TALam x₃ wt) | Inl refl = abort (x₁ refl)
+    weaken-ta {Γ = Γ} {τ' = τ'} (FLam x₁ x₃) (TALam {x = y} x₄ wt) | Inr x₂ = TALam (apart-parts Γ _ _ x₄ (apart-singleton (flip x₁))) (weaken-ta {Γ = {!■ (y , )!} ∪ Γ} x₃ {!!})
+    weaken-ta frsh (TAAp wt wt₁) = {!!}
+    weaken-ta frsh (TAEHole x₁ x₂) = {!!}
+    weaken-ta frsh (TANEHole x₁ wt x₂) = {!!}
+    weaken-ta frsh (TACast wt x₁) = {!!}
+    weaken-ta frsh (TAFailedCast wt x₁ x₂ x₃) = {!!}
+    -- weaken-ta apt TAConst = TAConst
+    -- weaken-ta {x = x} {Γ = Γ} {τ' = τ'} apt (TAVar x₂) = TAVar (x∈∪l Γ  (■ (x , τ')) _ _ x₂)
+    -- weaken-ta apt (TALam x₂ wt) = {!!}
+    -- weaken-ta apt (TAAp wt wt₁) = TAAp (weaken-ta apt wt) (weaken-ta apt wt₁)
+    -- weaken-ta apt (TAEHole x₁ x₂) = TAEHole x₁ (weaken-subst-Γ apt x₂)
+    -- weaken-ta apt (TANEHole x₁ wt x₂) = TANEHole x₁ (weaken-ta apt wt) (weaken-subst-Γ apt x₂)
+    -- weaken-ta apt (TACast wt x₁) = TACast (weaken-ta apt wt) x₁
+    -- weaken-ta apt (TAFailedCast wt x₁ x₂ x₃) = TAFailedCast (weaken-ta apt wt) x₁ x₂ x₃
 
   lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } →
                   x # Γ →

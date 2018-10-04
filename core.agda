@@ -319,7 +319,6 @@ module core where
   apply-env (Id Γ) d = d
   apply-env (Subst d y σ) d' = [ d / y ] ( apply-env σ d')
 
-
   -- values
   data _val : (d : dhexp) → Set where
     VConst : c val
