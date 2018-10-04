@@ -42,7 +42,7 @@ open import preservation
 
 open import lemmas-complete
 -- open import cast-inert
-open import complete-preservation
+-- open import complete-preservation
 open import complete-progress
 open import complete-expansion
 

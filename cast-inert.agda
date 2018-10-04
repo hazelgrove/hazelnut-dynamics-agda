@@ -7,6 +7,7 @@ open import lemmas-gcomplete
 open import lemmas-complete
 open import progress-checks
 open import finality
+
 module cast-inert where
   -- if a term is compelete and well typed, then the casts inside are all
   -- identity casts and there are no failed casts
@@ -65,9 +66,11 @@ module cast-inert where
   remove-casts-same (TAVar x₁) NICVar MSRefl step2 (FIndet ()) f2
   remove-casts-same (TAVar x₁) NICVar (MSStep (Step FHOuter () FHOuter) step1) step2 f1 f2
 
-  remove-casts-same (TALam x₁ wt) (NICLam nic) MSRefl MSRefl f1 f2 = {!!}
-  remove-casts-same (TALam x₁ wt) (NICLam nic) MSRefl (MSStep x₂ step2) f1 f2 = {!x₂!}
-  remove-casts-same (TALam x₁ wt) (NICLam nic) (MSStep x₂ step1) MSRefl f1 f2 = {!!}
+  remove-casts-same (TALam x₁ wt) (NICLam nic) MSRefl MSRefl (FBoxed (BVVal VLam)) (FBoxed (BVVal VLam)) = {!!} -- ap1 (λ qq → ·λ _ [ _ ] qq) {!!}
+  remove-casts-same (TALam x₁ wt) (NICLam nic) MSRefl MSRefl _ (FIndet ())
+  remove-casts-same (TALam x₁ wt) (NICLam nic) MSRefl MSRefl (FIndet ()) _
+  remove-casts-same (TALam x₁ wt) (NICLam nic) MSRefl (MSStep x₂ step2) f1 f2 = abort (boxedval-not-step (BVVal VLam) ( _ , x₂))
+  remove-casts-same (TALam x₁ wt) (NICLam nic) (MSStep x₂ step1) MSRefl f1 f2 = abort (boxedval-not-step (BVVal VLam) ( _ , x₂))
   remove-casts-same (TALam x₁ wt) (NICLam nic) (MSStep x₂ step1) (MSStep x₃ step2) f1 f2 = {!!}
 
   remove-casts-same (TAAp wt wt₁) (NICAp nic nic₁) MSRefl step2 (FBoxed (BVVal ())) f2
@@ -77,8 +80,8 @@ module cast-inert where
   remove-casts-same (TAEHole x x₁) NICHole MSRefl step2 (FBoxed (BVVal ())) f2
   remove-casts-same (TAEHole x x₁) NICHole MSRefl MSRefl (FIndet IEHole) (FBoxed (BVVal ()))
   remove-casts-same (TAEHole x x₁) NICHole MSRefl MSRefl (FIndet IEHole) (FIndet IEHole) = refl
-  remove-casts-same (TAEHole x x₁) NICHole MSRefl (MSStep x₂ step2) (FIndet IEHole) f2 = {!!}
-  remove-casts-same (TAEHole x x₁) NICHole (MSStep x₂ step1) step2 f1 f2 = {!!}
+  remove-casts-same (TAEHole x x₁) NICHole MSRefl (MSStep (Step FHOuter () FHOuter) step2) (FIndet IEHole) f2
+  remove-casts-same (TAEHole x x₁) NICHole (MSStep (Step FHOuter () FHOuter) step1) step2 f1 f2
 
   remove-casts-same (TANEHole x wt x₁) (NICNEHole nic) step1 step2 f1 f2 = {!!}
 
