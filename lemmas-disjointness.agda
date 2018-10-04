@@ -49,6 +49,21 @@ module lemmas-disjointness where
       lem2 p .p q apt | Inl refl = abort (somenotnone apt)
       lem2 p r q apt | Inr x₁ = flip x₁
 
+  -- dual of lem2 above; if two indices are disequal, then either is apart
+  -- from the singleton formed with the other
+  apart-singleton : {A : Set} → ∀{x y} → {τ : A} →
+                          x ≠ y →
+                          x # (■ (y , τ))
+  apart-singleton {A} {x} {y} {τ} neq with natEQ y x
+  apart-singleton neq | Inl x₁ = abort ((flip neq) x₁)
+  apart-singleton neq | Inr x₁ = refl
+
+  -- if an index is apart from two contexts, it's apart from their union as
+  -- well. used below and in other files, so it's outside the local scope.
+  apart-parts : {A : Set} (Γ1 Γ2 : A ctx) (n : Nat) → n # Γ1 → n # Γ2 → n # (Γ1 ∪ Γ2)
+  apart-parts Γ1 Γ2 n apt1 apt2 with Γ1 n
+  apart-parts _ _ n refl apt2 | .None = apt2
+
   -- if both parts of a union are disjoint with a target, so is the union
   disjoint-parts : {A : Set} {Γ1 Γ2 Γ3 : A ctx} → Γ1 ## Γ3 → Γ2 ## Γ3 → (Γ1 ∪ Γ2) ## Γ3
   disjoint-parts {_} {Γ1} {Γ2} {Γ3} D13 D23 = d31 , d32
@@ -62,10 +77,6 @@ module lemmas-disjointness where
       d31 n D with dom-split Γ1 Γ2 n D
       d31 n D | Inl x = π1 D13 n x
       d31 n D | Inr x = π1 D23 n x
-
-      apart-parts : {A : Set} (Γ1 Γ2 : A ctx) (n : Nat) → n # Γ1 → n # Γ2 → n # (Γ1 ∪ Γ2)
-      apart-parts Γ1 Γ2 n apt1 apt2 with Γ1 n
-      apart-parts _ _ n refl apt2 | .None = apt2
 
       d32 : (n : Nat) → dom Γ3 n → n # (Γ1 ∪ Γ2)
       d32 n D = apart-parts Γ1 Γ2 n (π2 D13 n D) (π2 D23 n D)
