@@ -13,9 +13,7 @@ module lemmas-subst-ta where
   lem-subst-σ s wt = STASubst s wt
 
   -- todo: i'm worried this may actually be false without knowing that x ≠
-  -- y, but that's kind of what we usually mean on paper anyway; nb that we
-  -- don't actually use this anywhere? i think it belongs in structural,
-  -- maybe, or perhaps can be omitted.
+  -- y, but that's kind of what we usually mean on paper anyway
   exchange-subst-Γ : ∀{Δ Γ x y τ1 τ2 σ Γ'} →
                    x ≠ y →
                    Δ , (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ σ :s: Γ' →
@@ -45,14 +43,13 @@ module lemmas-subst-ta where
 
   mutual
     weaken-subst-Γ : ∀{ x Γ Δ σ Γ' τ} →
-                     -- x # Γ →
-                     envfresh x σ → -- todo is this right or should it be
-                                    -- just apartness, as above? see call
-                                    -- site below
+                     envfresh x σ →
                      Δ , Γ ⊢ σ :s: Γ' →
                      Δ , (Γ ,, (x , τ)) ⊢ σ :s: Γ'
-    weaken-subst-Γ (EFId x₁) (STAId x₂) = STAId (λ x τ x₃ → {!!})
-    weaken-subst-Γ (EFSubst x₁ efrsh x₂) (STASubst subst x₃) = STASubst (weaken-subst-Γ {Γ = {!!} } efrsh  {!!}) (weaken-ta x₁ x₃)
+    weaken-subst-Γ {Γ = Γ} (EFId x₁) (STAId x₂) = STAId (λ x τ x₃ → x∈∪l Γ _ x τ (x₂ x τ x₃) )
+    weaken-subst-Γ {x = x} {Γ = Γ} (EFSubst x₁ efrsh x₂) (STASubst {y = y} {τ = τ'} subst x₃) =
+      STASubst (exchange-subst-Γ {Γ = Γ} (flip x₂) (weaken-subst-Γ {Γ = Γ ,, (y , τ')} efrsh subst))
+               (weaken-ta x₁ x₃)
 
     weaken-ta : ∀{x Γ Δ d τ τ'} →
                 fresh x d →
