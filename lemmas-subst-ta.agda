@@ -28,7 +28,7 @@ module lemmas-subst-ta where
       EFId : ∀{x Γ} → x # Γ → envfresh x (Id Γ)
       EFSubst : ∀{x d σ y} → fresh x d
                            → envfresh x σ
-                           → x ≠ y -- todo: maybe?
+                           → x ≠ y
                            → envfresh x (Subst d y σ)
 
     data fresh : Nat → dhexp → Set where
@@ -52,8 +52,7 @@ module lemmas-subst-ta where
                (weaken-ta x₁ x₃)
 
     weaken-ta : ∀{x Γ Δ d τ τ'} →
-                fresh x d →
-                -- x # Γ ?
+                fresh x d →  -- x # Γ ?
                 Δ , Γ ⊢ d :: τ →
                 Δ , Γ ,, (x , τ') ⊢ d :: τ
     weaken-ta _ TAConst = TAConst
@@ -62,8 +61,8 @@ module lemmas-subst-ta where
     weaken-ta (FLam x₁ x₂) (TALam x₃ wt) | Inl refl = abort (x₁ refl)
     weaken-ta {Γ = Γ} {τ' = τ'} (FLam x₁ x₃) (TALam {x = y} x₄ wt) | Inr x₂ = TALam (apart-parts Γ _ _ x₄ (apart-singleton (flip x₁))) (weaken-ta {Γ = {!■ (y , ? )!} ∪ Γ} x₃ wt)
     weaken-ta (FAp frsh frsh₁) (TAAp wt wt₁) = TAAp (weaken-ta frsh wt) (weaken-ta frsh₁ wt₁)
-    weaken-ta (FHole x₁) (TAEHole x₂ x₃) = TAEHole x₂ (weaken-subst-Γ x₁ x₃) -- second argument rel to todo above
-    weaken-ta (FNEHole x₁ frsh) (TANEHole x₂ wt x₃) = TANEHole x₂ (weaken-ta frsh wt) (weaken-subst-Γ x₁ x₃) -- second argument rel to todo above
+    weaken-ta (FHole x₁) (TAEHole x₂ x₃) = TAEHole x₂ (weaken-subst-Γ x₁ x₃)
+    weaken-ta (FNEHole x₁ frsh) (TANEHole x₂ wt x₃) = TANEHole x₂ (weaken-ta frsh wt) (weaken-subst-Γ x₁ x₃)
     weaken-ta (FCast frsh) (TACast wt x₁) = TACast (weaken-ta frsh wt) x₁
     weaken-ta (FFailedCast frsh) (TAFailedCast wt x₁ x₂ x₃) = TAFailedCast (weaken-ta frsh wt) x₁ x₂ x₃
 
