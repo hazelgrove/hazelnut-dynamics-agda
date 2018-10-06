@@ -17,7 +17,7 @@ module expandability where
     expandability-synth (SAsc {τ = τ} wt)
       with expandability-ana wt
     ... | _ , _ , τ' , D  = _ , _ , ESAsc D
-    expandability-synth (SVar {n = n} x) = _ , _ , ESVar x
+    expandability-synth (SVar x) = _ , _ , ESVar x
     expandability-synth (SAp dis wt1 m wt2)
       with expandability-ana (ASubsume wt1 (match-consist m)) | expandability-ana wt2
     ... | _ , _ , _ , D1 | _ , _ , _ , D2 = _ , _ , ESAp dis (expand-ana-disjoint dis D1 D2) wt1 m D1 D2
