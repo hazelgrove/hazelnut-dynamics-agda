@@ -3,7 +3,6 @@ open import Nat
 open import core
 open import contexts
 open import lemmas-disjointness
-open import structural
 
 module lemmas-subst-ta where
   lem-subst-σ : ∀{Δ x Γ τ1 σ Γ' d } →
