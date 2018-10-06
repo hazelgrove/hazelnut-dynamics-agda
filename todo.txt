@@ -71,3 +71,33 @@ ditto
 -- gcomp-extend {Γ} {τ} {x} gc tc x₁ τ₁ x₃ | Inr x₂ with natEQ x x₁
 -- gcomp-extend gc tc x τ₁ refl | Inr x₃ | Inl refl = tc
 -- gcomp-extend gc tc x₁ τ₁ x₄ | Inr x₃ | Inr x₂ = gc x₁ τ₁ x₄
+
+more removed code
+--------------------------------------------------------
+    -- weaken-subst-Γ {x = x} {Γ = Γ} {τ = τ1} apt (STAId x₁) = STAId (λ y τ2 x₂ → x∈∪l Γ (■ (x , τ1)) _ _ (x₁ y τ2 x₂))
+    -- weaken-subst-Γ {x = x} {Γ = Γ} {τ = τ1} apt (STASubst {y = y} {τ = τ2} s x₁) with natEQ x y
+    -- weaken-subst-Γ {x = x} {Γ = Γ} {τ = τ1} apt (STASubst {τ = τ2} s x₂) | Inl refl = STASubst {!!} (weaken-ta apt x₂)
+    -- weaken-subst-Γ apt (STASubst s x₂) | Inr x₁ = STASubst {!!} (weaken-ta apt x₂)
+    -- = STASubst {!!} (weaken-ta apt x₁)
+
+      -- STASubst (weaken-subst-Γ {x = y} {Γ = Γ ,, (x , τ1)} {τ = τ2} {!!} {!!}) (weaken-ta apt x₁)
+
+
+  -- this is false
+  --
+  -- apart-fresh : ∀{ x Γ Δ d τ} →
+  --               x # Γ →
+  --               Δ , Γ ⊢ d :: τ →
+  --               fresh x d
+  -- apart-fresh aprt TAConst = FConst
+  -- apart-fresh {x = x} aprt (TAVar {x = y} x₂) with natEQ x y
+  -- apart-fresh aprt (TAVar x₃) | Inl refl = abort (somenotnone (! x₃ · aprt))
+  -- apart-fresh aprt (TAVar x₃) | Inr x₂ = FVar x₂
+  -- apart-fresh {x = x} aprt (TALam {x = y} x₂ wt) with natEQ x y
+  -- apart-fresh aprt (TALam x₃ wt) | Inl refl = {!!}
+  -- apart-fresh aprt (TALam x₃ wt) | Inr x₂ = FLam x₂
+  -- apart-fresh aprt (TAAp wt wt₁) = FAp (apart-fresh aprt wt) (apart-fresh aprt wt₁)
+  -- apart-fresh aprt (TAEHole x₁ x₂) = FHole {!!}
+  -- apart-fresh aprt (TANEHole x₁ wt x₂) = FNEHole {!!} (apart-fresh aprt wt)
+  -- apart-fresh aprt (TACast wt x₁) = FCast (apart-fresh aprt wt)
+  -- apart-fresh aprt (TAFailedCast wt x₁ x₂ x₃) = FFailedCast (apart-fresh aprt wt)
