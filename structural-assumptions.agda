@@ -18,8 +18,10 @@ module structural-assumptions where
 -- structural.agda, and 3) the signature of applying a substitition to a
 -- hole in core.agda
 
-  postulate
-    subst-weaken : ∀{Δ Γ Γ' Δ' σ} → Δ ## Δ' → Δ , Γ ⊢ σ :s: Γ' → (Δ ∪ Δ') , Γ ⊢ σ :s: Γ'
+  -- todo: used to assume this, but i've proven a less general form in
+  -- lemmas-subst-ta that is the one we actually need at the call site.
+  --
+  --   subst-weaken : ∀{Δ Γ Γ' Δ' σ} → Δ ## Δ' → Δ , Γ ⊢ σ :s: Γ' → (Δ ∪ Δ') , Γ ⊢ σ :s: Γ'
   postulate
     lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } → x # Γ → Δ , Γ ,, (x , τ1) ⊢ d1 :: τ → Δ , Γ ⊢ d2 :: τ1 → Δ , Γ ⊢ [ d2 / x ] d1 :: τ
       -- partial proof in lemmas-subst-ta

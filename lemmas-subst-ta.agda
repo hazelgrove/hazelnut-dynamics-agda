@@ -60,7 +60,7 @@ module lemmas-subst-ta where
     weaken-ta {x = x} frsh (TALam {x = y} x₂ wt) with natEQ x y
     weaken-ta (FLam x₁ x₂) (TALam x₃ wt) | Inl refl = abort (x₁ refl)
     weaken-ta {Γ = Γ} {τ' = τ'} (FLam x₁ x₃) (TALam {x = y} x₄ wt) | Inr x₂ = TALam (apart-parts Γ _ _ x₄ (apart-singleton (flip x₁)))
-                                                                              {!weaken-ta {Γ = Γ ,, (y , ?)} x₃ wt!}
+                                                                                    {!weaken-ta {Γ = Γ ,, (y , ?)} x₃ wt!}
     weaken-ta (FAp frsh frsh₁) (TAAp wt wt₁) = TAAp (weaken-ta frsh wt) (weaken-ta frsh₁ wt₁)
     weaken-ta (FHole x₁) (TAEHole x₂ x₃) = TAEHole x₂ (weaken-subst-Γ x₁ x₃)
     weaken-ta (FNEHole x₁ frsh) (TANEHole x₂ wt x₃) = TANEHole x₂ (weaken-ta frsh wt) (weaken-subst-Γ x₁ x₃)
