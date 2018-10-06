@@ -479,39 +479,3 @@ module core where
                  d ↦ d' →
                  d' ↦* d'' →
                  d  ↦* d''
-
-  -- application of a substution to a term
-  -- todo: this is not well-founded with the current representation of σs
-  postulate
-    apply : env → dhexp → dhexp
-  -- apply σ c = c
-  -- apply σ (X x) with σ x
-  -- apply σ (X x) | Some d' = d'
-  -- apply σ (X x) | None = X x
-  -- apply σ (·λ x [ τ ] d) = (·λ x [ τ ] (apply σ d))
-  -- apply σ ⦇⦈⟨ u , σ' ⟩ =  ⦇⦈⟨ u , ((λ x → (lift (apply σ)) (σ' x))) ⟩ -- (λ x → (lift (apply σ)) (σ' x))
-  -- apply σ ⦇ d ⦈⟨ u , σ' ⟩ = ⦇ apply σ d ⦈⟨ u ,{!!} ⟩
-  -- apply σ (d1 ∘ d2) = ((apply σ d1) ∘ (apply σ d2))
-  -- apply σ (d ⟨ τ1 ⇒ τ2 ⟩) = ((apply σ d) ⟨ τ1 ⇒ τ2 ⟩)
-  -- apply σ (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) = ((apply σ d) ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
-
-  -- hole instantiation
-  --
-  -- todo: as with substition, it may make sense to make this judgemental
-  -- rather than a metafunction. this probably also depends on how we solve
-  -- the problem with definition apply, above.
-  ⟦_/_⟧_ : dhexp → Nat → dhexp → dhexp
-  ⟦ d / u ⟧ c = c
-  ⟦ d / u ⟧ X x = X x
-  ⟦ d / u ⟧ (·λ x [ τ ] d') = ·λ x [ τ ] (⟦ d / u ⟧ d')
-  ⟦ d / u ⟧ ⦇⦈⟨ n , σ ⟩
-    with natEQ n u
-  ⟦ d / u ⟧ ⦇⦈⟨ .u , σ ⟩ | Inl refl = apply σ d
-  ⟦ d / u ⟧ ⦇⦈⟨ n , σ ⟩  | Inr x = ⦇⦈⟨ n , σ ⟩
-  ⟦ d / u ⟧ ⦇ d' ⦈⟨ n , σ ⟩
-    with natEQ n u
-  ⟦ d / u ⟧ ⦇ d' ⦈⟨ .u , σ ⟩ | Inl refl = apply σ d
-  ⟦ d / u ⟧ ⦇ d' ⦈⟨ n , σ ⟩ | Inr x = ⦇ d' ⦈⟨ n , σ ⟩
-  ⟦ d / u ⟧ (d1 ∘ d2) = (⟦ d / u ⟧ d1) ∘ (⟦ d / u ⟧ d2)
-  ⟦ d / u ⟧ (d' ⟨ τ1 ⇒ τ2 ⟩) = (⟦ d / u ⟧ d') ⟨ τ1 ⇒ τ2 ⟩
-  ⟦ d / u ⟧ (d' ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) = (⟦ d / u ⟧ d') ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩

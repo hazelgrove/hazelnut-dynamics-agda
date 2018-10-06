@@ -45,6 +45,3 @@ open import cast-inert
 open import complete-preservation
 open import complete-progress
 open import complete-expansion
-
--- open import instantiation
--- open import commutativity
