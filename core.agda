@@ -125,9 +125,9 @@ module core where
       SAsc    : {Γ : tctx} {e : hexp} {τ : htyp} →
                  Γ ⊢ e <= τ →
                  Γ ⊢ (e ·: τ) => τ
-      SVar    : {Γ : tctx} {τ : htyp} {n : Nat} →
-                 (n , τ) ∈ Γ →
-                 Γ ⊢ X n => τ
+      SVar    : {Γ : tctx} {τ : htyp} {x : Nat} →
+                 (x , τ) ∈ Γ →
+                 Γ ⊢ X x => τ
       SAp     : {Γ : tctx} {e1 e2 : hexp} {τ τ1 τ2 : htyp} →
                  holes-disjoint e1 e2 →
                  Γ ⊢ e1 => τ1 →

@@ -4,9 +4,43 @@ open import core
 open import contexts
 open import lemmas-disjointness
 
-open import structural
+--open import structural
 
 module disjointness where
+  mutual
+    weaken-synth : ∀{ x Γ e τ τ'} → x # Γ → Γ ⊢ e => τ → (Γ ,, (x , τ')) ⊢ e => τ
+    weaken-synth apt SConst = SConst
+    weaken-synth apt (SAsc x₁) = SAsc (weaken-ana apt x₁)
+    weaken-synth {x = y} {Γ = Γ} apt (SVar {τ = τ} {x = x} x₁) = SVar (x∈∪l Γ (■ (y , _)) x τ x₁)
+    weaken-synth apt (SAp x₁ wt x₂ x₃) = SAp x₁ (weaken-synth apt wt) x₂ (weaken-ana apt x₃)
+    weaken-synth apt SEHole = SEHole
+    weaken-synth apt (SNEHole x₁ wt) = SNEHole x₁ (weaken-synth apt wt)
+    weaken-synth apt (SLam x₂ wt) = SLam {!!} {!!}
+
+    weaken-ana : ∀{x Γ e τ τ'} → x # Γ → Γ ⊢ e <= τ → (Γ ,, (x , τ')) ⊢ e <= τ
+    weaken-ana apt (ASubsume x₁ x₂) = ASubsume (weaken-synth apt x₁) x₂
+    weaken-ana apt (ALam x₂ x₃ wt) = {!!}
+
+  mutual
+    weaken-synth-expand : ∀{x Γ e τ e' Δ τ'} → x # Γ
+                                             → Γ ⊢ e ⇒ τ ~> e' ⊣ Δ
+                                             → (Γ ,, (x , τ')) ⊢ e ⇒ τ ~> e' ⊣ Δ
+    weaken-synth-expand apt ESConst = ESConst
+    weaken-synth-expand {x = y} {Γ = Γ} {τ = τ} apt (ESVar {x = x} x₂) = ESVar (x∈∪l Γ (■ (y , _)) x τ x₂)
+    weaken-synth-expand apt (ESLam x₂ syn) = {!!}
+    weaken-synth-expand apt (ESAp x₁ x₂ x₃ x₄ x₅ x₆) = ESAp x₁ x₂ (weaken-synth apt x₃) x₄ (weaken-ana-expand apt x₅) (weaken-ana-expand apt x₆)
+    weaken-synth-expand apt (ESEHole {u = u})= {!!}
+    weaken-synth-expand apt (ESNEHole x₁ syn) = {!!}
+    weaken-synth-expand apt (ESAsc x₁) = ESAsc (weaken-ana-expand apt x₁)
+
+    weaken-ana-expand : ∀{ Γ e τ e' τ' Δ x τ* } → x # Γ
+                                                → Γ ⊢ e ⇐ τ ~> e' :: τ' ⊣ Δ
+                                                → (Γ ,, (x , τ*)) ⊢ e ⇐ τ ~> e' :: τ' ⊣ Δ
+    weaken-ana-expand apt (EALam x₂ x₃ ana) = EALam {!!} {!!} {!!}
+    weaken-ana-expand apt (EASubsume x₁ x₂ x₃ x₄) = EASubsume x₁ x₂ (weaken-synth-expand apt x₃) x₄
+    weaken-ana-expand apt EAEHole = {!!}
+    weaken-ana-expand apt (EANEHole x₁ x₂) = {!!}
+
   mutual
     expand-new-disjoint-synth : ∀ { e u τ d Δ Γ Γ' τ'} →
                           hole-name-new e u →
