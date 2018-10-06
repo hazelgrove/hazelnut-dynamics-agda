@@ -13,6 +13,3 @@ module structural where
     weaken-ana-expand : ∀{ Γ e τ e' τ' Δ x τ* } → x # Γ
                                                 → Γ ⊢ e ⇐ τ ~> e' :: τ' ⊣ Δ
                                                 → (Γ ,, (x , τ*)) ⊢ e ⇐ τ ~> e' :: τ' ⊣ Δ
-
-  postulate
-    lem-weakenΔ1 : ∀{Δ1 Δ2 Γ d τ} → Δ1 ## Δ2 → Δ1 , Γ ⊢ d :: τ → (Δ1 ∪ Δ2) , Γ ⊢ d :: τ

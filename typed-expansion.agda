@@ -6,10 +6,22 @@ open import contexts
 open import lemmas-consistency
 open import lemmas-disjointness
 
-open import structural-assumptions
-open import structural
-
 module typed-expansion where
+  mutual
+    lem-weaken-:s: : ∀{Δ1 Δ2 Γ σ Γ'} → Δ1 ## Δ2 → Δ1 , Γ ⊢ σ :s: Γ' → (Δ1 ∪ Δ2) , Γ ⊢ σ :s: Γ'
+    lem-weaken-:s: disj (STAId x) = STAId x
+    lem-weaken-:s: disj (STASubst subst x) = STASubst (lem-weaken-:s: disj subst) (lem-weakenΔ1 disj x)
+
+    lem-weakenΔ1 : ∀{Δ1 Δ2 Γ d τ} → Δ1 ## Δ2 → Δ1 , Γ ⊢ d :: τ → (Δ1 ∪ Δ2) , Γ ⊢ d :: τ
+    lem-weakenΔ1 disj TAConst = TAConst
+    lem-weakenΔ1 disj (TAVar x₁) = TAVar x₁
+    lem-weakenΔ1 disj (TALam x₁ wt) = TALam x₁ (lem-weakenΔ1 disj wt)
+    lem-weakenΔ1 disj (TAAp wt wt₁) = TAAp (lem-weakenΔ1 disj wt) (lem-weakenΔ1 disj wt₁)
+    lem-weakenΔ1 {Δ1} {Δ2} {Γ} disj (TAEHole {u = u} {Γ' = Γ'} x x₁) = TAEHole (x∈∪l Δ1 Δ2 u _ x ) (lem-weaken-:s: disj x₁)
+    lem-weakenΔ1 {Δ1} {Δ2} {Γ} disj (TANEHole {Γ' = Γ'} {u = u} x wt x₁) = TANEHole (x∈∪l Δ1 Δ2 u _ x) (lem-weakenΔ1 disj wt) (lem-weaken-:s: disj x₁)
+    lem-weakenΔ1 disj (TACast wt x) = TACast (lem-weakenΔ1 disj wt) x
+    lem-weakenΔ1 disj (TAFailedCast wt x x₁ x₂) = TAFailedCast (lem-weakenΔ1 disj wt) x x₁ x₂
+
   lem-weakenΔ2 : ∀{Δ1 Δ2 Γ d τ} → Δ1 ## Δ2 → Δ2 , Γ ⊢ d :: τ → (Δ1 ∪ Δ2) , Γ ⊢ d :: τ
   lem-weakenΔ2 {Δ1} {Δ2} {Γ} {d} {τ} disj D = tr (λ q → q , Γ ⊢ d :: τ) (∪comm Δ2 Δ1 (##-comm disj)) (lem-weakenΔ1 (##-comm disj) D)
 
