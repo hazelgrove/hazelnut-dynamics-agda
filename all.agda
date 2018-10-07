@@ -11,7 +11,6 @@ open import lemmas-disjointness
 open import disjointness
 
 open import structural-assumptions
-open import structural
 
 open import focus-formation
 open import ground-decidable
