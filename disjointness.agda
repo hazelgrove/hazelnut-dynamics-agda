@@ -7,6 +7,18 @@ open import lemmas-disjointness
 --open import structural
 
 module disjointness where
+  exchange-synth : ∀{Γ x y τ τ1 τ2 e}
+                       → x ≠ y
+                       → (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ e => τ
+                       → (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ e => τ
+  exchange-synth {Γ} {x} {y} {τ} {τ1} {τ2} {e} neq synth = tr (λ qq → qq ⊢ e => τ) {!!} synth
+
+  exchange-ana : ∀{Γ x y τ τ1 τ2 e}
+                       → x ≠ y
+                       → (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ e <= τ
+                       → (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ e <= τ
+  exchange-ana {Γ} {x} {y} {τ} {τ1} {τ2} {e} neq ana = tr (λ qq → qq ⊢ e <= τ) {!!} ana
+
   mutual
     weaken-synth : ∀{ x Γ e τ τ'} → x # Γ → Γ ⊢ e => τ → (Γ ,, (x , τ')) ⊢ e => τ
     weaken-synth apt SConst = SConst
@@ -15,11 +27,19 @@ module disjointness where
     weaken-synth apt (SAp x₁ wt x₂ x₃) = SAp x₁ (weaken-synth apt wt) x₂ (weaken-ana apt x₃)
     weaken-synth apt SEHole = SEHole
     weaken-synth apt (SNEHole x₁ wt) = SNEHole x₁ (weaken-synth apt wt)
-    weaken-synth apt (SLam x₂ wt) = SLam {!!} {!!}
+    weaken-synth {x = y} {Γ = Γ} apt (SLam {x = x} x₂ wt) with natEQ x y
+    weaken-synth {x = y} {Γ = Γ} apt (SLam x₃ wt) | Inl refl = {!!}
+    weaken-synth {x = y} {Γ = Γ} apt (SLam {x = x} x₃ wt) | Inr x₂ =
+                 SLam (apart-parts Γ (■ (y , _)) x x₃ (apart-singleton x₂))
+                      (exchange-synth {Γ = Γ} x₂ (weaken-synth (apart-parts Γ (■ (x , _)) y apt (apart-singleton (flip x₂))) wt))
 
     weaken-ana : ∀{x Γ e τ τ'} → x # Γ → Γ ⊢ e <= τ → (Γ ,, (x , τ')) ⊢ e <= τ
     weaken-ana apt (ASubsume x₁ x₂) = ASubsume (weaken-synth apt x₁) x₂
-    weaken-ana apt (ALam x₂ x₃ wt) = {!!}
+    weaken-ana {x = y} {Γ = Γ} apt (ALam {x = x} x₂ x₃ wt) with natEQ x y
+    weaken-ana apt (ALam x₃ x₄ wt) | Inl refl = {!!}
+    weaken-ana {x = y} {Γ = Γ} apt (ALam {x = x} x₃ x₄ wt) | Inr x₂ =
+                 ALam (apart-parts Γ (■ (y , _)) x x₃ (apart-singleton x₂)) x₄
+                      (exchange-ana {Γ = Γ} x₂ (weaken-ana (apart-parts Γ (■ (x , _)) y apt (apart-singleton (flip x₂))) wt))
 
   mutual
     weaken-synth-expand : ∀{x Γ e τ e' Δ τ'} → x # Γ
@@ -94,8 +114,6 @@ module disjointness where
 
 
   mutual
-    -- this looks good but may not *quite* work because of the
-    -- weakening calls in the two lambda cases
     expand-ana-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ1' τ2' Γ Δ1 Δ2 } →
           holes-disjoint e1 e2 →
           Γ ⊢ e1 ⇐ τ1 ~> e1' :: τ1' ⊣ Δ1 →

@@ -18,10 +18,17 @@ module structural-assumptions where
 -- structural.agda, and 3) the signature of applying a substitition to a
 -- hole in core.agda
 
-  -- todo: used to assume this, but i've proven a less general form in
-  -- lemmas-subst-ta that is the one we actually need at the call site.
-  --
-  --   subst-weaken : ∀{Δ Γ Γ' Δ' σ} → Δ ## Δ' → Δ , Γ ⊢ σ :s: Γ' → (Δ ∪ Δ') , Γ ⊢ σ :s: Γ'
+  -- partial proof in lemmas-subst-ta
   postulate
     lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } → x # Γ → Δ , Γ ,, (x , τ1) ⊢ d1 :: τ → Δ , Γ ⊢ d2 :: τ1 → Δ , Γ ⊢ [ d2 / x ] d1 :: τ
-      -- partial proof in lemmas-subst-ta
+
+
+  -- todo: there's a freshness concern here; i'm not sure if just
+  -- being apart from Γ is good enough. in POPL work it wasn't, we
+  -- wanted really aggressive freshness because of barendrecht's. we
+  -- might be able to generate that freshness from the first two
+  -- premises.
+  postulate
+    weaken-ana-expand : ∀{ Γ e τ e' τ' Δ x τ* } → x # Γ
+                                                → Γ ⊢ e ⇐ τ ~> e' :: τ' ⊣ Δ
+                                                → (Γ ,, (x , τ*)) ⊢ e ⇐ τ ~> e' :: τ' ⊣ Δ

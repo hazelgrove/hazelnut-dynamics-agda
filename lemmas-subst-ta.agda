@@ -11,16 +11,33 @@ module lemmas-subst-ta where
                   Δ , Γ ⊢ Subst d x σ :s: Γ'
   lem-subst-σ s wt = STASubst s wt
 
-  -- todo: i'm worried this may actually be false without knowing that x ≠
-  -- y, but that's kind of what we usually mean on paper anyway
+  -- not actually helpful here i think
+  ∪eq : {A : Set} → (x y p q : A ctx) → x == p → y == q → (x ∪ y) == (p ∪ q)
+  ∪eq x y .x .y refl refl = refl
+
+  lem-swap : {A : Set} (Γ : A ctx) (x y : Nat) (t1 t2 : A) {x≠y : x == y → ⊥}  (z : Nat) →
+         ((Γ ,, (x , t1)) ,, (y , t2)) z == ((Γ ,, (y , t2)) ,, (x , t1)) z
+  lem-swap Γ x y t1 t2 z with natEQ x z | natEQ y z
+  lem-swap Γ x y t1 t2 {x≠y} z | Inl p | Inl q = abort (x≠y (p · ! q))
+  lem-swap Γ x y t1 t2 .x | Inl refl | Inr x₂ with natEQ x x
+  lem-swap Γ x y t1 t2 .x | Inl refl | Inr x₂ | Inl refl = {!!}
+  lem-swap Γ x y t1 t2 .x | Inl refl | Inr x₂ | Inr x₁ = abort (x₁ refl)
+  lem-swap Γ x y t1 t2 .y | Inr x₁ | Inl refl with natEQ y y
+  lem-swap Γ x₁ y t1 t2 .y | Inr x₂ | Inl refl | Inl refl = {!!}
+  lem-swap Γ x₁ y t1 t2 .y | Inr x₂ | Inl refl | Inr x = abort (x refl)
+  lem-swap Γ x y t1 t2 z | Inr x₁ | Inr x₂ with natEQ x z | natEQ y z
+  lem-swap Γ x .x t1 t2 .x | Inr x₂ | Inr x₃ | Inl refl | Inl refl = abort (x₃ refl)
+  lem-swap Γ x y t1 t2 .x | Inr x₂ | Inr x₃ | Inl refl | Inr x₁ = abort (x₂ refl)
+  lem-swap Γ x y t1 t2 z | Inr x₃ | Inr x₄ | Inr x₁ | Inl x₂ = abort (x₄ x₂)
+  lem-swap Γ x y t1 t2 z | Inr x₃ | Inr x₄ | Inr x₁ | Inr x₂ = {!!}
+
+  -- all the proofs of exchange will be almost exactly this one, just with
+  -- different judgemental forms in the first argument to transport.
   exchange-subst-Γ : ∀{Δ Γ x y τ1 τ2 σ Γ'} →
                    x ≠ y →
                    Δ , (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ σ :s: Γ' →
                    Δ , (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ σ :s: Γ'
-  exchange-subst-Γ {Δ} {Γ} {x} {y} {τ1} {τ2} {σ} {Γ'} x≠y xy = tr (λ qq → Δ , qq ⊢ σ :s: Γ') (funext swap) xy
-    where
-      swap : (z : Nat) → (Γ ,, (x , τ1) ,, (y , τ2)) z == (Γ ,, (y , τ2) ,, (x , τ1)) z
-      swap = {!!}
+  exchange-subst-Γ {Δ} {Γ} {x} {y} {τ1} {τ2} {σ} {Γ'} x≠y xy = tr (λ qq → Δ , qq ⊢ σ :s: Γ') (funext (lem-swap Γ x y τ1 τ2 {x≠y})) xy
 
   mutual
     data envfresh : Nat → env → Set where
@@ -41,6 +58,7 @@ module lemmas-subst-ta where
       FFailedCast : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
 
   mutual
+    -- todo: can this use the other weakening for :s: directly? or is that not worth the hassle
     weaken-subst-Γ : ∀{ x Γ Δ σ Γ' τ} →
                      envfresh x σ →
                      Δ , Γ ⊢ σ :s: Γ' →
