@@ -74,28 +74,28 @@ module contexts where
 
   infixl 10 _,,_
 
+  lem-dom-union1 : {A : Set} {C1 C2 : A ctx} {x : Nat} → C1 ## C2 → dom C1 x → (C1 ∪ C2) x == C1 x
+  lem-dom-union1 {A} {C1} {C2} {x} (d1 , d2) D with C1 x
+  lem-dom-union1 (d1 , d2) D | Some x₁ = refl
+  lem-dom-union1 (d1 , d2) D | None = abort (somenotnone (! (π2 D)))
+
+  lem-dom-union2 : {A : Set} {C1 C2 : A ctx} {x : Nat} → C1 ## C2 → dom C1 x → (C2 ∪ C1) x == C1 x
+  lem-dom-union2 {A} {C1} {C2} {x} (d1 , d2) D with ctxindirect C2 x
+  lem-dom-union2 {A} {C1} {C2} {x} (d1 , d2) D | Inl x₁ = abort (somenotnone (! (π2 x₁) · d1 x D ))
+  lem-dom-union2 {A} {C1} {C2} {x} (d1 , d2) D | Inr x₁ with C2 x
+  lem-dom-union2 (d1 , d2) D | Inr x₂ | Some x₁ = abort (somenotnone x₂)
+  lem-dom-union2 (d1 , d2) D | Inr x₁ | None = refl
+
   -- if the contexts in question are disjoint, then union is commutative
   ∪comm : {A : Set} → (C1 C2 : A ctx) → C1 ## C2 → (C1 ∪ C2) == (C2 ∪ C1)
   ∪comm C1 C2 (d1 , d2)= funext guts
     where
-      lem-dom-union1 : {A : Set} {C1 C2 : A ctx} {x : Nat} → C1 ## C2 → dom C1 x → (C1 ∪ C2) x == C1 x
-      lem-dom-union1 {A} {C1} {C2} {x} (d1 , d2) D with C1 x
-      lem-dom-union1 (d1 , d2) D | Some x₁ = refl
-      lem-dom-union1 (d1 , d2) D | None = abort (somenotnone (! (π2 D)))
-
-      lem-dom-union2 : {A : Set} {C1 C2 : A ctx} {x : Nat} → C1 ## C2 → dom C1 x → (C2 ∪ C1) x == C1 x
-      lem-dom-union2 {A} {C1} {C2} {x} (d1 , d2) D with ctxindirect C2 x
-      lem-dom-union2 {A} {C1} {C2} {x} (d1 , d2) D | Inl x₁ = abort (somenotnone (! (π2 x₁) · d1 x D ))
-      lem-dom-union2 {A} {C1} {C2} {x} (d1 , d2) D | Inr x₁ with C2 x
-      lem-dom-union2 (d1 , d2) D | Inr x₂ | Some x₁ = abort (somenotnone x₂)
-      lem-dom-union2 (d1 , d2) D | Inr x₁ | None = refl
-
-      lem-apart-union1 : {A : Set} (C1 C2 : A ctx) (x : Nat) → x # C1 → x # C2 → (C1 ∪ C2) x == None
+      lem-apart-union1 : {A : Set} (C1 C2 : A ctx) (x : Nat) → x # C1 → x # C2 → x # (C1 ∪ C2)
       lem-apart-union1 C1 C2 x apt1 apt2 with C1 x
       lem-apart-union1 C1 C2 x apt1 apt2 | Some x₁ = abort (somenotnone apt1)
       lem-apart-union1 C1 C2 x apt1 apt2 | None = apt2
 
-      lem-apart-union2 : {A : Set} (C1 C2 : A ctx) (x : Nat) → x # C1 → x # C2 → (C2 ∪ C1) x == None
+      lem-apart-union2 : {A : Set} (C1 C2 : A ctx) (x : Nat) → x # C1 → x # C2 → x # (C2 ∪ C1)
       lem-apart-union2 C1 C2 x apt1 apt2 with C2 x
       lem-apart-union2 C1 C2 x apt1 apt2 | Some x₁ = abort (somenotnone apt2)
       lem-apart-union2 C1 C2 x apt1 apt2 | None = apt1
@@ -117,7 +117,10 @@ module contexts where
   -- an element in the right of a union is in the union as long as the
   -- contexts are disjoint; this asymmetry reflects the asymmetry in the
   -- definition of union
-  x∈∪r : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) → (n , x) ∈ Γ' → Γ' ## Γ → (n , x) ∈ (Γ ∪ Γ')
+  x∈∪r : {A : Set} → (Γ Γ' : A ctx) (n : Nat) (x : A) →
+                             (n , x) ∈ Γ' →
+                             Γ' ## Γ →
+                             (n , x) ∈ (Γ ∪ Γ')
   x∈∪r Γ Γ' n x nx∈ disj = tr (λ qq → (n , x) ∈ qq) (∪comm _ _ disj) (x∈∪l Γ' Γ n x nx∈)
 
   -- an element is in the context formed with just itself
@@ -128,14 +131,18 @@ module contexts where
 
   -- if an index is in the domain of a singleton context, it's the only
   -- index in the context
-  lem-dom-eq : {A : Set} (y : A) (n m : Nat) → dom (■ (m , y)) n → n == m
+  lem-dom-eq : {A : Set} (y : A) (n m : Nat) →
+                                 dom (■ (m , y)) n →
+                                 n == m
   lem-dom-eq y n m (π1 , π2) with natEQ m n
   lem-dom-eq y n .n (π1 , π2) | Inl refl = refl
   lem-dom-eq y n m (π1 , π2) | Inr x = abort (somenotnone (! π2))
 
   -- a singleton context formed with an inded apart from a context is
   -- disjoint from that context
-  lem-apart-sing-disj : {A : Set} {n : Nat} {a : A} {Γ : A ctx} → n # Γ → (■ (n , a)) ## Γ
+  lem-apart-sing-disj : {A : Set} {n : Nat} {a : A} {Γ : A ctx} →
+                                     n # Γ →
+                                     (■ (n , a)) ## Γ
   lem-apart-sing-disj {A} {n} {a} {Γ} apt = asd1 , asd2
     where
       asd1 : (n₁ : Nat) → dom (■ (n , a)) n₁ → n₁ # Γ
@@ -148,7 +155,9 @@ module contexts where
       asd2 m (π1 , π2) | Inr x = refl
 
   -- the singleton context can only produce one non-none result
-  lem-insingeq : {A : Set} {x x' : Nat} {τ τ' : A} → (■ (x , τ)) x' == Some τ' → τ == τ'
+  lem-insingeq : {A : Set} {x x' : Nat} {τ τ' : A} →
+                              (■ (x , τ)) x' == Some τ' →
+                              τ == τ'
   lem-insingeq {A} {x} {x'} {τ} {τ'} eq with lem-dom-eq τ x' x (τ' , eq)
   lem-insingeq {A} {x} {.x} {τ} {τ'} eq | refl with natEQ x x
   lem-insingeq refl | refl | Inl refl = refl
@@ -156,7 +165,10 @@ module contexts where
 
   -- if an index doesn't appear in a context, and the union of that context
   -- with a singleton does produce a result, it must have come from the singleton
-  lem-apart-union-eq : {A : Set} {Γ : A ctx} {x x' : Nat} {τ τ' : A} → x' # Γ → (Γ ∪ ■ (x , τ)) x' == Some τ' → τ == τ'
+  lem-apart-union-eq : {A : Set} {Γ : A ctx} {x x' : Nat} {τ τ' : A} →
+                                    x' # Γ →
+                                    (Γ ∪ ■ (x , τ)) x' == Some τ' →
+                                    τ == τ'
   lem-apart-union-eq {A} {Γ} {x} {x'} {τ} {τ'} apart eq with Γ x'
   lem-apart-union-eq apart eq | Some x = abort (somenotnone apart)
   lem-apart-union-eq apart eq | None = lem-insingeq eq
@@ -164,7 +176,10 @@ module contexts where
   -- if an index not in a singleton context produces a result from that
   -- singleton unioned with another context, the result must have come from
   -- the other context
-  lem-neq-union-eq : {A : Set} {Γ : A ctx} {x x' : Nat} {τ τ' : A} → x' ≠ x → (Γ ∪ ■ (x , τ)) x' == Some τ' → Γ x' == Some τ'
+  lem-neq-union-eq : {A : Set} {Γ : A ctx} {x x' : Nat} {τ τ' : A} →
+                                    x' ≠ x →
+                                    (Γ ∪ ■ (x , τ)) x' == Some τ' →
+                                    Γ x' == Some τ'
   lem-neq-union-eq {A} {Γ} {x} {x'} {τ} {τ'} neq eq with Γ x'
   lem-neq-union-eq neq eq | Some x = eq
   lem-neq-union-eq {A} {Γ} {x} {x'} {τ} {τ'} neq eq | None with natEQ x x'
@@ -173,7 +188,9 @@ module contexts where
 
   -- extending a context with a new index produces the result paired with
   -- that index.
-  ctx-top : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n # Γ) → (n , a) ∈ (Γ ,, (n , a))
+  ctx-top : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) →
+                                       (n # Γ) →
+                                       (n , a) ∈ (Γ ,, (n , a))
   ctx-top Γ n a apt = x∈∪r Γ (■ (n , a)) n a (x∈■ n a) (lem-apart-sing-disj apt)
 
   -- if a union of a singleton and a ctx produces no result, the argument
@@ -181,7 +198,7 @@ module contexts where
   -- singleton
   lem-union-none : {A : Set} {Γ : A ctx} {a : A} {x x' : Nat}
                       → (Γ ∪ ■ (x , a)) x' == None
-                      → x ≠ x' × x' # Γ
+                      → (x ≠ x') × (x' # Γ)
   lem-union-none {A} {Γ} {a} {x} {x'} emp with ctxindirect Γ x'
   lem-union-none {A} {Γ} {a} {x} {x'} emp | Inl (π1 , π2) with Γ x'
   lem-union-none emp | Inl (π1 , π2) | Some x = abort (somenotnone emp)
