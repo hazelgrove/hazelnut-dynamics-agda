@@ -33,19 +33,33 @@ module exchange where
                    x ≠ y →
                    Δ , (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ σ :s: Γ' →
                    Δ , (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ σ :s: Γ'
-  exchange-subst-Γ {Δ} {Γ} {x} {y} {τ1} {τ2} {σ} {Γ'} x≠y xy =
-    tr (λ qq → Δ , qq ⊢ σ :s: Γ') (swap Γ x≠y) xy
+  exchange-subst-Γ {Δ} {Γ} {x} {y} {τ1} {τ2} {σ} {Γ'} x≠y =
+    tr (λ qq → Δ , qq ⊢ σ :s: Γ') (swap Γ x≠y)
 
   exchange-synth : ∀{Γ x y τ τ1 τ2 e}
                        → x ≠ y
                        → (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ e => τ
                        → (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ e => τ
-  exchange-synth {Γ} {x} {y} {τ} {τ1} {τ2} {e} neq synth =
-    tr (λ qq → qq ⊢ e => τ) (swap Γ neq) synth
+  exchange-synth {Γ} {x} {y} {τ} {τ1} {τ2} {e} neq  =
+    tr (λ qq → qq ⊢ e => τ) (swap Γ neq)
 
   exchange-ana : ∀{Γ x y τ τ1 τ2 e}
                        → x ≠ y
                        → (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ e <= τ
                        → (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ e <= τ
-  exchange-ana {Γ} {x} {y} {τ} {τ1} {τ2} {e} neq ana =
-    tr (λ qq → qq ⊢ e <= τ) (swap Γ neq) ana
+  exchange-ana {Γ} {x} {y} {τ} {τ1} {τ2} {e} neq  =
+    tr (λ qq → qq ⊢ e <= τ) (swap Γ neq)
+
+  exchange-expand-synth : ∀{Γ x y τ1 τ2 e τ d Δ} →
+                        x ≠ y →
+                        (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ e ⇒ τ ~> d ⊣ Δ →
+                        (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ e ⇒ τ ~> d ⊣ Δ
+  exchange-expand-synth {Γ = Γ} {e = e} {τ = τ} {d = d } {Δ = Δ} neq =
+    tr (λ qq → qq ⊢ e ⇒ τ ~> d ⊣ Δ) (swap Γ neq)
+
+  exchange-expand-ana : ∀ {Γ x y τ1 τ2 τ τ' d e Δ} →
+                      x ≠ y →
+                      (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
+                      (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
+  exchange-expand-ana {Γ = Γ} {τ = τ} {τ' = τ'} {d = d} {e = e} {Δ = Δ} neq =
+    tr (λ qq → qq ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ) (swap Γ neq)
