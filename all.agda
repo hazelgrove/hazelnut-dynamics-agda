@@ -48,3 +48,4 @@ open import complete-expansion
 open import weakening
 open import exchange
 open import lemmas-freshness
+open import contraction
