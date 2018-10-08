@@ -46,3 +46,28 @@ module weakening where
                      ALam (apart-extend1 Γ (flip neq) x₂)
                           x₃
                           (exchange-ana {Γ = Γ} (flip neq) (weaken-ana frsh wt))
+
+  mutual
+    weaken-subst-Γ : ∀{ x Γ Δ σ Γ' τ} →
+                     envfresh x σ →
+                     Δ , Γ ⊢ σ :s: Γ' →
+                     Δ , (Γ ,, (x , τ)) ⊢ σ :s: Γ'
+    weaken-subst-Γ {Γ = Γ} (EFId x₁) (STAId x₂) = STAId (λ x τ x₃ → x∈∪l Γ _ x τ (x₂ x τ x₃) )
+    weaken-subst-Γ {x = x} {Γ = Γ} (EFSubst x₁ efrsh x₂) (STASubst {y = y} {τ = τ'} subst x₃) =
+      STASubst (exchange-subst-Γ {Γ = Γ} (flip x₂) (weaken-subst-Γ {Γ = Γ ,, (y , τ')} efrsh subst))
+               (weaken-ta x₁ x₃)
+
+    weaken-ta : ∀{x Γ Δ d τ τ'} →
+                fresh x d →
+                Δ , Γ ⊢ d :: τ →
+                Δ , Γ ,, (x , τ') ⊢ d :: τ
+    weaken-ta _ TAConst = TAConst
+    weaken-ta {x} {Γ} {_} {_} {τ} {τ'} (FVar x₂) (TAVar x₃) = TAVar (x∈∪l Γ (■ (x , τ')) _ _ x₃)
+    weaken-ta {x = x} frsh (TALam {x = y} x₂ wt) with natEQ x y
+    weaken-ta (FLam x₁ x₂) (TALam x₃ wt) | Inl refl = abort (x₁ refl)
+    weaken-ta {Γ = Γ} {τ' = τ'} (FLam x₁ x₃) (TALam {x = y} x₄ wt) | Inr x₂ = TALam (apart-extend1 Γ (flip x₁) x₄) (exchange-ta-Γ {Γ = Γ} (flip x₁) (weaken-ta x₃ wt))
+    weaken-ta (FAp frsh frsh₁) (TAAp wt wt₁) = TAAp (weaken-ta frsh wt) (weaken-ta frsh₁ wt₁)
+    weaken-ta (FHole x₁) (TAEHole x₂ x₃) = TAEHole x₂ (weaken-subst-Γ x₁ x₃)
+    weaken-ta (FNEHole x₁ frsh) (TANEHole x₂ wt x₃) = TANEHole x₂ (weaken-ta frsh wt) (weaken-subst-Γ x₁ x₃)
+    weaken-ta (FCast frsh) (TACast wt x₁) = TACast (weaken-ta frsh wt) x₁
+    weaken-ta (FFailedCast frsh) (TAFailedCast wt x₁ x₂ x₃) = TAFailedCast (weaken-ta frsh wt) x₁ x₂ x₃

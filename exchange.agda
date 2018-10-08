@@ -63,3 +63,10 @@ module exchange where
                       (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
   exchange-expand-ana {Γ = Γ} {τ = τ} {τ' = τ'} {d = d} {e = e} {Δ = Δ} neq =
     tr (λ qq → qq ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ) (swap Γ neq)
+
+  exchange-ta-Γ : ∀{Γ x y τ1 τ2 d τ Δ } →
+                x ≠ y →
+                Δ , (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ d :: τ →
+                Δ , (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ d :: τ
+  exchange-ta-Γ {Γ = Γ} {d = d} {τ = τ} {Δ = Δ} neq =
+    tr (λ qq → Δ , qq ⊢ d :: τ) (swap Γ neq)

@@ -11,7 +11,13 @@ open import weakening
 
 module disjointness where
 
-  --todo move to weakening
+  --todo move to weakening when done
+  weaken-hole-synth : ∀{Γ x τ' u} → x # Γ → (Γ ,, (x , τ')) ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , Id Γ ⟩ ⊣  ■ (u , (Γ , ⦇⦈))
+  weaken-hole-synth apt = {!!}
+
+  ex : ∀{Γ x τ' u} → x # Γ → (Γ ,, (x , τ')) ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , Id (Γ ,, (x , τ')) ⟩ ⊣  ■ (u , ((Γ ,, (x , τ')) , ⦇⦈))
+  ex = λ {Γ} {x} {τ'} {u} _ → ESEHole
+
   mutual
     weaken-synth-expand : ∀{x Γ e τ d Δ τ'} → fresh x d
                                              → Γ ⊢ e ⇒ τ ~> d ⊣ Δ
@@ -20,7 +26,7 @@ module disjointness where
     weaken-synth-expand {x = y} {Γ = Γ} {τ = τ} frsh (ESVar {x = x} x₂) = ESVar (x∈∪l Γ (■ (y , _)) x τ x₂)
     weaken-synth-expand {Γ = Γ} (FLam x₁ frsh) (ESLam x₂ syn) = ESLam (apart-extend1 Γ (flip x₁) x₂) (exchange-expand-synth {Γ = Γ} (flip x₁) (weaken-synth-expand frsh syn))
     weaken-synth-expand (FAp (FCast frsh) (FCast frsh₁)) (ESAp x₁ x₂ x₃ x₄ x₅ x₆) = ESAp x₁ x₂ (weaken-synth (fresh-expand-ana2 frsh x₅) x₃) x₄ (weaken-ana-expand frsh x₅) (weaken-ana-expand frsh₁ x₆)
-    weaken-synth-expand {x = x } {Γ = Γ} {τ' = τ'}  frsh (ESEHole {u = u})= {!ESEHole {Γ = Γ ,, (x , τ')} {u = u}  !}
+    weaken-synth-expand (FHole (EFId x₁)) ESEHole = weaken-hole-synth x₁
     weaken-synth-expand frsh (ESNEHole x₁ syn) = {!!}
     weaken-synth-expand (FCast frsh) (ESAsc x₁) = ESAsc (weaken-ana-expand frsh x₁)
 
@@ -84,19 +90,27 @@ module disjointness where
     expand-disjoint-new-ana (EANEHole {Δ = Δ} x x₁) disj = HNNEHole (singles-notequal (disjoint-union2 {Γ1 = Δ} disj))
                                                                     (expand-disjoint-new-synth x₁ (disjoint-union1 disj))
 
+  -- these are experimental / almost certainly false; just trying to figure
+  -- out how to bridge the gap in these two holes below
+  mutual
+    expand-fresh-synth : ∀{x Γ e τ d Δ} → x # Γ → Γ ⊢ e ⇒ τ ~> d ⊣ Δ → freshh x e
+    expand-fresh-synth apt exp = {!exp!}
+
+    expand-fresh-ana : ∀{x Γ e τ d τ' Δ} → x # Γ → Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ → freshh x e
+    expand-fresh-ana apt exp = {!!}
 
   mutual
-    expand-ana-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ1' τ2' Γ Δ1 Δ2 } →
+    expand-ana-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ1' τ2' Γ Δ1 Δ2 } →
           holes-disjoint e1 e2 →
           Γ ⊢ e1 ⇐ τ1 ~> e1' :: τ1' ⊣ Δ1 →
           Γ ⊢ e2 ⇐ τ2 ~> e2' :: τ2' ⊣ Δ2 →
           Δ1 ## Δ2
     expand-ana-disjoint hd (EASubsume x x₁ x₂ x₃) E2 = expand-synth-disjoint hd x₂ E2
-    expand-ana-disjoint (HDLam1 hd) (EALam x₁ x₂ ex1) E2 = expand-ana-disjoint hd ex1 (weaken-ana-expand {!!} E2)
+    expand-ana-disjoint (HDLam1 hd) (EALam x₁ x₂ ex1) E2 = expand-ana-disjoint hd ex1 (weaken-ana-expand {!fresh-expand-ana1 x₁ (expand-fresh-ana x₁ E2) E2!} E2)
     expand-ana-disjoint (HDHole x) EAEHole E2 = ##-comm (expand-new-disjoint-ana x E2)
     expand-ana-disjoint (HDNEHole x hd) (EANEHole x₁ x₂) E2 = disjoint-parts (expand-synth-disjoint hd x₂ E2) (##-comm (expand-new-disjoint-ana x E2))
 
-    expand-synth-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ2' Γ Δ1 Δ2 } →
+    expand-synth-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ2' Γ Δ1 Δ2 } →
           holes-disjoint e1 e2 →
           Γ ⊢ e1 ⇒ τ1 ~> e1' ⊣ Δ1 →
           Γ ⊢ e2 ⇐ τ2 ~> e2' :: τ2' ⊣ Δ2 →
@@ -111,12 +125,12 @@ module disjointness where
     expand-synth-disjoint (HDAp hd hd₁) (ESAp x x₁ x₂ x₃ x₄ x₅) ana = disjoint-parts (expand-ana-disjoint hd x₄ ana) (expand-ana-disjoint hd₁ x₅ ana)
 
 
-  -- these lemmas are all structurally recursive. morally, they
-  -- establish the properties about reduction that would be obvious /
-  -- baked into Agda if holes-disjoint was defined as a function
-  -- rather than a judgement (datatype), or if we had defined all the
-  -- O(n^2) cases rather than relying on a little indirection to only
-  -- have O(n) cases. that work has to go somewhwere, and we prefer
+  -- these lemmas are all structurally recursive and quite
+  -- mechanical. morally, they establish the properties about reduction
+  -- that would be obvious / baked into Agda if holes-disjoint was defined
+  -- as a function rather than a judgement (datatype), or if we had defined
+  -- all the O(n^2) cases rather than relying on a little indirection to
+  -- only have O(n) cases. that work has to go somewhwere, and we prefer
   -- that it goes here.
   ds-lem-asc : ∀{e1 e2 τ} → holes-disjoint e2 e1 → holes-disjoint e2 (e1 ·: τ)
   ds-lem-asc HDConst = HDConst
@@ -278,5 +292,5 @@ module disjointness where
   -- disjoint-new : ∀{e1 e2 u} → holes-disjoint e1 e2 → hole-name-new e1 u → hole-name-new e2 u
 
   -- it's also not reflexive, because ⦇⦈[ u ] isn't hole-disjoint with
-  -- itself since u == u; it's not anti-reflexive, because the
-  -- expression c *is* hole-disjoint with itself (abeit vacuously)
+  -- itself since refl : u == u; it's also not anti-reflexive, because the
+  -- expression c *is* hole-disjoint with itself (albeit vacuously)
