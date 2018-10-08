@@ -101,3 +101,27 @@ more removed code
   -- apart-fresh aprt (TANEHole x₁ wt x₂) = FNEHole {!!} (apart-fresh aprt wt)
   -- apart-fresh aprt (TACast wt x₁) = FCast (apart-fresh aprt wt)
   -- apart-fresh aprt (TAFailedCast wt x₁ x₂ x₃) = FFailedCast (apart-fresh aprt wt)
+
+
+----- working on freshness in weakening; some promising but i think wrong
+    -- older versions below
+    -- weaken-synth : ∀{ x Γ e τ τ'} → x # Γ → Γ ⊢ e => τ → (Γ ,, (x , τ')) ⊢ e => τ
+    -- weaken-synth apt SConst = SConst
+    -- weaken-synth apt (SAsc x₁) = SAsc (weaken-ana apt x₁)
+    -- weaken-synth {x = y} {Γ = Γ} apt (SVar {τ = τ} {x = x} x₁) = SVar (x∈∪l Γ (■ (y , _)) x τ x₁)
+    -- weaken-synth apt (SAp x₁ wt x₂ x₃) = SAp x₁ (weaken-synth apt wt) x₂ (weaken-ana apt x₃)
+    -- weaken-synth apt SEHole = SEHole
+    -- weaken-synth apt (SNEHole x₁ wt) = SNEHole x₁ (weaken-synth apt wt)
+    -- weaken-synth {x = y} {Γ = Γ} apt (SLam {x = x} x₂ wt) with natEQ x y
+    -- weaken-synth {x = y} {Γ = Γ} apt (SLam x₃ wt) | Inl refl = {!!}
+    -- weaken-synth {x = y} {Γ = Γ} apt (SLam {x = x} x₃ wt) | Inr x₂ =
+    --              SLam (apart-parts Γ (■ (y , _)) x x₃ (apart-singleton x₂))
+    --                   (exchange-synth {Γ = Γ} x₂ (weaken-synth (apart-parts Γ (■ (x , _)) y apt (apart-singleton (flip x₂))) wt))
+
+    -- weaken-ana : ∀{x Γ e τ τ'} → x # Γ → Γ ⊢ e <= τ → (Γ ,, (x , τ')) ⊢ e <= τ
+    -- weaken-ana apt (ASubsume x₁ x₂) = ASubsume (weaken-synth {!!} x₁) x₂
+    -- weaken-ana {x = y} {Γ = Γ} apt (ALam {x = x} x₂ x₃ wt) with natEQ x y
+    -- weaken-ana apt (ALam x₃ x₄ wt) | Inl refl = {!!}
+    -- weaken-ana {x = y} {Γ = Γ} apt (ALam {x = x} x₃ x₄ wt) | Inr x₂ =
+    --              ALam (apart-parts Γ (■ (y , _)) x x₃ (apart-singleton x₂)) x₄
+    --                   (exchange-ana {Γ = Γ} x₂ (weaken-ana (apart-parts Γ (■ (x , _)) y apt (apart-singleton (flip x₂))) wt))

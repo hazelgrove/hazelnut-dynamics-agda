@@ -4,7 +4,7 @@ open import core
 open import contexts
 open import lemmas-disjointness
 open import exchange
-
+open import lemmas-freshness
 --open import structural-assumptions
 
 module disjointness where
@@ -12,26 +12,24 @@ module disjointness where
   -- last lambda cases go through?  todo: move this to weakening.agda once
   -- it works
   mutual
-    weaken-synth : ∀{ x Γ e τ τ'} → x # Γ → Γ ⊢ e => τ → (Γ ,, (x , τ')) ⊢ e => τ
-    weaken-synth apt SConst = SConst
-    weaken-synth apt (SAsc x₁) = SAsc (weaken-ana apt x₁)
-    weaken-synth {x = y} {Γ = Γ} apt (SVar {τ = τ} {x = x} x₁) = SVar (x∈∪l Γ (■ (y , _)) x τ x₁)
-    weaken-synth apt (SAp x₁ wt x₂ x₃) = SAp x₁ (weaken-synth apt wt) x₂ (weaken-ana apt x₃)
-    weaken-synth apt SEHole = SEHole
-    weaken-synth apt (SNEHole x₁ wt) = SNEHole x₁ (weaken-synth apt wt)
-    weaken-synth {x = y} {Γ = Γ} apt (SLam {x = x} x₂ wt) with natEQ x y
-    weaken-synth {x = y} {Γ = Γ} apt (SLam x₃ wt) | Inl refl = {!!}
-    weaken-synth {x = y} {Γ = Γ} apt (SLam {x = x} x₃ wt) | Inr x₂ =
-                 SLam (apart-parts Γ (■ (y , _)) x x₃ (apart-singleton x₂))
-                      (exchange-synth {Γ = Γ} x₂ (weaken-synth (apart-parts Γ (■ (x , _)) y apt (apart-singleton (flip x₂))) wt))
+    weaken-synth : ∀{ x Γ e τ τ'} → freshh x e → Γ ⊢ e => τ → (Γ ,, (x , τ')) ⊢ e => τ
+    weaken-synth FRHConst SConst = SConst
+    weaken-synth (FRHAsc frsh) (SAsc x₁) = SAsc (weaken-ana frsh x₁)
+    weaken-synth {Γ = Γ} (FRHVar {x = x} x₁) (SVar {x = y} x₂) = SVar (x∈∪l Γ (■(x , _)) y _  x₂)
+    weaken-synth {Γ = Γ} (FRHLam2 x₁ frsh) (SLam x₂ wt) =
+                    SLam (apart-extend1 Γ (flip x₁) x₂)
+                         (exchange-synth {Γ = Γ} (flip x₁) ((weaken-synth frsh wt)))
+    weaken-synth FRHEHole SEHole = SEHole
+    weaken-synth (FRHNEHole frsh) (SNEHole x₁ wt) = SNEHole x₁ (weaken-synth frsh wt)
+    weaken-synth (FRHAp frsh frsh₁) (SAp x₁ wt x₂ x₃) = SAp x₁ (weaken-synth frsh wt) x₂ (weaken-ana frsh₁ x₃)
 
-    weaken-ana : ∀{x Γ e τ τ'} → x # Γ → Γ ⊢ e <= τ → (Γ ,, (x , τ')) ⊢ e <= τ
-    weaken-ana apt (ASubsume x₁ x₂) = ASubsume (weaken-synth apt x₁) x₂
-    weaken-ana {x = y} {Γ = Γ} apt (ALam {x = x} x₂ x₃ wt) with natEQ x y
-    weaken-ana apt (ALam x₃ x₄ wt) | Inl refl = {!!}
-    weaken-ana {x = y} {Γ = Γ} apt (ALam {x = x} x₃ x₄ wt) | Inr x₂ =
-                 ALam (apart-parts Γ (■ (y , _)) x x₃ (apart-singleton x₂)) x₄
-                      (exchange-ana {Γ = Γ} x₂ (weaken-ana (apart-parts Γ (■ (x , _)) y apt (apart-singleton (flip x₂))) wt))
+    weaken-ana : ∀{x Γ e τ τ'} → freshh x e → Γ ⊢ e <= τ → (Γ ,, (x , τ')) ⊢ e <= τ
+    weaken-ana frsh (ASubsume x₁ x₂) = ASubsume (weaken-synth frsh x₁) x₂
+    weaken-ana {Γ = Γ} (FRHLam1 neq frsh) (ALam x₂ x₃ wt) =
+                     ALam (apart-extend1 Γ (flip neq) x₂)
+                          x₃
+                          (exchange-ana {Γ = Γ} (flip neq) (weaken-ana frsh wt))
+
 
   mutual
     -- todo: probably also need freshness here for the same reason
@@ -41,7 +39,7 @@ module disjointness where
     weaken-synth-expand apt ESConst = ESConst
     weaken-synth-expand {x = y} {Γ = Γ} {τ = τ} apt (ESVar {x = x} x₂) = ESVar (x∈∪l Γ (■ (y , _)) x τ x₂)
     weaken-synth-expand apt (ESLam x₂ syn) = {!weaken-synth-expand ? syn!}
-    weaken-synth-expand apt (ESAp x₁ x₂ x₃ x₄ x₅ x₆) = ESAp x₁ x₂ (weaken-synth apt x₃) x₄ (weaken-ana-expand apt x₅) (weaken-ana-expand apt x₆)
+    weaken-synth-expand apt (ESAp x₁ x₂ x₃ x₄ x₅ x₆) = ESAp x₁ x₂ (weaken-synth {!!} x₃) x₄ (weaken-ana-expand apt x₅) (weaken-ana-expand apt x₆)
     weaken-synth-expand {x = x } {Γ = Γ} {τ' = τ'}  apt (ESEHole {u = u})= {!ESEHole {Γ = Γ ,, (x , τ')} {u = u}  !}
     weaken-synth-expand apt (ESNEHole x₁ syn) = {!!}
     weaken-synth-expand apt (ESAsc x₁) = ESAsc (weaken-ana-expand apt x₁)

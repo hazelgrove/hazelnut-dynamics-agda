@@ -74,6 +74,7 @@ module contexts where
 
   infixl 10 _,,_
 
+  -- used below in proof of ∪ commutativity and associativity
   lem-dom-union1 : {A : Set} {C1 C2 : A ctx} {x : Nat} → C1 ## C2 → dom C1 x → (C1 ∪ C2) x == C1 x
   lem-dom-union1 {A} {C1} {C2} {x} (d1 , d2) D with C1 x
   lem-dom-union1 (d1 , d2) D | Some x₁ = refl

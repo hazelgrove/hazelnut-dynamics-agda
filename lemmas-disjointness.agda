@@ -41,7 +41,9 @@ module lemmas-disjointness where
   lem-domsingle p q | Inr x₁ = abort (x₁ refl)
 
   -- if singleton contexts are disjoint, their indices must be disequal
-  singles-notequal : {A : Set} {x y : A} {u1 u2 : Nat} → (■ (u1 , x)) ## (■ (u2 , y)) → u1 ≠ u2
+  singles-notequal : {A : Set} {x y : A} {u1 u2 : Nat} →
+                          (■ (u1 , x)) ## (■ (u2 , y)) →
+                          u1 ≠ u2
   singles-notequal {A} {x} {y} {u1} {u2} (d1 , d2) = lem2 u1 u2 y (d1 u1 (lem-domsingle u1 x))
     where
       lem2 : {A : Set} (p r : Nat) (q : A) → p # (■ (r , q)) → p ≠ r
@@ -63,6 +65,10 @@ module lemmas-disjointness where
   apart-parts : {A : Set} (Γ1 Γ2 : A ctx) (n : Nat) → n # Γ1 → n # Γ2 → n # (Γ1 ∪ Γ2)
   apart-parts Γ1 Γ2 n apt1 apt2 with Γ1 n
   apart-parts _ _ n refl apt2 | .None = apt2
+
+  -- this is just for convenience; it shows up a lot.
+  apart-extend1 : {A : Set} → ∀{ x y τ} → (Γ : A ctx)  → x ≠ y → x # Γ → x # (Γ ,, (y , τ))
+  apart-extend1 {A} {x} {y} {τ} Γ neq apt = apart-parts Γ (■ (y , τ)) x apt (apart-singleton neq)
 
   -- if both parts of a union are disjoint with a target, so is the union
   disjoint-parts : {A : Set} {Γ1 Γ2 Γ3 : A ctx} → Γ1 ## Γ3 → Γ2 ## Γ3 → (Γ1 ∪ Γ2) ## Γ3

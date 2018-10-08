@@ -498,3 +498,13 @@ module core where
       FAp     : ∀{x d1 d2} → fresh x d1 → fresh x d2 → fresh x (d1 ∘ d2)
       FCast   : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒ τ2 ⟩)
       FFailedCast : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
+
+  data freshh : Nat → hexp → Set where
+    FRHConst : ∀{x} → freshh x c
+    FRHAsc   : ∀{x e τ} → freshh x e → freshh x (e ·: τ)
+    FRHVar   : ∀{x y} → x ≠ y → freshh x (X y)
+    FRHLam1  : ∀{x y e} → x ≠ y → freshh x e → freshh x (·λ y e)
+    FRHLam2  : ∀{x τ e y} → x ≠ y → freshh x e → freshh x (·λ y [ τ ] e)
+    FRHEHole : ∀{x u} → freshh x (⦇⦈[ u ]) --todo: x ≠ u?
+    FRHNEHole : ∀{x u e} → freshh x e → freshh x (⦇ e ⦈[ u ])  --todo: x ≠ u?
+    FRHAp : ∀{x e1 e2} → freshh x e1 → freshh x e2 → freshh x (e1 ∘ e2)
