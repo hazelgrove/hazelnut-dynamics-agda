@@ -4,6 +4,7 @@ open import List
 open import core
 open import contexts
 open import lemmas-disjointness
+open import exchange
 
 -- this module contains all the proofs of different weakening structural
 -- properties that we use for the hypothetical judgements
@@ -25,3 +26,23 @@ module weakening where
 
   weaken-ta-Δ2 : ∀{Δ1 Δ2 Γ d τ} → Δ1 ## Δ2 → Δ2 , Γ ⊢ d :: τ → (Δ1 ∪ Δ2) , Γ ⊢ d :: τ
   weaken-ta-Δ2 {Δ1} {Δ2} {Γ} {d} {τ} disj D = tr (λ q → q , Γ ⊢ d :: τ) (∪comm Δ2 Δ1 (##-comm disj)) (weaken-ta-Δ1 (##-comm disj) D)
+
+
+  mutual
+    weaken-synth : ∀{ x Γ e τ τ'} → freshh x e → Γ ⊢ e => τ → (Γ ,, (x , τ')) ⊢ e => τ
+    weaken-synth FRHConst SConst = SConst
+    weaken-synth (FRHAsc frsh) (SAsc x₁) = SAsc (weaken-ana frsh x₁)
+    weaken-synth {Γ = Γ} (FRHVar {x = x} x₁) (SVar {x = y} x₂) = SVar (x∈∪l Γ (■(x , _)) y _  x₂)
+    weaken-synth {Γ = Γ} (FRHLam2 x₁ frsh) (SLam x₂ wt) =
+                    SLam (apart-extend1 Γ (flip x₁) x₂)
+                         (exchange-synth {Γ = Γ} (flip x₁) ((weaken-synth frsh wt)))
+    weaken-synth FRHEHole SEHole = SEHole
+    weaken-synth (FRHNEHole frsh) (SNEHole x₁ wt) = SNEHole x₁ (weaken-synth frsh wt)
+    weaken-synth (FRHAp frsh frsh₁) (SAp x₁ wt x₂ x₃) = SAp x₁ (weaken-synth frsh wt) x₂ (weaken-ana frsh₁ x₃)
+
+    weaken-ana : ∀{x Γ e τ τ'} → freshh x e → Γ ⊢ e <= τ → (Γ ,, (x , τ')) ⊢ e <= τ
+    weaken-ana frsh (ASubsume x₁ x₂) = ASubsume (weaken-synth frsh x₁) x₂
+    weaken-ana {Γ = Γ} (FRHLam1 neq frsh) (ALam x₂ x₃ wt) =
+                     ALam (apart-extend1 Γ (flip neq) x₂)
+                          x₃
+                          (exchange-ana {Γ = Γ} (flip neq) (weaken-ana frsh wt))

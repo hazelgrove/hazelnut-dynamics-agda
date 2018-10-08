@@ -5,52 +5,33 @@ open import contexts
 open import lemmas-disjointness
 open import exchange
 open import lemmas-freshness
+open import weakening
+
 --open import structural-assumptions
 
 module disjointness where
-  -- todo: do i need freshness here rather than just apartness to make the
-  -- last lambda cases go through?  todo: move this to weakening.agda once
-  -- it works
+
+  --todo move to weakening
   mutual
-    weaken-synth : ∀{ x Γ e τ τ'} → freshh x e → Γ ⊢ e => τ → (Γ ,, (x , τ')) ⊢ e => τ
-    weaken-synth FRHConst SConst = SConst
-    weaken-synth (FRHAsc frsh) (SAsc x₁) = SAsc (weaken-ana frsh x₁)
-    weaken-synth {Γ = Γ} (FRHVar {x = x} x₁) (SVar {x = y} x₂) = SVar (x∈∪l Γ (■(x , _)) y _  x₂)
-    weaken-synth {Γ = Γ} (FRHLam2 x₁ frsh) (SLam x₂ wt) =
-                    SLam (apart-extend1 Γ (flip x₁) x₂)
-                         (exchange-synth {Γ = Γ} (flip x₁) ((weaken-synth frsh wt)))
-    weaken-synth FRHEHole SEHole = SEHole
-    weaken-synth (FRHNEHole frsh) (SNEHole x₁ wt) = SNEHole x₁ (weaken-synth frsh wt)
-    weaken-synth (FRHAp frsh frsh₁) (SAp x₁ wt x₂ x₃) = SAp x₁ (weaken-synth frsh wt) x₂ (weaken-ana frsh₁ x₃)
+    weaken-synth-expand : ∀{x Γ e τ d Δ τ'} → fresh x d
+                                             → Γ ⊢ e ⇒ τ ~> d ⊣ Δ
+                                             → (Γ ,, (x , τ')) ⊢ e ⇒ τ ~> d ⊣ Δ
+    weaken-synth-expand frsh ESConst = ESConst
+    weaken-synth-expand {x = y} {Γ = Γ} {τ = τ} frsh (ESVar {x = x} x₂) = ESVar (x∈∪l Γ (■ (y , _)) x τ x₂)
+    weaken-synth-expand {Γ = Γ} (FLam x₁ frsh) (ESLam x₂ syn) = ESLam (apart-extend1 Γ (flip x₁) x₂) (exchange-expand-synth {Γ = Γ} (flip x₁) (weaken-synth-expand frsh syn))
+    weaken-synth-expand (FAp (FCast frsh) (FCast frsh₁)) (ESAp x₁ x₂ x₃ x₄ x₅ x₆) = ESAp x₁ x₂ (weaken-synth (fresh-expand-ana2 frsh x₅) x₃) x₄ (weaken-ana-expand frsh x₅) (weaken-ana-expand frsh₁ x₆)
+    weaken-synth-expand {x = x } {Γ = Γ} {τ' = τ'}  frsh (ESEHole {u = u})= {!ESEHole {Γ = Γ ,, (x , τ')} {u = u}  !}
+    weaken-synth-expand frsh (ESNEHole x₁ syn) = {!!}
+    weaken-synth-expand (FCast frsh) (ESAsc x₁) = ESAsc (weaken-ana-expand frsh x₁)
 
-    weaken-ana : ∀{x Γ e τ τ'} → freshh x e → Γ ⊢ e <= τ → (Γ ,, (x , τ')) ⊢ e <= τ
-    weaken-ana frsh (ASubsume x₁ x₂) = ASubsume (weaken-synth frsh x₁) x₂
-    weaken-ana {Γ = Γ} (FRHLam1 neq frsh) (ALam x₂ x₃ wt) =
-                     ALam (apart-extend1 Γ (flip neq) x₂)
-                          x₃
-                          (exchange-ana {Γ = Γ} (flip neq) (weaken-ana frsh wt))
+    weaken-ana-expand : ∀{ Γ e τ d τ' Δ x τ* } → fresh x d
+                                                → Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
+                                                → (Γ ,, (x , τ*)) ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
+    weaken-ana-expand {Γ = Γ} (FLam x₁ frsh) (EALam x₂ x₃ ana) = EALam (apart-extend1 Γ (flip x₁) x₂) x₃ (exchange-expand-ana {Γ = Γ} (flip x₁) (weaken-ana-expand frsh ana))
+    weaken-ana-expand frsh (EASubsume x₁ x₂ x₃ x₄) = EASubsume x₁ x₂ (weaken-synth-expand frsh x₃) x₄
+    weaken-ana-expand (FHole (EFId x₁)) EAEHole = {!!}
+    weaken-ana-expand (FNEHole (EFId x₁) frsh) (EANEHole x₂ x₃) = {!!}
 
-
-  mutual
-    -- todo: probably also need freshness here for the same reason
-    weaken-synth-expand : ∀{x Γ e τ e' Δ τ'} → x # Γ
-                                             → Γ ⊢ e ⇒ τ ~> e' ⊣ Δ
-                                             → (Γ ,, (x , τ')) ⊢ e ⇒ τ ~> e' ⊣ Δ
-    weaken-synth-expand apt ESConst = ESConst
-    weaken-synth-expand {x = y} {Γ = Γ} {τ = τ} apt (ESVar {x = x} x₂) = ESVar (x∈∪l Γ (■ (y , _)) x τ x₂)
-    weaken-synth-expand apt (ESLam x₂ syn) = {!weaken-synth-expand ? syn!}
-    weaken-synth-expand apt (ESAp x₁ x₂ x₃ x₄ x₅ x₆) = ESAp x₁ x₂ (weaken-synth {!!} x₃) x₄ (weaken-ana-expand apt x₅) (weaken-ana-expand apt x₆)
-    weaken-synth-expand {x = x } {Γ = Γ} {τ' = τ'}  apt (ESEHole {u = u})= {!ESEHole {Γ = Γ ,, (x , τ')} {u = u}  !}
-    weaken-synth-expand apt (ESNEHole x₁ syn) = {!!}
-    weaken-synth-expand apt (ESAsc x₁) = ESAsc (weaken-ana-expand apt x₁)
-
-    weaken-ana-expand : ∀{ Γ e τ e' τ' Δ x τ* } → x # Γ
-                                                → Γ ⊢ e ⇐ τ ~> e' :: τ' ⊣ Δ
-                                                → (Γ ,, (x , τ*)) ⊢ e ⇐ τ ~> e' :: τ' ⊣ Δ
-    weaken-ana-expand apt (EALam x₂ x₃ ana) = EALam {!!} {!!} {!!}
-    weaken-ana-expand apt (EASubsume x₁ x₂ x₃ x₄) = EASubsume x₁ x₂ (weaken-synth-expand apt x₃) x₄
-    weaken-ana-expand apt EAEHole = {!!}
-    weaken-ana-expand apt (EANEHole x₁ x₂) = {!!}
 
   mutual
     expand-new-disjoint-synth : ∀ { e u τ d Δ Γ Γ' τ'} →
@@ -111,7 +92,7 @@ module disjointness where
           Γ ⊢ e2 ⇐ τ2 ~> e2' :: τ2' ⊣ Δ2 →
           Δ1 ## Δ2
     expand-ana-disjoint hd (EASubsume x x₁ x₂ x₃) E2 = expand-synth-disjoint hd x₂ E2
-    expand-ana-disjoint (HDLam1 hd) (EALam x₁ x₂ ex1) E2 = expand-ana-disjoint hd ex1 (weaken-ana-expand x₁ E2)
+    expand-ana-disjoint (HDLam1 hd) (EALam x₁ x₂ ex1) E2 = expand-ana-disjoint hd ex1 (weaken-ana-expand {!!} E2)
     expand-ana-disjoint (HDHole x) EAEHole E2 = ##-comm (expand-new-disjoint-ana x E2)
     expand-ana-disjoint (HDNEHole x hd) (EANEHole x₁ x₂) E2 = disjoint-parts (expand-synth-disjoint hd x₂ E2) (##-comm (expand-new-disjoint-ana x E2))
 
@@ -124,7 +105,7 @@ module disjointness where
     expand-synth-disjoint (HDAsc hd) (ESAsc x) ana = expand-ana-disjoint hd x ana
     expand-synth-disjoint HDVar (ESVar x₁) ana = empty-disj _
     expand-synth-disjoint (HDLam1 hd) () ana
-    expand-synth-disjoint (HDLam2 hd) (ESLam x₁ synth) ana = expand-synth-disjoint hd synth (weaken-ana-expand x₁ ana)
+    expand-synth-disjoint (HDLam2 hd) (ESLam x₁ synth) ana = expand-synth-disjoint hd synth (weaken-ana-expand {!!} ana)
     expand-synth-disjoint (HDHole x) ESEHole ana = ##-comm (expand-new-disjoint-ana x ana)
     expand-synth-disjoint (HDNEHole x hd) (ESNEHole x₁ synth) ana = disjoint-parts (expand-synth-disjoint hd synth ana) (##-comm (expand-new-disjoint-ana x ana))
     expand-synth-disjoint (HDAp hd hd₁) (ESAp x x₁ x₂ x₃ x₄ x₅) ana = disjoint-parts (expand-ana-disjoint hd x₄ ana) (expand-ana-disjoint hd₁ x₅ ana)
