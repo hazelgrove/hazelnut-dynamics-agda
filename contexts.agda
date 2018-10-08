@@ -210,3 +210,72 @@ module contexts where
   lem-union-none {A} {Γ} {a} {x} {x'} emp | Inr y | None with natEQ x x'
   lem-union-none emp | Inr y | None | Inl refl = abort (somenotnone emp)
   lem-union-none emp | Inr y | None | Inr x₁ = x₁ , refl
+
+
+  --- lemmas building up to a proof of associativity of ∪
+  ctxignore1 : {A : Set} (x : Nat) (C1 C2 : A ctx) → x # C1 → (C1 ∪ C2) x == C2 x
+  ctxignore1 x C1 C2 apt with ctxindirect C1 x
+  ctxignore1 x C1 C2 apt | Inl x₁ = abort (somenotnone (! (π2 x₁) · apt))
+  ctxignore1 x C1 C2 apt | Inr x₁ with C1 x
+  ctxignore1 x C1 C2 apt | Inr x₂ | Some x₁ = abort (somenotnone (x₂))
+  ctxignore1 x C1 C2 apt | Inr x₁ | None = refl
+
+  ctxignore2 : {A : Set} (x : Nat) (C1 C2 : A ctx) → x # C2 → (C1 ∪ C2) x == C1 x
+  ctxignore2 x C1 C2 apt with ctxindirect C2 x
+  ctxignore2 x C1 C2 apt | Inl x₁ = abort (somenotnone (! (π2 x₁) · apt))
+  ctxignore2 x C1 C2 apt | Inr x₁ with C1 x
+  ctxignore2 x C1 C2 apt | Inr x₂ | Some x₁ = refl
+  ctxignore2 x C1 C2 apt | Inr x₁ | None = x₁
+
+  ctxcollapse1 : {A : Set} → (C1 C2 C3 : A ctx) (x : Nat) →
+               (x # C3) →
+               (C2 ∪ C3) x == C2 x →
+               (C1 ∪ (C2 ∪ C3)) x == (C1 ∪ C2) x
+  ctxcollapse1 C1 C2 C3 x apt eq with C2 x
+  ctxcollapse1 C1 C2 C3 x apt eq | Some x₁ with C1 x
+  ctxcollapse1 C1 C2 C3 x apt eq | Some x₂ | Some x₁ = refl
+  ctxcollapse1 C1 C2 C3 x apt eq | Some x₁ | None with C2 x
+  ctxcollapse1 C1 C2 C3 x apt eq | Some x₂ | None | Some x₁ = refl
+  ctxcollapse1 C1 C2 C3 x apt eq | Some x₁ | None | None = apt
+  ctxcollapse1 C1 C2 C3 x apt eq | None with C1 x
+  ctxcollapse1 C1 C2 C3 x apt eq | None | Some x₁ = refl
+  ctxcollapse1 C1 C2 C3 x apt eq | None | None with C2 x
+  ctxcollapse1 C1 C2 C3 x apt eq | None | None | Some x₁ = refl
+  ctxcollapse1 C1 C2 C3 x apt eq | None | None | None = eq
+
+  ctxcollapse2 : {A : Set} → (C1 C2 C3 : A ctx) (x : Nat) →
+                 (x # C2) →
+                 (C2 ∪ C3) x == C3 x →
+                 (C1 ∪ (C2 ∪ C3)) x == (C1 ∪ C3) x
+  ctxcollapse2 C1 C2 C3 x apt eq with C1 x
+  ctxcollapse2 C1 C2 C3 x apt eq | Some x₁ = refl
+  ctxcollapse2 C1 C2 C3 x apt eq | None with C2 x
+  ctxcollapse2 C1 C2 C3 x apt eq | None | Some x₁ = eq
+  ctxcollapse2 C1 C2 C3 x apt eq | None | None = refl
+
+  ctxcollapse3 : {A : Set} → (C1 C2 C3 : A ctx) (x : Nat) →
+                 (x # C2) →
+                 ((C1 ∪ C2) ∪ C3) x == (C1 ∪ C3) x
+  ctxcollapse3 C1 C2 C3 x apt with C1 x
+  ctxcollapse3 C1 C2 C3 x apt | Some x₁ = refl
+  ctxcollapse3 C1 C2 C3 x apt | None with C2 x
+  ctxcollapse3 C1 C2 C3 x apt | None | Some x₁ = abort (somenotnone apt)
+  ctxcollapse3 C1 C2 C3 x apt | None | None = refl
+
+  ∪assoc : {A : Set} (C1 C2 C3 : A ctx) → (C2 ## C3) → (C1 ∪ C2) ∪ C3 == C1 ∪ (C2 ∪ C3)
+  ∪assoc C1 C2 C3 (d1 , d2) = funext guts
+    where
+      case2 : (x : Nat) → x # C3 → dom C2 x → ((C1 ∪ C2) ∪ C3) x == (C1 ∪ (C2 ∪ C3)) x
+      case2 x apt dom = (ctxignore2 x (C1 ∪ C2) C3 apt) ·
+                        ! (ctxcollapse1 C1 C2 C3 x apt (lem-dom-union1 (d1 , d2) dom))
+
+      case34 : (x : Nat) → x # C2 → ((C1 ∪ C2) ∪ C3) x == (C1 ∪ (C2 ∪ C3)) x
+      case34 x apt = ctxcollapse3 C1 C2 C3 x apt ·
+                        ! (ctxcollapse2 C1 C2 C3 x apt (ctxignore1 x C2 C3 apt))
+
+      guts : (x : Nat) → ((C1 ∪ C2) ∪ C3) x == (C1 ∪ (C2 ∪ C3)) x
+      guts x with ctxindirect C2 x | ctxindirect C3 x
+      guts x | Inl (π1 , π2) | Inl (π3 , π4) = abort (somenotnone (! π4 · d1 x (π1 , π2)))
+      guts x | Inl x₁ | Inr x₂ = case2 x x₂ x₁
+      guts x | Inr x₁ | Inl x₂ = case34 x x₁
+      guts x | Inr x₁ | Inr x₂ = case34 x x₁

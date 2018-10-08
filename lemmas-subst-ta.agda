@@ -2,96 +2,10 @@ open import Prelude
 open import Nat
 open import core
 open import contexts
-open import lemmas-disjointness
+open import lemmas-disjointness --todo maybe remove after refactor weakness
+open import exchange
 
 module lemmas-subst-ta where
-  --- todo: move this stuff to exchange.agda once it's unholey
-
-  -- note that this is generic in the contents of the context. the proofs
-  -- below show the exchange properties that we actually need in the
-  -- various other proofs; the remaning exchange properties for both Δ and
-  -- Γ positions for all the other hypothetical judgements are exactly in
-  -- this pattern.
-
-  -- lem-swap : {A : Set} (Γ : A ctx) (x y : Nat) (t1 t2 : A) {x≠y : x == y → ⊥}  (z : Nat) →
-  --        ((Γ ,, (x , t1)) ,, (y , t2)) z == ((Γ ,, (y , t2)) ,, (x , t1)) z
-  -- lem-swap Γ x y t1 t2 z with natEQ x z | natEQ y z
-  -- lem-swap Γ x y t1 t2 {x≠y} z | Inl p | Inl q = abort (x≠y (p · ! q))
-  -- lem-swap Γ x y t1 t2 .x | Inl refl | Inr x₂ with natEQ x x
-  -- lem-swap Γ x y t1 t2 .x | Inl refl | Inr x₂ | Inl refl = {!!}
-  -- lem-swap Γ x y t1 t2 .x | Inl refl | Inr x₂ | Inr x₁ = abort (x₁ refl)
-  -- lem-swap Γ x y t1 t2 .y | Inr x₁ | Inl refl with natEQ y y
-  -- lem-swap Γ x₁ y t1 t2 .y | Inr x₂ | Inl refl | Inl refl = {!!}
-  -- lem-swap Γ x₁ y t1 t2 .y | Inr x₂ | Inl refl | Inr x = abort (x refl)
-  -- lem-swap Γ x y t1 t2 z | Inr x₁ | Inr x₂ with natEQ x z | natEQ y z
-  -- lem-swap Γ x .x t1 t2 .x | Inr x₂ | Inr x₃ | Inl refl | Inl refl = abort (x₃ refl)
-  -- lem-swap Γ x y t1 t2 .x | Inr x₂ | Inr x₃ | Inl refl | Inr x₁ = abort (x₂ refl)
-  -- lem-swap Γ x y t1 t2 z | Inr x₃ | Inr x₄ | Inr x₁ | Inl x₂ = abort (x₄ x₂)
-  -- lem-swap Γ x y t1 t2 z | Inr x₃ | Inr x₄ | Inr x₁ | Inr x₂ = {!!}
-
-  swap-little : {A : Set} {x y : Nat} {τ1 τ2 : A} → (x ≠ y) →
-    ((■ (x , τ1)) ,, (y , τ2)) == ((■ (y , τ2)) ,, (x , τ1))
-  swap-little {A} {x} {y} {τ1} {τ2} neq = ∪comm (■ (x , τ1))
-                                                (■ (y , τ2))
-                                                (disjoint-singles neq)
-
-  -- toss these if you don't need them
-  ctxignore1 : {A : Set} (x : Nat) (C1 C2 : A ctx) → x # C1 → (C1 ∪ C2) x == C2 x
-  ctxignore1 x C1 C2 apt with ctxindirect C1 x
-  ctxignore1 x C1 C2 apt | Inl x₁ = abort (somenotnone (! (π2 x₁) · apt))
-  ctxignore1 x C1 C2 apt | Inr x₁ with C1 x
-  ctxignore1 x C1 C2 apt | Inr x₂ | Some x₁ = abort (somenotnone (x₂))
-  ctxignore1 x C1 C2 apt | Inr x₁ | None = refl
-
-  -- toss these if you don't need them
-  ctxignore2 : {A : Set} (x : Nat) (C1 C2 : A ctx) → x # C2 → (C1 ∪ C2) x == C1 x
-  ctxignore2 x C1 C2 apt with ctxindirect C2 x
-  ctxignore2 x C1 C2 apt | Inl x₁ = abort (somenotnone (! (π2 x₁) · apt))
-  ctxignore2 x C1 C2 apt | Inr x₁ with C1 x
-  ctxignore2 x C1 C2 apt | Inr x₂ | Some x₁ = refl
-  ctxignore2 x C1 C2 apt | Inr x₁ | None = x₁
-
-  ∪assoc : {A : Set} (C1 C2 C3 : A ctx) → (C2 ## C3) → (C1 ∪ C2) ∪ C3 == C1 ∪ (C2 ∪ C3)
-  ∪assoc C1 C2 C3 (d1 , d2) = funext guts
-    where
-      case2 : (x : Nat) → x # C3 → dom C2 x → ((C1 ∪ C2) ∪ C3) x == (C1 ∪ (C2 ∪ C3)) x
-      case2 x apt dom = (ctxignore2 x (C1 ∪ C2) C3 apt) ·
-                        {!!}
-
--- lem-dom-union1 (d1 , d2) dom
-
--- tr (λ qq → ((C1 ∪ C2) ∪ C3) x == (C1 ∪ qq) x) {!(ctxignore2 x C2 C3 apt)!} {!!}
-
-      case3 : (x : Nat) → x # C2 → dom C3 x → ((C1 ∪ C2) ∪ C3) x == (C1 ∪ (C2 ∪ C3)) x
-      case3 x apt dom = {!!}
-
-      guts : (x : Nat) → ((C1 ∪ C2) ∪ C3) x == (C1 ∪ (C2 ∪ C3)) x
-      guts x with ctxindirect C2 x | ctxindirect C3 x
-      guts x | Inl (π1 , π2) | Inl (π3 , π4) = abort (somenotnone (! π4 · d1 x (π1 , π2)))
-      guts x | Inl x₁ | Inr x₂ = case2 x x₂ x₁
-      guts x | Inr x₁ | Inl x₂ = case3 x x₁ x₂
-      guts x | Inr x₁ | Inr x₂ = {!!}
-
-  swap : {A : Set} (Γ : A ctx) (x y : Nat) (τ1 τ2 : A) (x≠y : x == y → ⊥) →
-         ((Γ ,, (x , τ1)) ,, (y , τ2)) == ((Γ ,, (y , τ2)) ,, (x , τ1))
-  swap Γ x y τ1 τ2 neq = (∪assoc Γ (■ (x , τ1)) (■ (y , τ2)) (disjoint-singles neq) ) ·
-                         (ap1 (λ qq → Γ ∪ qq) (swap-little neq) ·
-                          ! (∪assoc Γ (■ (y , τ2)) (■ (x , τ1)) (disjoint-singles (flip neq))))
-
-
--- {!tr ? (swap-little {τ1 = τ1} {τ2 = τ2} neq)!}
-
--- {!ap1 (λ qq → Γ ∪ qq) (swap-little' {τ1 = τ1} {τ2 = τ2} neq)!}
-
-  -- all the proofs of exchange will be almost exactly this one, just with
-  -- different judgemental forms in the first argument to transport.
-  exchange-subst-Γ : ∀{Δ Γ x y τ1 τ2 σ Γ'} →
-                   x ≠ y →
-                   Δ , (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ σ :s: Γ' →
-                   Δ , (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ σ :s: Γ'
-  exchange-subst-Γ {Δ} {Γ} {x} {y} {τ1} {τ2} {σ} {Γ'} x≠y xy =
-    tr (λ qq → Δ , qq ⊢ σ :s: Γ') (swap Γ x y τ1 τ2 x≠y) xy
-     -- tr (λ qq → Δ , qq ⊢ σ :s: Γ') (funext (lem-swap Γ x y τ1 τ2 {x≠y})) xy
 
   --- todo: move this stuff to weakening.agda once it's unholey
   mutual

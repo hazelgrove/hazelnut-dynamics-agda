@@ -3,25 +3,14 @@ open import Nat
 open import core
 open import contexts
 open import lemmas-disjointness
+open import exchange
 
 --open import structural-assumptions
 
 module disjointness where
-  -- todo: move this to exchange.agda once it works
-  exchange-synth : ∀{Γ x y τ τ1 τ2 e}
-                       → x ≠ y
-                       → (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ e => τ
-                       → (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ e => τ
-  exchange-synth {Γ} {x} {y} {τ} {τ1} {τ2} {e} neq synth = tr (λ qq → qq ⊢ e => τ) {!!} synth
-
-  exchange-ana : ∀{Γ x y τ τ1 τ2 e}
-                       → x ≠ y
-                       → (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ e <= τ
-                       → (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ e <= τ
-  exchange-ana {Γ} {x} {y} {τ} {τ1} {τ2} {e} neq ana = tr (λ qq → qq ⊢ e <= τ) {!!} ana
-
-  -- todo: do i need freshness here rather than just apartness to make the last lambda cases go through?
-  -- todo: move this to weakening.agda once it works
+  -- todo: do i need freshness here rather than just apartness to make the
+  -- last lambda cases go through?  todo: move this to weakening.agda once
+  -- it works
   mutual
     weaken-synth : ∀{ x Γ e τ τ'} → x # Γ → Γ ⊢ e => τ → (Γ ,, (x , τ')) ⊢ e => τ
     weaken-synth apt SConst = SConst

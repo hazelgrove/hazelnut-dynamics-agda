@@ -46,3 +46,4 @@ open import complete-progress
 open import complete-expansion
 
 open import weakening
+open import exchange
