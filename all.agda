@@ -37,7 +37,7 @@ open import canonical-indeterminate-forms
 open import lemmas-progress-checks
 open import progress-checks
 open import progress
-open import preservation
+open import preservation -- depends on subst-ta
 
 open import lemmas-complete
 open import cast-inert
