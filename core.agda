@@ -479,3 +479,22 @@ module core where
                  d ↦ d' →
                  d' ↦* d'' →
                  d  ↦* d''
+
+  -- freshness, used in substitution and disjointness proofs
+  mutual
+    data envfresh : Nat → env → Set where
+      EFId : ∀{x Γ} → x # Γ → envfresh x (Id Γ)
+      EFSubst : ∀{x d σ y} → fresh x d
+                           → envfresh x σ
+                           → x ≠ y
+                           → envfresh x (Subst d y σ)
+
+    data fresh : Nat → dhexp → Set where
+      FConst : ∀{x} → fresh x c
+      FVar   : ∀{x y} → x ≠ y → fresh x (X y)
+      FLam   : ∀{x y τ d} → x ≠ y → fresh x d → fresh x (·λ y [ τ ] d)
+      FHole  : ∀{x u σ} → envfresh x σ → fresh x (⦇⦈⟨ u , σ ⟩)
+      FNEHole : ∀{x d u σ} → envfresh x σ → fresh x d → fresh x (⦇ d ⦈⟨ u , σ ⟩)
+      FAp     : ∀{x d1 d2} → fresh x d1 → fresh x d2 → fresh x (d1 ∘ d2)
+      FCast   : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒ τ2 ⟩)
+      FFailedCast : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)

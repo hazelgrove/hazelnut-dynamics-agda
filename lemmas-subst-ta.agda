@@ -11,6 +11,7 @@ module lemmas-subst-ta where
                   Δ , Γ ⊢ Subst d x σ :s: Γ'
   lem-subst-σ s wt = STASubst s wt
 
+  --- todo: move this stuff to exchange.agda once it's unholey
   -- not actually helpful here i think
   ∪eq : {A : Set} → (x y p q : A ctx) → x == p → y == q → (x ∪ y) == (p ∪ q)
   ∪eq x y .x .y refl refl = refl
@@ -37,28 +38,11 @@ module lemmas-subst-ta where
                    x ≠ y →
                    Δ , (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ σ :s: Γ' →
                    Δ , (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ σ :s: Γ'
-  exchange-subst-Γ {Δ} {Γ} {x} {y} {τ1} {τ2} {σ} {Γ'} x≠y xy = tr (λ qq → Δ , qq ⊢ σ :s: Γ') (funext (lem-swap Γ x y τ1 τ2 {x≠y})) xy
+  exchange-subst-Γ {Δ} {Γ} {x} {y} {τ1} {τ2} {σ} {Γ'} x≠y xy =
+     tr (λ qq → Δ , qq ⊢ σ :s: Γ') (funext (lem-swap Γ x y τ1 τ2 {x≠y})) xy
 
+  --- todo: move this stuff to weakening.agda once it's unholey
   mutual
-    data envfresh : Nat → env → Set where
-      EFId : ∀{x Γ} → x # Γ → envfresh x (Id Γ)
-      EFSubst : ∀{x d σ y} → fresh x d
-                           → envfresh x σ
-                           → x ≠ y
-                           → envfresh x (Subst d y σ)
-
-    data fresh : Nat → dhexp → Set where
-      FConst : ∀{x} → fresh x c
-      FVar   : ∀{x y} → x ≠ y → fresh x (X y)
-      FLam   : ∀{x y τ d} → x ≠ y → fresh x d → fresh x (·λ y [ τ ] d)
-      FHole  : ∀{x u σ} → envfresh x σ → fresh x (⦇⦈⟨ u , σ ⟩)
-      FNEHole : ∀{x d u σ} → envfresh x σ → fresh x d → fresh x (⦇ d ⦈⟨ u , σ ⟩)
-      FAp     : ∀{x d1 d2} → fresh x d1 → fresh x d2 → fresh x (d1 ∘ d2)
-      FCast   : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒ τ2 ⟩)
-      FFailedCast : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
-
-  mutual
-    -- todo: can this use the other weakening for :s: directly? or is that not worth the hassle
     weaken-subst-Γ : ∀{ x Γ Δ σ Γ' τ} →
                      envfresh x σ →
                      Δ , Γ ⊢ σ :s: Γ' →

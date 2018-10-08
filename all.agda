@@ -8,7 +8,7 @@ open import core
 open import lemmas-gcomplete
 
 open import lemmas-disjointness
-open import disjointness
+open import disjointness -- work here
 
 open import structural-assumptions
 
@@ -17,7 +17,7 @@ open import ground-decidable
 open import matched-ground-invariant
 open import finality
 
--- open import lemmas-subst-ta
+open import lemmas-subst-ta -- work here
 open import lemmas-ground
 open import lemmas-consistency
 open import lemmas-matching
@@ -44,3 +44,5 @@ open import cast-inert
 open import complete-preservation
 open import complete-progress
 open import complete-expansion
+
+open import weakening
