@@ -125,3 +125,28 @@ more removed code
     -- weaken-ana {x = y} {Γ = Γ} apt (ALam {x = x} x₃ x₄ wt) | Inr x₂ =
     --              ALam (apart-parts Γ (■ (y , _)) x x₃ (apart-singleton x₂)) x₄
     --                   (exchange-ana {Γ = Γ} x₂ (weaken-ana (apart-parts Γ (■ (x , _)) y apt (apart-singleton (flip x₂))) wt))
+
+
+-----
+
+scraps from subst lemma
+
+-- apart-union1 Γ (■ (x , _)) y x₂ | apart-noteq y x _ (apart-union2 Γ (■ (x , _)) y x₂)
+
+  -- lem-subst {Γ = Γ} {x = x} apt (TALam  {x = y} x₂ wt1) wt2 -- = {!weaken-ta ? (TALam x₂ wt1)!}
+  --   with natEQ y x
+  -- lem-subst {Γ = Γ} {x = x} apt (TALam x₃ wt1) wt2 | Inl refl = abort ((π1(lem-union-none {Γ = Γ} x₃)) refl)
+  -- lem-subst {Γ = Γ} apt (TALam x₃ wt1) wt2 | Inr x₂
+  --   with lem-union-none {Γ = Γ} x₃ -- | lem-subst apt wt1  -- probably not the straight IH; need to weaken
+  -- ... | neq , r = {!!}
+  -- --  TALam r (lem-subst {!!} (weaken-ta {!!} {!!}) (weaken-ta r wt2))
+
+  -- context pretty printer is going ape; i know that wt1 has type
+  --
+  --   (.Δ , Γ ,, (x , .τ1) ,, (y , .τ2) ⊢ .d :: .τ3)
+  --
+  -- because exchange-ta-Γ {Γ = Γ} x≠y wt1 has type
+  --
+  --   .Δ , Γ ,, (y , .τ2) ,, (x , .τ1) ⊢ .d :: .τ3
+
+--   ... | Inr _ = TALam y#Γ {!lem-subst {Δ = Δ} {Γ = Γ ,, (y , τ1)} {x = x} {d1 = d}  !}
