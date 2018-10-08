@@ -71,10 +71,10 @@ module preservation where
   preserve-trans (TAFailedCast x y z q) ()
 
   -- this is the main preservation theorem, gluing together the above
-  preservation : {Δ : hctx} {d d' : dhexp} {τ : htyp} →
-             Δ , ∅ ⊢ d :: τ →
+  preservation : {Δ : hctx} {d d' : dhexp} {τ : htyp} {Γ : tctx} →
+             Δ , Γ ⊢ d :: τ →
              d ↦ d' →
-             Δ , ∅ ⊢ d' :: τ
+             Δ , Γ ⊢ d' :: τ
   preservation D (Step x x₁ x₂)
     with wt-filling D x
   ... | (_ , wt) = wt-different-fill x D wt (preserve-trans wt x₁) x₂
