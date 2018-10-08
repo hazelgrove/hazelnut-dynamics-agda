@@ -9,7 +9,8 @@ module contraction where
   -- trasnport allows you to prove contraction for all the hypothetical
   -- judgements uniformly. we never explicitly use contraction anywhere, so
   -- we omit any of the specific instances for concision; they are entirely
-  -- mechanical, as are the specific instances of exchange.
+  -- mechanical, as are the specific instances of exchange. one is shown
+  -- below as an example.
   contract : {A : Set} {x : Nat} {τ : A} (Γ : A ctx) →
          ((Γ ,, (x , τ)) ,, (x , τ)) == (Γ ,, (x , τ))
   contract {A} {x} {τ} Γ = funext guts
@@ -28,3 +29,17 @@ module contraction where
       guts y | Inr x₂ | None | Inr x₁ with natEQ x y
       guts .x | Inr x₃ | None | Inr x₂ | Inl refl = abort (x₃ refl)
       guts y | Inr x₃ | None | Inr x₂ | Inr x₁ = refl
+
+  contract-synth : ∀{ Γ x τ e τ'}
+                  → (Γ ,, (x , τ) ,, (x , τ)) ⊢ e => τ'
+                  → (Γ ,, (x , τ)) ⊢ e => τ'
+  contract-synth {Γ = Γ} {e = e} {τ' = τ'} =
+    tr (λ qq → qq ⊢ e => τ') (contract Γ)
+
+  -- as an aside, this also establishes the other direction which is rarely
+  -- mentioned, since equality is symmetric
+  expand-synth : ∀{ Γ x τ e τ'}
+                  → (Γ ,, (x , τ)) ⊢ e => τ'
+                  → (Γ ,, (x , τ) ,, (x , τ)) ⊢ e => τ'
+  expand-synth {Γ = Γ} {e = e} {τ' = τ'} =
+    tr (λ qq → qq ⊢ e => τ') (! (contract Γ))
