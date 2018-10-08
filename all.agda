@@ -8,7 +8,7 @@ open import core
 open import lemmas-gcomplete
 
 open import lemmas-disjointness
-open import disjointness -- work here
+--open import disjointness -- working here
 
 open import structural-assumptions
 
@@ -17,15 +17,15 @@ open import ground-decidable
 open import matched-ground-invariant
 open import finality
 
-open import lemmas-subst-ta -- work here
+--open import lemmas-subst-ta -- working here
 open import lemmas-ground
 open import lemmas-consistency
 open import lemmas-matching
 open import synth-unicity
 open import htype-decidable
 
-open import expansion-generality
-open import expandability
+--open import expansion-generality -- depend on disjointness
+--open import expandability -- ditto
 open import expansion-unicity
 open import type-assignment-unicity
 open import typed-expansion
