@@ -84,8 +84,8 @@ each type getting its own theorem, for usability later.
 
 - [expansion-generality.agda](expansion-generality.agda) argues that the expansion
   judgements respect the bidirectional typing system.
-- [expandability.agda](expandability.agda) argues that any well typed term
-  can be expanded to a dynamic term.
+- [expandability.agda](expandability.agda) argues that any well typed
+  external term can be expanded to a internal term.
 - [expansion-unicity.agda](expansion-unicity.agda) argues that expansion
   produces at most one result.
 - [typed-expansion.agda](typed-expansion.agda) argues that the expansion
@@ -110,8 +110,8 @@ them, you get the same type safety theorems you might expect for the
 restricted fragment without holes.
 
 - [complete-expansion.agda](complete-expansion.agda) argues that the
-  expansion of a complete term into the dynamic language produces another
-  complete term.
+  expansion of a complete external term into the internal language produces
+  another complete term.
 - [complete-preservation.agda](complete-preservation.agda) argues that
   stepping a complete term produces a complete term that is assigned the
   same type
