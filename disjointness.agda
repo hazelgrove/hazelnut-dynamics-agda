@@ -93,7 +93,7 @@ module disjointness where
 
   dom-union : {A B : Set} {Δ1 Δ2 : A ctx} {H1 H2 : B ctx} → dom-eq Δ1 H1 → dom-eq Δ2 H2 → dom-eq (Δ1 ∪ Δ2) (H1 ∪ H2)
   dom-union (π1 , π2) (π3 , π4) = (λ n x → {!!}) ,
-                                  {!!}
+                                  (λ n x → {!!})
 
   mutual
     holes-delta-ana : ∀{Γ H e τ d τ' Δ} →
@@ -118,12 +118,33 @@ module disjointness where
     holes-delta-synth (HAp h h₁) (ESAp x x₁ x₂ x₃ x₄ x₅) with holes-delta-ana h x₄ | holes-delta-ana h₁ x₅
     ... | ih1 | ih2 = dom-union ih1 ih2
 
+  lem-apart-new : ∀{e H u} → holes e H → hole-name-new e u → u # H
+  lem-apart-new HConst HNConst = refl
+  lem-apart-new (HAsc h) (HNAsc hn) = lem-apart-new h hn
+  lem-apart-new HVar HNVar = refl
+  lem-apart-new (HLam1 h) (HNLam1 hn) = lem-apart-new h hn
+  lem-apart-new (HLam2 h) (HNLam2 hn) = lem-apart-new h hn
+  lem-apart-new HEHole (HNHole x) = apart-singleton (flip x)
+  lem-apart-new (HNEHole {u = u'} {H = H} h) (HNNEHole  {u = u}  x hn) = apart-parts H (■ (u' , <>)) u (lem-apart-new h hn) (apart-singleton (flip x))
+  lem-apart-new (HAp {H1 = H1} {H2 = H2} h h₁) (HNAp hn hn₁) = apart-parts H1 H2 _ (lem-apart-new h hn) (lem-apart-new h₁ hn₁)
+
+  lem-apart-disjoint : {A : Set} {H : A ctx} {u : Nat} {x : A} → u # H → (■ (u , x)) ## H
+  lem-apart-disjoint {H = H} apt = (λ n x → tr (λ qq → qq # H) (singleton-eq (π2 x)) apt) ,
+                                   (λ n x → {!!})
+
   holes-disjoint-disjoint : ∀{ e1 e2 H1 H2} →
                     holes e1 H1 →
                     holes e2 H2 →
                     holes-disjoint e1 e2 →
                     H1 ## H2
-  holes-disjoint-disjoint = {!!}
+  holes-disjoint-disjoint HConst he2 HDConst = empty-disj _
+  holes-disjoint-disjoint (HAsc he1) he2 (HDAsc hd) = holes-disjoint-disjoint he1 he2 hd
+  holes-disjoint-disjoint HVar he2 HDVar = empty-disj _
+  holes-disjoint-disjoint (HLam1 he1) he2 (HDLam1 hd) = holes-disjoint-disjoint he1 he2 hd
+  holes-disjoint-disjoint (HLam2 he1) he2 (HDLam2 hd) = holes-disjoint-disjoint he1 he2 hd
+  holes-disjoint-disjoint HEHole he2 (HDHole x) = lem-apart-disjoint (lem-apart-new he2 x)
+  holes-disjoint-disjoint (HNEHole he1) he2 (HDNEHole x hd) = disjoint-parts (holes-disjoint-disjoint he1 he2 hd) (lem-apart-disjoint (lem-apart-new he2 x))
+  holes-disjoint-disjoint (HAp he1 he2) he3 (HDAp hd hd₁) = disjoint-parts (holes-disjoint-disjoint he1 he3 hd) (holes-disjoint-disjoint he2 he3 hd₁)
 
   mutual
     expand-ana-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ1' τ2' Γ Δ1 Δ2 } →
