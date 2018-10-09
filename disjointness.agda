@@ -12,11 +12,11 @@ open import weakening
 module disjointness where
 
   --todo move to weakening when done
-  weaken-hole-synth : ∀{Γ x τ' u} → x # Γ → (Γ ,, (x , τ')) ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , Id Γ ⟩ ⊣  ■ (u , (Γ , ⦇⦈))
-  weaken-hole-synth apt = {!!}
+  -- weaken-hole-synth : ∀{Γ x τ' u} → x # Γ → (Γ ,, (x , τ')) ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , Id Γ ⟩ ⊣  ■ (u , (Γ , ⦇⦈))
+  -- weaken-hole-synth apt = {!!}
 
-  ex : ∀{Γ x τ' u} → x # Γ → (Γ ,, (x , τ')) ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , Id (Γ ,, (x , τ')) ⟩ ⊣  ■ (u , ((Γ ,, (x , τ')) , ⦇⦈))
-  ex = λ {Γ} {x} {τ'} {u} _ → ESEHole
+  -- ex : ∀{Γ x τ' u} → x # Γ → (Γ ,, (x , τ')) ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , Id (Γ ,, (x , τ')) ⟩ ⊣  ■ (u , ((Γ ,, (x , τ')) , ⦇⦈))
+  -- ex = λ {Γ} {x} {τ'} {u} _ → ESEHole
 
   mutual
     weaken-synth-expand : ∀{x Γ e τ d Δ τ'} → fresh x d
@@ -26,7 +26,7 @@ module disjointness where
     weaken-synth-expand {x = y} {Γ = Γ} {τ = τ} frsh (ESVar {x = x} x₂) = ESVar (x∈∪l Γ (■ (y , _)) x τ x₂)
     weaken-synth-expand {Γ = Γ} (FLam x₁ frsh) (ESLam x₂ syn) = ESLam (apart-extend1 Γ (flip x₁) x₂) (exchange-expand-synth {Γ = Γ} (flip x₁) (weaken-synth-expand frsh syn))
     weaken-synth-expand (FAp (FCast frsh) (FCast frsh₁)) (ESAp x₁ x₂ x₃ x₄ x₅ x₆) = ESAp x₁ x₂ (weaken-synth (fresh-expand-ana2 frsh x₅) x₃) x₄ (weaken-ana-expand frsh x₅) (weaken-ana-expand frsh₁ x₆)
-    weaken-synth-expand (FHole (EFId x₁)) ESEHole = weaken-hole-synth x₁
+    weaken-synth-expand (FHole (EFId x₁)) ESEHole = {!!}
     weaken-synth-expand frsh (ESNEHole x₁ syn) = {!!}
     weaken-synth-expand (FCast frsh) (ESAsc x₁) = ESAsc (weaken-ana-expand frsh x₁)
 
@@ -90,15 +90,6 @@ module disjointness where
     expand-disjoint-new-ana (EANEHole {Δ = Δ} x x₁) disj = HNNEHole (singles-notequal (disjoint-union2 {Γ1 = Δ} disj))
                                                                     (expand-disjoint-new-synth x₁ (disjoint-union1 disj))
 
-  -- these are experimental / almost certainly false; just trying to figure
-  -- out how to bridge the gap in these two holes below
-  mutual
-    expand-fresh-synth : ∀{x Γ e τ d Δ} → x # Γ → Γ ⊢ e ⇒ τ ~> d ⊣ Δ → freshh x e
-    expand-fresh-synth apt exp = {!exp!}
-
-    expand-fresh-ana : ∀{x Γ e τ d τ' Δ} → x # Γ → Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ → freshh x e
-    expand-fresh-ana apt exp = {!!}
-
   mutual
     expand-ana-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ1' τ2' Γ Δ1 Δ2 } →
           holes-disjoint e1 e2 →
@@ -106,7 +97,9 @@ module disjointness where
           Γ ⊢ e2 ⇐ τ2 ~> e2' :: τ2' ⊣ Δ2 →
           Δ1 ## Δ2
     expand-ana-disjoint hd (EASubsume x x₁ x₂ x₃) E2 = expand-synth-disjoint hd x₂ E2
-    expand-ana-disjoint (HDLam1 hd) (EALam x₁ x₂ ex1) E2 = expand-ana-disjoint hd ex1 (weaken-ana-expand {!fresh-expand-ana1 x₁ (expand-fresh-ana x₁ E2) E2!} E2)
+    expand-ana-disjoint (HDLam1 hd) (EALam x₁ x₂ E1) E2 = {!!}
+    --expand-ana-disjoint (HDLam1 hd) (EASubsume x₁ x₂ x₃ x₄) E2 = ?
+    -- expand-ana-disjoint hd ex1 {!!} -- (weaken-ana-expand {!fresh-expand-ana1 x₁ (expand-fresh-ana x₁ E2) E2!} E2)
     expand-ana-disjoint (HDHole x) EAEHole E2 = ##-comm (expand-new-disjoint-ana x E2)
     expand-ana-disjoint (HDNEHole x hd) (EANEHole x₁ x₂) E2 = disjoint-parts (expand-synth-disjoint hd x₂ E2) (##-comm (expand-new-disjoint-ana x E2))
 
