@@ -128,9 +128,14 @@ module disjointness where
   lem-apart-new (HNEHole {u = u'} {H = H} h) (HNNEHole  {u = u}  x hn) = apart-parts H (■ (u' , <>)) u (lem-apart-new h hn) (apart-singleton (flip x))
   lem-apart-new (HAp {H1 = H1} {H2 = H2} h h₁) (HNAp hn hn₁) = apart-parts H1 H2 _ (lem-apart-new h hn) (lem-apart-new h₁ hn₁)
 
+  lem-dom-apt : {A : Set} {G : A ctx} {x y : Nat} → x # G → dom G y → x ≠ y
+  lem-dom-apt {x = x} {y = y} apt dom with natEQ x y
+  lem-dom-apt apt dom | Inl refl = abort (somenotnone (! (π2 dom) · apt))
+  lem-dom-apt apt dom | Inr x₁ = x₁
+
   lem-apart-disjoint : {A : Set} {H : A ctx} {u : Nat} {x : A} → u # H → (■ (u , x)) ## H
   lem-apart-disjoint {H = H} apt = (λ n x → tr (λ qq → qq # H) (singleton-eq (π2 x)) apt) ,
-                                   (λ n x → {!!})
+                                   (λ n x → apart-singleton (flip (lem-dom-apt apt x)))
 
   holes-disjoint-disjoint : ∀{ e1 e2 H1 H2} →
                     holes e1 H1 →
