@@ -165,3 +165,57 @@ x₁  : .Γ .x == None
 
 which isn't true. if d is (c < b => b >) then d' is (c) and the goal is
 false.
+
+----------------
+
+these are actually false! exactly because of the hole case. removing them
+and trying to prove what they depended on syntactically rather than via weakening
+
+
+  --todo move to weakening when done
+  -- weaken-hole-synth : ∀{Γ x τ' u} → x # Γ → (Γ ,, (x , τ')) ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , Id Γ ⟩ ⊣  ■ (u , (Γ , ⦇⦈))
+  -- weaken-hole-synth apt = {!!}
+
+  -- ex : ∀{Γ x τ' u} → x # Γ → (Γ ,, (x , τ')) ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , Id (Γ ,, (x , τ')) ⟩ ⊣  ■ (u , ((Γ ,, (x , τ')) , ⦇⦈))
+  -- ex = λ {Γ} {x} {τ'} {u} _ → ESEHole
+
+  -- mutual
+  --   weaken-synth-expand : ∀{x Γ e τ d Δ τ'} → fresh x d
+  --                                            → Γ ⊢ e ⇒ τ ~> d ⊣ Δ
+  --                                            → (Γ ,, (x , τ')) ⊢ e ⇒ τ ~> d ⊣ Δ
+  --   weaken-synth-expand frsh ESConst = ESConst
+  --   weaken-synth-expand {x = y} {Γ = Γ} {τ = τ} frsh (ESVar {x = x} x₂) = ESVar (x∈∪l Γ (■ (y , _)) x τ x₂)
+  --   weaken-synth-expand {Γ = Γ} (FLam x₁ frsh) (ESLam x₂ syn) = ESLam (apart-extend1 Γ (flip x₁) x₂) (exchange-expand-synth {Γ = Γ} (flip x₁) (weaken-synth-expand frsh syn))
+  --   weaken-synth-expand (FAp (FCast frsh) (FCast frsh₁)) (ESAp x₁ x₂ x₃ x₄ x₅ x₆) = ESAp x₁ x₂ (weaken-synth (fresh-expand-ana2 frsh x₅) x₃) x₄ (weaken-ana-expand frsh x₅) (weaken-ana-expand frsh₁ x₆)
+  --   weaken-synth-expand (FHole (EFId x₁)) ESEHole = {!!}
+  --   weaken-synth-expand frsh (ESNEHole x₁ syn) = {!!}
+  --   weaken-synth-expand (FCast frsh) (ESAsc x₁) = ESAsc (weaken-ana-expand frsh x₁)
+
+  --   weaken-ana-expand : ∀{ Γ e τ d τ' Δ x τ* } → fresh x d
+  --                                               → Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
+  --                                               → (Γ ,, (x , τ*)) ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
+  --   weaken-ana-expand {Γ = Γ} (FLam x₁ frsh) (EALam x₂ x₃ ana) = EALam (apart-extend1 Γ (flip x₁) x₂) x₃ (exchange-expand-ana {Γ = Γ} (flip x₁) (weaken-ana-expand frsh ana))
+  --   weaken-ana-expand frsh (EASubsume x₁ x₂ x₃ x₄) = EASubsume x₁ x₂ (weaken-synth-expand frsh x₃) x₄
+  --   weaken-ana-expand (FHole (EFId x₁)) EAEHole = {!!}
+  --   weaken-ana-expand (FNEHole (EFId x₁) frsh) (EANEHole x₂ x₃) = {!!}
+
+    -- expand-ana-disjoint hd (EASubsume x x₁ x₂ x₃) E2 = expand-synth-disjoint hd x₂ E2
+    -- expand-ana-disjoint (HDLam1 hd) (EALam x₁ x₂ E1) E2 = {!!}
+    -- --expand-ana-disjoint (HDLam1 hd) (EASubsume x₁ x₂ x₃ x₄) E2 = ?
+    -- -- expand-ana-disjoint hd ex1 {!!} -- (weaken-ana-expand {!fresh-expand-ana1 x₁ (expand-fresh-ana x₁ E2) E2!} E2)
+    -- expand-ana-disjoint (HDHole x) EAEHole E2 = ##-comm (expand-new-disjoint-ana x E2)
+    -- expand-ana-disjoint (HDNEHole x hd) (EANEHole x₁ x₂) E2 = disjoint-parts (expand-synth-disjoint hd x₂ E2) (##-comm (expand-new-disjoint-ana x E2))
+
+    -- expand-synth-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ2' Γ Δ1 Δ2 } →
+    --       holes-disjoint e1 e2 →
+    --       Γ ⊢ e1 ⇒ τ1 ~> e1' ⊣ Δ1 →
+    --       Γ ⊢ e2 ⇐ τ2 ~> e2' :: τ2' ⊣ Δ2 →
+    --       Δ1 ## Δ2
+    -- expand-synth-disjoint HDConst ESConst ana = empty-disj _
+    -- expand-synth-disjoint (HDAsc hd) (ESAsc x) ana = expand-ana-disjoint hd x ana
+    -- expand-synth-disjoint HDVar (ESVar x₁) ana = empty-disj _
+    -- expand-synth-disjoint (HDLam1 hd) () ana
+    -- expand-synth-disjoint (HDLam2 hd) (ESLam x₁ synth) ana = {!!} --  expand-synth-disjoint hd synth {!!} -- (weaken-ana-expand {!!} ana)
+    -- expand-synth-disjoint (HDHole x) ESEHole ana = ##-comm (expand-new-disjoint-ana x ana)
+    -- expand-synth-disjoint (HDNEHole x hd) (ESNEHole x₁ synth) ana = disjoint-parts (expand-synth-disjoint hd synth ana) (##-comm (expand-new-disjoint-ana x ana))
+    -- expand-synth-disjoint (HDAp hd hd₁) (ESAp x x₁ x₂ x₃ x₄ x₅) ana = disjoint-parts (expand-ana-disjoint hd x₄ ana) (expand-ana-disjoint hd₁ x₅ ana)

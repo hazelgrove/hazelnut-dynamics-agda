@@ -7,38 +7,7 @@ open import exchange
 open import lemmas-freshness
 open import weakening
 
---open import structural-assumptions
-
 module disjointness where
-
-  --todo move to weakening when done
-  -- weaken-hole-synth : ∀{Γ x τ' u} → x # Γ → (Γ ,, (x , τ')) ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , Id Γ ⟩ ⊣  ■ (u , (Γ , ⦇⦈))
-  -- weaken-hole-synth apt = {!!}
-
-  -- ex : ∀{Γ x τ' u} → x # Γ → (Γ ,, (x , τ')) ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , Id (Γ ,, (x , τ')) ⟩ ⊣  ■ (u , ((Γ ,, (x , τ')) , ⦇⦈))
-  -- ex = λ {Γ} {x} {τ'} {u} _ → ESEHole
-
-  mutual
-    weaken-synth-expand : ∀{x Γ e τ d Δ τ'} → fresh x d
-                                             → Γ ⊢ e ⇒ τ ~> d ⊣ Δ
-                                             → (Γ ,, (x , τ')) ⊢ e ⇒ τ ~> d ⊣ Δ
-    weaken-synth-expand frsh ESConst = ESConst
-    weaken-synth-expand {x = y} {Γ = Γ} {τ = τ} frsh (ESVar {x = x} x₂) = ESVar (x∈∪l Γ (■ (y , _)) x τ x₂)
-    weaken-synth-expand {Γ = Γ} (FLam x₁ frsh) (ESLam x₂ syn) = ESLam (apart-extend1 Γ (flip x₁) x₂) (exchange-expand-synth {Γ = Γ} (flip x₁) (weaken-synth-expand frsh syn))
-    weaken-synth-expand (FAp (FCast frsh) (FCast frsh₁)) (ESAp x₁ x₂ x₃ x₄ x₅ x₆) = ESAp x₁ x₂ (weaken-synth (fresh-expand-ana2 frsh x₅) x₃) x₄ (weaken-ana-expand frsh x₅) (weaken-ana-expand frsh₁ x₆)
-    weaken-synth-expand (FHole (EFId x₁)) ESEHole = {!!}
-    weaken-synth-expand frsh (ESNEHole x₁ syn) = {!!}
-    weaken-synth-expand (FCast frsh) (ESAsc x₁) = ESAsc (weaken-ana-expand frsh x₁)
-
-    weaken-ana-expand : ∀{ Γ e τ d τ' Δ x τ* } → fresh x d
-                                                → Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
-                                                → (Γ ,, (x , τ*)) ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
-    weaken-ana-expand {Γ = Γ} (FLam x₁ frsh) (EALam x₂ x₃ ana) = EALam (apart-extend1 Γ (flip x₁) x₂) x₃ (exchange-expand-ana {Γ = Γ} (flip x₁) (weaken-ana-expand frsh ana))
-    weaken-ana-expand frsh (EASubsume x₁ x₂ x₃ x₄) = EASubsume x₁ x₂ (weaken-synth-expand frsh x₃) x₄
-    weaken-ana-expand (FHole (EFId x₁)) EAEHole = {!!}
-    weaken-ana-expand (FNEHole (EFId x₁) frsh) (EANEHole x₂ x₃) = {!!}
-
-
   mutual
     expand-new-disjoint-synth : ∀ { e u τ d Δ Γ Γ' τ'} →
                           hole-name-new e u →
@@ -90,32 +59,79 @@ module disjointness where
     expand-disjoint-new-ana (EANEHole {Δ = Δ} x x₁) disj = HNNEHole (singles-notequal (disjoint-union2 {Γ1 = Δ} disj))
                                                                     (expand-disjoint-new-synth x₁ (disjoint-union1 disj))
 
+  data holes : (e : hexp) (H : ⊤ ctx) → Set where
+    HConst : holes c ∅
+    HAsc   : ∀{e τ H} → holes e H → holes (e ·: τ) H
+    HVar   : ∀{x} → holes (X x) ∅
+    HLam1  : ∀{x e H} → holes e H → holes (·λ x e) H
+    HLam2  : ∀{x e τ H} → holes e H → holes (·λ x [ τ ] e) H
+    HEHole : ∀{u} → holes (⦇⦈[ u ]) (■ (u , <>))
+    HNEHole : ∀{e u H} → holes e H → holes (⦇ e ⦈[ u ]) (H ,, (u , <>))
+    HAp : ∀{e1 e2 H1 H2} → holes e1 H1 → holes e2 H2 → holes (e1 ∘ e2) (H1 ∪ H2)
+
+  dom-eq : {A B : Set} → A ctx → B ctx → Set
+  dom-eq {A} {B} C1 C2 = ((n : Nat) → Σ[ x ∈ A ]( C1 n == Some x) → (Σ[ y ∈ B ](C2 n == Some y)))×
+                         ((n : Nat) → Σ[ y ∈ B ]( C2 n == Some y) → (Σ[ x ∈ A ](C1 n == Some x)))
+
+  dom-∅ : {A B : Set} → dom-eq (λ _ → None {A}) (λ _ → None {B})
+  dom-∅ {A} {B} = (λ n x → abort (somenotnone (! (π2 x)))) , (λ n x → abort (somenotnone (! (π2 x))))
+
+  -- todo: this seems like i would have proven it already
+  singleton-eq : {A : Set} {a : A} → ∀{x n y} → (■ (x , a)) n == Some y → x == n
+  singleton-eq {A} {a} {x} {n} {y} eq with natEQ x n
+  singleton-eq eq | Inl x₁ = x₁
+  singleton-eq eq | Inr x₁ = abort (somenotnone (! eq))
+
+  singleton-lookup-refl : {A : Set} {n : Nat} {β : A} → (■ (n , β)) n == Some β
+  singleton-lookup-refl {n = n} with natEQ n n
+  singleton-lookup-refl | Inl refl = λ {β} → refl
+  singleton-lookup-refl | Inr x = abort (x refl)
+
+  dom-single : {A B : Set} (x : Nat) (a : A) (b : B) → dom-eq (■ (x , a)) (■ (x , b))
+  dom-single {A} {B} x α β = (λ n x₁ → β , (ap1 (λ qq → (■ (qq , β)) n) (singleton-eq (π2 x₁)) · singleton-lookup-refl)) ,
+                             (λ n x₁ → α , (ap1 (λ qq → (■ (qq , α)) n) (singleton-eq (π2 x₁)) · singleton-lookup-refl))
+
+  dom-union : {A B : Set} {Δ1 Δ2 : A ctx} {H1 H2 : B ctx} → dom-eq Δ1 H1 → dom-eq Δ2 H2 → dom-eq (Δ1 ∪ Δ2) (H1 ∪ H2)
+  dom-union (π1 , π2) (π3 , π4) = (λ n x → {!!}) ,
+                                  {!!}
+
+  mutual
+    holes-delta-ana : ∀{Γ H e τ d τ' Δ} →
+                    holes e H →
+                    Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
+                    dom-eq Δ H
+    holes-delta-ana (HLam1 h) (EALam x₁ x₂ exp) = holes-delta-ana h exp
+    holes-delta-ana h (EASubsume x x₁ x₂ x₃) = holes-delta-synth h x₂
+    holes-delta-ana (HEHole {u = u}) EAEHole = dom-single u _ _
+    holes-delta-ana (HNEHole {u = u} h) (EANEHole x x₁) = dom-union (holes-delta-synth h x₁) (dom-single u _ _ )
+
+    holes-delta-synth : ∀{Γ H e τ d Δ} →
+                    holes e H →
+                    Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
+                    dom-eq Δ H
+    holes-delta-synth HConst ESConst = dom-∅
+    holes-delta-synth (HAsc h) (ESAsc x) = holes-delta-ana h x
+    holes-delta-synth HVar (ESVar x₁) = dom-∅
+    holes-delta-synth (HLam2 h) (ESLam x₁ exp) = holes-delta-synth h exp
+    holes-delta-synth (HEHole {u = u}) ESEHole = dom-single u _ _
+    holes-delta-synth (HNEHole {u = u} h) (ESNEHole x exp) = dom-union (holes-delta-synth h exp) (dom-single u _ _)
+    holes-delta-synth (HAp h h₁) (ESAp x x₁ x₂ x₃ x₄ x₅) with holes-delta-ana h x₄ | holes-delta-ana h₁ x₅
+    ... | ih1 | ih2 = dom-union ih1 ih2
+
+  holes-disjoint-disjoint : ∀{ e1 e2 H1 H2} →
+                    holes e1 H1 →
+                    holes e2 H2 →
+                    holes-disjoint e1 e2 →
+                    H1 ## H2
+  holes-disjoint-disjoint = {!!}
+
   mutual
     expand-ana-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ1' τ2' Γ Δ1 Δ2 } →
           holes-disjoint e1 e2 →
           Γ ⊢ e1 ⇐ τ1 ~> e1' :: τ1' ⊣ Δ1 →
           Γ ⊢ e2 ⇐ τ2 ~> e2' :: τ2' ⊣ Δ2 →
           Δ1 ## Δ2
-    expand-ana-disjoint hd (EASubsume x x₁ x₂ x₃) E2 = expand-synth-disjoint hd x₂ E2
-    expand-ana-disjoint (HDLam1 hd) (EALam x₁ x₂ E1) E2 = {!!}
-    --expand-ana-disjoint (HDLam1 hd) (EASubsume x₁ x₂ x₃ x₄) E2 = ?
-    -- expand-ana-disjoint hd ex1 {!!} -- (weaken-ana-expand {!fresh-expand-ana1 x₁ (expand-fresh-ana x₁ E2) E2!} E2)
-    expand-ana-disjoint (HDHole x) EAEHole E2 = ##-comm (expand-new-disjoint-ana x E2)
-    expand-ana-disjoint (HDNEHole x hd) (EANEHole x₁ x₂) E2 = disjoint-parts (expand-synth-disjoint hd x₂ E2) (##-comm (expand-new-disjoint-ana x E2))
-
-    expand-synth-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ2' Γ Δ1 Δ2 } →
-          holes-disjoint e1 e2 →
-          Γ ⊢ e1 ⇒ τ1 ~> e1' ⊣ Δ1 →
-          Γ ⊢ e2 ⇐ τ2 ~> e2' :: τ2' ⊣ Δ2 →
-          Δ1 ## Δ2
-    expand-synth-disjoint HDConst ESConst ana = empty-disj _
-    expand-synth-disjoint (HDAsc hd) (ESAsc x) ana = expand-ana-disjoint hd x ana
-    expand-synth-disjoint HDVar (ESVar x₁) ana = empty-disj _
-    expand-synth-disjoint (HDLam1 hd) () ana
-    expand-synth-disjoint (HDLam2 hd) (ESLam x₁ synth) ana = expand-synth-disjoint hd synth (weaken-ana-expand {!!} ana)
-    expand-synth-disjoint (HDHole x) ESEHole ana = ##-comm (expand-new-disjoint-ana x ana)
-    expand-synth-disjoint (HDNEHole x hd) (ESNEHole x₁ synth) ana = disjoint-parts (expand-synth-disjoint hd synth ana) (##-comm (expand-new-disjoint-ana x ana))
-    expand-synth-disjoint (HDAp hd hd₁) (ESAp x x₁ x₂ x₃ x₄ x₅) ana = disjoint-parts (expand-ana-disjoint hd x₄ ana) (expand-ana-disjoint hd₁ x₅ ana)
+    expand-ana-disjoint = {!!}
 
 
   -- these lemmas are all structurally recursive and quite

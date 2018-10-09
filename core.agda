@@ -105,8 +105,8 @@ module core where
            hole-name-new e2 u →
            hole-name-new (e1 ∘ e2) u
 
-  -- describes when the collection of hole names used in two terms do
-  -- not overlap
+  -- describes when the collection of hole names used in two terms do not
+  -- overlap
   data holes-disjoint : (e1 : hexp) → (e2 : hexp) → Set where
     HDConst : ∀{e} → holes-disjoint c e
     HDAsc : ∀{e1 e2 τ} → holes-disjoint e1 e2 → holes-disjoint (e1 ·: τ) e2

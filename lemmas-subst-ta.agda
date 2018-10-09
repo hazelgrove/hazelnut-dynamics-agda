@@ -21,12 +21,15 @@ module lemmas-subst-ta where
     with lem-union-none {Γ = Γ} x₂
   ... |  x≠y , y#Γ with natEQ y x
   ... | Inl eq = abort (x≠y (! eq))
-  ... | Inr _ = TALam y#Γ (lem-subst {Δ = Δ} {Γ = Γ ,, (y , τ1)} {x = x} {d1 = d}
-                             (apart-extend1 Γ x≠y x#Γ)
-                             (exchange-ta-Γ {Γ = Γ} x≠y wt1)
-                             (weaken-ta {!!} wt2))
+  ... | Inr _ = TALam y#Γ (lem-subst {Δ = Δ} {Γ = Γ ,, (y , τ1)} {x = x} {d1 = d} (apart-extend1 Γ x≠y x#Γ) (exchange-ta-Γ {Γ = Γ} x≠y wt1) (weaken-ta {!!} wt2))
   lem-subst apt (TAAp wt1 wt2) wt3 = TAAp (lem-subst apt wt1 wt3) (lem-subst apt wt2 wt3)
   lem-subst apt (TAEHole inΔ sub) wt2 = TAEHole inΔ (STASubst sub wt2)
   lem-subst apt (TANEHole x₁ wt1 x₂) wt2 = TANEHole x₁ (lem-subst apt wt1 wt2) (STASubst x₂ wt2)
   lem-subst apt (TACast wt1 x₁) wt2 = TACast (lem-subst apt wt1 wt2) x₁
   lem-subst apt (TAFailedCast wt1 x₁ x₂ x₃) wt2 = TAFailedCast (lem-subst apt wt1 wt2) x₁ x₂ x₃
+
+  -- possible fix: add a premise from a new judgement like holes disjoint
+  -- that classifies pairs of dhexps that share no variable names
+  -- whatsoever. that should imply freshness here. then propagate that
+  -- change to preservation. this is morally what α-equiv lets us do in a
+  -- real setting.
