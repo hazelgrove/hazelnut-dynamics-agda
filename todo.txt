@@ -150,3 +150,18 @@ scraps from subst lemma
   --   .Δ , Γ ,, (y , .τ2) ,, (x , .τ1) ⊢ .d :: .τ3
 
 --   ... | Inr _ = TALam y#Γ {!lem-subst {Δ = Δ} {Γ = Γ ,, (y , τ1)} {x = x} {d1 = d}  !}
+
+-----
+
+i don't think the last statement in cast-inert.agda is actually true. in
+the case for lambdas, if both multi-steps are reflexive (i.e. you're done
+stepping) you get down to
+
+Goal: (·λ .x [ .τ ] .d) == (·λ .x [ .τ ] .d')
+————————————————————————————————————————————————————————————
+nic : no-id-casts .d .d'
+wt  : .Δ , .Γ ,, (.x , .τ) ⊢ .d :: .τ2
+x₁  : .Γ .x == None
+
+which isn't true. if d is (c < b => b >) then d' is (c) and the goal is
+false.
