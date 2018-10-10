@@ -69,32 +69,89 @@ module disjointness where
     HNEHole : ∀{e u H} → holes e H → holes (⦇ e ⦈[ u ]) (H ,, (u , <>))
     HAp : ∀{e1 e2 H1 H2} → holes e1 H1 → holes e2 H2 → holes (e1 ∘ e2) (H1 ∪ H2)
 
+  -- proving that the above judgement has mode (∀,∃), or that it defines a
+  -- function, so we can use it in a functional modality below
+  find-holes : (e : hexp) → Σ[ H ∈ ⊤ ctx ](holes e H)
+  find-holes c = ∅ , HConst
+  find-holes (e ·: x) with find-holes e
+  ... | (h , d)= h , (HAsc d)
+  find-holes (X x) = ∅ , HVar
+  find-holes (·λ x e) with find-holes e
+  ... | (h , d) = h , HLam1 d
+  find-holes (·λ x [ x₁ ] e) with find-holes e
+  ... | (h , d) = h , HLam2 d
+  find-holes ⦇⦈[ x ] = (■ (x , <>)) , HEHole
+  find-holes ⦇ e ⦈[ x ] with find-holes e
+  ... | (h , d) = h ,, (x , <>) , HNEHole d
+  find-holes (e1 ∘ e2) with find-holes e1 | find-holes e2
+  ... | (h1 , d1) | (h2 , d2)  = (h1 ∪ h2 ) , (HAp d1 d2)
+
+  -- two contexts that may contain different mappings have the same domain
   dom-eq : {A B : Set} → A ctx → B ctx → Set
   dom-eq {A} {B} C1 C2 = ((n : Nat) → Σ[ x ∈ A ]( C1 n == Some x) → (Σ[ y ∈ B ](C2 n == Some y)))×
                          ((n : Nat) → Σ[ y ∈ B ]( C2 n == Some y) → (Σ[ x ∈ A ](C1 n == Some x)))
 
+  -- the empty context has the same domain as itself
   dom-∅ : {A B : Set} → dom-eq (λ _ → None {A}) (λ _ → None {B})
   dom-∅ {A} {B} = (λ n x → abort (somenotnone (! (π2 x)))) , (λ n x → abort (somenotnone (! (π2 x))))
 
-  -- todo: this seems like i would have proven it already
+  -- todo: this seems like i would have proven it already? otw move to lemmas
   singleton-eq : {A : Set} {a : A} → ∀{x n y} → (■ (x , a)) n == Some y → x == n
   singleton-eq {A} {a} {x} {n} {y} eq with natEQ x n
   singleton-eq eq | Inl x₁ = x₁
   singleton-eq eq | Inr x₁ = abort (somenotnone (! eq))
 
+  -- todo: this seems like i would have proven it already? otw move to lemmas
   singleton-lookup-refl : {A : Set} {n : Nat} {β : A} → (■ (n , β)) n == Some β
   singleton-lookup-refl {n = n} with natEQ n n
   singleton-lookup-refl | Inl refl = λ {β} → refl
   singleton-lookup-refl | Inr x = abort (x refl)
 
+  -- the singleton contexts formed with any contents but the same index has
+  -- the same domain
   dom-single : {A B : Set} (x : Nat) (a : A) (b : B) → dom-eq (■ (x , a)) (■ (x , b))
   dom-single {A} {B} x α β = (λ n x₁ → β , (ap1 (λ qq → (■ (qq , β)) n) (singleton-eq (π2 x₁)) · singleton-lookup-refl)) ,
                              (λ n x₁ → α , (ap1 (λ qq → (■ (qq , α)) n) (singleton-eq (π2 x₁)) · singleton-lookup-refl))
 
-  dom-union : {A B : Set} {Δ1 Δ2 : A ctx} {H1 H2 : B ctx} → dom-eq Δ1 H1 → dom-eq Δ2 H2 → dom-eq (Δ1 ∪ Δ2) (H1 ∪ H2)
-  dom-union (π1 , π2) (π3 , π4) = (λ n x → {!!}) ,
-                                  (λ n x → {!!})
+  lem-dom-union-apt1 : {A : Set} {Δ1 Δ2 : A ctx} {x : Nat} {y : A} → x # Δ1 → ((Δ1 ∪ Δ2) x == Some y) → (Δ2 x == Some y)
+  lem-dom-union-apt1 {A} {Δ1} {Δ2} {x} {y} apt xin with Δ1 x
+  lem-dom-union-apt1 apt xin | Some x₁ = abort (somenotnone apt)
+  lem-dom-union-apt1 apt xin | None = xin
 
+  lem-dom-union-apt2 : {A : Set} {Δ1 Δ2 : A ctx} {x : Nat} {y : A} → x # Δ2 → ((Δ1 ∪ Δ2) x == Some y) → (Δ1 x == Some y)
+  lem-dom-union-apt2 {A} {Δ1} {Δ2} {x} {y} apt xin with Δ1 x
+  lem-dom-union-apt2 apt xin | Some x₁ = xin
+  lem-dom-union-apt2 apt xin | None = abort (somenotnone (! xin · apt))
+
+  dom-union : {A B : Set} {Δ1 Δ2 : A ctx} {H1 H2 : B ctx} →
+                                     H1 ## H2 →
+                                     dom-eq Δ1 H1 →
+                                     dom-eq Δ2 H2 →
+                                     dom-eq (Δ1 ∪ Δ2) (H1 ∪ H2)
+  dom-union {A} {B} {Δ1} {Δ2} {H1} {H2} disj (p1 , p2) (p3 , p4) = guts1 , guts2
+    where
+      guts1 : (n : Nat) →
+                 Σ[ x ∈ A ] ((Δ1 ∪ Δ2) n == Some x) →
+                 Σ[ y ∈ B ] ((H1 ∪ H2) n == Some y)
+      guts1 n (x , eq) with ctxindirect Δ1 n
+      guts1 n (x₁ , eq) | Inl x with p1 n x
+      ... | q1 , q2 = q1 , x∈∪l H1 H2 n q1 q2
+      guts1 n (x₁ , eq) | Inr x with p3 n (_ , lem-dom-union-apt1 {Δ1 = Δ1} {Δ2 = Δ2} x eq)
+      ... | q1 , q2 =  q1 , x∈∪r H1 H2 n q1 q2 (##-comm disj)
+
+      guts2 : (n : Nat) →
+                 Σ[ y ∈ B ] ((H1 ∪ H2) n == Some y) →
+                 Σ[ x ∈ A ] ((Δ1 ∪ Δ2) n == Some x)
+      guts2 n (x , eq) with ctxindirect H1 n
+      guts2 n (x₁ , eq) | Inl x with p2 n x
+      ... | q1 , q2 = q1 , x∈∪l Δ1 Δ2 n q1 q2
+      guts2 n (x₁ , eq) | Inr x with p4 n (_ , lem-dom-union-apt2 {Δ1 = H2} {Δ2 = H1} x (tr (λ qq → qq n == Some x₁) (∪comm H1 H2 disj) eq))
+      ... | q1 , q2 = q1 , x∈∪r Δ1 Δ2 n q1 q2 (##-comm {!!})
+
+
+
+  -- the holes of an expression have the same domain as Δ; that is, we
+  -- don't add any extra junk as we expand
   mutual
     holes-delta-ana : ∀{Γ H e τ d τ' Δ} →
                     holes e H →
@@ -103,7 +160,7 @@ module disjointness where
     holes-delta-ana (HLam1 h) (EALam x₁ x₂ exp) = holes-delta-ana h exp
     holes-delta-ana h (EASubsume x x₁ x₂ x₃) = holes-delta-synth h x₂
     holes-delta-ana (HEHole {u = u}) EAEHole = dom-single u _ _
-    holes-delta-ana (HNEHole {u = u} h) (EANEHole x x₁) = dom-union (holes-delta-synth h x₁) (dom-single u _ _ )
+    holes-delta-ana (HNEHole {u = u} h) (EANEHole x x₁) = dom-union {!!} (holes-delta-synth h x₁) (dom-single u _ _ )
 
     holes-delta-synth : ∀{Γ H e τ d Δ} →
                     holes e H →
@@ -114,10 +171,10 @@ module disjointness where
     holes-delta-synth HVar (ESVar x₁) = dom-∅
     holes-delta-synth (HLam2 h) (ESLam x₁ exp) = holes-delta-synth h exp
     holes-delta-synth (HEHole {u = u}) ESEHole = dom-single u _ _
-    holes-delta-synth (HNEHole {u = u} h) (ESNEHole x exp) = dom-union (holes-delta-synth h exp) (dom-single u _ _)
-    holes-delta-synth (HAp h h₁) (ESAp x x₁ x₂ x₃ x₄ x₅) with holes-delta-ana h x₄ | holes-delta-ana h₁ x₅
-    ... | ih1 | ih2 = dom-union ih1 ih2
+    holes-delta-synth (HNEHole {u = u} h) (ESNEHole x exp) = dom-union {!!} (holes-delta-synth h exp) (dom-single u _ _)
+    holes-delta-synth (HAp h h₁) (ESAp x x₁ x₂ x₃ x₄ x₅) = dom-union {!!} (holes-delta-ana h x₄) (holes-delta-ana h₁ x₅)
 
+  -- if a hole name is new then it's apart from the holes
   lem-apart-new : ∀{e H u} → holes e H → hole-name-new e u → u # H
   lem-apart-new HConst HNConst = refl
   lem-apart-new (HAsc h) (HNAsc hn) = lem-apart-new h hn
@@ -128,15 +185,14 @@ module disjointness where
   lem-apart-new (HNEHole {u = u'} {H = H} h) (HNNEHole  {u = u}  x hn) = apart-parts H (■ (u' , <>)) u (lem-apart-new h hn) (apart-singleton (flip x))
   lem-apart-new (HAp {H1 = H1} {H2 = H2} h h₁) (HNAp hn hn₁) = apart-parts H1 H2 _ (lem-apart-new h hn) (lem-apart-new h₁ hn₁)
 
+  -- todo: lemmas file?
   lem-dom-apt : {A : Set} {G : A ctx} {x y : Nat} → x # G → dom G y → x ≠ y
   lem-dom-apt {x = x} {y = y} apt dom with natEQ x y
   lem-dom-apt apt dom | Inl refl = abort (somenotnone (! (π2 dom) · apt))
   lem-dom-apt apt dom | Inr x₁ = x₁
 
-  lem-apart-disjoint : {A : Set} {H : A ctx} {u : Nat} {x : A} → u # H → (■ (u , x)) ## H
-  lem-apart-disjoint {H = H} apt = (λ n x → tr (λ qq → qq # H) (singleton-eq (π2 x)) apt) ,
-                                   (λ n x → apart-singleton (flip (lem-dom-apt apt x)))
-
+  -- if the holes of two expressions are disjoint, so are their collections
+  -- of hole names
   holes-disjoint-disjoint : ∀{ e1 e2 H1 H2} →
                     holes e1 H1 →
                     holes e2 H2 →
@@ -147,18 +203,33 @@ module disjointness where
   holes-disjoint-disjoint HVar he2 HDVar = empty-disj _
   holes-disjoint-disjoint (HLam1 he1) he2 (HDLam1 hd) = holes-disjoint-disjoint he1 he2 hd
   holes-disjoint-disjoint (HLam2 he1) he2 (HDLam2 hd) = holes-disjoint-disjoint he1 he2 hd
-  holes-disjoint-disjoint HEHole he2 (HDHole x) = lem-apart-disjoint (lem-apart-new he2 x)
-  holes-disjoint-disjoint (HNEHole he1) he2 (HDNEHole x hd) = disjoint-parts (holes-disjoint-disjoint he1 he2 hd) (lem-apart-disjoint (lem-apart-new he2 x))
+  holes-disjoint-disjoint HEHole he2 (HDHole x) = lem-apart-sing-disj (lem-apart-new he2 x)
+  holes-disjoint-disjoint (HNEHole he1) he2 (HDNEHole x hd) = disjoint-parts (holes-disjoint-disjoint he1 he2 hd) (lem-apart-sing-disj (lem-apart-new he2 x))
   holes-disjoint-disjoint (HAp he1 he2) he3 (HDAp hd hd₁) = disjoint-parts (holes-disjoint-disjoint he1 he3 hd) (holes-disjoint-disjoint he2 he3 hd₁)
 
-  mutual
-    expand-ana-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ1' τ2' Γ Δ1 Δ2 } →
+  -- if two contexsts are disjoint and each share a domain with another
+  -- context, those other two contexts are also disjoint
+  domeq-disj : {A B : Set} {H1 H2 : A ctx} {Δ1 Δ2 : B ctx} →
+               H1 ## H2 →
+               dom-eq Δ1 H1 →
+               dom-eq Δ2 H2 →
+               Δ1 ## Δ2
+  domeq-disj (π1 , π2) (π3 , π4) (π5 , π6) =
+                   (λ n x → {!(π3 n x)!}) ,
+                   (λ n x → {!!})
+
+  -- if you expand two hole-disjoint expressions analytically, the Δs
+  -- produces are disjoint
+  expand-ana-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ1' τ2' Γ Δ1 Δ2 } →
           holes-disjoint e1 e2 →
           Γ ⊢ e1 ⇐ τ1 ~> e1' :: τ1' ⊣ Δ1 →
           Γ ⊢ e2 ⇐ τ2 ~> e2' :: τ2' ⊣ Δ2 →
           Δ1 ## Δ2
-    expand-ana-disjoint = {!!}
-
+  expand-ana-disjoint {e1} {e2} hd ana1 ana2
+    with find-holes e1 | find-holes e2
+  ... | (_ , he1) | (_ , he2) = domeq-disj (holes-disjoint-disjoint he1 he2 hd)
+                                           (holes-delta-ana he1 ana1)
+                                           (holes-delta-ana he2 ana2)
 
   -- these lemmas are all structurally recursive and quite
   -- mechanical. morally, they establish the properties about reduction

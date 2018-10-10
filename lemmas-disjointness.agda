@@ -72,15 +72,17 @@ module lemmas-disjointness where
   apart-extend1 : {A : Set} → ∀{ x y τ} → (Γ : A ctx)  → x ≠ y → x # Γ → x # (Γ ,, (y , τ))
   apart-extend1 {A} {x} {y} {τ} Γ neq apt = apart-parts Γ (■ (y , τ)) x apt (apart-singleton neq)
 
+  -- if an index is in the domain of a union, it's in the domain of one or
+  -- the other unand
+  dom-split : {A : Set} → (Γ1 Γ2 : A ctx) (n : Nat) → dom (Γ1 ∪ Γ2) n → dom Γ1 n + dom Γ2 n
+  dom-split Γ4 Γ5 n (π1 , π2) with Γ4 n
+  dom-split Γ4 Γ5 n (π1 , π2) | Some x = Inl (x , refl)
+  dom-split Γ4 Γ5 n (π1 , π2) | None = Inr (π1 , π2)
+
   -- if both parts of a union are disjoint with a target, so is the union
   disjoint-parts : {A : Set} {Γ1 Γ2 Γ3 : A ctx} → Γ1 ## Γ3 → Γ2 ## Γ3 → (Γ1 ∪ Γ2) ## Γ3
   disjoint-parts {_} {Γ1} {Γ2} {Γ3} D13 D23 = d31 , d32
     where
-      dom-split : {A : Set} → (Γ1 Γ2 : A ctx) (n : Nat) → dom (Γ1 ∪ Γ2) n → dom Γ1 n + dom Γ2 n
-      dom-split Γ4 Γ5 n (π1 , π2) with Γ4 n
-      dom-split Γ4 Γ5 n (π1 , π2) | Some x = Inl (x , refl)
-      dom-split Γ4 Γ5 n (π1 , π2) | None = Inr (π1 , π2)
-
       d31 : (n : Nat) → dom (Γ1 ∪ Γ2) n → n # Γ3
       d31 n D with dom-split Γ1 Γ2 n D
       d31 n D | Inl x = π1 D13 n x
