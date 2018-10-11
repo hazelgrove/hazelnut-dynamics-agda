@@ -115,11 +115,13 @@ module disjointness where
   dom-single {A} {B} x α β = (λ n x₁ → β , (ap1 (λ qq → (■ (qq , β)) n) (singleton-eq (π2 x₁)) · singleton-lookup-refl)) ,
                              (λ n x₁ → α , (ap1 (λ qq → (■ (qq , α)) n) (singleton-eq (π2 x₁)) · singleton-lookup-refl))
 
+  -- todo: this seems like i would have proven it already? otw move to lemmas
   lem-dom-union-apt1 : {A : Set} {Δ1 Δ2 : A ctx} {x : Nat} {y : A} → x # Δ1 → ((Δ1 ∪ Δ2) x == Some y) → (Δ2 x == Some y)
   lem-dom-union-apt1 {A} {Δ1} {Δ2} {x} {y} apt xin with Δ1 x
   lem-dom-union-apt1 apt xin | Some x₁ = abort (somenotnone apt)
   lem-dom-union-apt1 apt xin | None = xin
 
+  -- todo: this seems like i would have proven it already? otw move to lemmas
   lem-dom-union-apt2 : {A : Set} {Δ1 Δ2 : A ctx} {x : Nat} {y : A} → x # Δ2 → ((Δ1 ∪ Δ2) x == Some y) → (Δ1 x == Some y)
   lem-dom-union-apt2 {A} {Δ1} {Δ2} {x} {y} apt xin with Δ1 x
   lem-dom-union-apt2 apt xin | Some x₁ = xin
@@ -148,6 +150,8 @@ module disjointness where
       guts2 n dom2 | Inr x₁ | Inl x = abort (somenotnone (! (π2 (de1 n x)) · x₁))
       guts2 n dom2 | Inr x₁ | Inr x = x
 
+  -- if two sets share a domain with disjoint sets, then their union shares
+  -- a domain with the union
   dom-union : {A B : Set} {Δ1 Δ2 : A ctx} {H1 H2 : B ctx} →
                                      H1 ## H2 →
                                      dom-eq Δ1 H1 →
@@ -173,33 +177,8 @@ module disjointness where
       guts2 n (x₁ , eq) | Inr x with p4 n (_ , lem-dom-union-apt2 {Δ1 = H2} {Δ2 = H1} x (tr (λ qq → qq n == Some x₁) (∪comm H1 H2 disj) eq))
       ... | q1 , q2 = q1 , x∈∪r Δ1 Δ2 n q1 q2 (##-comm (dom-eq-disj disj (p1 , p2) (p3 , p4)))
 
-
-
-  -- the holes of an expression have the same domain as Δ; that is, we
-  -- don't add any extra junk as we expand
-  mutual
-    holes-delta-ana : ∀{Γ H e τ d τ' Δ} →
-                    holes e H →
-                    Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
-                    dom-eq Δ H
-    holes-delta-ana (HLam1 h) (EALam x₁ x₂ exp) = holes-delta-ana h exp
-    holes-delta-ana h (EASubsume x x₁ x₂ x₃) = holes-delta-synth h x₂
-    holes-delta-ana (HEHole {u = u}) EAEHole = dom-single u _ _
-    holes-delta-ana (HNEHole {u = u} h) (EANEHole x x₁) = dom-union {!!} (holes-delta-synth h x₁) (dom-single u _ _ )
-
-    holes-delta-synth : ∀{Γ H e τ d Δ} →
-                    holes e H →
-                    Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
-                    dom-eq Δ H
-    holes-delta-synth HConst ESConst = dom-∅
-    holes-delta-synth (HAsc h) (ESAsc x) = holes-delta-ana h x
-    holes-delta-synth HVar (ESVar x₁) = dom-∅
-    holes-delta-synth (HLam2 h) (ESLam x₁ exp) = holes-delta-synth h exp
-    holes-delta-synth (HEHole {u = u}) ESEHole = dom-single u _ _
-    holes-delta-synth (HNEHole {u = u} h) (ESNEHole x exp) = dom-union {!!} (holes-delta-synth h exp) (dom-single u _ _)
-    holes-delta-synth (HAp h h₁) (ESAp x x₁ x₂ x₃ x₄ x₅) = dom-union {!!} (holes-delta-ana h x₄) (holes-delta-ana h₁ x₅)
-
-  -- if a hole name is new then it's apart from the holes
+  -- if a hole name is new then it's apart from the collection of hole
+  -- names
   lem-apart-new : ∀{e H u} → holes e H → hole-name-new e u → u # H
   lem-apart-new HConst HNConst = refl
   lem-apart-new (HAsc h) (HNAsc hn) = lem-apart-new h hn
@@ -210,7 +189,7 @@ module disjointness where
   lem-apart-new (HNEHole {u = u'} {H = H} h) (HNNEHole  {u = u}  x hn) = apart-parts H (■ (u' , <>)) u (lem-apart-new h hn) (apart-singleton (flip x))
   lem-apart-new (HAp {H1 = H1} {H2 = H2} h h₁) (HNAp hn hn₁) = apart-parts H1 H2 _ (lem-apart-new h hn) (lem-apart-new h₁ hn₁)
 
-  -- todo: lemmas file?
+  -- todo: this seems like i would have proven it already? otw move to lemmas
   lem-dom-apt : {A : Set} {G : A ctx} {x y : Nat} → x # G → dom G y → x ≠ y
   lem-dom-apt {x = x} {y = y} apt dom with natEQ x y
   lem-dom-apt apt dom | Inl refl = abort (somenotnone (! (π2 dom) · apt))
@@ -232,19 +211,37 @@ module disjointness where
   holes-disjoint-disjoint (HNEHole he1) he2 (HDNEHole x hd) = disjoint-parts (holes-disjoint-disjoint he1 he2 hd) (lem-apart-sing-disj (lem-apart-new he2 x))
   holes-disjoint-disjoint (HAp he1 he2) he3 (HDAp hd hd₁) = disjoint-parts (holes-disjoint-disjoint he1 he3 hd) (holes-disjoint-disjoint he2 he3 hd₁)
 
-  -- if two contexsts are disjoint and each share a domain with another
-  -- context, those other two contexts are also disjoint
-  domeq-disj : {A B : Set} {H1 H2 : A ctx} {Δ1 Δ2 : B ctx} →
-               H1 ## H2 →
-               dom-eq Δ1 H1 →
-               dom-eq Δ2 H2 →
-               Δ1 ## Δ2
-  domeq-disj (π1 , π2) (π3 , π4) (π5 , π6) =
-                   (λ n x → {!(π3 n x)!}) ,
-                   (λ n x → {!!})
+  -- the holes of an expression have the same domain as Δ; that is, we
+  -- don't add any extra junk as we expand
+  mutual
+    holes-delta-ana : ∀{Γ H e τ d τ' Δ} →
+                    holes e H →
+                    Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
+                    dom-eq Δ H
+    holes-delta-ana (HLam1 h) (EALam x₁ x₂ exp) = holes-delta-ana h exp
+    holes-delta-ana h (EASubsume x x₁ x₂ x₃) = holes-delta-synth h x₂
+    holes-delta-ana (HEHole {u = u}) EAEHole = dom-single u _ _
+    holes-delta-ana (HNEHole {u = u} h) (EANEHole x x₁) with (holes-delta-synth h x₁)
+    ... | ih = dom-union {!!} ih (dom-single u _ _ )
+
+    holes-delta-synth : ∀{Γ H e τ d Δ} →
+                    holes e H →
+                    Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
+                    dom-eq Δ H
+    holes-delta-synth HConst ESConst = dom-∅
+    holes-delta-synth (HAsc h) (ESAsc x) = holes-delta-ana h x
+    holes-delta-synth HVar (ESVar x₁) = dom-∅
+    holes-delta-synth (HLam2 h) (ESLam x₁ exp) = holes-delta-synth h exp
+    holes-delta-synth (HEHole {u = u}) ESEHole = dom-single u _ _
+    holes-delta-synth (HNEHole {u = u} h) (ESNEHole x exp) = dom-union {!!} (holes-delta-synth h exp) (dom-single u _ _)
+    holes-delta-synth (HAp h h₁) (ESAp x x₁ x₂ x₃ x₄ x₅) = dom-union (holes-disjoint-disjoint h h₁ x) (holes-delta-ana h x₄) (holes-delta-ana h₁ x₅)
 
   -- if you expand two hole-disjoint expressions analytically, the Δs
-  -- produces are disjoint
+  -- produces are disjoint. note that this is likely true for synthetic
+  -- expansions in much the same way, but we only prove "half" of the usual
+  -- pair here. the proof technique is *not* structurally inductive on the
+  -- expansion judgement, because of the missing weakness property, so this
+  -- proof is somewhat unusual compared to the rest in this development.
   expand-ana-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ1' τ2' Γ Δ1 Δ2 } →
           holes-disjoint e1 e2 →
           Γ ⊢ e1 ⇐ τ1 ~> e1' :: τ1' ⊣ Δ1 →
@@ -252,9 +249,10 @@ module disjointness where
           Δ1 ## Δ2
   expand-ana-disjoint {e1} {e2} hd ana1 ana2
     with find-holes e1 | find-holes e2
-  ... | (_ , he1) | (_ , he2) = domeq-disj (holes-disjoint-disjoint he1 he2 hd)
-                                           (holes-delta-ana he1 ana1)
-                                           (holes-delta-ana he2 ana2)
+  ... | (_ , he1) | (_ , he2) = dom-eq-disj (holes-disjoint-disjoint he1 he2 hd)
+                                            (holes-delta-ana he1 ana1)
+                                            (holes-delta-ana he2 ana2)
+
 
   -- these lemmas are all structurally recursive and quite
   -- mechanical. morally, they establish the properties about reduction
