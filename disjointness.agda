@@ -59,6 +59,7 @@ module disjointness where
     expand-disjoint-new-ana (EANEHole {Δ = Δ} x x₁) disj = HNNEHole (singles-notequal (disjoint-union2 {Γ1 = Δ} disj))
                                                                     (expand-disjoint-new-synth x₁ (disjoint-union1 disj))
 
+  -- collect up the hole names of a term as the indices of a trivial contex
   data holes : (e : hexp) (H : ⊤ ctx) → Set where
     HConst : holes c ∅
     HAsc   : ∀{e τ H} → holes e H → holes (e ·: τ) H
@@ -69,8 +70,9 @@ module disjointness where
     HNEHole : ∀{e u H} → holes e H → holes (⦇ e ⦈[ u ]) (H ,, (u , <>))
     HAp : ∀{e1 e2 H1 H2} → holes e1 H1 → holes e2 H2 → holes (e1 ∘ e2) (H1 ∪ H2)
 
-  -- proving that the above judgement has mode (∀,∃), or that it defines a
-  -- function, so we can use it in a functional modality below
+  -- the above judgement has mode (∀,∃). this doesn't prove uniqueness; any
+  -- contex that extends the one computed here will be indistinguishable
+  -- but we'll treat this one as canonical
   find-holes : (e : hexp) → Σ[ H ∈ ⊤ ctx ](holes e H)
   find-holes c = ∅ , HConst
   find-holes (e ·: x) with find-holes e
@@ -123,6 +125,29 @@ module disjointness where
   lem-dom-union-apt2 apt xin | Some x₁ = xin
   lem-dom-union-apt2 apt xin | None = abort (somenotnone (! xin · apt))
 
+  -- if two disjoint sets each share a domain with two other sets, those
+  -- are also disjoint.
+  dom-eq-disj : {A B : Set} {Δ1 Δ2 : A ctx} {H1 H2 : B ctx} →
+              H1 ## H2 →
+              dom-eq Δ1 H1 →
+              dom-eq Δ2 H2 →
+              Δ1 ## Δ2
+  dom-eq-disj {A} {B} {Δ1} {Δ2} {H1} {H2} (d1 , d2) (de1 , de2) (de3 , de4) = guts1 , guts2
+    where
+      guts1 : (n : Nat) → dom Δ1 n → n # Δ2
+      guts1 n dom1 with ctxindirect H2 n
+      guts1 n dom1 | Inl x = abort (somenotnone (! (π2 x) · d1 n (de1 n dom1)))
+      guts1 n dom1 | Inr x with ctxindirect Δ2 n
+      guts1 n dom1 | Inr x₁ | Inl x = abort (somenotnone (! (π2 (de3 n x)) · x₁))
+      guts1 n dom1 | Inr x₁ | Inr x = x
+
+      guts2 : (n : Nat) → dom Δ2 n → n # Δ1
+      guts2 n dom2 with ctxindirect H1 n
+      guts2 n dom2 | Inl x = abort (somenotnone (! (π2 x) · d2 n (de3 n dom2)))
+      guts2 n dom2 | Inr x with ctxindirect Δ1 n
+      guts2 n dom2 | Inr x₁ | Inl x = abort (somenotnone (! (π2 (de1 n x)) · x₁))
+      guts2 n dom2 | Inr x₁ | Inr x = x
+
   dom-union : {A B : Set} {Δ1 Δ2 : A ctx} {H1 H2 : B ctx} →
                                      H1 ## H2 →
                                      dom-eq Δ1 H1 →
@@ -146,7 +171,7 @@ module disjointness where
       guts2 n (x₁ , eq) | Inl x with p2 n x
       ... | q1 , q2 = q1 , x∈∪l Δ1 Δ2 n q1 q2
       guts2 n (x₁ , eq) | Inr x with p4 n (_ , lem-dom-union-apt2 {Δ1 = H2} {Δ2 = H1} x (tr (λ qq → qq n == Some x₁) (∪comm H1 H2 disj) eq))
-      ... | q1 , q2 = q1 , x∈∪r Δ1 Δ2 n q1 q2 (##-comm {!!})
+      ... | q1 , q2 = q1 , x∈∪r Δ1 Δ2 n q1 q2 (##-comm (dom-eq-disj disj (p1 , p2) (p3 , p4)))
 
 
 
