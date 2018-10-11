@@ -23,6 +23,7 @@ module core where
     ⦇_⦈[_]  : hexp → Nat → hexp
     _∘_     : hexp → hexp → hexp
 
+  -- the type of type contexts, i.e. Γs in the judegments below
   tctx : Set
   tctx = htyp ctx
 
@@ -42,7 +43,7 @@ module core where
       _⟨_⇒_⟩   : dhexp → htyp → htyp → dhexp
       _⟨_⇒⦇⦈⇏_⟩   : dhexp → htyp → htyp → dhexp
 
-  -- notation for chaining together agreeable casts
+  -- convenient notation for chaining together two agreeable casts
   _⟨_⇒_⇒_⟩ : dhexp → htyp → htyp → htyp → dhexp
   d ⟨ t1 ⇒ t2 ⇒ t3 ⟩ = d ⟨ t1 ⇒ t2 ⟩ ⟨ t2 ⇒ t3 ⟩
 
@@ -72,15 +73,15 @@ module core where
     MAHole : ⦇⦈ ▸arr ⦇⦈ ==> ⦇⦈
     MAArr  : {τ1 τ2 : htyp} → τ1 ==> τ2 ▸arr τ1 ==> τ2
 
-  -- aliases for type and hole contexts
+  -- the type of hole contexts, i.e. Δs in the judgements
   hctx : Set
   hctx = (htyp ctx × htyp) ctx
 
-  -- this is just fancy notation for a triple to match the CMTT syntax
+  -- notation for a triple to match the CMTT syntax
   _::[_]_ : Nat → tctx → htyp → (Nat × (tctx × htyp))
   u ::[ Γ ] τ = u , (Γ , τ)
 
-  -- defines when a name for a hole does not yet appear in a term
+  -- the hole name u does not appear in the term e
   data hole-name-new : (e : hexp) (u : Nat) → Set where
     HNConst : ∀{u} → hole-name-new c u
     HNAsc : ∀{e τ u} →
@@ -105,8 +106,7 @@ module core where
            hole-name-new e2 u →
            hole-name-new (e1 ∘ e2) u
 
-  -- describes when the collection of hole names used in two terms do not
-  -- overlap
+  -- two terms that do not share any hole names
   data holes-disjoint : (e1 : hexp) → (e2 : hexp) → Set where
     HDConst : ∀{e} → holes-disjoint c e
     HDAsc : ∀{e1 e2 τ} → holes-disjoint e1 e2 → holes-disjoint (e1 ·: τ) e2
@@ -156,12 +156,12 @@ module core where
                  (Γ ,, (x , τ1)) ⊢ e <= τ2 →
                  Γ ⊢ (·λ x e) <= τ
 
-  -- those types without holes anywhere
+  -- those types without holes
   data _tcomplete : htyp → Set where
     TCBase : b tcomplete
     TCArr : ∀{τ1 τ2} → τ1 tcomplete → τ2 tcomplete → (τ1 ==> τ2) tcomplete
 
-  -- those expressions without holes anywhere
+  -- those external expressions without holes
   data _ecomplete : hexp → Set where
     ECConst : c ecomplete
     ECAsc : ∀{τ e} → τ tcomplete → e ecomplete → (e ·: τ) ecomplete
@@ -170,6 +170,7 @@ module core where
     ECLam2 : ∀{x e τ} → e ecomplete → τ tcomplete → (·λ x [ τ ] e) ecomplete
     ECAp : ∀{e1 e2} → e1 ecomplete → e2 ecomplete → (e1 ∘ e2) ecomplete
 
+  -- those internal expressions without holes
   data _dcomplete : dhexp → Set where
     DCVar : ∀{x} → (X x) dcomplete
     DCConst : c dcomplete
@@ -177,12 +178,12 @@ module core where
     DCAp : ∀{d1 d2} → d1 dcomplete → d2 dcomplete → (d1 ∘ d2) dcomplete
     DCCast : ∀{d τ1 τ2} → d dcomplete → τ1 tcomplete → τ2 tcomplete → (d ⟨ τ1 ⇒ τ2 ⟩) dcomplete
 
-  -- contexts that only know about complete types
+  -- contexts that only produce complete types
   _gcomplete : tctx → Set
   Γ gcomplete = (x : Nat) (τ : htyp) → (x , τ) ∈ Γ → τ tcomplete
 
-  -- those d for which every cast inside is the identity cast and there are
-  -- no failed casts
+  -- those internal expressions where every cast is the identity cast and
+  -- there are no failed casts
   data cast-id : dhexp → Set where
     CIConst  : cast-id c
     CIVar    : ∀{x} → cast-id (X x)
@@ -192,11 +193,9 @@ module core where
     CIAp     : ∀{d1 d2} → cast-id d1 → cast-id d2 → cast-id (d1 ∘ d2)
     CICast   : ∀{d τ} → cast-id d → cast-id (d ⟨ τ ⇒ τ ⟩)
 
-  -- _extends_ : {A : Set} (Γ Γ' : A ctx) → Set
-  -- _extends_ {A} Γ' Γ  = (x : Nat) → dom Γ x → Γ' x == Γ x
-
   -- expansion
   mutual
+    -- synthesis
     data _⊢_⇒_~>_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (Δ : hctx) → Set where
       ESConst : ∀{Γ} → Γ ⊢ c ⇒ b ~> c ⊣ ∅
       ESVar   : ∀{Γ x τ} → (x , τ) ∈ Γ →
@@ -214,10 +213,8 @@ module core where
               Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2' ⊣ Δ2 →
               Γ ⊢ e1 ∘ e2 ⇒ τ ~> (d1 ⟨ τ1' ⇒ τ2 ==> τ ⟩) ∘ (d2 ⟨ τ2' ⇒ τ2 ⟩) ⊣ (Δ1 ∪ Δ2)
       ESEHole : ∀{ Γ u } →
-                -- Γ' extends Γ → -- todo note here about weakening away everything you don't need
                 Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , Id Γ ⟩ ⊣  ■ (u ::[ Γ ] ⦇⦈)
       ESNEHole : ∀{ Γ e τ d u Δ } →
-                 --Γ' extends Γ → -- todo note here about weakening away everything you don't need
                  Δ ## (■ (u , Γ , ⦇⦈)) →
                  Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
                  Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈⟨ u , Id Γ  ⟩ ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
@@ -225,6 +222,7 @@ module core where
                  Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                  Γ ⊢ (e ·: τ) ⇒ τ ~> d ⟨ τ' ⇒ τ ⟩ ⊣ Δ
 
+    -- analysis
     data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (τ' : htyp) (Δ : hctx) → Set where
       EALam : ∀{Γ x τ τ1 τ2 e d τ2' Δ } →
               (x # Γ) →
@@ -244,18 +242,12 @@ module core where
                  Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
                  Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈⟨ u , Id Γ  ⟩ :: τ ⊣ (Δ ,, u ::[ Γ ] τ)
 
-  -- ground
+  -- ground types
   data _ground : (τ : htyp) → Set where
     GBase : b ground
     GHole : ⦇⦈ ==> ⦇⦈ ground
 
   mutual
-    -- substitition type assignment
-    -- _,_⊢_:s:_ : hctx → tctx → env → tctx → Set
-    -- Δ , Γ ⊢ Id Γ1 :s: Γ2 = Γ1 == Γ2
-    -- Δ , Γ ⊢ Subst d y σ :s: Γ' = (Δ , Γ ⊢ σ :s: (Γ' \\ y))
-    --                 × Σ[ τ ∈ htyp ] (Γ' y == Some τ × Δ , Γ ⊢ d :: τ) -- todo: dom here
-
     -- todo: clean up above, dom?
     data _,_⊢_:s:_ : hctx → tctx → env → tctx → Set where
       STAId : ∀{Γ Γ' Δ} →
@@ -485,8 +477,9 @@ module core where
                  d' ↦* d'' →
                  d  ↦* d''
 
-  -- freshness, used in substitution and disjointness proofs
+  -- freshness
   mutual
+    -- ... with respect to a hole context
     data envfresh : Nat → env → Set where
       EFId : ∀{x Γ} → x # Γ → envfresh x (Id Γ)
       EFSubst : ∀{x d σ y} → fresh x d
@@ -494,6 +487,7 @@ module core where
                            → x ≠ y
                            → envfresh x (Subst d y σ)
 
+    -- ... for inernal expressions
     data fresh : Nat → dhexp → Set where
       FConst : ∀{x} → fresh x c
       FVar   : ∀{x y} → x ≠ y → fresh x (X y)
@@ -504,12 +498,13 @@ module core where
       FCast   : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒ τ2 ⟩)
       FFailedCast : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
 
+  -- ... for external expressions
   data freshh : Nat → hexp → Set where
     FRHConst : ∀{x} → freshh x c
     FRHAsc   : ∀{x e τ} → freshh x e → freshh x (e ·: τ)
     FRHVar   : ∀{x y} → x ≠ y → freshh x (X y)
     FRHLam1  : ∀{x y e} → x ≠ y → freshh x e → freshh x (·λ y e)
     FRHLam2  : ∀{x τ e y} → x ≠ y → freshh x e → freshh x (·λ y [ τ ] e)
-    FRHEHole : ∀{x u} → freshh x (⦇⦈[ u ]) --todo: x ≠ u?
-    FRHNEHole : ∀{x u e} → freshh x e → freshh x (⦇ e ⦈[ u ])  --todo: x ≠ u?
+    FRHEHole : ∀{x u} → freshh x (⦇⦈[ u ])
+    FRHNEHole : ∀{x u e} → freshh x e → freshh x (⦇ e ⦈[ u ])
     FRHAp : ∀{x e1 e2} → freshh x e1 → freshh x e2 → freshh x (e1 ∘ e2)
