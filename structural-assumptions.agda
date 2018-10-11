@@ -21,13 +21,3 @@ module structural-assumptions where
   -- partial proof in lemmas-subst-ta
   postulate
     lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } → x # Γ → Δ , Γ ,, (x , τ1) ⊢ d1 :: τ → Δ , Γ ⊢ d2 :: τ1 → Δ , Γ ⊢ [ d2 / x ] d1 :: τ
-
-  -- todo: there's a freshness concern here; i'm not sure if just
-  -- being apart from Γ is good enough. in POPL work it wasn't, we
-  -- wanted really aggressive freshness because of barendrecht's. we
-  -- might be able to generate that freshness from the first two
-  -- premises.
-  postulate
-    weaken-ana-expand : ∀{ Γ e τ e' τ' Δ x τ* } → x # Γ
-                                                → Γ ⊢ e ⇐ τ ~> e' :: τ' ⊣ Δ
-                                                → (Γ ,, (x , τ*)) ⊢ e ⇐ τ ~> e' :: τ' ⊣ Δ
