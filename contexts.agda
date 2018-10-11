@@ -139,7 +139,7 @@ module contexts where
   lem-dom-eq y n .n (π1 , π2) | Inl refl = refl
   lem-dom-eq y n m (π1 , π2) | Inr x = abort (somenotnone (! π2))
 
-  -- a singleton context formed with an inded apart from a context is
+  -- a singleton context formed with an index apart from a context is
   -- disjoint from that context
   lem-apart-sing-disj : {A : Set} {n : Nat} {a : A} {Γ : A ctx} →
                                      n # Γ →
@@ -154,6 +154,19 @@ module contexts where
       asd2 m (π1 , π2) with natEQ n m
       asd2 .n (π1 , π2) | Inl refl = abort (somenotnone (! π2 · apt ))
       asd2 m (π1 , π2) | Inr x = refl
+
+  -- the only index of a singleton context is in its domain
+  lem-domsingle : {A : Set} (p : Nat) (q : A) → dom (■ (p , q)) p
+  lem-domsingle p q with natEQ p p
+  lem-domsingle p q | Inl refl = q , refl
+  lem-domsingle p q | Inr x₁ = abort (x₁ refl)
+
+
+  -- dual of above
+  lem-disj-sing-apart : {A : Set} {n : Nat} {a : A} {Γ : A ctx} →
+                                     (■ (n , a)) ## Γ →
+                                     n # Γ
+  lem-disj-sing-apart {A} {n} {a} {Γ} (d1 , d2) = d1 n (lem-domsingle n a)
 
   -- the singleton context can only produce one non-none result
   lem-insingeq : {A : Set} {x x' : Nat} {τ τ' : A} →

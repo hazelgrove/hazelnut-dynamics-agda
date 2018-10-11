@@ -211,6 +211,32 @@ module disjointness where
   holes-disjoint-disjoint (HNEHole he1) he2 (HDNEHole x hd) = disjoint-parts (holes-disjoint-disjoint he1 he2 hd) (lem-apart-sing-disj (lem-apart-new he2 x))
   holes-disjoint-disjoint (HAp he1 he2) he3 (HDAp hd hd₁) = disjoint-parts (holes-disjoint-disjoint he1 he3 hd) (holes-disjoint-disjoint he2 he3 hd₁)
 
+  mutual
+    expand-apart-new-synth : ∀{Δ u Γ d e τ'} →
+                     u # Δ →
+                     Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
+                     hole-name-new e u
+    expand-apart-new-synth disj ESConst = HNConst
+    expand-apart-new-synth disj (ESVar x₁) = HNVar
+    expand-apart-new-synth disj (ESLam x₁ exp) = HNLam2 (expand-apart-new-synth disj exp)
+    expand-apart-new-synth {u = u} disj (ESAp {Δ1 = Δ1} {Δ2 = Δ2} x x₁ x₂ x₃ x₄ x₅) = HNAp (expand-apart-new-ana (apart-union1 Δ1 Δ2 u disj) x₄)
+                                                                                           (expand-apart-new-ana (apart-union2 Δ1 Δ2 u disj) x₅)
+    expand-apart-new-synth disj ESEHole = HNHole (flip (apart-noteq _ _ _ disj))
+    expand-apart-new-synth disj (ESNEHole {Δ = Δ} x exp) with lem-union-none {Γ = Δ} disj
+    ... | neq , apt = HNNEHole neq (expand-apart-new-synth apt exp)
+    expand-apart-new-synth disj (ESAsc x) = HNAsc (expand-apart-new-ana disj x)
+
+    expand-apart-new-ana : ∀{Δ u Γ d e τ τ'} →
+                     u # Δ →
+                     Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
+                     hole-name-new e u
+    expand-apart-new-ana disj (EALam x₁ x₂ exp) = HNLam1 (expand-apart-new-ana disj exp)
+    expand-apart-new-ana disj (EASubsume x x₁ x₂ x₃) = expand-apart-new-synth disj x₂
+    expand-apart-new-ana disj EAEHole = HNHole (flip (apart-noteq _ _ _ disj))
+    expand-apart-new-ana disj (EANEHole {Δ = Δ} x x₁) with lem-union-none {Γ = Δ} disj
+    ... | neq , apt = HNNEHole neq (expand-apart-new-synth apt x₁)
+
+
   -- the holes of an expression have the same domain as Δ; that is, we
   -- don't add any extra junk as we expand
   mutual
@@ -221,8 +247,10 @@ module disjointness where
     holes-delta-ana (HLam1 h) (EALam x₁ x₂ exp) = holes-delta-ana h exp
     holes-delta-ana h (EASubsume x x₁ x₂ x₃) = holes-delta-synth h x₂
     holes-delta-ana (HEHole {u = u}) EAEHole = dom-single u _ _
-    holes-delta-ana (HNEHole {u = u} h) (EANEHole x x₁) with (holes-delta-synth h x₁)
-    ... | ih = dom-union {!!} ih (dom-single u _ _ )
+    holes-delta-ana (HNEHole {u = u} h) (EANEHole x x₁) =
+                                  dom-union (##-comm (lem-apart-sing-disj (lem-apart-new h (expand-apart-new-synth (lem-disj-sing-apart (##-comm x)) x₁))))
+                                            (holes-delta-synth h x₁)
+                                            (dom-single u _ _ )
 
     holes-delta-synth : ∀{Γ H e τ d Δ} →
                     holes e H →
@@ -233,7 +261,9 @@ module disjointness where
     holes-delta-synth HVar (ESVar x₁) = dom-∅
     holes-delta-synth (HLam2 h) (ESLam x₁ exp) = holes-delta-synth h exp
     holes-delta-synth (HEHole {u = u}) ESEHole = dom-single u _ _
-    holes-delta-synth (HNEHole {u = u} h) (ESNEHole x exp) = dom-union {!!} (holes-delta-synth h exp) (dom-single u _ _)
+    holes-delta-synth (HNEHole {u = u} h) (ESNEHole x exp) = dom-union ((##-comm (lem-apart-sing-disj (lem-apart-new h (expand-apart-new-synth (lem-disj-sing-apart (##-comm x)) exp)))))
+                                                                       (holes-delta-synth h exp)
+                                                                       (dom-single u _ _)
     holes-delta-synth (HAp h h₁) (ESAp x x₁ x₂ x₃ x₄ x₅) = dom-union (holes-disjoint-disjoint h h₁ x) (holes-delta-ana h x₄) (holes-delta-ana h₁ x₅)
 
   -- if you expand two hole-disjoint expressions analytically, the Δs

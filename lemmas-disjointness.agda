@@ -36,12 +36,6 @@ module lemmas-disjointness where
       ds2 .u2 d | refl | Inl x₁ = abort (neq x₁)
       ds2 .u2 d | refl | Inr x₁ = refl
 
-  -- the only index of a singleton context is in its domain
-  lem-domsingle : {A : Set} (p : Nat) (q : A) → dom (■ (p , q)) p
-  lem-domsingle p q with natEQ p p
-  lem-domsingle p q | Inl refl = q , refl
-  lem-domsingle p q | Inr x₁ = abort (x₁ refl)
-
   apart-noteq : {A : Set} (p r : Nat) (q : A) → p # (■ (r , q)) → p ≠ r
   apart-noteq p r q apt with natEQ r p
   apart-noteq p .p q apt | Inl refl = abort (somenotnone apt)
