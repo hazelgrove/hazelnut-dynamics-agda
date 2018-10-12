@@ -7,7 +7,6 @@ open import lemmas-gcomplete
 open import lemmas-complete
 open import progress-checks
 open import finality
-open import preservation
 
 module cast-inert where
   -- if a term is compelete and well typed, then the casts inside are all
