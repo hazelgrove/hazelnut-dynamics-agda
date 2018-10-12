@@ -12,7 +12,7 @@ module core where
   -- arrow type constructors bind very tightly
   infixr 25  _==>_
 
-  -- expressions
+  -- external expressions
   data hexp : Set where
     c       : hexp
     _·:_    : hexp → htyp → hexp
@@ -32,7 +32,7 @@ module core where
       Id : (Γ : tctx) → env
       Subst : (d : dhexp) → (y : Nat) → env → env
 
-    -- expressions without ascriptions but with casts
+    -- internal expressions
     data dhexp : Set where
       c        : dhexp
       X        : Nat → dhexp
