@@ -160,7 +160,8 @@ module disjointness where
   -- proof technique here is explcitly *not* structurally inductive on the
   -- expansion judgement, because that approach relies on weakening of
   -- expansion, which is false because of the substitution contexts. giving
-  -- expansion weakning would take away unicity, so we avoid it.
+  -- expansion weakning would take away unicity, so we avoid the whole
+  -- question.
   expand-ana-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ1' τ2' Γ Δ1 Δ2 } →
           holes-disjoint e1 e2 →
           Γ ⊢ e1 ⇐ τ1 ~> e1' :: τ1' ⊣ Δ1 →
