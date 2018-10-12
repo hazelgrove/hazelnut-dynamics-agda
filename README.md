@@ -1,12 +1,55 @@
 # hazelnut-dynamics-agda
-This repository is the mechanization of the work described in our current
-[draft paper](https://github.com/hazelgrove/hazelnut-dynamics). It includes
-the full definitions of all the judgements and metafunctions in the draft
-and proofs of many of the theorems. It is a work in progress, so not every
-theorem is currently fully proven. The theorems listed in
-[all.agda](all.agda) and not commented out are proven in full, however.
+This repository is the mechanization of the work described in our [POPL19
+paper](https://github.com/hazelgrove/hazelnut-dynamics). It includes the
+full definitions of all the judgements and metafunctions and proofs of the
+theorems up through Section 3.
+
+# How To Check These Proofs
+
+These proofs are known to check under `Agda 2.5.1.1`. The most direct, if
+not easiest, option to check the proofs is to install that version of Agda,
+or one compatible with it, and run `agda all.agda` at the command line.
+
+Alternatively, we have provided a [Docker file](Dockerfile) to make it
+easier to build that environment and check the proofs. To use it, first
+install [Docker](https://www.docker.com/products/docker-desktop) and clone
+this repository to your local machine. Then, at a command line inside that
+clone, run `docker build -t hazel-popl19 .`. This may take a fair amount of
+time. When it finishes, run `docker run hazel-popl19`.
+
+# Where To Find Each Theorem
+
+All of the judgements defined in the paper are given in
+[core.agda](core.agda). The syntax is meant to mirror the on-paper notation
+as closely as possible, with some small variations because of the
+limitations of the language.
+
+For easy reference, the proofs for the theorems in order of appearance in
+the paper text can be found as follows:
+
+- Theorem 3.1, _Typed Expansion_, is in [typed-expansion.agda](typed-expansion.agda)
+- Theorem 3.2, _Type Assignment Unicity_, is in [type-assignment-unicity.agda](type-assignment-unicity.agda)
+- Theorem 3.3, _Expandability_, is in [expandability.agda](expandability.agda )
+- Theorem 3.4, _Expansion Generality_, is in [expansion-generality.agda](expansion-generality.agda)
+- Definition 3.5, _Identity Substitution_, is in [core.agda](core.agda) on
+  line
+- Definition 3.6, _Substitution Typing_, is in [core.agda](core.agda) on
+  line
+- Theorem 3.7, _Finality_, is in [finality.agda](finality.agda)
+- Lemma 3.8, _Grounding_, is in [grounding.agda](grounding.agda)
+- Theorem 3.9, _Preservation_, is in [preservation.agda](preservation.agda)
+- Theorem 3.10, _Progress_, is in [progress.agda](progress.agda)
+- Theorem 3.11, _Complete Expansion_, is in [complete-expansion.agda](complete-expansion.agda)
+- Theorem 3.12, _Complete Preservation_, is in [complete-preservation.agda](complete-preservation.agda)
+- Theorem 3.13, _Complete Progress_, is in [complete-progress.agda](complete-progress.agda)
 
 # Description of Agda Files
+
+The theorems do not quite tell the whole story: they all rely on a variety
+of lemmas and smaller claims or observations that aren't explicitly
+mentioned in the paper text. What follows is a rough description of what to
+expect from each source file; more detail is provided in the comments
+inside each.
 
 ## Prelude and Datatypes
 

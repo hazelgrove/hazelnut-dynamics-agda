@@ -18,7 +18,7 @@ open import structural-assumptions
 open import finality
 open import focus-formation
 open import ground-decidable
-open import matched-ground-invariant
+open import grounding
 
 --open import lemmas-subst-ta -- working here
 open import htype-decidable
