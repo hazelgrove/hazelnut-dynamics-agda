@@ -22,8 +22,8 @@ module dom-eq where
 
   -- the singleton contexts formed with any contents but the same index has
   -- the same domain
-  dom-single : {A B : Set} (x : Nat) (a : A) (b : B) → dom-eq (■ (x , a)) (■ (x , b))
-  dom-single {A} {B} x α β = (λ n x₁ → β , (ap1 (λ qq → (■ (qq , β)) n) (! (lem-dom-eq x₁)) · x∈■ _ _)) ,
+  dom-single : {A B : Set} (x : Nat) {a : A} {b : B} → dom-eq (■ (x , a)) (■ (x , b))
+  dom-single {A} {B} x {α} {β} = (λ n x₁ → β , (ap1 (λ qq → (■ (qq , β)) n) (! (lem-dom-eq x₁)) · x∈■ _ _)) ,
                              (λ n x₁ → α , (ap1 (λ qq → (■ (qq , α)) n) (! (lem-dom-eq x₁)) · x∈■ _ _))
 
   -- if two disjoint contexts each share a domain with two others, those
