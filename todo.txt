@@ -193,3 +193,69 @@ and trying to prove what they depended on syntactically rather than via weakenin
 
   exists-fresh (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) (Some x₂) = {!!}
   exists-fresh (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) None = {!!}
+
+
+---------------
+
+  -- there is always a natural number that's fresh for any expression,
+  -- possibly avoiding one in particular
+  data used-list : dhexp → List Nat → Set where
+    ULConst : used-list c []
+    ULVar   : ∀{x} → used-list (X x) (x :: [])
+    ULLam   : ∀{x τ d l} → used-list d l → used-list (·λ_[_]_ x τ d) (x :: l)
+    ULHole  :
+
+  exists-fresh : (d : dhexp) → Σ[ y ∈ Nat ] (fresh y d)
+  exists-fresh = {!!}
+
+  -- rename all x's into y's in d to produce d'
+  data rename : (x : Nat) → (y : Nat) → (d : dhexp) (d' : dhexp) → Set where
+    RConst       : ∀{x y} → rename x y c c
+    RVar1        : ∀{x y z} → x ≠ z → rename x y (X z) (X z)
+    RVar2        : ∀{x y} → rename x y (X x) (X y)
+  --  RLam         : ∀{x y τ e} → rename x y ? ?
+    -- REHole
+    -- RNEHole
+    -- RAp
+    -- RCast
+    -- RFailedCast
+
+  -- have to do something about the context in the typing judgement as well
+  -- and probably in the σs. bleh.
+
+  exists-rename : (x y : Nat) (d : dhexp) → Σ[ d' ∈ dhexp ](rename x y d d')
+  exists-rename z y c = c , RConst
+  exists-rename z y (X x) with natEQ z x
+  exists-rename z y (X .z) | Inl refl = X y , RVar2
+  exists-rename z y (X x) | Inr x₁ = X x , RVar1 x₁
+  exists-rename z y (·λ x [ x₁ ] d) = {!!}
+  exists-rename z y ⦇⦈⟨ x ⟩ = {!!}
+  exists-rename z y ⦇ d ⦈⟨ x ⟩ = {!!}
+  exists-rename z y (d ∘ d₁) = {!!}
+  exists-rename z y (d ⟨ x ⇒ x₁ ⟩) = {!!}
+  exists-rename z y (d ⟨ x ⇒⦇⦈⇏ x₁ ⟩) = {!!}
+
+  rename-ctx : {A : Set} → (x y : Nat) → (Γ : A ctx) → A ctx
+  rename-ctx x y Γ q with natEQ y q -- if you're asking about the new variable y,  it's now gonna be  whatever x was
+  rename-ctx x y Γ q | Inl x₁ = Γ x
+  rename-ctx x y Γ q | Inr x₁ = Γ q
+
+  -- is this the right direction? try to use it below; need that y # Γ, likely
+  rename-preserve : ∀{x y d d' Δ Γ τ} → fresh y d
+                                      → rename x y d d'
+                                      → Δ , (rename-ctx x y Γ) ⊢ d' :: τ
+                                      → Δ , Γ ⊢ d :: τ
+  rename-preserve = {!!}
+
+
+-----
+
+i think i actually can't do substitution the 312/abt way. you need a finite
+collection, not a context with a possibly infinite domain, of the variables
+that are used in a term so that you can pick something that's fresh
+throughout. i tried to do just one but then you need two, etc. this is, i
+think, ultimately not possible because freshness for dhexps is defined wrt
+freshness for environments which has a \Gamma in it that's a function so i
+can't iterate over all the elements of the domain and pick something that's
+bigger than all of them. so this idea works, just not with this exact
+representation of contexts.

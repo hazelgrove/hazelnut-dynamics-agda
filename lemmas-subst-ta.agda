@@ -1,5 +1,6 @@
 open import Prelude
 open import Nat
+open import List
 open import core
 open import contexts
 open import weakening
@@ -7,55 +8,6 @@ open import exchange
 open import lemmas-disjointness
 
 module lemmas-subst-ta where
-  -- there is always a natural number that's fresh for any expression,
-  -- possibly avoiding one in particular
-  exists-fresh : (d : dhexp) → Σ[ y ∈ Nat ] (fresh y d)
-  exists-fresh = {!!}
-
-  -- rename all x's into y's in d to produce d'
-  data rename : (x : Nat) → (y : Nat) → (d : dhexp) (d' : dhexp) → Set where
-    RConst       : ∀{x y} → rename x y c c
-    RVar1        : ∀{x y z} → x ≠ z → rename x y (X z) (X z)
-    RVar2        : ∀{x y} → rename x y (X x) (X y)
-  --  RLam         : ∀{x y τ e} → rename x y ? ?
-    -- REHole
-    -- RNEHole
-    -- RAp
-    -- RCast
-    -- RFailedCast
-
-  -- have to do something about the context in the typing judgement as well
-  -- and probably in the σs. bleh.
-
-  exists-rename : (x y : Nat) (d : dhexp) → Σ[ d' ∈ dhexp ](rename x y d d')
-  exists-rename z y c = c , RConst
-  exists-rename z y (X x) with natEQ z x
-  exists-rename z y (X .z) | Inl refl = X y , RVar2
-  exists-rename z y (X x) | Inr x₁ = X x , RVar1 x₁
-  exists-rename z y (·λ x [ x₁ ] d) = {!!}
-  exists-rename z y ⦇⦈⟨ x ⟩ = {!!}
-  exists-rename z y ⦇ d ⦈⟨ x ⟩ = {!!}
-  exists-rename z y (d ∘ d₁) = {!!}
-  exists-rename z y (d ⟨ x ⇒ x₁ ⟩) = {!!}
-  exists-rename z y (d ⟨ x ⇒⦇⦈⇏ x₁ ⟩) = {!!}
-
-  rename-ctx : {A : Set} → (x y : Nat) → (Γ : A ctx) → A ctx
-  rename-ctx x y Γ q with natEQ y q -- if you're asking about the new variable y,  it's now gonna be  whatever x was
-  rename-ctx x y Γ q | Inl x₁ = Γ x
-  rename-ctx x y Γ q | Inr x₁ = Γ q
-
-  -- is this the right direction? try to use it below; need that y # Γ, likely
-  rename-preserve : ∀{x y d d' Δ Γ τ} → (f : fresh y d) → rename x y d d' → Δ , Γ ⊢ d :: τ → Δ , (rename-ctx x y Γ) ⊢ d' :: τ
-  rename-preserve FConst RConst TAConst = TAConst
-  rename-preserve (FVar x₂) (RVar1 x₁) (TAVar x₃) = TAVar {!!}
-  rename-preserve (FVar x₂) RVar2 (TAVar x₃) = TAVar {!!}
-  rename-preserve (FLam x₂ f) re (TALam x₃ wt) = {!!}
-  rename-preserve (FHole x₂) re (TAEHole x₃ x₄) = {!!}
-  rename-preserve (FNEHole x₂ f) re (TANEHole x₃ wt x₄) = {!!}
-  rename-preserve (FAp f f₁) re (TAAp wt wt₁) = {!!}
-  rename-preserve (FCast f) re (TACast wt x₂) = {!!}
-  rename-preserve (FFailedCast f) re (TAFailedCast wt x₂ x₃ x₄) = {!!}
-
   lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } →
                   x # Γ →
                   Δ , Γ ,, (x , τ1) ⊢ d1 :: τ →

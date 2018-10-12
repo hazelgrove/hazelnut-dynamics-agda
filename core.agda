@@ -34,14 +34,14 @@ module core where
 
     -- internal expressions
     data dhexp : Set where
-      c        : dhexp
-      X        : Nat → dhexp
-      ·λ_[_]_  : Nat → htyp → dhexp → dhexp
-      ⦇⦈⟨_⟩    : (Nat × env) → dhexp
-      ⦇_⦈⟨_⟩   : dhexp → (Nat × env) → dhexp
-      _∘_      : dhexp → dhexp → dhexp
-      _⟨_⇒_⟩   : dhexp → htyp → htyp → dhexp
-      _⟨_⇒⦇⦈⇏_⟩   : dhexp → htyp → htyp → dhexp
+      c         : dhexp
+      X         : Nat → dhexp
+      ·λ_[_]_   : Nat → htyp → dhexp → dhexp
+      ⦇⦈⟨_⟩     : (Nat × env) → dhexp
+      ⦇_⦈⟨_⟩    : dhexp → (Nat × env) → dhexp
+      _∘_       : dhexp → dhexp → dhexp
+      _⟨_⇒_⟩    : dhexp → htyp → htyp → dhexp
+      _⟨_⇒⦇⦈⇏_⟩ : dhexp → htyp → htyp → dhexp
 
   -- convenient notation for chaining together two agreeable casts
   _⟨_⇒_⇒_⟩ : dhexp → htyp → htyp → htyp → dhexp
