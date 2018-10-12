@@ -7,10 +7,6 @@ open import synth-unicity
 open import lemmas-matching
 
 module expansion-unicity where
-  -- todo: move to a lemmas file
-  ⦇⦈≠arr : ∀{t1 t2} → t1 ==> t2 == ⦇⦈ → ⊥
-  ⦇⦈≠arr ()
-
   mutual
     expansion-unicity-synth : {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} {d1 d2 : dhexp} {Δ1 Δ2 : hctx} →
                             Γ ⊢ e ⇒ τ1 ~> d1 ⊣ Δ1 →
