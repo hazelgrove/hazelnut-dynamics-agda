@@ -9,47 +9,24 @@ module dom-eq where
   -- main definition: two contexts are domain-equal when they produce (Some
   -- x) on the same indices. note that the context need not map indices to
   -- even the same type of contents; this is just a property about the
-  -- domains.
+  -- domains. the proofs that follow establish that this property is
+  -- respected in the appropriate ways by the context maniupulation
+  -- operators we use in the other judgements.
   dom-eq : {A B : Set} → A ctx → B ctx → Set
   dom-eq {A} {B} C1 C2 = ((n : Nat) → Σ[ x ∈ A ]( C1 n == Some x) → (Σ[ y ∈ B ](C2 n == Some y)))×
                          ((n : Nat) → Σ[ y ∈ B ]( C2 n == Some y) → (Σ[ x ∈ A ](C1 n == Some x)))
-
 
   -- the empty context has the same domain as itself
   dom-∅ : {A B : Set} → dom-eq (λ _ → None {A}) (λ _ → None {B})
   dom-∅ {A} {B} = (λ n x → abort (somenotnone (! (π2 x)))) , (λ n x → abort (somenotnone (! (π2 x))))
 
-  -- todo: this seems like i would have proven it already? otw move to lemmas
-  singleton-eq : {A : Set} {a : A} → ∀{x n y} → (■ (x , a)) n == Some y → x == n
-  singleton-eq {A} {a} {x} {n} {y} eq with natEQ x n
-  singleton-eq eq | Inl x₁ = x₁
-  singleton-eq eq | Inr x₁ = abort (somenotnone (! eq))
-
-  -- todo: this seems like i would have proven it already? otw move to lemmas
-  singleton-lookup-refl : {A : Set} {n : Nat} {β : A} → (■ (n , β)) n == Some β
-  singleton-lookup-refl {n = n} with natEQ n n
-  singleton-lookup-refl | Inl refl = λ {β} → refl
-  singleton-lookup-refl | Inr x = abort (x refl)
-
   -- the singleton contexts formed with any contents but the same index has
   -- the same domain
   dom-single : {A B : Set} (x : Nat) (a : A) (b : B) → dom-eq (■ (x , a)) (■ (x , b))
-  dom-single {A} {B} x α β = (λ n x₁ → β , (ap1 (λ qq → (■ (qq , β)) n) (singleton-eq (π2 x₁)) · singleton-lookup-refl)) ,
-                             (λ n x₁ → α , (ap1 (λ qq → (■ (qq , α)) n) (singleton-eq (π2 x₁)) · singleton-lookup-refl))
+  dom-single {A} {B} x α β = (λ n x₁ → β , (ap1 (λ qq → (■ (qq , β)) n) (! (lem-dom-eq x₁)) · x∈■ _ _)) ,
+                             (λ n x₁ → α , (ap1 (λ qq → (■ (qq , α)) n) (! (lem-dom-eq x₁)) · x∈■ _ _))
 
-  -- todo: this seems like i would have proven it already? otw move to lemmas
-  lem-dom-union-apt1 : {A : Set} {Δ1 Δ2 : A ctx} {x : Nat} {y : A} → x # Δ1 → ((Δ1 ∪ Δ2) x == Some y) → (Δ2 x == Some y)
-  lem-dom-union-apt1 {A} {Δ1} {Δ2} {x} {y} apt xin with Δ1 x
-  lem-dom-union-apt1 apt xin | Some x₁ = abort (somenotnone apt)
-  lem-dom-union-apt1 apt xin | None = xin
-
-  -- todo: this seems like i would have proven it already? otw move to lemmas
-  lem-dom-union-apt2 : {A : Set} {Δ1 Δ2 : A ctx} {x : Nat} {y : A} → x # Δ2 → ((Δ1 ∪ Δ2) x == Some y) → (Δ1 x == Some y)
-  lem-dom-union-apt2 {A} {Δ1} {Δ2} {x} {y} apt xin with Δ1 x
-  lem-dom-union-apt2 apt xin | Some x₁ = xin
-  lem-dom-union-apt2 apt xin | None = abort (somenotnone (! xin · apt))
-
-  -- if two disjoint sets each share a domain with two other sets, those
+  -- if two disjoint contexts each share a domain with two others, those
   -- are also disjoint.
   dom-eq-disj : {A B : Set} {Δ1 Δ2 : A ctx} {H1 H2 : B ctx} →
               H1 ## H2 →

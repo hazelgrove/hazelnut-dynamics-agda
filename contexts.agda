@@ -29,15 +29,14 @@ module contexts where
   _∈_ : {A : Set} (p : Nat × A) → (Γ : A ctx) → Set
   (x , y) ∈ Γ = (Γ x) == Some y
 
-  -- this packages up an appeal to context memebership into a form
-  -- that lets us retain more information in some settings, and
-  -- therefore be able to use things like context unicity
+  -- this packages up an appeal to context memebership into a form that
+  -- lets us retain more information
   ctxindirect : {A : Set} (Γ : A ctx) (n : Nat) → Σ[ a ∈ A ] (Γ n == Some a) + Γ n == None
   ctxindirect Γ n with Γ n
   ctxindirect Γ n | Some x = Inl (x , refl)
   ctxindirect Γ n | None = Inr refl
 
-  -- apartness for contexts, so that we can follow barendregt's convention
+  -- apartness for contexts
   _#_ : {A : Set} (n : Nat) → (Γ : A ctx) → Set
   x # Γ = (Γ x) == None
 
@@ -55,7 +54,8 @@ module contexts where
   ctxunicity _ _ | Inr x≠x = abort (x≠x refl)
 
   -- warning: this is union, but it assumes WITHOUT CHECKING that the
-  -- domains are disjoint.
+  -- domains are disjoint. this is inherently asymmetric, and that's
+  -- reflected throughout the development that follows
   _∪_ : {A : Set} → A ctx → A ctx → A ctx
   (C1 ∪ C2) x with C1 x
   (C1 ∪ C2) x | Some x₁ = Some x₁
@@ -67,20 +67,25 @@ module contexts where
   (■ (x , a)) .x | Inl refl = Some a
   ... | Inr _ = None
 
-  -- add a new binding to the context, clobbering anything that might have
-  -- been there before.
+  -- context extension
   _,,_ : {A : Set} → A ctx → (Nat × A) → A ctx
   (Γ ,, (x , t)) = Γ ∪ (■ (x , t))
 
   infixl 10 _,,_
 
   -- used below in proof of ∪ commutativity and associativity
-  lem-dom-union1 : {A : Set} {C1 C2 : A ctx} {x : Nat} → C1 ## C2 → dom C1 x → (C1 ∪ C2) x == C1 x
+  lem-dom-union1 : {A : Set} {C1 C2 : A ctx} {x : Nat} →
+                                    C1 ## C2 →
+                                    dom C1 x →
+                                    (C1 ∪ C2) x == C1 x
   lem-dom-union1 {A} {C1} {C2} {x} (d1 , d2) D with C1 x
   lem-dom-union1 (d1 , d2) D | Some x₁ = refl
   lem-dom-union1 (d1 , d2) D | None = abort (somenotnone (! (π2 D)))
 
-  lem-dom-union2 : {A : Set} {C1 C2 : A ctx} {x : Nat} → C1 ## C2 → dom C1 x → (C2 ∪ C1) x == C1 x
+  lem-dom-union2 : {A : Set} {C1 C2 : A ctx} {x : Nat} →
+                                    C1 ## C2 →
+                                    dom C1 x →
+                                    (C2 ∪ C1) x == C1 x
   lem-dom-union2 {A} {C1} {C2} {x} (d1 , d2) D with ctxindirect C2 x
   lem-dom-union2 {A} {C1} {C2} {x} (d1 , d2) D | Inl x₁ = abort (somenotnone (! (π2 x₁) · d1 x D ))
   lem-dom-union2 {A} {C1} {C2} {x} (d1 , d2) D | Inr x₁ with C2 x
@@ -132,12 +137,12 @@ module contexts where
 
   -- if an index is in the domain of a singleton context, it's the only
   -- index in the context
-  lem-dom-eq : {A : Set} (y : A) (n m : Nat) →
+  lem-dom-eq : {A : Set} {y : A} {n m : Nat} →
                                  dom (■ (m , y)) n →
                                  n == m
-  lem-dom-eq y n m (π1 , π2) with natEQ m n
-  lem-dom-eq y n .n (π1 , π2) | Inl refl = refl
-  lem-dom-eq y n m (π1 , π2) | Inr x = abort (somenotnone (! π2))
+  lem-dom-eq {n = n} {m = m} (π1 , π2) with natEQ m n
+  lem-dom-eq (π1 , π2) | Inl refl = refl
+  lem-dom-eq (π1 , π2) | Inr x = abort (somenotnone (! π2))
 
   -- a singleton context formed with an index apart from a context is
   -- disjoint from that context
@@ -147,7 +152,7 @@ module contexts where
   lem-apart-sing-disj {A} {n} {a} {Γ} apt = asd1 , asd2
     where
       asd1 : (n₁ : Nat) → dom (■ (n , a)) n₁ → n₁ # Γ
-      asd1 m d with lem-dom-eq _ _ _ d
+      asd1 m d with lem-dom-eq  d
       asd1 .n d | refl = apt
 
       asd2 : (n₁ : Nat) → dom Γ n₁ → n₁ # (■ (n , a))
@@ -172,7 +177,7 @@ module contexts where
   lem-insingeq : {A : Set} {x x' : Nat} {τ τ' : A} →
                               (■ (x , τ)) x' == Some τ' →
                               τ == τ'
-  lem-insingeq {A} {x} {x'} {τ} {τ'} eq with lem-dom-eq τ x' x (τ' , eq)
+  lem-insingeq {A} {x} {x'} {τ} {τ'} eq with lem-dom-eq (τ' , eq)
   lem-insingeq {A} {x} {.x} {τ} {τ'} eq | refl with natEQ x x
   lem-insingeq refl | refl | Inl refl = refl
   lem-insingeq eq | refl | Inr x₁ = abort (somenotnone (! eq))
@@ -293,3 +298,14 @@ module contexts where
       guts x | Inl x₁ | Inr x₂ = case2 x x₂ x₁
       guts x | Inr x₁ | Inl x₂ = case34 x x₁
       guts x | Inr x₁ | Inr x₂ = case34 x x₁
+
+  -- if x is apart from either part of a union, the answer comes from the other one
+  lem-dom-union-apt1 : {A : Set} {Δ1 Δ2 : A ctx} {x : Nat} {y : A} → x # Δ1 → ((Δ1 ∪ Δ2) x == Some y) → (Δ2 x == Some y)
+  lem-dom-union-apt1 {A} {Δ1} {Δ2} {x} {y} apt xin with Δ1 x
+  lem-dom-union-apt1 apt xin | Some x₁ = abort (somenotnone apt)
+  lem-dom-union-apt1 apt xin | None = xin
+
+  lem-dom-union-apt2 : {A : Set} {Δ1 Δ2 : A ctx} {x : Nat} {y : A} → x # Δ2 → ((Δ1 ∪ Δ2) x == Some y) → (Δ1 x == Some y)
+  lem-dom-union-apt2 {A} {Δ1} {Δ2} {x} {y} apt xin with Δ1 x
+  lem-dom-union-apt2 apt xin | Some x₁ = xin
+  lem-dom-union-apt2 apt xin | None = abort (somenotnone (! xin · apt))

@@ -103,12 +103,6 @@ module disjointness where
   lem-apart-new (HNEHole {u = u'} {H = H} h) (HNNEHole  {u = u}  x hn) = apart-parts H (■ (u' , <>)) u (lem-apart-new h hn) (apart-singleton (flip x))
   lem-apart-new (HAp {H1 = H1} {H2 = H2} h h₁) (HNAp hn hn₁) = apart-parts H1 H2 _ (lem-apart-new h hn) (lem-apart-new h₁ hn₁)
 
-  -- todo: this seems like i would have proven it already? otw move to lemmas
-  lem-dom-apt : {A : Set} {G : A ctx} {x y : Nat} → x # G → dom G y → x ≠ y
-  lem-dom-apt {x = x} {y = y} apt dom with natEQ x y
-  lem-dom-apt apt dom | Inl refl = abort (somenotnone (! (π2 dom) · apt))
-  lem-dom-apt apt dom | Inr x₁ = x₁
-
   -- if the holes of two expressions are disjoint, so are their collections
   -- of hole names
   holes-disjoint-disjoint : ∀{ e1 e2 H1 H2} →
@@ -152,8 +146,9 @@ module disjointness where
     ... | neq , apt = HNNEHole neq (expand-apart-new-synth apt x₁)
 
 
-  -- the holes of an expression have the same domain as Δ; that is, we
-  -- don't add anything we don't find in the term during expansion
+  -- the holes of an expression have the same domain as the context
+  -- produced during expansion; that is, we don't add anything we don't
+  -- find in the term during expansion.
   mutual
     holes-delta-ana : ∀{Γ H e τ d τ' Δ} →
                     holes e H →
@@ -181,12 +176,18 @@ module disjointness where
                                                                        (dom-single u _ _)
     holes-delta-synth (HAp h h₁) (ESAp x x₁ x₂ x₃ x₄ x₅) = dom-union (holes-disjoint-disjoint h h₁ x) (holes-delta-ana h x₄) (holes-delta-ana h₁ x₅)
 
+  -- this is the main result of this file:
+  --
   -- if you expand two hole-disjoint expressions analytically, the Δs
-  -- produces are disjoint. note that this is likely true for synthetic
-  -- expansions in much the same way, but we only prove "half" of the usual
-  -- pair here. the proof technique is *not* structurally inductive on the
-  -- expansion judgement, because of the missing weakness property, so this
-  -- proof is somewhat unusual compared to the rest in this development.
+  -- produced are disjoint.
+  --
+  -- note that this is likely true for synthetic expansions in much the
+  -- same way, but we only prove half of the usual pair here because that's
+  -- all we need to establish expansion generality and expandability. the
+  -- proof technique here is explcitly *not* structurally inductive on the
+  -- expansion judgement, because that approach relies on weakening of
+  -- expansion, which is false because of the substitution contexts. giving
+  -- expansion weakning would take away unicity, so we avoid it.
   expand-ana-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ1' τ2' Γ Δ1 Δ2 } →
           holes-disjoint e1 e2 →
           Γ ⊢ e1 ⇐ τ1 ~> e1' :: τ1' ⊣ Δ1 →

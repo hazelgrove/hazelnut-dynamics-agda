@@ -25,13 +25,13 @@ module lemmas-disjointness where
   disjoint-singles {_} {x} {y} {u1} {u2} neq = ds1 , ds2
     where
       ds1 : (n : Nat) → dom (■ (u1 , x)) n → n # (■ (u2 , y))
-      ds1 n d with lem-dom-eq _ _ _ d
+      ds1 n d with lem-dom-eq d
       ds1 .u1 d | refl with natEQ u2 u1
       ds1 .u1 d | refl | Inl xx = abort (neq (! xx))
       ds1 .u1 d | refl | Inr x₁ = refl
 
       ds2 : (n : Nat) → dom (■ (u2 , y)) n → n # (■ (u1 , x))
-      ds2 n d with lem-dom-eq _ _ _ d
+      ds2 n d with lem-dom-eq d
       ds2 .u2 d | refl with natEQ u1 u2
       ds2 .u2 d | refl | Inl x₁ = abort (neq x₁)
       ds2 .u2 d | refl | Inr x₁ = refl
@@ -124,3 +124,9 @@ module lemmas-disjointness where
 
       du22 : (n : Nat) → dom Δ n → n # Γ2
       du22 n dom = apart-union2 Γ1 Γ2 n (ud2 n dom)
+
+  -- if x isn't in a context and y is then they can't be equal
+  lem-dom-apt : {A : Set} {G : A ctx} {x y : Nat} → x # G → dom G y → x ≠ y
+  lem-dom-apt {x = x} {y = y} apt dom with natEQ x y
+  lem-dom-apt apt dom | Inl refl = abort (somenotnone (! (π2 dom) · apt))
+  lem-dom-apt apt dom | Inr x₁ = x₁
