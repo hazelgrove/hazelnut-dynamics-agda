@@ -10,11 +10,12 @@ open import lemmas-complete
 
 module complete-progress where
 
+  -- todo: explain this
   data okc : (d : dhexp) (Δ : hctx) → Set where
     V : ∀{d Δ} → d val → okc d Δ
     S : ∀{d Δ} → Σ[ d' ∈ dhexp ] (d ↦ d') → okc d Δ
 
-  -- if an arrow is disequal, it disagrees in the first or second argument
+  -- todo: lemma file if an arrow is disequal, it disagrees in the first or second argument
   ne-factor : ∀{τ1 τ2 τ3 τ4} → (τ1 ==> τ2) ≠ (τ3 ==> τ4) → (τ1 ≠ τ3) + (τ2 ≠ τ4)
   ne-factor {τ1} {τ2} {τ3} {τ4} ne with htype-dec τ1 τ3 | htype-dec τ2 τ4
   ne-factor ne | Inl refl | Inl refl = Inl (λ x → ne refl)
