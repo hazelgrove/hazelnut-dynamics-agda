@@ -248,7 +248,6 @@ module core where
     GHole : ⦇⦈ ==> ⦇⦈ ground
 
   mutual
-    -- todo: clean up above, dom?
     data _,_⊢_:s:_ : hctx → tctx → env → tctx → Set where
       STAId : ∀{Γ Γ' Δ} →
                   ((x : Nat) (τ : htyp) → (x , τ) ∈ Γ' → (x , τ) ∈ Γ) →

@@ -49,3 +49,5 @@ open import weakening
 open import exchange
 open import lemmas-freshness
 open import contraction
+open import holes-disjoint-checks
+open import dom-eq
