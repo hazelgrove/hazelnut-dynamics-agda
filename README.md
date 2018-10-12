@@ -32,9 +32,9 @@ the paper text can be found as follows:
 - Theorem 3.3, _Expandability_, is in [expandability.agda](expandability.agda )
 - Theorem 3.4, _Expansion Generality_, is in [expansion-generality.agda](expansion-generality.agda)
 - Definition 3.5, _Identity Substitution_, is in [core.agda](core.agda) on
-  line
+  line 31 TODO CHECK THIS BEFORE SUBMISSION
 - Definition 3.6, _Substitution Typing_, is in [core.agda](core.agda) on
-  line
+  line 251 TODO CHECK THIS BEFORE SUBMISSION
 - Theorem 3.7, _Finality_, is in [finality.agda](finality.agda)
 - Lemma 3.8, _Grounding_, is in [grounding.agda](grounding.agda)
 - Theorem 3.9, _Preservation_, is in [preservation.agda](preservation.agda)

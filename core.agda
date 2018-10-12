@@ -28,6 +28,7 @@ module core where
   tctx = htyp ctx
 
   mutual
+    -- identity substitution, substitition environments
     data env : Set where
       Id : (Γ : tctx) → env
       Subst : (d : dhexp) → (y : Nat) → env → env
