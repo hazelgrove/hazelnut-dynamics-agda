@@ -1,11 +1,3 @@
-copied from all.agda so that i can ignore comments
--------------------------------------------------
-open import structural-assumptions -- prove everything in here and then remove this file
-open import structural -- this too, really
-open import typed-expansion -- in complete-expansion
-open import preservation -- in complete-preservation
-
-
 deadline madness code snippets that i removed
 ---------------------------------------------
 -- this goes in preservation.agda
@@ -40,37 +32,6 @@ deadline madness code snippets that i removed
   lem-subst (TACast D1 x₁) D2 = TACast (lem-subst D1 D2) x₁
   lem-subst (TAFailedCast D1 x₁ x₂ x₃) D2 = TAFailedCast (lem-subst D1 D2) x₁ x₂ x₃
 
--- this goes in typed expansion (or maybe a lemmas file)
-
-  lem-weakenΔ1 : ∀{Δ1 Δ2 Γ d τ} → Δ1 ## Δ2 → Δ1 , Γ ⊢ d :: τ → (Δ1 ∪ Δ2) , Γ ⊢ d :: τ
-  lem-weakenΔ1 d TAConst = TAConst
-  lem-weakenΔ1 d (TAVar x₁) = TAVar x₁
-  lem-weakenΔ1 d (TALam D) = TALam (lem-weakenΔ1 d D)
-  lem-weakenΔ1 d (TAAp D D₁) = TAAp (lem-weakenΔ1 d D) (lem-weakenΔ1 d D₁)
-  lem-weakenΔ1 d (TAEHole {Δ = Δ} x y) = TAEHole (x∈∪l Δ _ _ _ x) (subst-weaken {!!} y)
-  lem-weakenΔ1 d (TANEHole {Δ = Δ} D x y) = TANEHole (x∈∪l Δ _ _ _ D) (lem-weakenΔ1 d x) (subst-weaken {!!} y)
-  lem-weakenΔ1 d (TACast D x) = TACast (lem-weakenΔ1 d D) x
-  lem-weakenΔ1 d (TAFailedCast x y z w) = TAFailedCast (lem-weakenΔ1 d x) y z w
-
-
--- complete expansion
-
------
-version of this lemma where the union in ,, is flipped; probably useless
--- ctx-top : {A : Set} → (Γ : A ctx) (n : Nat) (a : A) → (n , a) ∈ (Γ ,, (n , a))
--- ctx-top Γ n a with natEQ n n
--- ctx-top Γ n a | Inl refl = refl
--- ctx-top Γ n a | Inr x = abort (x refl)
-
-
-ditto
--- gcomp-extend {Γ} {τ} {x} gc tc x₁ τ₁ x₂ with natEQ x₁ x
--- gcomp-extend gc tc x τ₁ x₃ | Inl refl with natEQ x x
--- gcomp-extend gc tc x τ refl | Inl refl | Inl refl = tc
--- gcomp-extend gc tc x τ₁ x₃ | Inl refl | Inr x₁ = gc x τ₁ x₃
--- gcomp-extend {Γ} {τ} {x} gc tc x₁ τ₁ x₃ | Inr x₂ with natEQ x x₁
--- gcomp-extend gc tc x τ₁ refl | Inr x₃ | Inl refl = tc
--- gcomp-extend gc tc x₁ τ₁ x₄ | Inr x₃ | Inr x₂ = gc x₁ τ₁ x₄
 
 more removed code
 --------------------------------------------------------
@@ -104,28 +65,6 @@ more removed code
 
 
 ----- working on freshness in weakening; some promising but i think wrong
-    -- older versions below
-    -- weaken-synth : ∀{ x Γ e τ τ'} → x # Γ → Γ ⊢ e => τ → (Γ ,, (x , τ')) ⊢ e => τ
-    -- weaken-synth apt SConst = SConst
-    -- weaken-synth apt (SAsc x₁) = SAsc (weaken-ana apt x₁)
-    -- weaken-synth {x = y} {Γ = Γ} apt (SVar {τ = τ} {x = x} x₁) = SVar (x∈∪l Γ (■ (y , _)) x τ x₁)
-    -- weaken-synth apt (SAp x₁ wt x₂ x₃) = SAp x₁ (weaken-synth apt wt) x₂ (weaken-ana apt x₃)
-    -- weaken-synth apt SEHole = SEHole
-    -- weaken-synth apt (SNEHole x₁ wt) = SNEHole x₁ (weaken-synth apt wt)
-    -- weaken-synth {x = y} {Γ = Γ} apt (SLam {x = x} x₂ wt) with natEQ x y
-    -- weaken-synth {x = y} {Γ = Γ} apt (SLam x₃ wt) | Inl refl = {!!}
-    -- weaken-synth {x = y} {Γ = Γ} apt (SLam {x = x} x₃ wt) | Inr x₂ =
-    --              SLam (apart-parts Γ (■ (y , _)) x x₃ (apart-singleton x₂))
-    --                   (exchange-synth {Γ = Γ} x₂ (weaken-synth (apart-parts Γ (■ (x , _)) y apt (apart-singleton (flip x₂))) wt))
-
-    -- weaken-ana : ∀{x Γ e τ τ'} → x # Γ → Γ ⊢ e <= τ → (Γ ,, (x , τ')) ⊢ e <= τ
-    -- weaken-ana apt (ASubsume x₁ x₂) = ASubsume (weaken-synth {!!} x₁) x₂
-    -- weaken-ana {x = y} {Γ = Γ} apt (ALam {x = x} x₂ x₃ wt) with natEQ x y
-    -- weaken-ana apt (ALam x₃ x₄ wt) | Inl refl = {!!}
-    -- weaken-ana {x = y} {Γ = Γ} apt (ALam {x = x} x₃ x₄ wt) | Inr x₂ =
-    --              ALam (apart-parts Γ (■ (y , _)) x x₃ (apart-singleton x₂)) x₄
-    --                   (exchange-ana {Γ = Γ} x₂ (weaken-ana (apart-parts Γ (■ (x , _)) y apt (apart-singleton (flip x₂))) wt))
-
 
 -----
 
@@ -219,3 +158,38 @@ and trying to prove what they depended on syntactically rather than via weakenin
     -- expand-synth-disjoint (HDHole x) ESEHole ana = ##-comm (expand-new-disjoint-ana x ana)
     -- expand-synth-disjoint (HDNEHole x hd) (ESNEHole x₁ synth) ana = disjoint-parts (expand-synth-disjoint hd synth ana) (##-comm (expand-new-disjoint-ana x ana))
     -- expand-synth-disjoint (HDAp hd hd₁) (ESAp x x₁ x₂ x₃ x₄ x₅) ana = disjoint-parts (expand-ana-disjoint hd x₄ ana) (expand-ana-disjoint hd₁ x₅ ana)
+
+
+------------------------------
+  data maybeneq : Maybe Nat → Nat → Set where
+    MNeqN : ∀{x} → maybeneq None x
+    MNeqS : ∀{x y} → x ≠ y →  maybeneq (Some y) x
+
+
+  exists-fresh c (Some x) with different-nat x
+  ... | x' , neq = x' , FConst , MNeqS neq
+  exists-fresh c None = Z , FConst , MNeqN
+
+  exists-fresh (X x) (Some y) with different-nat2 x y
+  ... | z , neq1 , neq2 = z , (FVar neq2) , (MNeqS neq1)
+  exists-fresh (X x) None with different-nat x
+  ... | x' , neq = x' , FVar neq , MNeqN
+
+  exists-fresh (·λ x [ τ ] d) (Some x₂) = {!!}
+  exists-fresh (·λ x [ τ ] d) None with exists-fresh d (Some x)
+  exists-fresh (·λ x [ τ ] d) None | new , fr , MNeqS x₁ = new , FLam x₁ fr , MNeqN
+
+  exists-fresh ⦇⦈⟨ u , σ ⟩ (Some x₁) = {!!}
+  exists-fresh ⦇⦈⟨ u , σ ⟩ None = {!!}
+
+  exists-fresh ⦇ d ⦈⟨ u , σ ⟩ (Some x₁) = {!!}
+  exists-fresh ⦇ d ⦈⟨ u , σ ⟩ None = {!!}
+
+  exists-fresh (d ∘ d₁) (Some x) = {!!}
+  exists-fresh (d ∘ d₁) None = {!!}
+
+  exists-fresh (d ⟨ τ1 ⇒ τ2 ⟩) (Some x₂) = {!!}
+  exists-fresh (d ⟨ τ1 ⇒ τ2 ⟩) None = {!!}
+
+  exists-fresh (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) (Some x₂) = {!!}
+  exists-fresh (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) None = {!!}
