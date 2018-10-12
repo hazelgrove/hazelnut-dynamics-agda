@@ -15,7 +15,9 @@ easier to build that environment and check the proofs. To use it, first
 install [Docker](https://www.docker.com/products/docker-desktop) and clone
 this repository to your local machine. Then, at a command line inside that
 clone, run `docker build -t hazel-popl19 .`. This may take a fair amount of
-time. When it finishes, run `docker run hazel-popl19`.
+time. When it finishes, run `docker run hazel-popl19`. This should take
+less than a minute, output lot of lines that begin with `Finished .. ` or
+`Checking ..`, and end with the line `Finished all.` to indicate success.
 
 # Where To Find Each Theorem
 
