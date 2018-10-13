@@ -20,4 +20,11 @@ module structural-assumptions where
 
   -- partial proof in lemmas-subst-ta
   postulate
-    lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } → x # Γ → Δ , Γ ,, (x , τ1) ⊢ d1 :: τ → Δ , Γ ⊢ d2 :: τ1 → Δ , Γ ⊢ [ d2 / x ] d1 :: τ
+    lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } →
+                  x # Γ →
+                  binders-disjoint d1 d2 →
+                  binders-unique d1 →
+                  binders-unique d2 →
+                  Δ , Γ ,, (x , τ1) ⊢ d1 :: τ →
+                  Δ , Γ ⊢ d2 :: τ1 →
+                  Δ , Γ ⊢ [ d2 / x ] d1 :: τ

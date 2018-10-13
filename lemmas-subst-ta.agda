@@ -8,91 +8,54 @@ open import exchange
 open import lemmas-disjointness
 
 module lemmas-subst-ta where
-  -- todo: add a premise from a new judgement like holes disjoint that
-  -- classifies pairs of dhexps that share no variable names
-  -- whatsoever. that should imply freshness here. then propagate that
-  -- change to preservation. this is morally what α-equiv lets us do in a
-  -- real setting.
+  lem-bd-lam :  ∀{ d1 x τ1 d} → binders-disjoint d1 (·λ_[_]_ x  τ1 d) → binders-disjoint d1 d
+  lem-bd-lam = {!!}
 
-  -- the variable name x does not appear in the term d
-  data var-name-new : (x : Nat) (d : ihexp) → Set where
-    VNNConst : ∀{x} → var-name-new x c
-    VNNVar : ∀{x y} → x ≠ y → var-name-new x (X y)
-    VNNLam2 : ∀{x d y τ} → x ≠ y
-                         → var-name-new x d
-                         → var-name-new x (·λ_[_]_ y τ d)
-    VNNHole : ∀{x u σ} → var-name-new x (⦇⦈⟨ u , σ ⟩) -- todo something about σ?
-    VNNNEHole : ∀{x u σ d } →
-                var-name-new x d →
-                var-name-new x (⦇ d ⦈⟨ u , σ ⟩) -- todo something about σ?
-    VNNAp : ∀{ x d1 d2 } →
-           var-name-new x d1 →
-           var-name-new x d2 →
-           var-name-new x (d1 ∘ d2)
-    VNNCast : ∀{x d τ1 τ2} → var-name-new x d → var-name-new x (d ⟨ τ1 ⇒ τ2 ⟩)
-    VNNFailedCast : ∀{x d τ1 τ2} → var-name-new x d → var-name-new x (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
+  binders-fresh : ∀{ Δ Γ d1 d2 τ y} → Δ , Γ ⊢ d2 :: τ
+                                    → binders-unique d1 -- todo: ditch
+                                    → binders-unique d2
+                                    → binders-disjoint d1 d2
+                                    → unbound-in y d2
+                                    → Γ y == None
+                                    → fresh y d2
+  binders-fresh TAConst bu1 BUHole bd UBConst apt = FConst
+  binders-fresh {y = y}  (TAVar {x = x} x₁) bu1 BUVar bd UBVar apt with natEQ y x
+  binders-fresh (TAVar x₂) bu1 BUVar bd UBVar apt | Inl refl = abort (somenotnone (! x₂ · apt))
+  binders-fresh (TAVar x₂) bu1 BUVar bd UBVar apt | Inr x₁ = FVar x₁
+  binders-fresh {y = y} (TALam {x = x} x₁ wt) bu1 bu2 bd ub apt  with natEQ y x
+  binders-fresh (TALam x₂ wt) bu1 bu2 bd (UBLam2 x₁ ub) apt | Inl refl = abort (x₁ refl)
+  binders-fresh {Γ = Γ} (TALam {x = x} x₂ wt) bu1 (BULam bu2 x₃) bd (UBLam2 x₄ ub) apt | Inr x₁ =  FLam x₁ (binders-fresh wt bu1 bu2 (lem-bd-lam bd) ub (apart-extend1 Γ x₄ apt))
+  binders-fresh (TAAp wt wt₁) bu1 bu2 bd ub apt = {!!}
+  binders-fresh (TAEHole x x₁) bu1 bu2 bd ub apt = {!!}
+  binders-fresh (TANEHole x wt x₁) bu1 bu2 bd ub apt = {!!}
+  binders-fresh (TACast wt x) bu1 bu2 bd ub apt = {!!}
+  binders-fresh (TAFailedCast wt x x₁ x₂) bu1 bu2 bd ub apt = {!!}
 
-  -- two terms that do not share any hole names
-  data var-names-disjoint : (d1 : ihexp) → (d2 : ihexp) → Set where
-    VNDConst : ∀{d} → var-names-disjoint c d
-    VNDVar : ∀{x d} → var-names-disjoint (X x) d
-    VNDLam : ∀{x τ d1 d2} → var-names-disjoint d1 d2
-                          → var-names-disjoint (·λ_[_]_ x τ d1) d2
-    VNDHole : ∀{u σ d2} → var-name-new u d2
-                        → var-names-disjoint (⦇⦈⟨ u , σ ⟩) d2 -- todo something about σ?
-    VNDNEHole : ∀{u σ d1 d2} → var-name-new u d2
-                             → var-names-disjoint d1 d2
-                             → var-names-disjoint (⦇ d1 ⦈⟨ u , σ ⟩) d2 -- todo something about σ?
-    VNDAp :  ∀{d1 d2 d3} → var-names-disjoint d1 d3
-                         → var-names-disjoint d2 d3
-                         → var-names-disjoint (d1 ∘ d2) d3
-
-  -- all the variable names in the term are unique
-  data var-names-unique : ihexp → Set where
-    VNUHole : var-names-unique c
-    VNUVar : ∀{x} → var-names-unique (X x)
-    VNULam : {x : Nat} {τ : htyp} {d : ihexp} → var-names-unique d
-                                              → var-name-new x d
-                                              → var-names-unique (·λ_[_]_ x τ d)
-    VNUEHole : ∀{u σ} → var-names-unique (⦇⦈⟨ u , σ ⟩) -- todo something about σ?
-    VNUNEHole : ∀{u σ d} → var-names-unique d
-                         → var-names-unique (⦇ d ⦈⟨ u , σ ⟩) -- todo something about σ?
-    VNUAp : ∀{d1 d2} → var-names-unique d1
-                     → var-names-unique d2
-                     → var-names-disjoint d1 d2
-                     → var-names-unique (d1 ∘ d2)
-    VNUCast : ∀{d τ1 τ2} → var-names-unique d
-                         → var-names-unique (d ⟨ τ1 ⇒ τ2 ⟩)
-    VNUFailedCast : ∀{d τ1 τ2} → var-names-unique d
-                               → var-names-unique (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
-
-  unique-fresh : ∀{Δ Γ d τ y} → Δ , Γ ⊢ d :: τ → y # Γ → var-names-unique d → fresh y d
-  unique-fresh TAConst apt VNUHole = FConst
-  unique-fresh (TAVar x₁) apt VNUVar = {!!}
-  unique-fresh (TALam x₁ wt) apt (VNULam unq x₂) = {!!}
-  unique-fresh (TAAp wt wt₁) apt (VNUAp unq unq₁ x) = {!!}
-  unique-fresh (TAEHole x x₁) apt VNUEHole = {!!}
-  unique-fresh (TANEHole x wt x₁) apt (VNUNEHole unq) = {!!}
-  unique-fresh (TACast wt x) apt (VNUCast unq) = {!!}
-  unique-fresh (TAFailedCast wt x x₁ x₂) apt (VNUFailedCast unq) = {!!}
+  -- todo
+  lem : ∀{y τ d d2} → binders-disjoint (·λ_[_]_ y τ d) d2 → unbound-in y d2
+  lem (BDLam bd x₁) = x₁
 
   lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } →
                   x # Γ →
+                  binders-disjoint d1 d2 →
+                  binders-unique d1 →
+                  binders-unique d2 →
                   Δ , Γ ,, (x , τ1) ⊢ d1 :: τ →
                   Δ , Γ ⊢ d2 :: τ1 →
                   Δ , Γ ⊢ [ d2 / x ] d1 :: τ
-  lem-subst apt TAConst wt2 = TAConst
-  lem-subst {x = x} apt (TAVar {x = x'} x₂) wt2 with natEQ x' x
-  lem-subst {Γ = Γ} apt (TAVar x₃) wt2 | Inl refl with lem-apart-union-eq {Γ = Γ} apt x₃
-  lem-subst apt (TAVar x₃) wt2 | Inl refl | refl = wt2
-  lem-subst {Γ = Γ} apt (TAVar x₃) wt2 | Inr x₂ = TAVar (lem-neq-union-eq {Γ = Γ} x₂ x₃)
-  lem-subst {Δ = Δ} {Γ = Γ} {x = x} {d2 = d2} x#Γ (TALam {x = y} {τ1 = τ1} {d = d} {τ2 = τ2} x₂ wt1) wt2
+  lem-subst apt bd bu1 bu2  TAConst wt2 = TAConst
+  lem-subst {x = x} apt bd bu1 bu2  (TAVar {x = x'} x₂) wt2 with natEQ x' x
+  lem-subst {Γ = Γ} apt bd bu1 bu2 (TAVar x₃) wt2 | Inl refl with lem-apart-union-eq {Γ = Γ} apt x₃
+  lem-subst apt bd bu1 bu2  (TAVar x₃) wt2 | Inl refl | refl = wt2
+  lem-subst {Γ = Γ} apt bd bu1 bu2  (TAVar x₃) wt2 | Inr x₂ = TAVar (lem-neq-union-eq {Γ = Γ} x₂ x₃)
+  lem-subst {Δ = Δ} {Γ = Γ} {x = x} {d2 = d2} x#Γ bd bu1 bu2 (TALam {x = y} {τ1 = τ1} {d = d} {τ2 = τ2} x₂ wt1) wt2
     with lem-union-none {Γ = Γ} x₂
   ... |  x≠y , y#Γ with natEQ y x
   ... | Inl eq = abort (x≠y (! eq))
-  ... | Inr _  = TALam y#Γ (lem-subst {Δ = Δ} {Γ = Γ ,, (y , τ1)} {x = x} {d1 = d} (apart-extend1 Γ x≠y x#Γ) (exchange-ta-Γ {Γ = Γ} x≠y wt1) (weaken-ta {!!} wt2))
-  lem-subst apt (TAAp wt1 wt2) wt3 = TAAp (lem-subst apt wt1 wt3) (lem-subst apt wt2 wt3)
-  lem-subst apt (TAEHole inΔ sub) wt2 = TAEHole inΔ (STASubst sub wt2)
-  lem-subst apt (TANEHole x₁ wt1 x₂) wt2 = TANEHole x₁ (lem-subst apt wt1 wt2) (STASubst x₂ wt2)
-  lem-subst apt (TACast wt1 x₁) wt2 = TACast (lem-subst apt wt1 wt2) x₁
-  lem-subst apt (TAFailedCast wt1 x₁ x₂ x₃) wt2 = TAFailedCast (lem-subst apt wt1 wt2) x₁ x₂ x₃
+  ... | Inr _  = TALam y#Γ (lem-subst {Δ = Δ} {Γ = Γ ,, (y , τ1)} {x = x} {d1 = d} (apart-extend1 Γ x≠y x#Γ) {!!} {!!} {!!} (exchange-ta-Γ {Γ = Γ} x≠y wt1)
+                                         (weaken-ta (binders-fresh wt2 bu1 bu2 bd (lem bd) y#Γ) wt2))
+  lem-subst apt bd bu1 bu2 (TAAp wt1 wt2) wt3 = TAAp (lem-subst apt {!!} {!!} {!!} wt1 wt3) (lem-subst apt {!!} {!!} {!!} wt2 wt3)
+  lem-subst apt bd bu1 bu2 (TAEHole inΔ sub) wt2 = TAEHole inΔ (STASubst sub wt2)
+  lem-subst apt bd bu1 bu2 (TANEHole x₁ wt1 x₂) wt2 = TANEHole x₁ (lem-subst apt {!!} {!!} {!!} wt1 wt2) (STASubst x₂ wt2)
+  lem-subst apt bd bu1 bu2 (TACast wt1 x₁) wt2 = TACast (lem-subst apt {!!} {!!} {!!} wt1 wt2) x₁
+  lem-subst apt bd bu1 bu2 (TAFailedCast wt1 x₁ x₂ x₃) wt2 = TAFailedCast (lem-subst apt {!!} {!!} {!!} wt1 wt2) x₁ x₂ x₃

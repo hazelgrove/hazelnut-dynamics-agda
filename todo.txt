@@ -259,3 +259,25 @@ freshness for environments which has a \Gamma in it that's a function so i
 can't iterate over all the elements of the domain and pick something that's
 bigger than all of them. so this idea works, just not with this exact
 representation of contexts.
+
+----
+
+  -- the variable name x does not appear in the term d
+  -- data var-name-new : (x : Nat) (d : ihexp) → Set where
+  --   VNNConst : ∀{x} → var-name-new x c
+  --   VNNVar : ∀{x y} → x ≠ y → var-name-new x (X y)
+  --   VNNLam2 : ∀{x d y τ} → x ≠ y
+  --                        → var-name-new x d
+  --                        → var-name-new x (·λ_[_]_ y τ d)
+  --   VNNHole : ∀{x u σ} → var-name-new-σ x σ
+  --                      → var-name-new x (⦇⦈⟨ u , σ ⟩)
+  --   VNNNEHole : ∀{x u σ d }
+  --               → var-name-new-σ x σ
+  --               → var-name-new x d
+  --               → var-name-new x (⦇ d ⦈⟨ u , σ ⟩)
+  --   VNNAp : ∀{ x d1 d2 } →
+  --          var-name-new x d1 →
+  --          var-name-new x d2 →
+  --          var-name-new x (d1 ∘ d2)
+  --   VNNCast : ∀{x d τ1 τ2} → var-name-new x d → var-name-new x (d ⟨ τ1 ⇒ τ2 ⟩)
+  --   VNNFailedCast : ∀{x d τ1 τ2} → var-name-new x d → var-name-new x (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)

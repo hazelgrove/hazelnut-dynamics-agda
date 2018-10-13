@@ -52,29 +52,39 @@ module preservation where
 
   -- instruction transitions preserve type
   preserve-trans : ∀{ Δ Γ d τ d' } →
+            binders-unique d →
             Δ , Γ ⊢ d :: τ →
             d →> d' →
             Δ , Γ ⊢ d' :: τ
-  preserve-trans TAConst ()
-  preserve-trans (TAVar x₁) ()
-  preserve-trans (TALam _ ta) ()
-  preserve-trans (TAAp (TALam apt ta) ta₁) ITLam = lem-subst apt ta ta₁
-  preserve-trans (TAAp (TACast ta TCRefl) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ TCRefl)) TCRefl
-  preserve-trans (TAAp (TACast ta (TCArr x x₁)) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ (~sym x))) x₁
-  preserve-trans (TAEHole x x₁) ()
-  preserve-trans (TANEHole x ta x₁) ()
-  preserve-trans (TACast ta x) (ITCastID) = ta
-  preserve-trans (TACast (TACast ta x) x₁) (ITCastSucceed x₂) = ta
-  preserve-trans (TACast ta x) (ITGround (MGArr x₁)) = TACast (TACast ta (TCArr TCHole1 TCHole1)) TCHole1
-  preserve-trans (TACast ta TCHole2) (ITExpand (MGArr x₁)) = TACast (TACast ta TCHole2) (TCArr TCHole2 TCHole2)
-  preserve-trans (TACast (TACast ta x) x₁) (ITCastFail w y z) = TAFailedCast ta w y z
-  preserve-trans (TAFailedCast x y z q) ()
+  preserve-trans bd TAConst ()
+  preserve-trans bd (TAVar x₁) ()
+  preserve-trans bd (TALam _ ta) ()
+  preserve-trans (BUAp (BULam bd x₁) bd₁ (BDLam x₂ x₃)) (TAAp (TALam apt ta) ta₁) ITLam = lem-subst apt x₂ bd bd₁ ta ta₁
+  preserve-trans bd (TAAp (TACast ta TCRefl) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ TCRefl)) TCRefl
+  preserve-trans bd (TAAp (TACast ta (TCArr x x₁)) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ (~sym x))) x₁
+  preserve-trans bd (TAEHole x x₁) ()
+  preserve-trans bd (TANEHole x ta x₁) ()
+  preserve-trans bd (TACast ta x) (ITCastID) = ta
+  preserve-trans bd (TACast (TACast ta x) x₁) (ITCastSucceed x₂) = ta
+  preserve-trans bd (TACast ta x) (ITGround (MGArr x₁)) = TACast (TACast ta (TCArr TCHole1 TCHole1)) TCHole1
+  preserve-trans bd (TACast ta TCHole2) (ITExpand (MGArr x₁)) = TACast (TACast ta TCHole2) (TCArr TCHole2 TCHole2)
+  preserve-trans bd (TACast (TACast ta x) x₁) (ITCastFail w y z) = TAFailedCast ta w y z
+  preserve-trans bd (TAFailedCast x y z q) ()
+
+  lem-bd-ε : ∀{ d ε d0} → d == ε ⟦ d0 ⟧ → binders-unique d → binders-unique d0
+  lem-bd-ε FHOuter bd = bd
+  lem-bd-ε (FHAp1 eps) (BUAp bd bd₁ x) = lem-bd-ε eps bd
+  lem-bd-ε (FHAp2 eps) (BUAp bd bd₁ x) = lem-bd-ε eps bd₁
+  lem-bd-ε (FHNEHole eps) (BUNEHole bd x) = lem-bd-ε eps bd
+  lem-bd-ε (FHCast eps) (BUCast bd) = lem-bd-ε eps bd
+  lem-bd-ε (FHFailedCast eps) (BUFailedCast bd) = lem-bd-ε eps bd
 
   -- this is the main preservation theorem, gluing together the above
   preservation : {Δ : hctx} {d d' : ihexp} {τ : htyp} {Γ : tctx} →
+             binders-unique d →
              Δ , Γ ⊢ d :: τ →
              d ↦ d' →
              Δ , Γ ⊢ d' :: τ
-  preservation D (Step x x₁ x₂)
+  preservation bd D (Step x x₁ x₂)
     with wt-filling D x
-  ... | (_ , wt) = wt-different-fill x D wt (preserve-trans wt x₁) x₂
+  ... | (_ , wt) = wt-different-fill x D wt (preserve-trans (lem-bd-ε x bd) wt x₁) x₂

@@ -56,8 +56,9 @@ module complete-preservation where
   cp-rhs () (TAFailedCast wt x x₁ x₂) stp
 
   complete-preservation : ∀{d τ d' Δ} →
+             binders-unique d →
              d dcomplete →
              Δ , ∅ ⊢ d :: τ →
              d ↦ d' →
              (Δ , ∅ ⊢ d' :: τ) × (d' dcomplete)
-  complete-preservation dc wt stp = preservation wt stp , cp-rhs dc wt stp
+  complete-preservation bd dc wt stp = preservation bd wt stp , cp-rhs dc wt stp

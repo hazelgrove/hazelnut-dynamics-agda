@@ -509,3 +509,86 @@ module core where
     FRHEHole : ∀{x u} → freshh x (⦇⦈[ u ])
     FRHNEHole : ∀{x u e} → freshh x e → freshh x (⦇ e ⦈[ u ])
     FRHAp : ∀{x e1 e2} → freshh x e1 → freshh x e2 → freshh x (e1 ∘ e2)
+
+  -- x is not used in a binding site in d
+  mutual
+    data unbound-in-σ : Nat → env → Set where
+      UBσId : ∀{x Γ} → unbound-in-σ x (Id Γ)
+      UBσSubst : ∀{x d y σ} → unbound-in x d
+                            → unbound-in-σ x σ
+                            → unbound-in-σ x (Subst d y σ)
+
+    data unbound-in : (x : Nat) (d : ihexp) → Set where
+      UBConst : ∀{x} → unbound-in x c
+      UBVar : ∀{x y} → unbound-in x (X y)
+      UBLam2 : ∀{x d y τ} → x ≠ y
+                           → unbound-in x d
+                           → unbound-in x (·λ_[_]_ y τ d)
+      UBHole : ∀{x u σ} → unbound-in-σ x σ
+                         → unbound-in x (⦇⦈⟨ u , σ ⟩)
+      UBNEHole : ∀{x u σ d }
+                  → unbound-in-σ x σ
+                  → unbound-in x d
+                  → unbound-in x (⦇ d ⦈⟨ u , σ ⟩)
+      UBAp : ∀{ x d1 d2 } →
+            unbound-in x d1 →
+            unbound-in x d2 →
+            unbound-in x (d1 ∘ d2)
+      UBCast : ∀{x d τ1 τ2} → unbound-in x d → unbound-in x (d ⟨ τ1 ⇒ τ2 ⟩)
+      UBFailedCast : ∀{x d τ1 τ2} → unbound-in x d → unbound-in x (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
+
+
+  mutual
+    data binders-disjoint-σ : env → ihexp → Set where
+      BDσId : ∀{Γ d} → binders-disjoint-σ (Id Γ) d
+      BDσSubst : ∀{d1 d2 y σ} → binders-disjoint d1 d2
+                              → binders-disjoint-σ σ d2
+                              → binders-disjoint-σ (Subst d1 y σ) d2
+
+    -- two terms that do not share any binders
+    data binders-disjoint : (d1 : ihexp) → (d2 : ihexp) → Set where
+      BDConst : ∀{d} → binders-disjoint c d
+      BDVar : ∀{x d} → binders-disjoint (X x) d
+      BDLam : ∀{x τ d1 d2} → binders-disjoint d1 d2
+                            → unbound-in x d2
+                            → binders-disjoint (·λ_[_]_ x τ d1) d2
+      BDHole : ∀{u σ d2} → binders-disjoint-σ σ d2
+                         → binders-disjoint (⦇⦈⟨ u , σ ⟩) d2
+      BDNEHole : ∀{u σ d1 d2} → binders-disjoint-σ σ d2
+                              → binders-disjoint d1 d2
+                              → binders-disjoint (⦇ d1 ⦈⟨ u , σ ⟩) d2
+      BDAp :  ∀{d1 d2 d3} → binders-disjoint d1 d3
+                          → binders-disjoint d2 d3
+                          → binders-disjoint (d1 ∘ d2) d3
+      BDCast : ∀{d1 d2 τ1 τ2} → binders-disjoint d1 d2 → binders-disjoint (d1 ⟨ τ1 ⇒ τ2 ⟩) d2
+      BDFailedCast : ∀{d1 d2 τ1 τ2} → binders-disjoint d1 d2 → binders-disjoint (d1 ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) d2
+
+  mutual
+  -- each term has to be binders unique, and they have to be pairwise
+  -- disjoint with the collection of bound vars
+    data binders-unique-σ : env → Set where
+      BUσId : ∀{Γ} → binders-unique-σ (Id Γ)
+      BUσSubst : ∀{d y σ} → binders-unique d
+                          → binders-disjoint-σ σ d
+                          → binders-unique-σ (Subst d y σ)
+
+    -- all the variable names in the term are unique
+    data binders-unique : ihexp → Set where
+      BUHole : binders-unique c
+      BUVar : ∀{x} → binders-unique (X x)
+      BULam : {x : Nat} {τ : htyp} {d : ihexp} → binders-unique d
+                                                → unbound-in x d
+                                                → binders-unique (·λ_[_]_ x τ d)
+      BUEHole : ∀{u σ} → binders-unique-σ σ
+                        → binders-unique (⦇⦈⟨ u , σ ⟩)
+      BUNEHole : ∀{u σ d} → binders-unique d
+                           → binders-unique-σ σ
+                           → binders-unique (⦇ d ⦈⟨ u , σ ⟩)
+      BUAp : ∀{d1 d2} → binders-unique d1
+                       → binders-unique d2
+                       → binders-disjoint d1 d2
+                       → binders-unique (d1 ∘ d2)
+      BUCast : ∀{d τ1 τ2} → binders-unique d
+                           → binders-unique (d ⟨ τ1 ⇒ τ2 ⟩)
+      BUFailedCast : ∀{d τ1 τ2} → binders-unique d
+                                 → binders-unique (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
