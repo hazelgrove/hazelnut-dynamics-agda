@@ -15,7 +15,7 @@ module lemmas-subst-ta where
   -- real setting.
 
   -- the variable name x does not appear in the term d
-  data var-name-new : (x : Nat) (d : dhexp) → Set where
+  data var-name-new : (x : Nat) (d : ihexp) → Set where
     VNNConst : ∀{x} → var-name-new x c
     VNNVar : ∀{x y} → x ≠ y → var-name-new x (X y)
     VNNLam2 : ∀{x d y τ} → x ≠ y
@@ -33,7 +33,7 @@ module lemmas-subst-ta where
     VNNFailedCast : ∀{x d τ1 τ2} → var-name-new x d → var-name-new x (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
 
   -- two terms that do not share any hole names
-  data var-names-disjoint : (d1 : dhexp) → (d2 : dhexp) → Set where
+  data var-names-disjoint : (d1 : ihexp) → (d2 : ihexp) → Set where
     VNDConst : ∀{d} → var-names-disjoint c d
     VNDVar : ∀{x d} → var-names-disjoint (X x) d
     VNDLam : ∀{x τ d1 d2} → var-names-disjoint d1 d2
@@ -48,10 +48,10 @@ module lemmas-subst-ta where
                          → var-names-disjoint (d1 ∘ d2) d3
 
   -- all the variable names in the term are unique
-  data var-names-unique : dhexp → Set where
+  data var-names-unique : ihexp → Set where
     VNUHole : var-names-unique c
     VNUVar : ∀{x} → var-names-unique (X x)
-    VNULam : {x : Nat} {τ : htyp} {d : dhexp} → var-names-unique d
+    VNULam : {x : Nat} {τ : htyp} {d : ihexp} → var-names-unique d
                                               → var-name-new x d
                                               → var-names-unique (·λ_[_]_ x τ d)
     VNUEHole : ∀{u σ} → var-names-unique (⦇⦈⟨ u , σ ⟩) -- todo something about σ?

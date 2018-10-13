@@ -31,21 +31,21 @@ module core where
     -- identity substitution, substitition environments
     data env : Set where
       Id : (Γ : tctx) → env
-      Subst : (d : dhexp) → (y : Nat) → env → env
+      Subst : (d : ihexp) → (y : Nat) → env → env
 
     -- internal expressions
-    data dhexp : Set where
-      c         : dhexp
-      X         : Nat → dhexp
-      ·λ_[_]_   : Nat → htyp → dhexp → dhexp
-      ⦇⦈⟨_⟩     : (Nat × env) → dhexp
-      ⦇_⦈⟨_⟩    : dhexp → (Nat × env) → dhexp
-      _∘_       : dhexp → dhexp → dhexp
-      _⟨_⇒_⟩    : dhexp → htyp → htyp → dhexp
-      _⟨_⇒⦇⦈⇏_⟩ : dhexp → htyp → htyp → dhexp
+    data ihexp : Set where
+      c         : ihexp
+      X         : Nat → ihexp
+      ·λ_[_]_   : Nat → htyp → ihexp → ihexp
+      ⦇⦈⟨_⟩     : (Nat × env) → ihexp
+      ⦇_⦈⟨_⟩    : ihexp → (Nat × env) → ihexp
+      _∘_       : ihexp → ihexp → ihexp
+      _⟨_⇒_⟩    : ihexp → htyp → htyp → ihexp
+      _⟨_⇒⦇⦈⇏_⟩ : ihexp → htyp → htyp → ihexp
 
   -- convenient notation for chaining together two agreeable casts
-  _⟨_⇒_⇒_⟩ : dhexp → htyp → htyp → htyp → dhexp
+  _⟨_⇒_⇒_⟩ : ihexp → htyp → htyp → htyp → ihexp
   d ⟨ t1 ⇒ t2 ⇒ t3 ⟩ = d ⟨ t1 ⇒ t2 ⟩ ⟨ t2 ⇒ t3 ⟩
 
   -- type consistency
@@ -172,7 +172,7 @@ module core where
     ECAp : ∀{e1 e2} → e1 ecomplete → e2 ecomplete → (e1 ∘ e2) ecomplete
 
   -- those internal expressions without holes
-  data _dcomplete : dhexp → Set where
+  data _dcomplete : ihexp → Set where
     DCVar : ∀{x} → (X x) dcomplete
     DCConst : c dcomplete
     DCLam : ∀{x τ d} → d dcomplete → τ tcomplete → (·λ x [ τ ] d) dcomplete
@@ -185,7 +185,7 @@ module core where
 
   -- those internal expressions where every cast is the identity cast and
   -- there are no failed casts
-  data cast-id : dhexp → Set where
+  data cast-id : ihexp → Set where
     CIConst  : cast-id c
     CIVar    : ∀{x} → cast-id (X x)
     CILam    : ∀{x τ d} → cast-id d → cast-id (·λ x [ τ ] d)
@@ -197,7 +197,7 @@ module core where
   -- expansion
   mutual
     -- synthesis
-    data _⊢_⇒_~>_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (Δ : hctx) → Set where
+    data _⊢_⇒_~>_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : ihexp) (Δ : hctx) → Set where
       ESConst : ∀{Γ} → Γ ⊢ c ⇒ b ~> c ⊣ ∅
       ESVar   : ∀{Γ x τ} → (x , τ) ∈ Γ →
                          Γ ⊢ X x ⇒ τ ~> X x ⊣ ∅
@@ -224,7 +224,7 @@ module core where
                  Γ ⊢ (e ·: τ) ⇒ τ ~> d ⟨ τ' ⇒ τ ⟩ ⊣ Δ
 
     -- analysis
-    data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : dhexp) (τ' : htyp) (Δ : hctx) → Set where
+    data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : ihexp) (τ' : htyp) (Δ : hctx) → Set where
       EALam : ∀{Γ x τ τ1 τ2 e d τ2' Δ } →
               (x # Γ) →
               τ ▸arr τ1 ==> τ2 →
@@ -260,7 +260,7 @@ module core where
                Δ , Γ ⊢ Subst d y σ :s: Γ'
 
     -- type assignment
-    data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (d : dhexp) (τ : htyp) → Set where
+    data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (d : ihexp) (τ : htyp) → Set where
       TAConst : ∀{Δ Γ} → Δ , Γ ⊢ c :: b
       TAVar : ∀{Δ Γ x τ} → (x , τ) ∈ Γ → Δ , Γ ⊢ X x :: τ
       TALam : ∀{ Δ Γ x τ1 d τ2} →
@@ -296,7 +296,7 @@ module core where
   -- todo: if substitution lemma is hard to prove, maybe get a premise that
   -- it's final; analagous to "value substitution". or define it
   -- judgementally instead of as a function.
-  [_/_]_ : dhexp → Nat → dhexp → dhexp
+  [_/_]_ : ihexp → Nat → ihexp → ihexp
   [ d / y ] c = c
   [ d / y ] X x
     with natEQ x y
@@ -313,17 +313,17 @@ module core where
   [ d / y ] (d' ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩
 
   -- applying an environment to an expression
-  apply-env : env → dhexp → dhexp
+  apply-env : env → ihexp → ihexp
   apply-env (Id Γ) d = d
   apply-env (Subst d y σ) d' = [ d / y ] ( apply-env σ d')
 
   -- values
-  data _val : (d : dhexp) → Set where
+  data _val : (d : ihexp) → Set where
     VConst : c val
     VLam   : ∀{x τ d} → (·λ x [ τ ] d) val
 
   -- boxed values
-  data _boxedval : (d : dhexp) → Set where
+  data _boxedval : (d : ihexp) → Set where
     BVVal : ∀{d} → d val → d boxedval
     BVArrCast : ∀{ d τ1 τ2 τ3 τ4 } →
                 τ1 ==> τ2 ≠ τ3 ==> τ4 →
@@ -333,10 +333,10 @@ module core where
 
   mutual
     -- indeterminate forms
-    data _indet : (d : dhexp) → Set where
+    data _indet : (d : ihexp) → Set where
       IEHole : ∀{u σ} → ⦇⦈⟨ u , σ ⟩ indet
       INEHole : ∀{d u σ} → d final → ⦇ d ⦈⟨ u , σ ⟩ indet
-      IAp : ∀{d1 d2} → ((τ1 τ2 τ3 τ4 : htyp) (d1' : dhexp) →
+      IAp : ∀{d1 d2} → ((τ1 τ2 τ3 τ4 : htyp) (d1' : ihexp) →
                        d1 ≠ (d1' ⟨(τ1 ==> τ2) ⇒ (τ3 ==> τ4)⟩)) →
                        d1 indet →
                        d2 final →
@@ -350,7 +350,7 @@ module core where
                         d indet →
                         d ⟨ τ ⇒  ⦇⦈ ⟩ indet
       ICastHoleGround : ∀ { d τ } →
-                        ((d' : dhexp) (τ' : htyp) → d ≠ (d' ⟨ τ' ⇒ ⦇⦈ ⟩)) →
+                        ((d' : ihexp) (τ' : htyp) → d ≠ (d' ⟨ τ' ⇒ ⦇⦈ ⟩)) →
                         d indet →
                         τ ground →
                         d ⟨ ⦇⦈ ⇒ τ ⟩ indet
@@ -362,7 +362,7 @@ module core where
                     d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩ indet
 
     -- final expressions
-    data _final : (d : dhexp) → Set where
+    data _final : (d : ihexp) → Set where
       FBoxed : ∀{d} → d boxedval → d final
       FIndet : ∀{d} → d indet    → d final
 
@@ -372,8 +372,8 @@ module core where
   -- evaluation contexts
   data ectx : Set where
     ⊙ : ectx
-    _∘₁_ : ectx → dhexp → ectx
-    _∘₂_ : dhexp → ectx → ectx
+    _∘₁_ : ectx → ihexp → ectx
+    _∘₂_ : ihexp → ectx → ectx
     ⦇_⦈⟨_⟩ : ectx → (Nat × env ) → ectx
     _⟨_⇒_⟩ : ectx → htyp → htyp → ectx
     _⟨_⇒⦇⦈⇏_⟩ : ectx → htyp → htyp → ectx
@@ -406,7 +406,7 @@ module core where
                    ε ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩ evalctx
 
   -- d is the result of filling the hole in ε with d'
-  data _==_⟦_⟧ : (d : dhexp) (ε : ectx) (d' : dhexp) → Set where
+  data _==_⟦_⟧ : (d : ihexp) (ε : ectx) (d' : ihexp) → Set where
     FHOuter : ∀{d} → d == ⊙ ⟦ d ⟧
     FHAp1 : ∀{d1 d1' d2 ε} →
            d1 == ε ⟦ d1' ⟧ →
@@ -432,7 +432,7 @@ module core where
             (τ1 ==> τ2) ▸gnd (⦇⦈ ==> ⦇⦈)
 
   -- instruction transition judgement
-  data _→>_ : (d d' : dhexp) → Set where
+  data _→>_ : (d d' : ihexp) → Set where
     ITLam : ∀{ x τ d1 d2 } →
             -- d2 final → -- red brackets
             ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1)
@@ -463,7 +463,7 @@ module core where
                (d ⟨ ⦇⦈ ⇒ τ ⟩) →> (d ⟨ ⦇⦈ ⇒ τ' ⇒ τ ⟩)
 
   -- single step (in contextual evaluation sense)
-  data _↦_ : (d d' : dhexp) → Set where
+  data _↦_ : (d d' : ihexp) → Set where
     Step : ∀{ d d0 d' d0' ε} →
            d == ε ⟦ d0 ⟧ →
            d0 →> d0' →
@@ -471,7 +471,7 @@ module core where
            d ↦ d'
 
   -- reflexive transitive closure of single steps into multi steps
-  data _↦*_ : (d d' : dhexp) → Set where
+  data _↦*_ : (d d' : ihexp) → Set where
     MSRefl : ∀{d} → d ↦* d
     MSStep : ∀{d d' d''} →
                  d ↦ d' →
@@ -489,7 +489,7 @@ module core where
                            → envfresh x (Subst d y σ)
 
     -- ... for inernal expressions
-    data fresh : Nat → dhexp → Set where
+    data fresh : Nat → ihexp → Set where
       FConst : ∀{x} → fresh x c
       FVar   : ∀{x y} → x ≠ y → fresh x (X y)
       FLam   : ∀{x y τ d} → x ≠ y → fresh x d → fresh x (·λ y [ τ ] d)

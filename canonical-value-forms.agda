@@ -19,7 +19,7 @@ module canonical-value-forms where
   canonical-value-forms-arr : ∀{Δ d τ1 τ2} →
                               Δ , ∅ ⊢ d :: (τ1 ==> τ2) →
                               d val →
-                              Σ[ x ∈ Nat ] Σ[ d' ∈ dhexp ]
+                              Σ[ x ∈ Nat ] Σ[ d' ∈ ihexp ]
                                 ((d == (·λ x [ τ1 ] d')) ×
                                  (Δ , ■ (x , τ1) ⊢ d' :: τ2))
   canonical-value-forms-arr (TAVar x₁) ()

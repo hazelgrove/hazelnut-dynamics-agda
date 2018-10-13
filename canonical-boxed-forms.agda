@@ -15,13 +15,13 @@ module canonical-boxed-forms where
 
   -- this type gives somewhat nicer syntax for the output of the canonical
   -- forms lemma for boxed values at arrow type
-  data cbf-arr : (Δ : hctx) (d : dhexp) (τ1 τ2 : htyp) → Set where
+  data cbf-arr : (Δ : hctx) (d : ihexp) (τ1 τ2 : htyp) → Set where
     CBFLam : ∀{Δ d τ1 τ2} →
-      (Σ[ x ∈ Nat ] Σ[ d' ∈ dhexp ]
+      (Σ[ x ∈ Nat ] Σ[ d' ∈ ihexp ]
          (d == (·λ x [ τ1 ] d') × Δ , ■ (x , τ1) ⊢ d' :: τ2))
       → cbf-arr Δ d τ1 τ2
     CBFCastArr : ∀{Δ d τ1 τ2} →
-      (Σ[ d' ∈ dhexp ] Σ[ τ1' ∈ htyp ] Σ[ τ2' ∈ htyp ]
+      (Σ[ d' ∈ ihexp ] Σ[ τ1' ∈ htyp ] Σ[ τ2' ∈ htyp ]
          (d == (d' ⟨ τ1' ==> τ2' ⇒ τ1 ==> τ2 ⟩) ×
          (τ1' ==> τ2' ≠ τ1 ==> τ2) ×
          (Δ , ∅ ⊢ d' :: τ1' ==> τ2')))
@@ -43,7 +43,7 @@ module canonical-boxed-forms where
   canonical-boxed-forms-hole : ∀{Δ d} →
                                Δ , ∅ ⊢ d :: ⦇⦈ →
                                d boxedval →
-                               Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ]
+                               Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ]
                                  ((d == d' ⟨ τ' ⇒ ⦇⦈ ⟩) ×
                                   (τ' ground) ×
                                   (Δ , ∅ ⊢ d' :: τ'))

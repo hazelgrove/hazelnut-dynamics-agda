@@ -29,7 +29,7 @@ module cast-inert where
   cast-inert gc () (TAFailedCast wt x x₁ x₂)
 
   -- relates expressions to the same thing with all identity casts removed
-  data no-id-casts : dhexp → dhexp → Set where
+  data no-id-casts : ihexp → ihexp → Set where
     NICConst  : no-id-casts c c
     NICVar    : ∀{x} → no-id-casts (X x) (X x)
     NICLam    : ∀{x τ d d'} → no-id-casts d d' → no-id-casts (·λ x [ τ ] d) (·λ x [ τ ] d')

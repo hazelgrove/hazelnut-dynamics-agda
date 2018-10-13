@@ -71,7 +71,7 @@ module preservation where
   preserve-trans (TAFailedCast x y z q) ()
 
   -- this is the main preservation theorem, gluing together the above
-  preservation : {Δ : hctx} {d d' : dhexp} {τ : htyp} {Γ : tctx} →
+  preservation : {Δ : hctx} {d d' : ihexp} {τ : htyp} {Γ : tctx} →
              Δ , Γ ⊢ d :: τ →
              d ↦ d' →
              Δ , Γ ⊢ d' :: τ

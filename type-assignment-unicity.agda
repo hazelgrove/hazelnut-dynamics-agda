@@ -5,7 +5,7 @@ open import core
 open import contexts
 
 module type-assignment-unicity where
-  type-assignment-unicity : {Γ : tctx} {d : dhexp} {τ' τ : htyp} {Δ : hctx} →
+  type-assignment-unicity : {Γ : tctx} {d : ihexp} {τ' τ : htyp} {Δ : hctx} →
                               Δ , Γ ⊢ d :: τ →
                               Δ , Γ ⊢ d :: τ' →
                               τ == τ'

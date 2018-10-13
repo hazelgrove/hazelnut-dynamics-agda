@@ -19,12 +19,12 @@ module progress where
   -- this is a little bit of syntactic sugar to avoid many layer nested Inl
   -- and Inrs that you would get from the more literal transcription of the
   -- consequent of progress
-  data ok : (d : dhexp) (Δ : hctx) → Set where
-    S  : ∀{d Δ} → Σ[ d' ∈ dhexp ] (d ↦ d') → ok d Δ
+  data ok : (d : ihexp) (Δ : hctx) → Set where
+    S  : ∀{d Δ} → Σ[ d' ∈ ihexp ] (d ↦ d') → ok d Δ
     I  : ∀{d Δ} → d indet → ok d Δ
     BV : ∀{d Δ} → d boxedval → ok d Δ
 
-  progress : {Δ : hctx} {d : dhexp} {τ : htyp} →
+  progress : {Δ : hctx} {d : ihexp} {τ : htyp} →
              Δ , ∅ ⊢ d :: τ →
              ok d Δ
     -- constants

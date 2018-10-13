@@ -6,7 +6,7 @@ open import disjointness
 
 module expansion-generality where
   mutual
-    expansion-generality-synth : {Γ : tctx} {e : hexp} {τ : htyp} {d : dhexp} {Δ : hctx} →
+    expansion-generality-synth : {Γ : tctx} {e : hexp} {τ : htyp} {d : ihexp} {Δ : hctx} →
                             Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
                             Γ ⊢ e => τ
     expansion-generality-synth ESConst = SConst
@@ -18,7 +18,7 @@ module expansion-generality where
     expansion-generality-synth (ESNEHole dis ex) = SNEHole (expand-disjoint-new-synth ex dis) (expansion-generality-synth ex)
     expansion-generality-synth (ESAsc x) = SAsc (expansion-generality-ana x)
 
-    expansion-generality-ana : {Γ : tctx} {e : hexp} {τ τ' : htyp} {d : dhexp} {Δ : hctx} →
+    expansion-generality-ana : {Γ : tctx} {e : hexp} {τ τ' : htyp} {d : ihexp} {Δ : hctx} →
                           Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                           Γ ⊢ e <= τ
     expansion-generality-ana (EALam apt m ex) = ALam apt m (expansion-generality-ana ex)

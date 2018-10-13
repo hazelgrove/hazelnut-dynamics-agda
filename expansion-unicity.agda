@@ -8,7 +8,7 @@ open import lemmas-matching
 
 module expansion-unicity where
   mutual
-    expansion-unicity-synth : {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} {d1 d2 : dhexp} {Δ1 Δ2 : hctx} →
+    expansion-unicity-synth : {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} {d1 d2 : ihexp} {Δ1 Δ2 : hctx} →
                             Γ ⊢ e ⇒ τ1 ~> d1 ⊣ Δ1 →
                             Γ ⊢ e ⇒ τ2 ~> d2 ⊣ Δ2 →
                             τ1 == τ2 × d1 == d2 × Δ1 == Δ2
@@ -31,7 +31,7 @@ module expansion-unicity where
       with expansion-unicity-ana x x₁
     ... | refl , refl , refl = refl , refl , refl
 
-    expansion-unicity-ana : {Γ : tctx} {e : hexp} {τ1 τ2 τ2' : htyp} {d d' : dhexp} {Δ Δ' : hctx} →
+    expansion-unicity-ana : {Γ : tctx} {e : hexp} {τ1 τ2 τ2' : htyp} {d d' : ihexp} {Δ Δ' : hctx} →
                           Γ ⊢ e ⇐ τ1 ~> d  :: τ2  ⊣ Δ  →
                           Γ ⊢ e ⇐ τ1 ~> d' :: τ2' ⊣ Δ' →
                           d == d' × τ2 == τ2' × Δ == Δ'

@@ -4,7 +4,7 @@ open import core
 open import progress-checks
 
 module finality where
-  finality : Σ[ d ∈ dhexp ] (d final × (Σ[ d' ∈ dhexp ] (d ↦ d'))) → ⊥
+  finality : Σ[ d ∈ ihexp ] (d final × (Σ[ d' ∈ ihexp ] (d ↦ d'))) → ⊥
   finality (π1 , π2 , π3 , π4) = final-not-step π2 (π3 , π4)
 
   -- a slight restatement of the above, generalizing it to the

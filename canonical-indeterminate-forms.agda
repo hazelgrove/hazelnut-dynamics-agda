@@ -8,36 +8,36 @@ module canonical-indeterminate-forms where
 
   -- this type gives somewhat nicer syntax for the output of the canonical
   -- forms lemma for indeterminates at base type
-  data cif-base : (Δ : hctx) (d : dhexp) → Set where
+  data cif-base : (Δ : hctx) (d : ihexp) → Set where
     CIFBEHole : ∀ {Δ d} →
       Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇⦈⟨ u , σ ⟩) ×
         ((u ::[ Γ' ] b) ∈ Δ))
        → cif-base Δ d
     CIFBNEHole : ∀ {Δ d} →
-      Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ Γ' ∈ tctx ] Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ]
+      Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ Γ' ∈ tctx ] Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ]
         ((d == ⦇ d' ⦈⟨ u , σ ⟩) ×
         (d' final) ×
         (Δ , ∅ ⊢ d' :: τ') ×
         ((u ::[ Γ' ] b) ∈ Δ))
         → cif-base Δ d
     CIFBAp : ∀ {Δ d} →
-      Σ[ d1 ∈ dhexp ] Σ[ d2 ∈ dhexp ] Σ[ τ2 ∈ htyp ]
+      Σ[ d1 ∈ ihexp ] Σ[ d2 ∈ ihexp ] Σ[ τ2 ∈ htyp ]
         ((d == d1 ∘ d2) ×
         (Δ , ∅ ⊢ d1 :: τ2 ==> b) ×
         (Δ , ∅ ⊢ d2 :: τ2) ×
         (d1 indet) ×
         (d2 final) ×
-        ((τ1 τ2 τ3 τ4 : htyp) (d1' : dhexp) → d1 ≠ (d1' ⟨ τ1 ==> τ2 ⇒ τ3 ==> τ4 ⟩)))
+        ((τ1 τ2 τ3 τ4 : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨ τ1 ==> τ2 ⇒ τ3 ==> τ4 ⟩)))
         → cif-base Δ d
     CIFBCast : ∀ {Δ d} →
-      Σ[ d' ∈ dhexp ]
+      Σ[ d' ∈ ihexp ]
         ((d == d' ⟨ ⦇⦈ ⇒ b ⟩) ×
         (d' indet) ×
-        ((d'' : dhexp) (τ' : htyp) → d' ≠ (d'' ⟨ τ' ⇒ ⦇⦈ ⟩)))
+        ((d'' : ihexp) (τ' : htyp) → d' ≠ (d'' ⟨ τ' ⇒ ⦇⦈ ⟩)))
         → cif-base Δ d
     CIFBFailedCast : ∀ {Δ d} →
-      Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ]
+      Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ]
         ((d == d' ⟨ τ' ⇒⦇⦈⇏ b ⟩) ×
         (τ' ground) ×
         (τ' ≠ b) ×
@@ -58,44 +58,44 @@ module canonical-indeterminate-forms where
 
   -- this type gives somewhat nicer syntax for the output of the canonical
   -- forms lemma for indeterminates at arrow type
-  data cif-arr : (Δ : hctx) (d : dhexp) (τ1 τ2 : htyp) → Set where
+  data cif-arr : (Δ : hctx) (d : ihexp) (τ1 τ2 : htyp) → Set where
     CIFAEHole : ∀{d Δ τ1 τ2} →
       (Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇⦈⟨ u , σ ⟩) ×
         ((u ::[ Γ' ] (τ1 ==> τ2)) ∈ Δ)))
         → cif-arr Δ d τ1 τ2
     CIFANEHole : ∀{d Δ τ1 τ2} →
-      (Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ] Σ[ Γ' ∈ tctx ]
+      (Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇ d' ⦈⟨ u , σ ⟩) ×
         (d' final) ×
         (Δ , ∅ ⊢ d' :: τ') ×
         ((u ::[ Γ' ] (τ1 ==> τ2)) ∈ Δ)))
         → cif-arr Δ d τ1 τ2
     CIFAAp : ∀{d Δ τ1 τ2} →
-      (Σ[ d1 ∈ dhexp ] Σ[ d2 ∈ dhexp ] Σ[ τ ∈ htyp ] Σ[ τ1' ∈ htyp ] Σ[ τ2' ∈ htyp ]
+      (Σ[ d1 ∈ ihexp ] Σ[ d2 ∈ ihexp ] Σ[ τ ∈ htyp ] Σ[ τ1' ∈ htyp ] Σ[ τ2' ∈ htyp ]
         ((d == d1 ∘ d2) ×
         (Δ , ∅ ⊢ d1 :: τ ==> (τ1' ==> τ2')) ×
         (Δ , ∅ ⊢ d2 :: τ) ×
         (d1 indet) ×
         (d2 final) ×
-        ((τ1 τ2 τ3 τ4 : htyp) (d1' : dhexp) → d1 ≠ (d1' ⟨ τ1 ==> τ2 ⇒ τ3 ==> τ4 ⟩))))
+        ((τ1 τ2 τ3 τ4 : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨ τ1 ==> τ2 ⇒ τ3 ==> τ4 ⟩))))
         → cif-arr Δ d τ1 τ2
     CIFACast : ∀{d Δ τ1 τ2} →
-      (Σ[ d' ∈ dhexp ] Σ[ τ1 ∈ htyp ] Σ[ τ2 ∈ htyp ] Σ[ τ3 ∈ htyp ] Σ[ τ4 ∈ htyp ]
+      (Σ[ d' ∈ ihexp ] Σ[ τ1 ∈ htyp ] Σ[ τ2 ∈ htyp ] Σ[ τ3 ∈ htyp ] Σ[ τ4 ∈ htyp ]
         ((d == d' ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩) ×
           (d' indet) ×
           ((τ1 ==> τ2) ≠ (τ3 ==> τ4))))
        → cif-arr Δ d τ1 τ2
     CIFACastHole : ∀{d Δ τ1 τ2} →
-      (Σ[ d' ∈ dhexp ]
+      (Σ[ d' ∈ ihexp ]
         ((τ1 == ⦇⦈) ×
           (τ2 == ⦇⦈) ×
           (d == (d' ⟨ ⦇⦈ ⇒ ⦇⦈ ==> ⦇⦈ ⟩)) ×
           (d' indet) ×
-          ((d'' : dhexp) (τ' : htyp) → d' ≠ (d'' ⟨ τ' ⇒ ⦇⦈ ⟩))))
+          ((d'' : ihexp) (τ' : htyp) → d' ≠ (d'' ⟨ τ' ⇒ ⦇⦈ ⟩))))
         → cif-arr Δ d τ1 τ2
     CIFAFailedCast : ∀{d Δ τ1 τ2} →
-      (Σ[ d' ∈ dhexp ] Σ[ τ ∈ htyp ]
+      (Σ[ d' ∈ ihexp ] Σ[ τ ∈ htyp ]
           ((d == (d' ⟨ τ ⇒⦇⦈⇏ ⦇⦈ ==> ⦇⦈ ⟩) ) ×
             (τ ground) ×
             (τ ≠ (⦇⦈ ==> ⦇⦈)) ×
@@ -118,30 +118,30 @@ module canonical-indeterminate-forms where
 
   -- this type gives somewhat nicer syntax for the output of the canonical
   -- forms lemma for indeterminates at hole type
-  data cif-hole : (Δ : hctx) (d : dhexp) → Set where
+  data cif-hole : (Δ : hctx) (d : ihexp) → Set where
     CIFHEHole : ∀ {Δ d} →
       (Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇⦈⟨ u , σ ⟩) ×
          ((u ::[ Γ' ] ⦇⦈) ∈ Δ)))
       → cif-hole Δ d
     CIFHNEHole : ∀ {Δ d} →
-      (Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ] Σ[ Γ' ∈ tctx ]
+      (Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇ d' ⦈⟨ u , σ ⟩) ×
          (d' final) ×
          (Δ , ∅ ⊢ d' :: τ') ×
          ((u ::[ Γ' ] ⦇⦈) ∈ Δ)))
       → cif-hole Δ d
     CIFHAp : ∀ {Δ d} →
-      (Σ[ d1 ∈ dhexp ] Σ[ d2 ∈ dhexp ] Σ[ τ2 ∈ htyp ]
+      (Σ[ d1 ∈ ihexp ] Σ[ d2 ∈ ihexp ] Σ[ τ2 ∈ htyp ]
         ((d == d1 ∘ d2) ×
          (Δ , ∅ ⊢ d1 :: (τ2 ==> ⦇⦈)) ×
          (Δ , ∅ ⊢ d2 :: τ2) ×
          (d1 indet) ×
          (d2 final) ×
-         ((τ1 τ2 τ3 τ4 : htyp) (d1' : dhexp) → d1 ≠ (d1' ⟨ τ1 ==> τ2 ⇒ τ3 ==> τ4 ⟩))))
+         ((τ1 τ2 τ3 τ4 : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨ τ1 ==> τ2 ⇒ τ3 ==> τ4 ⟩))))
       → cif-hole Δ d
     CIFHCast : ∀ {Δ d} →
-      (Σ[ d' ∈ dhexp ] Σ[ τ' ∈ htyp ]
+      (Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ]
         ((d == d' ⟨ τ' ⇒ ⦇⦈ ⟩) ×
          (τ' ground) ×
          (d' indet)))

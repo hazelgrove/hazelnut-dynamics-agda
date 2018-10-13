@@ -9,7 +9,7 @@ open import weakening
 
 module typed-expansion where
   mutual
-    typed-expansion-synth : {Γ : tctx} {e : hexp} {τ : htyp} {d : dhexp} {Δ : hctx} →
+    typed-expansion-synth : {Γ : tctx} {e : hexp} {τ : htyp} {d : ihexp} {Δ : hctx} →
                             Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
                             Δ , Γ ⊢ d :: τ
     typed-expansion-synth ESConst = TAConst
@@ -26,7 +26,7 @@ module typed-expansion where
       with typed-expansion-ana x
     ... | con , ih = TACast ih con
 
-    typed-expansion-ana : {Γ : tctx} {e : hexp} {τ τ' : htyp} {d : dhexp} {Δ : hctx} →
+    typed-expansion-ana : {Γ : tctx} {e : hexp} {τ τ' : htyp} {d : ihexp} {Δ : hctx} →
                           Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                           (τ' ~ τ) × (Δ , Γ ⊢ d :: τ')
     typed-expansion-ana (EALam x₁ MAHole ex)

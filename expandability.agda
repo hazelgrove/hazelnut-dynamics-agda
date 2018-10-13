@@ -11,7 +11,7 @@ module expandability where
   mutual
     expandability-synth : {Γ : tctx} {e : hexp} {τ : htyp} →
                           Γ ⊢ e => τ →
-                          Σ[ d ∈ dhexp ] Σ[ Δ ∈ hctx ]
+                          Σ[ d ∈ ihexp ] Σ[ Δ ∈ hctx ]
                             (Γ ⊢ e ⇒ τ ~> d ⊣ Δ)
     expandability-synth SConst = _ , _ , ESConst
     expandability-synth (SAsc {τ = τ} wt)
@@ -31,7 +31,7 @@ module expandability where
 
     expandability-ana : {Γ : tctx} {e : hexp} {τ : htyp} →
                          Γ ⊢ e <= τ →
-                          Σ[ d ∈ dhexp ] Σ[ Δ ∈ hctx ] Σ[ τ' ∈ htyp ]
+                          Σ[ d ∈ ihexp ] Σ[ Δ ∈ hctx ] Σ[ τ' ∈ htyp ]
                             (Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ)
     expandability-ana {e = e} (ASubsume D x₁)
       with expandability-synth D
