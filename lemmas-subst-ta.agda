@@ -15,36 +15,56 @@ module lemmas-subst-ta where
   -- real setting.
 
   -- the variable name x does not appear in the term d
-  data var-name-new : (d : dhexp) (x : Nat) → Set where
-    VNConst : ∀{x} → var-name-new c x
-    VNVar : ∀{x y} → x ≠ y → var-name-new (X y) x
-    VNLam2 : ∀{x e y τ} →
-             x ≠ y →
-             var-name-new e x →
-             var-name-new (·λ_[_]_ y τ e) x
-    -- VNHole : ∀{x u σ} →
-    --           -- →
-    --          var-name-new (⦇⦈[ u , σ ]) x
-    -- VNNEHole : ∀{u u' e} →
-    --            u' ≠ u →
-    --            var-name-new e u →
-    --            var-name-new (⦇ e ⦈[ u' ]) u
-    -- VNAp : ∀{ u e1 e2 } →
-    --        var-name-new e1 u →
-    --        var-name-new e2 u →
-    --        var-name-new (e1 ∘ e2) u
+  data var-name-new : (x : Nat) (d : dhexp) → Set where
+    VNNConst : ∀{x} → var-name-new x c
+    VNNVar : ∀{x y} → x ≠ y → var-name-new x (X y)
+    VNNLam2 : ∀{x d y τ} → x ≠ y
+                         → var-name-new x d
+                         → var-name-new x (·λ_[_]_ y τ d)
+    VNNHole : ∀{x u σ} → var-name-new x (⦇⦈⟨ u , σ ⟩) -- todo something about σ?
+    VNNNEHole : ∀{x u σ d } →
+                var-name-new x d →
+                var-name-new x (⦇ d ⦈⟨ u , σ ⟩) -- todo something about σ?
+    VNNAp : ∀{ x d1 d2 } →
+           var-name-new x d1 →
+           var-name-new x d2 →
+           var-name-new x (d1 ∘ d2)
+    VNNCast : ∀{x d τ1 τ2} → var-name-new x d → var-name-new x (d ⟨ τ1 ⇒ τ2 ⟩)
+    VNNFailedCast : ∀{x d τ1 τ2} → var-name-new x d → var-name-new x (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
 
   -- two terms that do not share any hole names
-  data vars-disjoint : (e1 : hexp) → (e2 : hexp) → Set where
-    -- HDConst : ∀{e} → holes-disjoint c e
-    -- HDAsc : ∀{e1 e2 τ} → holes-disjoint e1 e2 → holes-disjoint (e1 ·: τ) e2
-    -- HDVar : ∀{x e} → holes-disjoint (X x) e
-    -- HDLam1 : ∀{x e1 e2} → holes-disjoint e1 e2 → holes-disjoint (·λ x e1) e2
-    -- HDLam2 : ∀{x e1 e2 τ} → holes-disjoint e1 e2 → holes-disjoint (·λ x [ τ ] e1) e2
-    -- HDHole : ∀{u e2} → hole-name-new e2 u → holes-disjoint (⦇⦈[ u ]) e2
-    -- HDNEHole : ∀{u e1 e2} → hole-name-new e2 u → holes-disjoint e1 e2 → holes-disjoint (⦇ e1 ⦈[ u ]) e2
-    -- HDAp :  ∀{e1 e2 e3} → holes-disjoint e1 e3 → holes-disjoint e2 e3 → holes-disjoint (e1 ∘ e2) e3
+  data var-names-disjoint : (d1 : dhexp) → (d2 : dhexp) → Set where
+    VNDConst : ∀{d} → var-names-disjoint c d
+    VNDVar : ∀{x d} → var-names-disjoint (X x) d
+    VNDLam : ∀{x τ d1 d2} → var-names-disjoint d1 d2
+                          → var-names-disjoint (·λ_[_]_ x τ d1) d2
+    VNDHole : ∀{u σ d2} → var-name-new u d2
+                        → var-names-disjoint (⦇⦈⟨ u , σ ⟩) d2 -- todo something about σ?
+    VNDNEHole : ∀{u σ d1 d2} → var-name-new u d2
+                             → var-names-disjoint d1 d2
+                             → var-names-disjoint (⦇ d1 ⦈⟨ u , σ ⟩) d2 -- todo something about σ?
+    VNDAp :  ∀{d1 d2 d3} → var-names-disjoint d1 d3
+                         → var-names-disjoint d2 d3
+                         → var-names-disjoint (d1 ∘ d2) d3
 
+  -- all the variable names in the term are unique
+  data var-names-unique : dhexp → Set where
+    VNUHole : var-names-unique c
+    VNUVar : ∀{x} → var-names-unique (X x)
+    VNULam : {x : Nat} {τ : htyp} {d : dhexp} → var-names-unique d
+                                              → var-name-new x d
+                                              → var-names-unique (·λ_[_]_ x τ d)
+    VNUEHole : ∀{u σ} → var-names-unique (⦇⦈⟨ u , σ ⟩) -- todo something about σ?
+    VNUNEHole : ∀{u σ d} → var-names-unique d
+                         → var-names-unique (⦇ d ⦈⟨ u , σ ⟩) -- todo something about σ?
+    VNUAp : ∀{d1 d2} → var-names-unique d1
+                     → var-names-unique d2
+                     → var-names-disjoint d1 d2
+                     → var-names-unique (d1 ∘ d2)
+    VNUCast : ∀{d τ1 τ2} → var-names-unique d
+                         → var-names-unique (d ⟨ τ1 ⇒ τ2 ⟩)
+    VNUFailedCast : ∀{d τ1 τ2} → var-names-unique d
+                               → var-names-unique (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
 
   lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } →
                   x # Γ →
