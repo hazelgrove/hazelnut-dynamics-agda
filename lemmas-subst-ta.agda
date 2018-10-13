@@ -66,6 +66,16 @@ module lemmas-subst-ta where
     VNUFailedCast : ∀{d τ1 τ2} → var-names-unique d
                                → var-names-unique (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
 
+  unique-fresh : ∀{Δ Γ d τ y} → Δ , Γ ⊢ d :: τ → y # Γ → var-names-unique d → fresh y d
+  unique-fresh TAConst apt VNUHole = FConst
+  unique-fresh (TAVar x₁) apt VNUVar = {!!}
+  unique-fresh (TALam x₁ wt) apt (VNULam unq x₂) = {!!}
+  unique-fresh (TAAp wt wt₁) apt (VNUAp unq unq₁ x) = {!!}
+  unique-fresh (TAEHole x x₁) apt VNUEHole = {!!}
+  unique-fresh (TANEHole x wt x₁) apt (VNUNEHole unq) = {!!}
+  unique-fresh (TACast wt x) apt (VNUCast unq) = {!!}
+  unique-fresh (TAFailedCast wt x x₁ x₂) apt (VNUFailedCast unq) = {!!}
+
   lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } →
                   x # Γ →
                   Δ , Γ ,, (x , τ1) ⊢ d1 :: τ →
