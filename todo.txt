@@ -281,3 +281,11 @@ representation of contexts.
   --          var-name-new x (d1 ∘ d2)
   --   VNNCast : ∀{x d τ1 τ2} → var-name-new x d → var-name-new x (d ⟨ τ1 ⇒ τ2 ⟩)
   --   VNNFailedCast : ∀{x d τ1 τ2} → var-name-new x d → var-name-new x (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
+----
+    binders-envfresh {Γ' = Γ'} {y = y} (STAId sub x) apt UBσId BUσId with ctxindirect Γ' y
+    binders-envfresh (STAId sub x₁) apt UBσId BUσId | Inl x = abort (somenotnone (! (π2 (sub _ x)) · apt))
+    binders-envfresh (STAId sub x₁) apt UBσId BUσId | Inr x = EFId x
+    binders-envfresh {y = y} (STASubst {y = z} sub x₁) apt (UBσSubst x₂ ub) (BUσSubst x x₃) with natEQ y z
+    binders-envfresh (STASubst sub x₁) apt (UBσSubst x₂ ub) (BUσSubst x₃ x₄) | Inl refl = {!!}
+    binders-envfresh (STASubst sub x₁) apt (UBσSubst x₂ ub) (BUσSubst x₃ x₄) | Inr x = EFSubst (binders-fresh x₁ {!!} x₃ {!!} x₂ apt)
+                                                                                               {!binders-envfresh sub ? !}

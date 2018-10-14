@@ -11,8 +11,13 @@ open import binders-disjoint-checks
 module lemmas-subst-ta where
   mutual
     binders-envfresh : ∀{Δ Γ Γ' y σ} → Δ , Γ ⊢ σ :s: Γ' → y # Γ → unbound-in-σ y σ → binders-unique-σ σ → envfresh y σ
-    binders-envfresh (STAId x) apt UBσId BUσId = {!!}
-    binders-envfresh (STASubst sub x₁) apt (UBσSubst x₂ ub) (BUσSubst x x₃) = {!!}
+    binders-envfresh {Γ' = Γ'} {y = y} (STAId x) apt unbound unique with ctxindirect Γ' y
+    binders-envfresh {Γ' = Γ'} {y = y} (STAId x₁) apt unbound unique | Inl x = abort (somenotnone (! (x₁ y (π1 x) (π2 x)) · apt))
+    binders-envfresh (STAId x₁) apt unbound unique | Inr x = EFId x
+    binders-envfresh {Γ = Γ} {y = y} (STASubst  {y = z} subst x₁) apt (UBσSubst x₂ unbound) (BUσSubst x₃ x₄) =
+                                                                                    EFSubst (binders-fresh x₁ {!!} x₃ {!!} x₂ apt)
+                                                                                            (binders-envfresh subst (apart-extend1 Γ {!!} apt) {!!} {!!})
+                                                                                            {!!}
 
     binders-fresh : ∀{ Δ Γ d1 d2 τ y} → Δ , Γ ⊢ d2 :: τ
                                       → binders-unique d1 -- todo: ditch?
@@ -30,7 +35,7 @@ module lemmas-subst-ta where
     binders-fresh {Γ = Γ} (TALam {x = x} x₂ wt) bu1 (BULam bu2 x₃) bd (UBLam2 x₄ ub) apt | Inr x₁ =  FLam x₁ (binders-fresh wt bu1 bu2 (lem-bd-lam bd) ub (apart-extend1 Γ x₄ apt))
     binders-fresh (TAAp wt wt₁) bu1 (BUAp bu2 bu3 x) bd (UBAp ub ub₁) apt = FAp (binders-fresh wt BUHole bu2 BDConst ub apt)
                                                                                 (binders-fresh wt₁ bu2 bu3 x ub₁ apt)
-    binders-fresh (TAEHole x₁ x₂) bu1 (BUEHole x) bd (UBHole x₃) apt = FHole {!binders-envfresh x₂ apt x₃ x !}
+    binders-fresh (TAEHole x₁ x₂) bu1 (BUEHole x) bd (UBHole x₃) apt = FHole {!!} -- FHole {!binders-envfresh x₂ apt x₃ x !}
     binders-fresh (TANEHole x₁ wt x₂) bu1 (BUNEHole bu2 x) bd (UBNEHole x₃ ub) apt = FNEHole {!binders-envfresh x₂ apt x₃!} (binders-fresh wt bu1 bu2 (lem-bd-hole bd) ub apt)
     binders-fresh (TACast wt x₁) bu1 (BUCast bu2) bd (UBCast ub) apt = FCast (binders-fresh wt bu1 bu2 (lem-bd-cast bd) ub apt)
     binders-fresh (TAFailedCast wt x x₁ x₂) bu1 (BUFailedCast bu2) bd (UBFailedCast ub) apt = FFailedCast (binders-fresh wt bu1 bu2 (lem-bd-failedcast bd) ub apt)
