@@ -90,7 +90,6 @@ module preservation where
   lem-bd-ε2 (FHFailedCast eps) bd = {!!}
 
   mutual
-
     bu-subst : ∀{d1 d2 x} → binders-unique d1 → binders-unique d2 → unbound-in x d1 → binders-unique ([ d2 / x ] d1)
     bu-subst BUHole bu2 ub = BUHole
     bu-subst {x = x} (BUVar {x = y}) bu2 UBVar with natEQ y x
@@ -99,8 +98,8 @@ module preservation where
     bu-subst {x = x} (BULam {x = y}  bu1 x₂) bu2 (UBLam2 x₃ ub) with natEQ y x
     bu-subst (BULam bu1 x₃) bu2 (UBLam2 x₄ ub) | Inl refl = BULam bu1 ub -- can also abort here; odd
     bu-subst (BULam bu1 x₃) bu2 (UBLam2 x₄ ub) | Inr x₂ = BULam (bu-subst bu1 bu2 ub) {!!}
-    bu-subst (BUEHole x₁) bu2 (UBHole x₂) = BUEHole {!!}
-    bu-subst (BUNEHole bu1 x₁) bu2 (UBNEHole x₂ ub) = BUNEHole (bu-subst bu1 bu2 ub) {!!}
+    bu-subst (BUEHole x₁) bu2 (UBHole x₂) = BUEHole (BUσSubst bu2 {!!})
+    bu-subst (BUNEHole bu1 x₁) bu2 (UBNEHole x₂ ub) = BUNEHole (bu-subst bu1 bu2 ub) (BUσSubst bu2 {!!})
     bu-subst (BUAp bu1 bu2 x₁) bu3 (UBAp ub ub₁) = BUAp (bu-subst bu1 bu3 ub) (bu-subst bu2 bu3 ub₁) {!!}
     bu-subst (BUCast bu1) bu2 (UBCast ub) = BUCast (bu-subst bu1 bu2 ub)
     bu-subst (BUFailedCast bu1) bu2 (UBFailedCast ub) = BUFailedCast (bu-subst bu1 bu2 ub)
