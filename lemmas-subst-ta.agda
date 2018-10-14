@@ -15,31 +15,27 @@ module lemmas-subst-ta where
     binders-envfresh {Γ' = Γ'} {y = y} (STAId x₁) apt unbound unique | Inl x = abort (somenotnone (! (x₁ y (π1 x) (π2 x)) · apt))
     binders-envfresh (STAId x₁) apt unbound unique | Inr x = EFId x
     binders-envfresh {Γ = Γ} {y = y} (STASubst  {y = z} subst x₁) apt (UBσSubst x₂ unbound neq) (BUσSubst zz x₃ x₄) =
-                                                                                    EFSubst {!binders-fresh!}
-                                                                                      -- (binders-fresh x₁ {!!} zz {!!} x₂ apt)
+                                                                                    EFSubst (binders-fresh {y = y} x₁ zz x₂ apt)
                                                                                             (binders-envfresh subst (apart-extend1 Γ neq apt) unbound x₃)
                                                                                             neq
 
-    binders-fresh : ∀{ Δ Γ d1 d2 τ y} → Δ , Γ ⊢ d2 :: τ
-                                      → binders-unique d1 -- todo: ditch?
+    binders-fresh : ∀{ Δ Γ d2 τ y} → Δ , Γ ⊢ d2 :: τ
                                       → binders-unique d2
-                                      → binders-disjoint d1 d2
                                       → unbound-in y d2
                                       → Γ y == None
                                       → fresh y d2
-    binders-fresh TAConst bu1 BUHole bd UBConst apt = FConst
-    binders-fresh {y = y}  (TAVar {x = x} x₁) bu1 BUVar bd UBVar apt with natEQ y x
-    binders-fresh (TAVar x₂) bu1 BUVar bd UBVar apt | Inl refl = abort (somenotnone (! x₂ · apt))
-    binders-fresh (TAVar x₂) bu1 BUVar bd UBVar apt | Inr x₁ = FVar x₁
-    binders-fresh {y = y} (TALam {x = x} x₁ wt) bu1 bu2 bd ub apt  with natEQ y x
-    binders-fresh (TALam x₂ wt) bu1 bu2 bd (UBLam2 x₁ ub) apt | Inl refl = abort (x₁ refl)
-    binders-fresh {Γ = Γ} (TALam {x = x} x₂ wt) bu1 (BULam bu2 x₃) bd (UBLam2 x₄ ub) apt | Inr x₁ =  FLam x₁ (binders-fresh wt bu1 bu2 (lem-bd-lam bd) ub (apart-extend1 Γ x₄ apt))
-    binders-fresh (TAAp wt wt₁) bu1 (BUAp bu2 bu3 x) bd (UBAp ub ub₁) apt = FAp (binders-fresh wt BUHole bu2 BDConst ub apt)
-                                                                                (binders-fresh wt₁ bu2 bu3 x ub₁ apt)
-    binders-fresh (TAEHole x₁ x₂) bu1 (BUEHole x) bd (UBHole x₃) apt = FHole {!!} -- FHole {!binders-envfresh x₂ apt x₃ x !}
-    binders-fresh (TANEHole x₁ wt x₂) bu1 (BUNEHole bu2 x) bd (UBNEHole x₃ ub) apt = FNEHole {!binders-envfresh x₂ apt x₃!} (binders-fresh wt bu1 bu2 (lem-bd-hole bd) ub apt)
-    binders-fresh (TACast wt x₁) bu1 (BUCast bu2) bd (UBCast ub) apt = FCast (binders-fresh wt bu1 bu2 (lem-bd-cast bd) ub apt)
-    binders-fresh (TAFailedCast wt x x₁ x₂) bu1 (BUFailedCast bu2) bd (UBFailedCast ub) apt = FFailedCast (binders-fresh wt bu1 bu2 (lem-bd-failedcast bd) ub apt)
+    binders-fresh TAConst BUHole UBConst apt = FConst
+    binders-fresh {y = y} (TAVar {x = x} x₁)  BUVar UBVar apt with natEQ y x
+    binders-fresh (TAVar x₂) BUVar UBVar apt | Inl refl = abort (somenotnone (! x₂ · apt))
+    binders-fresh (TAVar x₂) BUVar UBVar apt | Inr x₁ = FVar x₁
+    binders-fresh {y = y} (TALam {x = x} x₁ wt) bu2 ub apt  with natEQ y x
+    binders-fresh (TALam x₂ wt) bu2 (UBLam2 x₁ ub) apt | Inl refl = abort (x₁ refl)
+    binders-fresh {Γ = Γ} (TALam {x = x} x₂ wt) (BULam bu2 x₃) (UBLam2 x₄ ub) apt | Inr x₁ =  FLam x₁ (binders-fresh wt bu2 ub (apart-extend1 Γ x₄ apt))
+    binders-fresh (TAAp wt wt₁)  (BUAp bu2 bu3 x) (UBAp ub ub₁) apt = FAp (binders-fresh wt bu2 ub apt) (binders-fresh wt₁ bu3 ub₁ apt)
+    binders-fresh (TAEHole x₁ x₂) (BUEHole x) (UBHole x₃) apt = FHole (binders-envfresh x₂ apt x₃ x )
+    binders-fresh (TANEHole x₁ wt x₂) (BUNEHole bu2 x) (UBNEHole x₃ ub) apt = FNEHole (binders-envfresh x₂ apt x₃ x) (binders-fresh wt bu2  ub apt)
+    binders-fresh (TACast wt x₁) (BUCast bu2) (UBCast ub) apt = FCast (binders-fresh wt  bu2  ub apt)
+    binders-fresh (TAFailedCast wt x x₁ x₂) (BUFailedCast bu2) (UBFailedCast ub) apt = FFailedCast (binders-fresh wt  bu2  ub apt)
 
 
   lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } →
@@ -60,7 +56,7 @@ module lemmas-subst-ta where
   ... |  x≠y , y#Γ with natEQ y x
   ... | Inl eq = abort (x≠y (! eq))
   ... | Inr _  = TALam y#Γ (lem-subst {Δ = Δ} {Γ = Γ ,, (y , τ1)} {x = x} {d1 = d} (apart-extend1 Γ x≠y x#Γ) bd bu1' bu2 (exchange-ta-Γ {Γ = Γ} x≠y wt1)
-                                         (weaken-ta (binders-fresh wt2 (BULam {τ = τ2} bu1' ub) bu2 (BDLam bd bd') bd' y#Γ) wt2))
+                                         (weaken-ta (binders-fresh wt2  bu2 bd' y#Γ) wt2))
   lem-subst apt (BDAp bd bd₁) (BUAp bu1 bu2 x₁) bu3 (TAAp wt1 wt2) wt3 = TAAp (lem-subst apt bd bu1 bu3 wt1 wt3) (lem-subst apt bd₁ bu2 bu3 wt2 wt3)
   lem-subst apt bd bu1 bu2 (TAEHole inΔ sub) wt2 = TAEHole inΔ (STASubst sub wt2)
   lem-subst apt (BDNEHole x₁ bd) (BUNEHole bu1 x₂) bu2 (TANEHole x₃ wt1 x₄) wt2 = TANEHole x₃ (lem-subst apt bd bu1 bu2 wt1 wt2) (STASubst x₄ wt2)
