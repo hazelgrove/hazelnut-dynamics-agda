@@ -13,14 +13,12 @@ open import holes-disjoint-checks
 open import lemmas-disjointness
 open import lemmas-freshness
 
-open import structural-assumptions
-
 open import finality
 open import focus-formation
 open import ground-decidable
 open import grounding
 
---open import lemmas-subst-ta -- working here
+open import lemmas-subst-ta
 open import htype-decidable
 open import lemmas-consistency
 open import lemmas-ground
@@ -38,7 +36,7 @@ open import canonical-indeterminate-forms
 open import canonical-value-forms
 
 open import lemmas-progress-checks
-open import preservation -- depends on subst-ta
+open import preservation
 open import progress
 open import progress-checks
 

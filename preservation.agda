@@ -8,7 +8,7 @@ open import lemmas-consistency
 open import type-assignment-unicity
 open import binders-disjoint-checks
 
-open import structural-assumptions
+open import lemmas-subst-ta
 
 module preservation where
   -- if d and d' both result from filling the hole in ε with terms of the
@@ -60,7 +60,7 @@ module preservation where
   preserve-trans bd TAConst ()
   preserve-trans bd (TAVar x₁) ()
   preserve-trans bd (TALam _ ta) ()
-  preserve-trans (BUAp (BULam bd x₁) bd₁ (BDLam x₂ x₃)) (TAAp (TALam apt ta) ta₁) ITLam = lem-subst apt x₂ bd bd₁ ta ta₁
+  preserve-trans (BUAp (BULam bd x₁) bd₁ (BDLam x₂ x₃)) (TAAp (TALam apt ta) ta₁) ITLam = lem-subst apt x₂ bd₁ ta ta₁
   preserve-trans bd (TAAp (TACast ta TCRefl) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ TCRefl)) TCRefl
   preserve-trans bd (TAAp (TACast ta (TCArr x x₁)) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ (~sym x))) x₁
   preserve-trans bd (TAEHole x x₁) ()
