@@ -51,3 +51,5 @@ open import lemmas-complete
 open import contraction
 open import exchange
 open import weakening
+
+open import binders-disjoint-checks

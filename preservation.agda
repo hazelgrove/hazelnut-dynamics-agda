@@ -6,6 +6,7 @@ open import contexts
 
 open import lemmas-consistency
 open import type-assignment-unicity
+open import binders-disjoint-checks
 
 open import structural-assumptions
 
@@ -71,20 +72,61 @@ module preservation where
   preserve-trans bd (TACast (TACast ta x) x₁) (ITCastFail w y z) = TAFailedCast ta w y z
   preserve-trans bd (TAFailedCast x y z q) ()
 
-  lem-bd-ε : ∀{ d ε d0} → d == ε ⟦ d0 ⟧ → binders-unique d → binders-unique d0
-  lem-bd-ε FHOuter bd = bd
-  lem-bd-ε (FHAp1 eps) (BUAp bd bd₁ x) = lem-bd-ε eps bd
-  lem-bd-ε (FHAp2 eps) (BUAp bd bd₁ x) = lem-bd-ε eps bd₁
-  lem-bd-ε (FHNEHole eps) (BUNEHole bd x) = lem-bd-ε eps bd
-  lem-bd-ε (FHCast eps) (BUCast bd) = lem-bd-ε eps bd
-  lem-bd-ε (FHFailedCast eps) (BUFailedCast bd) = lem-bd-ε eps bd
+  -- binder uniqueness is preserved by hole filling
+  lem-bd-ε1 : ∀{ d ε d0} → d == ε ⟦ d0 ⟧ → binders-unique d → binders-unique d0
+  lem-bd-ε1 FHOuter bd = bd
+  lem-bd-ε1 (FHAp1 eps) (BUAp bd bd₁ x) = lem-bd-ε1 eps bd
+  lem-bd-ε1 (FHAp2 eps) (BUAp bd bd₁ x) = lem-bd-ε1 eps bd₁
+  lem-bd-ε1 (FHNEHole eps) (BUNEHole bd x) = lem-bd-ε1 eps bd
+  lem-bd-ε1 (FHCast eps) (BUCast bd) = lem-bd-ε1 eps bd
+  lem-bd-ε1 (FHFailedCast eps) (BUFailedCast bd) = lem-bd-ε1 eps bd
+
+  lem-bd-ε2 : ∀{ d ε d0} → d == ε ⟦ d0 ⟧ → binders-unique d0 → binders-unique d
+  lem-bd-ε2 FHOuter bd = bd
+  lem-bd-ε2 (FHAp1 eps) bd = {!!}
+  lem-bd-ε2 (FHAp2 eps) bd = {!!}
+  lem-bd-ε2 (FHNEHole eps) bd = {!!}
+  lem-bd-ε2 (FHCast eps) bd = {!!}
+  lem-bd-ε2 (FHFailedCast eps) bd = {!!}
+
+  mutual
+
+    bu-subst : ∀{d1 d2 x} → binders-unique d1 → binders-unique d2 → unbound-in x d1 → binders-unique ([ d2 / x ] d1)
+    bu-subst BUHole bu2 ub = BUHole
+    bu-subst {x = x} (BUVar {x = y}) bu2 UBVar with natEQ y x
+    bu-subst BUVar bu2 UBVar | Inl refl = bu2
+    bu-subst BUVar bu2 UBVar | Inr x₂ = BUVar
+    bu-subst {x = x} (BULam {x = y}  bu1 x₂) bu2 (UBLam2 x₃ ub) with natEQ y x
+    bu-subst (BULam bu1 x₃) bu2 (UBLam2 x₄ ub) | Inl refl = BULam bu1 ub -- can also abort here; odd
+    bu-subst (BULam bu1 x₃) bu2 (UBLam2 x₄ ub) | Inr x₂ = BULam (bu-subst bu1 bu2 ub) {!!}
+    bu-subst (BUEHole x₁) bu2 (UBHole x₂) = BUEHole {!!}
+    bu-subst (BUNEHole bu1 x₁) bu2 (UBNEHole x₂ ub) = BUNEHole (bu-subst bu1 bu2 ub) {!!}
+    bu-subst (BUAp bu1 bu2 x₁) bu3 (UBAp ub ub₁) = BUAp (bu-subst bu1 bu3 ub) (bu-subst bu2 bu3 ub₁) {!!}
+    bu-subst (BUCast bu1) bu2 (UBCast ub) = BUCast (bu-subst bu1 bu2 ub)
+    bu-subst (BUFailedCast bu1) bu2 (UBFailedCast ub) = BUFailedCast (bu-subst bu1 bu2 ub)
+
+  bu-trans : ∀{d0 d0'} → binders-unique d0 → d0 →> d0' → binders-unique d0'
+  bu-trans BUHole ()
+  bu-trans BUVar ()
+  bu-trans (BULam bu x₁) ()
+  bu-trans (BUEHole x) ()
+  bu-trans (BUNEHole bu x) ()
+  bu-trans (BUAp (BULam bu x₁) bu₁ (BDLam x₂ x₃)) ITLam = bu-subst bu bu₁ x₁
+  bu-trans (BUAp (BUCast bu) bu₁ (BDCast x)) ITApCast = BUCast (BUAp bu (BUCast bu₁) (lem-bd-into-cast x))
+  bu-trans (BUCast bu) ITCastID = bu
+  bu-trans (BUCast (BUCast bu)) (ITCastSucceed x) = bu
+  bu-trans (BUCast (BUCast bu)) (ITCastFail x x₁ x₂) = BUFailedCast bu
+  bu-trans (BUCast bu) (ITGround x) = BUCast (BUCast bu)
+  bu-trans (BUCast bu) (ITExpand x) = BUCast (BUCast bu)
+  bu-trans (BUFailedCast bu) ()
 
   -- this is the main preservation theorem, gluing together the above
   preservation : {Δ : hctx} {d d' : ihexp} {τ : htyp} {Γ : tctx} →
              binders-unique d →
              Δ , Γ ⊢ d :: τ →
              d ↦ d' →
-             Δ , Γ ⊢ d' :: τ
+             Δ , Γ ⊢ d' :: τ × binders-unique d'
   preservation bd D (Step x x₁ x₂)
     with wt-filling D x
-  ... | (_ , wt) = wt-different-fill x D wt (preserve-trans (lem-bd-ε x bd) wt x₁) x₂
+  ... | (_ , wt) = wt-different-fill x D wt (preserve-trans (lem-bd-ε1 x bd) wt x₁) x₂ ,
+                   {!(bu-trans (lem-bd-ε1 x bd) x₁)!}
