@@ -14,10 +14,11 @@ module lemmas-subst-ta where
     binders-envfresh {Γ' = Γ'} {y = y} (STAId x) apt unbound unique with ctxindirect Γ' y
     binders-envfresh {Γ' = Γ'} {y = y} (STAId x₁) apt unbound unique | Inl x = abort (somenotnone (! (x₁ y (π1 x) (π2 x)) · apt))
     binders-envfresh (STAId x₁) apt unbound unique | Inr x = EFId x
-    binders-envfresh {Γ = Γ} {y = y} (STASubst  {y = z} subst x₁) apt (UBσSubst x₂ unbound) (BUσSubst x₃ x₄) =
-                                                                                    EFSubst (binders-fresh x₁ {!!} x₃ {!!} x₂ apt)
-                                                                                            (binders-envfresh subst (apart-extend1 Γ {!!} apt) {!!} {!!})
-                                                                                            {!!}
+    binders-envfresh {Γ = Γ} {y = y} (STASubst  {y = z} subst x₁) apt (UBσSubst x₂ unbound neq) (BUσSubst zz x₃ x₄) =
+                                                                                    EFSubst {!binders-fresh!}
+                                                                                      -- (binders-fresh x₁ {!!} zz {!!} x₂ apt)
+                                                                                            (binders-envfresh subst (apart-extend1 Γ neq apt) unbound x₃)
+                                                                                            neq
 
     binders-fresh : ∀{ Δ Γ d1 d2 τ y} → Δ , Γ ⊢ d2 :: τ
                                       → binders-unique d1 -- todo: ditch?
