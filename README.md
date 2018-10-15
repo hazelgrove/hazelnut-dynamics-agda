@@ -1,6 +1,10 @@
 # hazelnut-dynamics-agda
-This repository is the mechanization of the work described in our [POPL19
-paper](https://arxiv.org/pdf/1805.00155). It includes all of the definitions and proofs from Section 3, as claimed in Sec. 3.4 (Agda Mechanization). The assumptions mentioned in that section are no longer needed -- see the Postulates section below.
+This repository is the mechanization of the work described in our
+[POPL19 paper](https://arxiv.org/pdf/1805.00155). It includes all of the
+definitions and proofs from Section 3, as claimed in Sec. 3.4 (Agda
+Mechanization). The assumptions mentioned in that section are no longer
+needed, and the final version of the paper text will reflect that -- see
+the Postulates section below.
 
 # How To Check These Proofs
 
@@ -12,8 +16,8 @@ all.agda` at the command line.
 Alternatively, we have provided a [Docker file](Dockerfile) to make it
 easier to build that environment and check the proofs. To use it, first
 install [Docker](https://www.docker.com/products/docker-desktop), make sure
-the Docker daemon is running and clone this repository to your local machine. Then,  
-at a command line inside that clone, run
+the Docker daemon is running, and clone this repository to your local
+machine. Then, at a command line inside that clone, run
 
 ```
 docker build -t hazel-popl19 .
@@ -43,11 +47,7 @@ the paper text can be found as follows:
 - Theorem 3.2, _Type Assignment Unicity_, is in
   [type-assignment-unicity.agda](type-assignment-unicity.agda).
 - Theorem 3.3, _Expandability_, is in
-  [expandability.agda](expandability.agda). The paper also claims the following:
-    
-    > "The mechanization also establishes that when an expansion exists, it is unique (not shown)."
-    
-  This proof is available in [expansion-unicity.agda](expansion-unicity.agda).
+  [expandability.agda](expandability.agda).
 - Theorem 3.4, _Expansion Generality_, is in
   [expansion-generality.agda](expansion-generality.agda).
 - Definition 3.5, _Identity Substitution_, is in [core.agda](core.agda) on
@@ -67,17 +67,24 @@ the paper text can be found as follows:
   [complete-progress.agda](complete-progress.agda).
 - Proposition 3.14, _Sensibility_, is taken as a postulate in
   [continuity.agda](continuity.agda). Sensibility for a slightly different
-  and richer language is proven in the mechanization of our POPL17 work.
-- Though we did not explicitly claim a mechanization of Corollary 3.15, _Continuity_, a proof is given in terms of a few postulates encoding the results from Omar et al., POPL 2017 in
-  [continuity.agda](continuity.agda).
+  and richer language is proven in the mechanization of our
+  [POPL17](https://arxiv.org/pdf/1607.04180) work.
+-  Corollary 3.15, _Continuity_, is in
+  [continuity.agda](continuity.agda). Though we did not explicitly claim a
+  mechanization of this claim, we give a proof is given in terms of a few
+  postulates encoding the results from Omar et al., POPL 2017.
+
+The paper also claims that "The mechanization also establishes that when an
+expansion exists, it is unique (not shown)." This proof is available in
+[expansion-unicity.agda](expansion-unicity.agda). In the final version of
+the paper, this will be listed as a Theorem.
 
 # Description of Agda Files
 
-The theorem statements rely on a variety
-of lemmas and smaller claims or observations that aren't explicitly
-mentioned in the paper text. What follows is a rough description of what to
-expect from each source file; more detail is provided in the comments
-inside each.
+The theorem statements rely on a variety of lemmas and smaller claims or
+observations that aren't explicitly mentioned in the paper text. What
+follows is a rough description of what to expect from each source file;
+more detail is provided in the comments inside each.
 
 On paper, we typically take it for granted that we can silently α-rename
 terms to equivalent terms whenever a collision of bound names is
@@ -99,16 +106,27 @@ quickly become pervasive and obfuscate the actual points of interest.
 Similarly, we make explicit some premises about disjointness of contexts or
 variables being apart from contexts in some of the premises of some rules
 that would typically be taken as read in an on-paper presentation. This is
-a slightly generalized version of Barendrecht's convention (Barendregt, 1984), which we used
-in our POPL17 mechanization as well for the same reason.
+a slightly generalized version of Barendrecht's convention (Barendregt,
+1984), which we used in our POPL17
+[mechanization](https://github.com/hazelgrove/hazelnut-dynamics) as well
+for the same reason.
 
 Since our base type system is bidirectional, the judgments defining it are
 mutually recursive. That means that anything type-directed is very likely
 to also be mutually recursive. The grammar of internal expressions is also
 mutually recursive with the definition of substitution environments. All
 told, a fair number of theorems are mutually recursive as this percolates
-through. We try to name things in a suggestive way, using `x-synth` and
-`x-ana` for the two halves of the same theorem.
+through. We try to name things in a suggestive way, using `*-synth` and
+`*-ana` for the two halves of the same theorem.
+
+Both hole and type contexts are encoded as Agda functions from natural
+numbers to optional contents. In practice these mappings are always
+finite. We represent finite substitutions and substitution environments
+explicitly as inductive datatypes, `_,_⊢_:s:_`and `env` from
+[core.agda](core.agda) respectively, taking advantage of the fact that the
+base case in our semantics is always the identity substitution. This allows
+us to reason about substitutions in a way that passes the Agda termination
+checker.
 
 ## Postulates
 
@@ -171,8 +189,8 @@ of the development.
   to the identity. (See the definition of `STAId` on line 254 of
   [core.agda](core.agda).) In practice, this is not a problem because you
   wouldn't want to add anything there just to weaken it away, and allowing
-  imprecision here would break the (unicity of
-  expansion)[expansion-unicity.agda], which is desirable.
+  imprecision here would break the (unicity)[expansion-unicity.agda] of
+  expansion.
 
 ## Theorems
 
