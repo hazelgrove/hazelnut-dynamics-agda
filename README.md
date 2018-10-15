@@ -1,8 +1,6 @@
 # hazelnut-dynamics-agda
 This repository is the mechanization of the work described in our [POPL19
-paper](https://github.com/hazelgrove/hazelnut-dynamics). It includes the
-full definitions of all the judgements and metafunctions and proofs of the
-theorems up through Section 3.
+paper](https://arxiv.org/pdf/1805.00155). It includes all of the definitions and proofs from Section 3, as claimed in Sec. 3.4 (Agda Mechanization). The assumptions mentioned in that section are no longer needed -- see the Postulates section below.
 
 # How To Check These Proofs
 
@@ -13,9 +11,9 @@ all.agda` at the command line.
 
 Alternatively, we have provided a [Docker file](Dockerfile) to make it
 easier to build that environment and check the proofs. To use it, first
-install [Docker](https://www.docker.com/products/docker-desktop) and clone
-this repository to your local machine. Then, at a command line inside that
-clone, run
+install [Docker](https://www.docker.com/products/docker-desktop), make sure
+the Docker daemon is running and clone this repository to your local machine. Then,  
+at a command line inside that clone, run
 
 ```
 docker build -t hazel-popl19 .
@@ -45,7 +43,11 @@ the paper text can be found as follows:
 - Theorem 3.2, _Type Assignment Unicity_, is in
   [type-assignment-unicity.agda](type-assignment-unicity.agda).
 - Theorem 3.3, _Expandability_, is in
-  [expandability.agda](expandability.agda).
+  [expandability.agda](expandability.agda). The paper also claims the following:
+    
+    > "The mechanization also establishes that when an expansion exists, it is unique (not shown)."
+    
+  This proof is available in [expansion-unicity.agda](expansion-unicity.agda).
 - Theorem 3.4, _Expansion Generality_, is in
   [expansion-generality.agda](expansion-generality.agda).
 - Definition 3.5, _Identity Substitution_, is in [core.agda](core.agda) on
@@ -66,14 +68,12 @@ the paper text can be found as follows:
 - Proposition 3.14, _Sensibility_, is taken as a postulate in
   [continuity.agda](continuity.agda). Sensibility for a slightly different
   and richer language is proven in the mechanization of our POPL17 work.
-- Corollary 3.15, _Continuity_, is proven in terms of a few postulates in
-  [continuity.agda](continuity.agda). This is meant more as a correct proof
-  sketch, showing the composition of the ingredients, than as an exhaustive
-  argument.
+- Though we did not explicitly claim a mechanization of Corollary 3.15, _Continuity_, a proof is given in terms of a few postulates encoding the results from Omar et al., POPL 2017 in
+  [continuity.agda](continuity.agda).
 
 # Description of Agda Files
 
-The theorems do not quite tell the whole story: they all rely on a variety
+The theorem statements rely on a variety
 of lemmas and smaller claims or observations that aren't explicitly
 mentioned in the paper text. What follows is a rough description of what to
 expect from each source file; more detail is provided in the comments
@@ -89,7 +89,7 @@ binders are globally not reused.
 That manifests in this development where we have chosen to add premises
 that binders are unique within a term or disjoint between terms when
 needed. These premises are fairly benign, since α-equivalence tells us they
-can always be satisfied without genuinely changing the term in
+can always be satisfied without changing the meaning of the term in
 question. Other standard approaches include using de Bruijn indices,
 Abstract Binding Trees, HOAS, or PHOAS to actually rewrite the terms when
 needed. We have chosen not to because _almost all_ of the theory we're
@@ -99,7 +99,7 @@ quickly become pervasive and obfuscate the actual points of interest.
 Similarly, we make explicit some premises about disjointness of contexts or
 variables being apart from contexts in some of the premises of some rules
 that would typically be taken as read in an on-paper presentation. This is
-a slightly generalized version of Barendrecht's convention, which we used
+a slightly generalized version of Barendrecht's convention (Barendregt, 1984), which we used
 in our POPL17 mechanization as well for the same reason.
 
 Since our base type system is bidirectional, the judgments defining it are
@@ -245,7 +245,7 @@ restricted fragment without holes.
 
 These files contain small technical lemmas for the corresponding judgement
 or theorem. They are generally not surprising once stated, although it's
-perhaps not immediately why they're needed, and tend to obfuscate the actual
+perhaps not immediate why they're needed, and tend to obfuscate the actual
 proof text. They are corralled into their own modules in an effort to aid
 readability.
 
