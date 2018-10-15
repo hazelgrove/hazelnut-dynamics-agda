@@ -99,9 +99,10 @@ needed. These premises are fairly benign, since α-equivalence tells us they
 can always be satisfied without changing the meaning of the term in
 question. Other standard approaches include using de Bruijn indices,
 Abstract Binding Trees, HOAS, or PHOAS to actually rewrite the terms when
-needed. We have chosen not to because _almost all_ of the theory we're
-interested in discussing here does not rely on these arguments, but they
-quickly become pervasive and obfuscate the actual points of interest.
+needed. We have chosen not to use these techniques in this case because
+_almost all_ of the theory we're interested in discussing here does not
+rely on these arguments, but the overhead quickly becomes pervasive and
+obfuscates the actual points of interest.
 
 Similarly, we make explicit some premises about disjointness of contexts or
 variables being apart from contexts in some of the premises of some rules
@@ -125,8 +126,8 @@ finite. We represent finite substitutions and substitution environments
 explicitly as inductive datatypes, `_,_⊢_:s:_`and `env` from
 [core.agda](core.agda) respectively, taking advantage of the fact that the
 base case in our semantics is always the identity substitution. This allows
-us to reason about substitutions in a way that passes the Agda termination
-checker.
+us to reason about substitutions in a well-founded way that passes the Agda
+termination checker.
 
 ## Postulates
 
