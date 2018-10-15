@@ -108,8 +108,8 @@ variables being apart from contexts in some of the premises of some rules
 that would typically be taken as read in an on-paper presentation. This is
 a slightly generalized version of Barendrecht's convention (Barendregt,
 1984), which we used in our POPL17
-[mechanization](https://github.com/hazelgrove/hazelnut-dynamics) as well
-for the same reason.
+[mechanization](https://github.com/hazelgrove/agda-popl17) as well for the
+same reason.
 
 Since our base type system is bidirectional, the judgments defining it are
 mutually recursive. That means that anything type-directed is very likely
