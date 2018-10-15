@@ -8,42 +8,68 @@ theorems up through Section 3.
 
 These proofs are known to check under `Agda 2.5.1.1`. The most direct, if
 not easiest, option to check the proofs is to install that version of Agda,
-or one compatible with it, and run `agda all.agda` at the command line.
+or one compatible with it, download the code in this repo, and run `agda
+all.agda` at the command line.
 
 Alternatively, we have provided a [Docker file](Dockerfile) to make it
 easier to build that environment and check the proofs. To use it, first
 install [Docker](https://www.docker.com/products/docker-desktop) and clone
 this repository to your local machine. Then, at a command line inside that
-clone, run `docker build -t hazel-popl19 .`. This may take a fair amount of
-time. When it finishes, run `docker run hazel-popl19`. This should take
-less than a minute, output a lot of lines that begin with `Finished` or
-`Checking`, and end with the line `Finished all.` to indicate success.
+clone, run
+
+```
+docker build -t hazel-popl19 .
+```
+
+This may take a fair amount of time. When it finishes, run
+
+```
+docker run hazel-popl19
+```
+
+This should take less than a minute, output a lot of lines that begin with
+`Finished` or `Checking`, and end with the line `Finished all.` to indicate
+success.
 
 # Where To Find Each Theorem
 
 All of the judgements defined in the paper are given in
 [core.agda](core.agda). The syntax is meant to mirror the on-paper notation
 as closely as possible, with some small variations because of the
-limitations of the language.
+limitations of Agda syntax.
 
 For easy reference, the proofs for the theorems in order of appearance in
 the paper text can be found as follows:
 
-- Theorem 3.1, _Typed Expansion_, is in [typed-expansion.agda](typed-expansion.agda)
-- Theorem 3.2, _Type Assignment Unicity_, is in [type-assignment-unicity.agda](type-assignment-unicity.agda)
-- Theorem 3.3, _Expandability_, is in [expandability.agda](expandability.agda )
-- Theorem 3.4, _Expansion Generality_, is in [expansion-generality.agda](expansion-generality.agda)
+- Theorem 3.1, _Typed Expansion_, is in [typed-expansion.agda](typed-expansion.agda).
+- Theorem 3.2, _Type Assignment Unicity_, is in
+  [type-assignment-unicity.agda](type-assignment-unicity.agda).
+- Theorem 3.3, _Expandability_, is in
+  [expandability.agda](expandability.agda).
+- Theorem 3.4, _Expansion Generality_, is in
+  [expansion-generality.agda](expansion-generality.agda).
 - Definition 3.5, _Identity Substitution_, is in [core.agda](core.agda) on
-  line 31 TODO CHECK THIS BEFORE SUBMISSION
+  line 31.
 - Definition 3.6, _Substitution Typing_, is in [core.agda](core.agda) on
-  line 251 TODO CHECK THIS BEFORE SUBMISSION
-- Theorem 3.7, _Finality_, is in [finality.agda](finality.agda)
-- Lemma 3.8, _Grounding_, is in [grounding.agda](grounding.agda)
-- Theorem 3.9, _Preservation_, is in [preservation.agda](preservation.agda)
-- Theorem 3.10, _Progress_, is in [progress.agda](progress.agda)
-- Theorem 3.11, _Complete Expansion_, is in [complete-expansion.agda](complete-expansion.agda)
-- Theorem 3.12, _Complete Preservation_, is in [complete-preservation.agda](complete-preservation.agda)
-- Theorem 3.13, _Complete Progress_, is in [complete-progress.agda](complete-progress.agda)
+  line 252.
+- Theorem 3.7, _Finality_, is in [finality.agda](finality.agda).
+- Lemma 3.8, _Grounding_, is in [grounding.agda](grounding.agda).
+- Theorem 3.9, _Preservation_, is in
+  [preservation.agda](preservation.agda).
+- Theorem 3.10, _Progress_, is in [progress.agda](progress.agda).
+- Theorem 3.11, _Complete Expansion_, is in
+  [complete-expansion.agda](complete-expansion.agda).
+- Theorem 3.12, _Complete Preservation_, is in
+  [complete-preservation.agda](complete-preservation.agda).
+- Theorem 3.13, _Complete Progress_, is in
+  [complete-progress.agda](complete-progress.agda).
+- Proposition 3.14, _Sensibility_, is taken as a postulate in
+  [continuity.agda](continuity.agda). Sensibility for a slightly different
+  and richer language is proven in the mechanization of our POPL17 work.
+- Corollary 3.15, _Continuity_, is proven in terms of a few postulates in
+  [continuity.agda](continuity.agda). This is meant more as a correct proof
+  sketch, showing the composition of the ingredients, than as an exhaustive
+  argument.
 
 # Description of Agda Files
 
@@ -52,6 +78,36 @@ of lemmas and smaller claims or observations that aren't explicitly
 mentioned in the paper text. What follows is a rough description of what to
 expect from each source file; more detail is provided in the comments
 inside each.
+
+On paper, we typically take it for granted that we can silently α-rename
+terms to equivalent terms whenever a collision of bound names is
+inconvenient. In a mechanization, we do not have that luxury and instead
+must be explicit in our treatment of binders in one way or
+another. Morally, we assume that all terms are in an α-normal form, where
+binders are globally not reused.
+
+That manifests in this development where we have chosen to add premises
+that binders are unique within a term or disjoint between terms when
+needed. These premises are fairly benign, since α-equivalence tells us they
+can always be satisfied without genuinely changing the term in
+question. Other standard approaches include using de Bruijn indices,
+Abstract Binding Trees, HOAS, or PHOAS to actually rewrite the terms when
+needed. We have chosen not to because _almost all_ of the theory we're
+interested in discussing here does not rely on these arguments, but they
+quickly become pervasive and obfuscate the actual points of interest.
+
+Similarly, we make explicit some premises about disjointness of contexts or
+variables being apart from contexts in some of the premises of some rules
+that would typically be taken as read in an on-paper presentation. This is
+a slightly generalized version of Barendrecht's convention, which we used
+in our POPL17 mechanization as well for the same reason.
+
+## Meta Concerns
+- [all.agda](all.agda) is morally a make file: it includes every module in
+  every other file, so running `$ agda all.agda` on a clean clone of this
+  repository will recheck every proof from scratch. It is known to load
+  cleanly with `Agda version 2.5.1.1`; we have not tested it on any other
+  version.
 
 ## Prelude and Datatypes
 
@@ -67,46 +123,35 @@ of the development.
 ## Core Definitions
 
 - [contexts.agda](contexts.agda) defines contexts as functions from natural
-  numbers to possible contents and proves the relevant properties needed to
-  make this definition usable.
-- [core.agda](core.agda)
+  numbers to possible contents and proves a collection of lemmas that makes
+  this definition practical.
+- [core.agda](core.agda) gives the definitions of all the grammars and
+  judgements in the order presented in the paper as types and metafunctions
+  in Agda. It also includes the definition of some judgements that are used
+  implicitly in on-paper notation but need to be made explicit in the
+  mechanization.
 
-## Meta Concerns
-- [all.agda](all.agda) is morally a make file: it includes every module in
-  every other file, so running `$ agda all.agda` on a clean clone of this
-  repository will recheck every proof from scratch. It is known to load
-  cleanly with `Agda version 2.5.1.1`; we have not tested it on any other
-  version.
-- [structural-assumptions.agda](structural-assumptions.agda) is a file of
-  postulates for standard structural properties about contexts and
-  judgements that we have not yet proven. This will not be included in the
-  final version of this mechanization, but it's helpful to have one place
-  to look to know exactly what is being taken on faith and what's really
-  proven. In a conservative sense, you can think of the rest of the
-  theorems as being implied by in the postulates taken here rather than in
-  their full form.
+## Structural Properties
 
-## Lemmas
+- [contraction.agda](contraction.agda) argues that contexts are the same up
+  to contraction, and therefore that every judgement that uses them enjoys
+  the contraction property.
+- [exchange.agda](exchange.agda) argues that contexts are the same up to
+  exchange, and therefore that every judgement that uses the enjoys the
+  exchange property.
+- [weakening.agda](weakening.agda) argues the weakening properties for
+  those judgements where we needed it in the other proofs. This is not
+  every weakening property for every judgement, and indeed some of them _do
+  not_ enjoy weakening in every argument.
 
-These files contain small technical lemmas for the corresponding judgement
-or theorem. They are generally not surprising once stated, although it's
-perhaps not immediately why they're needed, and tend to obfuscate the actual
-proof text. They are corralled into their own modules in an effort to aid
-readability.
-
-- [focus-formation.agda](focus-formation.agda)
-- [ground-decidable.agda](ground-decidable.agda)
-- [htype-decidable.agda](htype-decidable.agda)
-- [lemmas-consistency.agda](lemmas-consistency.agda)
-- [lemmas-ground.agda](lemmas-ground.agda)
-- [lemmas-matching.agda](lemmas-matching.agda)
-- [lemmas-progress-checks.agda](lemmas-progress-checks.agda)
-- [lemmas-subst-ta.agda](lemmas-subst-ta.agda)
-- [matched-ground-invariant.agda](matched-ground-invariant.agda)
-- [synth-unicity.agda](synth-unicity.agda) argues that the synthesis
-  judgement produces at most one type for a term.
-- [finality.agda](finality.agda) argues that a final expression only steps
-  to itself.
+  For example, the expansions do not support weakening in the typing
+  context because the rule for substitution typing requires that the lowest
+  substitution be exactly the identity, not something that can be weakened
+  to the identity. (See the definition of `STAId` on line 254 of
+  [core.agda](core.agda).) In practice, this is not a problem because you
+  wouldn't want to add anything there just to weaken it away, and allowing
+  imprecision here would break the (unicity of
+  expansion)[expansion-unicity.agda], which is desirable.
 
 ## Theorems
 
@@ -114,7 +159,7 @@ readability.
 
 Together, these files give the canonical forms lemma for the language. They
 are broken down in a slightly more explicit way than in the paper text,
-each type getting its own theorem, for usability later.
+each type getting its own theorem which improves usability.
 
 - [canonical-boxed-forms.agda](canonical-boxed-forms.agda)
 - [canonical-indeterminate-forms.agda](canonical-indeterminate-forms.agda)
@@ -141,17 +186,21 @@ each type getting its own theorem, for usability later.
 These first three files contain proofs of type safety for the core
 language, where terms and types may both have holes in them and still step.
 
-- [progress.agda](progress.agda) argues that any `dhexp` that gets assigned
-  a type either steps, is a boxed value, or is indeterminate
+- [progress.agda](progress.agda) argues that any well typed internal
+  expression either steps, is a boxed value, or is indeterminate.
 - [progress-checks.agda](progress-checks.agda) argues that the clauses in
-  progress are disjoint---that is to say that no expression both steps and
-  is a boxed value, etc.
+  the conclusion of progress are disjoint---i.e. no expression both steps
+  and is a boxed value.
 - [preservation.agda](preservation.agda) argues that stepping preserves
   type assignment.
 
+  This is the main place that our assumption about alpha-normal terms
+  appears: the statement of preservation makes explicit the standard
+  on-paper convention that binders not be reused in its argument.
+
 We also argue that our dynamics is a conservative extension in the sense
 that if you use it to evaluate terms in the calculus that have no holes in
-them, you get the same type safety theorems you might expect for the
+them, you get the standard type safety theorems you might expect for the
 restricted fragment without holes.
 
 - [complete-expansion.agda](complete-expansion.agda) argues that the
@@ -159,14 +208,75 @@ restricted fragment without holes.
   another complete term.
 - [complete-preservation.agda](complete-preservation.agda) argues that
   stepping a complete term produces a complete term that is assigned the
-  same type
+  same type, again with an explicit assumption about binder uniqueness.
 - [complete-progress.agda](complete-progress.agda) argues that complete
   terms are either a value or step.
 
+### Metatheory of Continuity
 
-### Metatheory of Instantiation
+- [continuity.agda](continuity.agda) includes a sketch of a proof of
+  continuity. This is built on postulates of a result from our POPL17 work
+  and a few properties that would need to be proven about the expression
+  forms from that work and the alpha-normal requirement we have in this
+  work.
 
-- [commutativity.agda](commutativity.agda) argues that stepping respects
-  hole instantiation.
-- [instantiation.agda](instantiation.agda) argues that hole instantiation
-  respects type assignment
+## Lemmas and Smaller Claims
+
+These files contain small technical lemmas for the corresponding judgement
+or theorem. They are generally not surprising once stated, although it's
+perhaps not immediately why they're needed, and tend to obfuscate the actual
+proof text. They are corralled into their own modules in an effort to aid
+readability.
+
+- [lemmas-complete.agda](lemmas-complete.agda)
+- [lemmas-consistency.agda](lemmas-consistency.agda)
+- [lemmas-disjointness.agda](lemmas-disjointness.agda)
+- [lemmas-freshness.agda](lemmas-freshness.agda)
+- [lemmas-gcomplete.agda](lemmas-gcomplete.agda)
+- [lemmas-ground.agda](lemmas-ground.agda)
+- [lemmas-matching.agda](lemmas-matching.agda)
+- [lemmas-progress-checks.agda](lemmas-progress-checks.agda)
+- [lemmas-subst-ta.agda](lemmas-subst-ta.agda)
+
+
+These files each establish smaller claims that are either not mentioned in
+the paper or mentioned only in passing. In terms of complexity and
+importance, they're somewhere between a lemma and a theorem.
+
+- [binders-disjoint-checks.agda](binders-disjoint-checks.agda) contains
+  some proofs that demonstrate that the `binders-disjoint` predicate acts
+  as expected. That judgement is defined inductively only on its left
+  argument. Since Agda judgements are not functions, lemmas are needed to
+  get the expected reduction behaivour in the right argument.
+- [cast-inert.agda](cast-inert.agda) shows a judgemental removal of
+  identity casts and argues that doing so does not change the type of the
+  expression. It would also be possible to argue that removing the identity
+  casts produces a term that steps in the same way, but identity cast
+  removal is a structural operation that goes under binders while our
+  evaluation semantics does not. To establish that result, we'd need a
+  equational theory of evaluation, compatible with the given one, that we
+  do not develop.
+- [disjointness.agda](disjointness.agda) characterizes the output hole
+  contexts produced in expansion, including disjointness guarantees needed
+  in the proofs of expandability and expansion generality.
+- [dom-eq.agda](dom-eq.agda) defines when two contexts have the same
+  context and some operations that preserve that property. This is used in
+  the proofs in [disjointness.agda](disjointness.agda).
+- [finality.agda](finality.agda) argues that a final expression only steps
+  to itself.
+- [focus-formation.agda](focus-formation.agda) argues that every `ε` is an
+  evaluation context. As noted in [core.agda](core.agda), because we elide
+  finality premises in the stepping rules, every `ε` is trivially an
+  evaluation context, so this proof is extremely immediate; it would be
+  more involved if those premises were in place.
+- [ground-decidable.agda](ground-decidable.agda) argues that every type is
+  either ground or not.
+- [grounding.agda](grounding.agda) argues the grounding property.
+- [holes-disjoint-checks.agda](holes-disjoint-checks.agda) contains some
+  checks on and lemmas for using the `holes-disjoint` judgement. Like
+  `binders-disjoint`, `holes-disjoint` is defined inductively on only its
+  left argument, so there's similar overhead.
+- [htype-decidable.agda](htype-decidable.agda) argues that every pair of
+  types are either equal or not.
+- [synth-unicity.agda](synth-unicity.agda) argues that the synthesis
+  judgement produces at most one type for a term.

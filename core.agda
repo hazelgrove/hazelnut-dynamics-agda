@@ -255,8 +255,7 @@ module core where
                   ((x : Nat) (τ : htyp) → (x , τ) ∈ Γ' → (x , τ) ∈ Γ) →
                   Δ , Γ ⊢ Id Γ' :s: Γ'
       STASubst : ∀{Γ Δ σ y Γ' d τ } →
-               Δ , Γ ,, (y , τ) ⊢ σ :s: Γ' → -- todo
-               -- Δ , Γ ⊢ σ :s: Γ' →
+               Δ , Γ ,, (y , τ) ⊢ σ :s: Γ' →
                Δ , Γ ⊢ d :: τ →
                Δ , Γ ⊢ Subst d y σ :s: Γ'
 

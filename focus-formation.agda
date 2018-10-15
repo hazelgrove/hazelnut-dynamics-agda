@@ -1,6 +1,8 @@
 open import core
 
 module focus-formation where
+  -- every ε is an evaluation context -- trivially, here, since we don't
+  -- include any of the premises in red brackets about finality
   focus-formation : ∀{d d' ε} → d == ε ⟦ d' ⟧ → ε evalctx
   focus-formation FHOuter = ECDot
   focus-formation (FHAp1 sub) = ECAp1 (focus-formation sub)
