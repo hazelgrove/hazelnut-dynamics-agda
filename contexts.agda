@@ -1,5 +1,4 @@
 open import Prelude
-open import List
 open import Nat
 
 module contexts where

@@ -1,6 +1,5 @@
 open import Prelude
 open import Nat
-open import List
 open import core
 open import contexts
 open import weakening

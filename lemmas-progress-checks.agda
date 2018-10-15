@@ -1,6 +1,5 @@
 open import Nat
 open import Prelude
-open import List
 open import core
 
 module lemmas-progress-checks where
