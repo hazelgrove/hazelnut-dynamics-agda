@@ -51,3 +51,4 @@ open import exchange
 open import weakening
 
 open import binders-disjoint-checks
+open import continuity
