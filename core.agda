@@ -512,7 +512,7 @@ module core where
       UBσId : ∀{x Γ} → unbound-in-σ x (Id Γ)
       UBσSubst : ∀{x d y σ} → unbound-in x d
                             → unbound-in-σ x σ
-                            → x ≠ y -- todo drop here maybe?
+                            → x ≠ y
                             → unbound-in-σ x (Subst d y σ)
 
     data unbound-in : (x : Nat) (d : ihexp) → Set where
