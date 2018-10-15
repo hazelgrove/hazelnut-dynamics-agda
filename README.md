@@ -108,8 +108,8 @@ Similarly, we make explicit some premises about disjointness of contexts or
 variables being apart from contexts in some of the premises of some rules
 that would typically be taken as read in an on-paper presentation. This is
 a slightly generalized version of Barendrecht's convention (Barendregt,
-1984), which we used in our POPL17
-[mechanization](https://github.com/hazelgrove/agda-popl17) as well for the
+1984), which we used in our [POPL17
+mechanization](https://github.com/hazelgrove/agda-popl17) as well for the
 same reason.
 
 Since our base type system is bidirectional, the judgments defining it are
@@ -153,9 +153,8 @@ Agda and we use it to reason about contexts.
 ## Prelude and Datatypes
 
 These files give definitions and syntactic sugar for common elements of
-type theory (sum types, products, sigmas, etc.) and data structures
-(natural numbers and lists) that are used pervasively throughout the rest
-of the development.
+type theory (sum types, products, sigmas, etc.) and natural numbers that
+are used pervasively throughout the rest of the development.
 
 - [Nat.agda](Nat.agda)
 - [Prelude.agda](Prelude.agda)
@@ -190,8 +189,8 @@ of the development.
   to the identity. (See the definition of `STAId` on line 254 of
   [core.agda](core.agda).) In practice, this is not a problem because you
   wouldn't want to add anything there just to weaken it away, and allowing
-  imprecision here would break the (unicity)[expansion-unicity.agda] of
-  expansion.
+  imprecision here would break the [unicity of
+  expansion](expansion-unicity.agda).
 
 ## Theorems
 
@@ -199,7 +198,8 @@ of the development.
 
 Together, these files give the canonical forms lemma for the language. They
 are broken down in a slightly more explicit way than in the paper text,
-each type getting its own theorem which improves usability.
+where each type gets its own theorem. This is easier to use in the proof of
+type safety.
 
 - [canonical-boxed-forms.agda](canonical-boxed-forms.agda)
 - [canonical-indeterminate-forms.agda](canonical-indeterminate-forms.agda)
@@ -262,22 +262,6 @@ restricted fragment without holes.
 
 ## Lemmas and Smaller Claims
 
-These files contain small technical lemmas for the corresponding judgement
-or theorem. They are generally not surprising once stated, although it's
-perhaps not immediate why they're needed, and tend to obfuscate the actual
-proof text. They are corralled into their own modules in an effort to aid
-readability.
-
-- [lemmas-complete.agda](lemmas-complete.agda)
-- [lemmas-consistency.agda](lemmas-consistency.agda)
-- [lemmas-disjointness.agda](lemmas-disjointness.agda)
-- [lemmas-freshness.agda](lemmas-freshness.agda)
-- [lemmas-gcomplete.agda](lemmas-gcomplete.agda)
-- [lemmas-ground.agda](lemmas-ground.agda)
-- [lemmas-matching.agda](lemmas-matching.agda)
-- [lemmas-progress-checks.agda](lemmas-progress-checks.agda)
-- [lemmas-subst-ta.agda](lemmas-subst-ta.agda)
-
 
 These files each establish smaller claims that are either not mentioned in
 the paper or mentioned only in passing. In terms of complexity and
@@ -320,3 +304,19 @@ importance, they're somewhere between a lemma and a theorem.
   types are either equal or not.
 - [synth-unicity.agda](synth-unicity.agda) argues that the synthesis
   judgement produces at most one type for a term.
+
+These files contain small technical lemmas for the corresponding judgement
+or theorem. They are generally not surprising once stated, although it's
+perhaps not immediate why they're needed, and tend to obfuscate the actual
+proof text. They are corralled into their own modules in an effort to aid
+readability.
+
+- [lemmas-complete.agda](lemmas-complete.agda)
+- [lemmas-consistency.agda](lemmas-consistency.agda)
+- [lemmas-disjointness.agda](lemmas-disjointness.agda)
+- [lemmas-freshness.agda](lemmas-freshness.agda)
+- [lemmas-gcomplete.agda](lemmas-gcomplete.agda)
+- [lemmas-ground.agda](lemmas-ground.agda)
+- [lemmas-matching.agda](lemmas-matching.agda)
+- [lemmas-progress-checks.agda](lemmas-progress-checks.agda)
+- [lemmas-subst-ta.agda](lemmas-subst-ta.agda)
