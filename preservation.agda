@@ -72,6 +72,14 @@ module preservation where
   preserve-trans bd (TACast (TACast ta x) x₁) (ITCastFail w y z) = TAFailedCast ta w y z
   preserve-trans bd (TAFailedCast x y z q) ()
 
+  lem-bd-ε1 : ∀{ d ε d0} → d == ε ⟦ d0 ⟧ → binders-unique d → binders-unique d0
+  lem-bd-ε1 FHOuter bd = bd
+  lem-bd-ε1 (FHAp1 eps) (BUAp bd bd₁ x) = lem-bd-ε1 eps bd
+  lem-bd-ε1 (FHAp2 eps) (BUAp bd bd₁ x) = lem-bd-ε1 eps bd₁
+  lem-bd-ε1 (FHNEHole eps) (BUNEHole bd x) = lem-bd-ε1 eps bd
+  lem-bd-ε1 (FHCast eps) (BUCast bd) = lem-bd-ε1 eps bd
+  lem-bd-ε1 (FHFailedCast eps) (BUFailedCast bd) = lem-bd-ε1 eps bd
+
   -- this is the main preservation theorem, gluing together the above
   preservation : {Δ : hctx} {d d' : ihexp} {τ : htyp} {Γ : tctx} →
              binders-unique d →
