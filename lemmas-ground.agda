@@ -2,11 +2,13 @@ open import Prelude
 open import core
 
 module lemmas-ground where
+  -- not ground types aren't hole to hole
   ground-arr-not-hole : ∀{τ} →
                       (τ ground → ⊥) →
                       (τ ≠ (⦇⦈ ==> ⦇⦈))
   ground-arr-not-hole notg refl = notg GHole
 
+  -- not ground types either have to be hole or an arrow
   notground : ∀{τ} → (τ ground → ⊥) → (τ == ⦇⦈) + (Σ[ τ1 ∈ htyp ] Σ[ τ2 ∈ htyp ] (τ == (τ1 ==> τ2)))
   notground {b} gnd = abort (gnd GBase)
   notground {⦇⦈} gnd = Inl refl

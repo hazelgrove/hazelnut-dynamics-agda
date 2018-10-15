@@ -15,7 +15,6 @@ module ground-decidable where
   ground-decidable ((τ ==> τ₁) ==> ⦇⦈) = Inr (λ ())
   ground-decidable ((τ ==> τ₁) ==> τ' ==> τ'') = Inr (λ ())
 
-
   ground-arr-lem : (τ : htyp) → ((τ ground) → ⊥) → (τ ≠  ⦇⦈) → Σ[ τ1 ∈ htyp ] Σ[ τ2 ∈ htyp ] ((τ == (τ1 ==> τ2)) × ((τ1 ==> τ2) ≠ (⦇⦈ ==> ⦇⦈)))
   ground-arr-lem b ng nh = abort (ng GBase)
   ground-arr-lem ⦇⦈ ng nh = abort (nh refl)

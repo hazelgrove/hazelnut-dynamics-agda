@@ -292,10 +292,6 @@ module core where
              Δ , Γ ⊢ d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩ :: τ2
 
   -- substitution
-  --
-  -- todo: if substitution lemma is hard to prove, maybe get a premise that
-  -- it's final; analagous to "value substitution". or define it
-  -- judgementally instead of as a function.
   [_/_]_ : ihexp → Nat → ihexp → ihexp
   [ d / y ] c = c
   [ d / y ] X x

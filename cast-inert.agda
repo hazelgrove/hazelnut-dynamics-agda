@@ -15,7 +15,7 @@ module cast-inert where
                   Γ gcomplete →
                   d dcomplete →
                   Δ , Γ ⊢ d :: τ →
-                  cast-id d -- all casts are id, and there are no failed casts
+                  cast-id d
   cast-inert gc dc TAConst = CIConst
   cast-inert gc dc (TAVar x₁) = CIVar
   cast-inert gc (DCLam dc x₁) (TALam x₂ wt) = CILam (cast-inert (gcomp-extend gc x₁ x₂) dc wt)
@@ -28,7 +28,9 @@ module cast-inert where
   ... | refl = CICast (cast-inert gc dc wt)
   cast-inert gc () (TAFailedCast wt x x₁ x₂)
 
-  -- relates expressions to the same thing with all identity casts removed
+  -- relates expressions to the same thing with all identity casts
+  -- removed. note that this is a syntactic rewrite and it goes under
+  -- binders.
   data no-id-casts : ihexp → ihexp → Set where
     NICConst  : no-id-casts c c
     NICVar    : ∀{x} → no-id-casts (X x) (X x)

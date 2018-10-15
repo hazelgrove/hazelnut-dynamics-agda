@@ -3,6 +3,7 @@ open import Prelude
 open import core
 
 module lemmas-progress-checks where
+  -- boxed values don't have an instruction transition
   boxedval-not-trans : ∀{d d'} → d boxedval → d →> d' → ⊥
   boxedval-not-trans (BVVal VConst) ()
   boxedval-not-trans (BVVal VLam) ()
@@ -13,6 +14,7 @@ module lemmas-progress-checks where
   boxedval-not-trans (BVHoleCast x a) (ITExpand ())
   boxedval-not-trans (BVHoleCast x x₁) (ITCastFail x₂ () x₄)
 
+  -- indets don't have an instruction transition
   indet-not-trans : ∀{d d'} → d indet → d →> d' → ⊥
   indet-not-trans IEHole ()
   indet-not-trans (INEHole x) ()
@@ -31,14 +33,18 @@ module lemmas-progress-checks where
   indet-not-trans (ICastHoleGround x x₁ x₂) (ITCastFail x₃ x₄ x₅) = x _ _ refl
   indet-not-trans (IFailedCast x x₁ x₂ x₃) ()
 
+  -- finals don't have an instruction transition
   final-not-trans : ∀{d d'} → d final → d →> d' → ⊥
   final-not-trans (FBoxed x) = boxedval-not-trans x
   final-not-trans (FIndet x) = indet-not-trans x
 
+  -- finals cast from a ground are still final
   final-gnd-cast : ∀{ d τ } → d final → τ ground → (d ⟨ τ ⇒ ⦇⦈ ⟩) final
   final-gnd-cast (FBoxed x) gnd = FBoxed (BVHoleCast gnd x)
   final-gnd-cast (FIndet x) gnd = FIndet (ICastGroundHole gnd x)
 
+  -- if an expression results from filling a hole in an evaluation context,
+  -- the hole-filler must have been final
   final-sub-final : ∀{d ε x} → d final → d == ε ⟦ x ⟧ → x final
   final-sub-final x FHOuter = x
   final-sub-final (FBoxed (BVVal ())) (FHAp1 eps)

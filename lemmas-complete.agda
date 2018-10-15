@@ -5,7 +5,7 @@ open import core
 open import lemmas-gcomplete
 
 module lemmas-complete where
-    -- no term is both complete and indeterminate
+  -- no term is both complete and indeterminate
   lem-ind-comp : ∀{d} → d dcomplete → d indet → ⊥
   lem-ind-comp DCVar ()
   lem-ind-comp DCConst ()

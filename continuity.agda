@@ -10,7 +10,8 @@ open import typed-expansion
 
 module continuity where
   -- we take the sensibilty theorem as a postulate; for a proof, refer to
-  -- the POPL17 mechanization.
+  -- the POPL17 mechanization. we also postulate some glue that allows us
+  -- to use our theorems here on the shape of results from that work.
   postulate
     action : Set
     zexp : Set
@@ -21,8 +22,6 @@ module continuity where
                   Γ ⊢ (e ◆) => τ →
                   Γ ⊢ e => τ ~ α ~> e' => τ' →
                   Γ ⊢ (e' ◆) => τ'
-
-  postulate
     binders-unique-h : hexp → Set
     binders-unique-z : zexp → Set
     binders-unique-cursor1 : ∀{e} → binders-unique-z e → binders-unique-h (e ◆)
@@ -35,6 +34,7 @@ module continuity where
                        binders-unique-h e →
                        Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
                        binders-unique d
+
 
   continuity : ∀{ e τ α e' τ' }
              → binders-unique-z e

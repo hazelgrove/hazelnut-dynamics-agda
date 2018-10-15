@@ -8,6 +8,8 @@ open import lemmas-disjointness
 open import binders-disjoint-checks
 
 module lemmas-subst-ta where
+  -- this is what makes the binders-unique assumption below good enough: it
+  -- tells us that we can pick fresh variables
   mutual
     binders-envfresh : ∀{Δ Γ Γ' y σ} → Δ , Γ ⊢ σ :s: Γ' → y # Γ → unbound-in-σ y σ → binders-unique-σ σ → envfresh y σ
     binders-envfresh {Γ' = Γ'} {y = y} (STAId x) apt unbound unique with ctxindirect Γ' y
@@ -36,7 +38,7 @@ module lemmas-subst-ta where
     binders-fresh (TACast wt x₁) (BUCast bu2) (UBCast ub) apt = FCast (binders-fresh wt  bu2  ub apt)
     binders-fresh (TAFailedCast wt x x₁ x₂) (BUFailedCast bu2) (UBFailedCast ub) apt = FFailedCast (binders-fresh wt  bu2  ub apt)
 
-
+  -- the substition lemma for preservation
   lem-subst : ∀{Δ Γ x τ1 d1 τ d2 } →
                   x # Γ →
                   binders-disjoint d1 d2 →

@@ -48,7 +48,7 @@ module complete-expansion where
       with complete-expansion-synth gc ec x₂
     ... | ih1 , ih2 , ih3 = ih1 , ih2 , ih3
 
-    --this is just a convenience since it shows up a few times above
+    -- this is just a convenience since it shows up a few times above
     comp-ana : ∀{Γ e τ d τ' Δ} →
        Γ gcomplete →
        Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →

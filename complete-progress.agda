@@ -9,18 +9,11 @@ open import lemmas-complete
 
 module complete-progress where
 
-  -- todo: explain this
+  -- as in progress, we define a datatype for the possible outcomes of
+  -- progress for readability.
   data okc : (d : ihexp) (Δ : hctx) → Set where
     V : ∀{d Δ} → d val → okc d Δ
     S : ∀{d Δ} → Σ[ d' ∈ ihexp ] (d ↦ d') → okc d Δ
-
-  -- todo: lemma file if an arrow is disequal, it disagrees in the first or second argument
-  ne-factor : ∀{τ1 τ2 τ3 τ4} → (τ1 ==> τ2) ≠ (τ3 ==> τ4) → (τ1 ≠ τ3) + (τ2 ≠ τ4)
-  ne-factor {τ1} {τ2} {τ3} {τ4} ne with htype-dec τ1 τ3 | htype-dec τ2 τ4
-  ne-factor ne | Inl refl | Inl refl = Inl (λ x → ne refl)
-  ne-factor ne | Inl x | Inr x₁ = Inr x₁
-  ne-factor ne | Inr x | Inl x₁ = Inl x
-  ne-factor ne | Inr x | Inr x₁ = Inl x
 
   complete-progress : {Δ : hctx} {d : ihexp} {τ : htyp} →
                        Δ , ∅ ⊢ d :: τ →

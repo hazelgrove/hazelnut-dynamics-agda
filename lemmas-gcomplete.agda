@@ -4,7 +4,8 @@ open import core
 open import contexts
 
 module lemmas-gcomplete where
-  -- g completeness respects extension
+  -- if you add a complete type to a complete context, the result is also a
+  -- complete context
   gcomp-extend : ∀{Γ τ x} → Γ gcomplete → τ tcomplete → x # Γ → (Γ ,, (x , τ)) gcomplete
   gcomp-extend {Γ} {τ} {x} gc tc apart x_query τ_query x₁ with natEQ x x_query
   gcomp-extend {Γ} {τ} {x} gc tc apart .x τ_query x₂ | Inl refl = tr (λ qq → qq tcomplete) (lem-apart-union-eq {Γ = Γ} apart x₂) tc

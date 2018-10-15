@@ -102,6 +102,28 @@ that would typically be taken as read in an on-paper presentation. This is
 a slightly generalized version of Barendrecht's convention, which we used
 in our POPL17 mechanization as well for the same reason.
 
+Since our base type system is bidirectional, the judgments defining it are
+mutually recursive. That means that anything type-directed is very likely
+to also be mutually recursive. The grammar of internal expressions is also
+mutually recursive with the definition of substitution environments. All
+told, a fair number of theorems are mutually recursive as this percolates
+through. We try to name things in a suggestive way, using `x-synth` and
+`x-ana` for the two halves of the same theorem.
+
+## Postulates
+
+We have benign postulates in two places:
+
+- First, we postulate function extensionality in
+[Prelude.agda](Prelude.agda), because it is known to be independent from
+Agda and we use it to reason about contexts.
+
+- Second, in [continuity.agda](continuity.agda), we postulate some
+  judgemental forms and theorems from our POPL17 mechanization in order to
+  demonstrate the connections to it described in the paper. We also
+  postulate some glue code that allows us to use those theorems in this
+  work.
+
 ## Meta Concerns
 - [all.agda](all.agda) is morally a make file: it includes every module in
   every other file, so running `$ agda all.agda` on a clean clone of this
@@ -116,7 +138,6 @@ type theory (sum types, products, sigmas, etc.) and data structures
 (natural numbers and lists) that are used pervasively throughout the rest
 of the development.
 
-- [List.agda](List.agda)
 - [Nat.agda](Nat.agda)
 - [Prelude.agda](Prelude.agda)
 

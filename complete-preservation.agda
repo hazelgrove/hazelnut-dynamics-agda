@@ -5,6 +5,8 @@ open import contexts
 open import preservation
 
 module complete-preservation where
+  -- if you substitute a complete term into a complete term, the result is
+  -- still complete.
   cp-subst : ∀ {x d1 d2} →
            d1 dcomplete →
            d2 dcomplete →
@@ -26,6 +28,7 @@ module complete-preservation where
   lem-proj : {x : Nat} {d : ihexp} { τ : htyp} → (·λ_[_]_ x τ d) dcomplete → Σ[ y ∈ Nat ] (y == x)
   lem-proj {x} (DCLam dc x₁) = x , refl
 
+  -- a complete well typed term steps to a complete term.
   cp-rhs : ∀{d τ d' Δ} →
              d dcomplete →
              Δ , ∅ ⊢ d :: τ →
@@ -54,6 +57,7 @@ module complete-preservation where
   cp-rhs (DCCast dc x x₁) (TACast wt x₂) (Step (FHCast x₃) x₄ (FHCast x₅)) = DCCast (cp-rhs dc wt (Step x₃ x₄ x₅)) x x₁
   cp-rhs () (TAFailedCast wt x x₁ x₂) stp
 
+  -- this is the main result of this file.
   complete-preservation : ∀{d τ d' Δ} →
              binders-unique d →
              d dcomplete →
