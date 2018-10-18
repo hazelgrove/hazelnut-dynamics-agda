@@ -38,8 +38,8 @@ module contraction where
 
   -- as an aside, this also establishes the other direction which is rarely
   -- mentioned, since equality is symmetric
-  expand-synth : ∀{ Γ x τ e τ'}
+  elab-synth : ∀{ Γ x τ e τ'}
                   → (Γ ,, (x , τ)) ⊢ e => τ'
                   → (Γ ,, (x , τ) ,, (x , τ)) ⊢ e => τ'
-  expand-synth {Γ = Γ} {e = e} {τ' = τ'} =
+  elab-synth {Γ = Γ} {e = e} {τ' = τ'} =
     tr (λ qq → qq ⊢ e => τ') (! (contract Γ))

@@ -24,11 +24,11 @@ open import lemmas-ground
 open import lemmas-matching
 open import synth-unicity
 
-open import expandability
-open import expansion-generality
-open import expansion-unicity
+open import elaborability
+open import elaboration-generality
+open import elaboration-unicity
 open import type-assignment-unicity
-open import typed-expansion
+open import typed-elaboration
 
 open import canonical-boxed-forms
 open import canonical-indeterminate-forms
@@ -40,7 +40,7 @@ open import progress
 open import progress-checks
 
 open import cast-inert
-open import complete-expansion
+open import complete-elaboration
 open import complete-preservation
 open import complete-progress
 open import lemmas-complete

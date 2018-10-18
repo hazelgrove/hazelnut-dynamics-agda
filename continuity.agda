@@ -5,8 +5,8 @@ open import contexts
 
 open import progress
 open import preservation
-open import expandability
-open import typed-expansion
+open import elaborability
+open import typed-elaboration
 
 module continuity where
   -- we take the sensibilty theorem as a postulate; for a proof, refer to
@@ -49,8 +49,8 @@ module continuity where
                     )
                 )
   continuity bu wt action with sensibility wt action
-  ... | sense with expandability-synth sense
-  ... | d , Δ , exp with typed-expansion-synth exp
+  ... | sense with elaborability-synth sense
+  ... | d , Δ , exp with typed-elaboration-synth exp
   ... | d::τ' with progress d::τ'
   ... | (S (d' , stp)) =  Δ , d , exp , d::τ' , Inl (d' , stp , preservation (expansion-unique (binders-unique-cursor1 (binders-unique-sensibility bu action)) exp) d::τ' stp)
   ... | (I ind) = Δ , d , exp , d::τ' , Inr (Inr ind)

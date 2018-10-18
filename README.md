@@ -43,13 +43,14 @@ limitations of Agda syntax.
 For easy reference, the proofs for the theorems in order of appearance in
 the paper text can be found as follows:
 
-- Theorem 3.1, _Typed Expansion_, is in [typed-expansion.agda](typed-expansion.agda).
+- Theorem 3.1, _Typed Elaboration_, is in
+  [typed-elaboration.agda](typed-elaboration.agda).
 - Theorem 3.2, _Type Assignment Unicity_, is in
   [type-assignment-unicity.agda](type-assignment-unicity.agda).
-- Theorem 3.3, _Expandability_, is in
-  [expandability.agda](expandability.agda).
-- Theorem 3.4, _Expansion Generality_, is in
-  [expansion-generality.agda](expansion-generality.agda).
+- Theorem 3.3, _Elaborability_, is in
+  [elaborability.agda](elaborability.agda).
+- Theorem 3.4, _Elaboration Generality_, is in
+  [elaboration-generality.agda](elaboration-generality.agda).
 - Definition 3.5, _Identity Substitution_, is in [core.agda](core.agda) on
   line 31.
 - Definition 3.6, _Substitution Typing_, is in [core.agda](core.agda) on
@@ -59,8 +60,8 @@ the paper text can be found as follows:
 - Theorem 3.9, _Preservation_, is in
   [preservation.agda](preservation.agda).
 - Theorem 3.10, _Progress_, is in [progress.agda](progress.agda).
-- Theorem 3.11, _Complete Expansion_, is in
-  [complete-expansion.agda](complete-expansion.agda).
+- Theorem 3.11, _Complete Elaboration_, is in
+  [complete-elaboration.agda](complete-elaboration.agda).
 - Theorem 3.12, _Complete Preservation_, is in
   [complete-preservation.agda](complete-preservation.agda).
 - Theorem 3.13, _Complete Progress_, is in
@@ -75,9 +76,9 @@ the paper text can be found as follows:
   postulates encoding the results from Omar et al., POPL 2017.
 
 The paper also claims that "The mechanization also establishes that when an
-expansion exists, it is unique (not shown)." This proof is available in
-[expansion-unicity.agda](expansion-unicity.agda). In the final version of
-the paper, this will be listed as a Theorem.
+elaboration exists, it is unique (not shown)." This proof is available in
+[elaboration-unicity.agda](elaboration-unicity.agda). In the final version
+of the paper, this will be listed as a Theorem.
 
 # Description of Agda Files
 
@@ -183,14 +184,14 @@ are used pervasively throughout the rest of the development.
   every weakening property for every judgement, and indeed some of them _do
   not_ enjoy weakening in every argument.
 
-  For example, the expansions do not support weakening in the typing
+  For example, the elaborations do not support weakening in the typing
   context because the rule for substitution typing requires that the lowest
   substitution be exactly the identity, not something that can be weakened
   to the identity. (See the definition of `STAId` on line 254 of
   [core.agda](core.agda).) In practice, this is not a problem because you
   wouldn't want to add anything there just to weaken it away, and allowing
   imprecision here would break the [unicity of
-  expansion](expansion-unicity.agda).
+  elaboration](elaboration-unicity.agda).
 
 ## Theorems
 
@@ -210,16 +211,16 @@ type safety.
 - [type-assignment-unicity.agda](type-assignment-unicity.agda) argues that
   the type assignment system assigns at most one type to any term.
 
-### Metatheory of Expansion
+### Metatheory of Elaboration
 
-- [expansion-generality.agda](expansion-generality.agda) argues that the expansion
-  judgements respect the bidirectional typing system.
-- [expandability.agda](expandability.agda) argues that any well typed
-  external term can be expanded to a internal term.
-- [expansion-unicity.agda](expansion-unicity.agda) argues that expansion
-  produces at most one result.
-- [typed-expansion.agda](typed-expansion.agda) argues that the expansion
-  respects the type assignment system.
+- [elaboration-generality.agda](elaboration-generality.agda) argues that
+  the elaboration judgements respect the bidirectional typing system.
+- [elaborability.agda](elaborability.agda) argues that any well typed
+  external term can be elaborated to a internal term.
+- [elaboration-unicity.agda](elaboration-unicity.agda) argues that
+  elaboration produces at most one result.
+- [typed-elaboration.agda](typed-elaboration.agda) argues that the
+  elaboration respects the type assignment system.
 
 ### Type Safety
 
@@ -243,9 +244,9 @@ that if you use it to evaluate terms in the calculus that have no holes in
 them, you get the standard type safety theorems you might expect for the
 restricted fragment without holes.
 
-- [complete-expansion.agda](complete-expansion.agda) argues that the
-  expansion of a complete external term into the internal language produces
-  another complete term.
+- [complete-elaboration.agda](complete-elaboration.agda) argues that the
+  elaboration of a complete external term produces a complete internal
+  term.
 - [complete-preservation.agda](complete-preservation.agda) argues that
   stepping a complete term produces a complete term that is assigned the
   same type, again with an explicit assumption about binder uniqueness.
@@ -281,8 +282,8 @@ importance, they're somewhere between a lemma and a theorem.
   equational theory of evaluation, compatible with the given one, that we
   do not develop.
 - [disjointness.agda](disjointness.agda) characterizes the output hole
-  contexts produced in expansion, including disjointness guarantees needed
-  in the proofs of expandability and expansion generality.
+  contexts produced in elaboration, including disjointness guarantees
+  needed in the proofs of Elaborability and Elaboration Generality.
 - [dom-eq.agda](dom-eq.agda) defines when two contexts have the same
   context and some operations that preserve that property. This is used in
   the proofs in [disjointness.agda](disjointness.agda).

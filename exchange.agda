@@ -50,18 +50,18 @@ module exchange where
   exchange-ana {Γ} {x} {y} {τ} {τ1} {τ2} {e} neq  =
     tr (λ qq → qq ⊢ e <= τ) (swap Γ neq)
 
-  exchange-expand-synth : ∀{Γ x y τ1 τ2 e τ d Δ} →
+  exchange-elab-synth : ∀{Γ x y τ1 τ2 e τ d Δ} →
                         x ≠ y →
                         (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ e ⇒ τ ~> d ⊣ Δ →
                         (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ e ⇒ τ ~> d ⊣ Δ
-  exchange-expand-synth {Γ = Γ} {e = e} {τ = τ} {d = d } {Δ = Δ} neq =
+  exchange-elab-synth {Γ = Γ} {e = e} {τ = τ} {d = d } {Δ = Δ} neq =
     tr (λ qq → qq ⊢ e ⇒ τ ~> d ⊣ Δ) (swap Γ neq)
 
-  exchange-expand-ana : ∀ {Γ x y τ1 τ2 τ τ' d e Δ} →
+  exchange-elab-ana : ∀ {Γ x y τ1 τ2 τ τ' d e Δ} →
                       x ≠ y →
                       (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                       (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
-  exchange-expand-ana {Γ = Γ} {τ = τ} {τ' = τ'} {d = d} {e = e} {Δ = Δ} neq =
+  exchange-elab-ana {Γ = Γ} {τ = τ} {τ' = τ'} {d = d} {e = e} {Δ = Δ} neq =
     tr (λ qq → qq ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ) (swap Γ neq)
 
   exchange-ta-Γ : ∀{Γ x y τ1 τ2 d τ Δ } →

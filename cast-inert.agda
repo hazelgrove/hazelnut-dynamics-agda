@@ -2,7 +2,7 @@ open import Nat
 open import Prelude
 open import core
 open import contexts
-open import typed-expansion
+open import typed-elaboration
 open import lemmas-gcomplete
 open import lemmas-complete
 open import progress-checks
