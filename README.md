@@ -51,34 +51,31 @@ the paper text can be found as follows:
   [elaborability.agda](elaborability.agda).
 - Theorem 3.4, _Elaboration Generality_, is in
   [elaboration-generality.agda](elaboration-generality.agda).
-- Definition 3.5, _Identity Substitution_, is in [core.agda](core.agda) on
+- Theorem 3.5, _Elaboration Unicity_, is in
+  [elaboration-unicity.agda](elaboration-unicity.agda).
+- Definition 3.6, _Identity Substitution_, is in [core.agda](core.agda) on
   line 31.
-- Definition 3.6, _Substitution Typing_, is in [core.agda](core.agda) on
+- Definition 3.7, _Substitution Typing_, is in [core.agda](core.agda) on
   line 252.
-- Theorem 3.7, _Finality_, is in [finality.agda](finality.agda).
-- Lemma 3.8, _Grounding_, is in [grounding.agda](grounding.agda).
-- Theorem 3.9, _Preservation_, is in
+- Theorem 3.8, _Finality_, is in [finality.agda](finality.agda).
+- Lemma 3.9, _Grounding_, is in [grounding.agda](grounding.agda).
+- Theorem 3.10, _Preservation_, is in
   [preservation.agda](preservation.agda).
-- Theorem 3.10, _Progress_, is in [progress.agda](progress.agda).
-- Theorem 3.11, _Complete Elaboration_, is in
+- Theorem 3.11, _Progress_, is in [progress.agda](progress.agda).
+- Theorem 3.12, _Complete Elaboration_, is in
   [complete-elaboration.agda](complete-elaboration.agda).
-- Theorem 3.12, _Complete Preservation_, is in
+- Theorem 3.13, _Complete Preservation_, is in
   [complete-preservation.agda](complete-preservation.agda).
-- Theorem 3.13, _Complete Progress_, is in
+- Theorem 3.14, _Complete Progress_, is in
   [complete-progress.agda](complete-progress.agda).
-- Proposition 3.14, _Sensibility_, is taken as a postulate in
+- Proposition 3.15, _Sensibility_, is taken as a postulate in
   [continuity.agda](continuity.agda). Sensibility for a slightly different
   and richer language is proven in the mechanization of our
   [POPL17](https://arxiv.org/pdf/1607.04180) work.
--  Corollary 3.15, _Continuity_, is in
+-  Corollary 3.16, _Continuity_, is in
   [continuity.agda](continuity.agda). Though we did not explicitly claim a
   mechanization of this claim, we give a proof is given in terms of a few
   postulates encoding the results from Omar et al., POPL 2017.
-
-The paper also claims that "The mechanization also establishes that when an
-elaboration exists, it is unique (not shown)." This proof is available in
-[elaboration-unicity.agda](elaboration-unicity.agda). In the final version
-of the paper, this will be listed as a Theorem.
 
 # Description of Agda Files
 

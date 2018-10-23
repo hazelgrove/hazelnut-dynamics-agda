@@ -30,10 +30,10 @@ module elaboration-unicity where
       with elaboration-unicity-ana x x₁
     ... | refl , refl , refl = refl , refl , refl
 
-    elaboration-unicity-ana : {Γ : tctx} {e : hexp} {τ1 τ2 τ2' : htyp} {d d' : ihexp} {Δ Δ' : hctx} →
-                          Γ ⊢ e ⇐ τ1 ~> d  :: τ2  ⊣ Δ  →
-                          Γ ⊢ e ⇐ τ1 ~> d' :: τ2' ⊣ Δ' →
-                          d == d' × τ2 == τ2' × Δ == Δ'
+    elaboration-unicity-ana : {Γ : tctx} {e : hexp} {τ τ1 τ2 : htyp} {d1 d2 : ihexp} {Δ1 Δ2 : hctx} →
+                          Γ ⊢ e ⇐ τ ~> d1 :: τ1 ⊣ Δ1  →
+                          Γ ⊢ e ⇐ τ ~> d2 :: τ2 ⊣ Δ2 →
+                          d1 == d2 × τ1 == τ2 × Δ1 == Δ2
     elaboration-unicity-ana (EALam x₁ m D1) (EALam x₂ m2 D2)
       with match-unicity m m2
     ... | refl with elaboration-unicity-ana D1 D2
