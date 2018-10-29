@@ -68,5 +68,5 @@ module progress-checks where
 
     -- final expressions don't step
     final-not-step : ∀{d} → d final → Σ[ d' ∈ ihexp ] (d ↦ d') → ⊥
-    final-not-step (FBoxed x) stp = boxedval-not-step x stp
+    final-not-step (FBoxedVal x) stp = boxedval-not-step x stp
     final-not-step (FIndet x) stp = indet-not-step x stp

@@ -359,8 +359,8 @@ module core where
 
     -- final expressions
     data _final : (d : ihexp) → Set where
-      FBoxed : ∀{d} → d boxedval → d final
-      FIndet : ∀{d} → d indet    → d final
+      FBoxedVal : ∀{d} → d boxedval → d final
+      FIndet    : ∀{d} → d indet    → d final
 
 
   -- contextual dynamics

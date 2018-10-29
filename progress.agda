@@ -55,11 +55,11 @@ module progress where
   progress (TAAp wt1 wt2) | I x | BV x₁
     with canonical-indeterminate-forms-arr wt1 x
   progress (TAAp wt1 wt2) | I x | BV y | CIFACast (_ , _ , _ , _ , _ , refl , _ , _ ) = S (_ , Step FHOuter ITApCast FHOuter)
-  progress (TAAp wt1 wt2) | I x | BV y | CIFAEHole (_ , _ , _ , refl , _)             = I (IAp (λ _ _ _ _ _ ()) x (FBoxed y))
-  progress (TAAp wt1 wt2) | I x | BV y | CIFANEHole (_ , _ , _ , _ , _ , refl , _)    = I (IAp (λ _ _ _ _ _ ()) x (FBoxed y))
-  progress (TAAp wt1 wt2) | I x | BV y | CIFAAp (_ , _ , _ , _ , _ , refl , _)        = I (IAp (λ _ _ _ _ _ ()) x (FBoxed y))
-  progress (TAAp wt1 wt2) | I x | BV y | CIFACastHole (_ , refl , refl , refl , _ )   = I (IAp (λ _ _ _ _ _ ()) x (FBoxed y))
-  progress (TAAp wt1 wt2) | I x | BV y | CIFAFailedCast (_ , _ , refl , _ )           = I (IAp (λ _ _ _ _ _ ()) x (FBoxed y))
+  progress (TAAp wt1 wt2) | I x | BV y | CIFAEHole (_ , _ , _ , refl , _)             = I (IAp (λ _ _ _ _ _ ()) x (FBoxedVal y))
+  progress (TAAp wt1 wt2) | I x | BV y | CIFANEHole (_ , _ , _ , _ , _ , refl , _)    = I (IAp (λ _ _ _ _ _ ()) x (FBoxedVal y))
+  progress (TAAp wt1 wt2) | I x | BV y | CIFAAp (_ , _ , _ , _ , _ , refl , _)        = I (IAp (λ _ _ _ _ _ ()) x (FBoxedVal y))
+  progress (TAAp wt1 wt2) | I x | BV y | CIFACastHole (_ , refl , refl , refl , _ )   = I (IAp (λ _ _ _ _ _ ()) x (FBoxedVal y))
+  progress (TAAp wt1 wt2) | I x | BV y | CIFAFailedCast (_ , _ , refl , _ )           = I (IAp (λ _ _ _ _ _ ()) x (FBoxedVal y))
     -- if the left is a boxed value, inspect the right
   progress (TAAp wt1 wt2) | BV v | S (_ , Step x y z) = S (_ , Step (FHAp2  x) y (FHAp2  z))
   progress (TAAp wt1 wt2) | BV v | I i
@@ -79,7 +79,7 @@ module progress where
     with progress wt
   ... | S (_ , Step x y z) = S (_ , Step (FHNEHole x) y (FHNEHole z))
   ... | I  x = I (INEHole (FIndet x))
-  ... | BV x = I (INEHole (FBoxed x))
+  ... | BV x = I (INEHole (FBoxedVal x))
 
     -- casts
   progress (TACast wt con)
@@ -161,4 +161,4 @@ module progress where
     with progress wt
   progress (TAFailedCast wt y z w) | S (d' , Step x a q) = S (_ , Step (FHFailedCast x) a (FHFailedCast q))
   progress (TAFailedCast wt y z w) | I x = I (IFailedCast (FIndet x) y z w)
-  progress (TAFailedCast wt y z w) | BV x = I (IFailedCast (FBoxed x) y z w)
+  progress (TAFailedCast wt y z w) | BV x = I (IFailedCast (FBoxedVal x) y z w)

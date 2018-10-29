@@ -35,25 +35,25 @@ module lemmas-progress-checks where
 
   -- finals don't have an instruction transition
   final-not-trans : ∀{d d'} → d final → d →> d' → ⊥
-  final-not-trans (FBoxed x) = boxedval-not-trans x
+  final-not-trans (FBoxedVal x) = boxedval-not-trans x
   final-not-trans (FIndet x) = indet-not-trans x
 
   -- finals cast from a ground are still final
   final-gnd-cast : ∀{ d τ } → d final → τ ground → (d ⟨ τ ⇒ ⦇⦈ ⟩) final
-  final-gnd-cast (FBoxed x) gnd = FBoxed (BVHoleCast gnd x)
+  final-gnd-cast (FBoxedVal x) gnd = FBoxedVal (BVHoleCast gnd x)
   final-gnd-cast (FIndet x) gnd = FIndet (ICastGroundHole gnd x)
 
   -- if an expression results from filling a hole in an evaluation context,
   -- the hole-filler must have been final
   final-sub-final : ∀{d ε x} → d final → d == ε ⟦ x ⟧ → x final
   final-sub-final x FHOuter = x
-  final-sub-final (FBoxed (BVVal ())) (FHAp1 eps)
-  final-sub-final (FBoxed (BVVal ())) (FHAp2 eps)
-  final-sub-final (FBoxed (BVVal ())) (FHNEHole eps)
-  final-sub-final (FBoxed (BVVal ())) (FHCast eps)
-  final-sub-final (FBoxed (BVVal ())) (FHFailedCast y)
-  final-sub-final (FBoxed (BVArrCast x₁ x₂)) (FHCast eps) = final-sub-final (FBoxed x₂) eps
-  final-sub-final (FBoxed (BVHoleCast x₁ x₂)) (FHCast eps) = final-sub-final (FBoxed x₂) eps
+  final-sub-final (FBoxedVal (BVVal ())) (FHAp1 eps)
+  final-sub-final (FBoxedVal (BVVal ())) (FHAp2 eps)
+  final-sub-final (FBoxedVal (BVVal ())) (FHNEHole eps)
+  final-sub-final (FBoxedVal (BVVal ())) (FHCast eps)
+  final-sub-final (FBoxedVal (BVVal ())) (FHFailedCast y)
+  final-sub-final (FBoxedVal (BVArrCast x₁ x₂)) (FHCast eps) = final-sub-final (FBoxedVal x₂) eps
+  final-sub-final (FBoxedVal (BVHoleCast x₁ x₂)) (FHCast eps) = final-sub-final (FBoxedVal x₂) eps
   final-sub-final (FIndet (IAp x₁ x₂ x₃)) (FHAp1 eps) = final-sub-final (FIndet x₂) eps
   final-sub-final (FIndet (IAp x₁ x₂ x₃)) (FHAp2 eps) = final-sub-final x₃ eps
   final-sub-final (FIndet (INEHole x₁)) (FHNEHole eps) = final-sub-final x₁ eps
