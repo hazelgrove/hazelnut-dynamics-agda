@@ -33,6 +33,12 @@ This should take less than a minute, output a lot of lines that begin with
 `Finished` or `Checking`, and end with the line `Finished all.` to indicate
 success.
 
+Most text editors that support Agda can be configured to use the version
+instead a Docker container instead of your host machine, so you can
+experiment with or evolve this code without making too much of a mess. For
+some example instructions, see [the docker-agda
+repo](https://github.com/banacorn/docker-agda).
+
 # Where To Find Each Theorem
 
 All of the judgements defined in the paper are given in
