@@ -88,3 +88,13 @@ module preservation where
   preservation bd D (Step x x₁ x₂)
     with wt-filling D x
   ... | (_ , wt) = wt-different-fill x D wt (preserve-trans (lem-bd-ε1 x bd) wt x₁) x₂
+
+  -- note that the exact statement of preservation in the paper, where Γ is
+  -- empty indicating that the terms are closed, is an immediate corrolary
+  -- of the slightly more general statement above.
+  preservation' : {Δ : hctx} {d d' : ihexp} {τ : htyp} →
+             binders-unique d →
+             Δ , ∅ ⊢ d :: τ →
+             d ↦ d' →
+             Δ , ∅ ⊢ d' :: τ
+  preservation' = preservation
