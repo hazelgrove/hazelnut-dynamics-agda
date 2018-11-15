@@ -171,7 +171,7 @@ Agda and we use it to reason about contexts.
 
 There are no other postulates in this development.
 
-## Meta Concerns
+## Meta
 - [all.agda](all.agda) is morally a make file: it includes every module in
   every other file, so running `$ agda all.agda` on a clean clone of this
   repository will recheck every proof from scratch. It is known to load
