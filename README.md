@@ -103,7 +103,7 @@ mechanized as well. Those can be found as follows:
   [lemmas-complete.agda](lemmas-complete.agda) as `complete-consistency` on
   line 19.
 - Lemma A.7, _Complete Casts_, is in [cast-inert.agda](cast-inert.agda) as
-  `complete-casts` on line 28.
+  `complete-casts` on line 31.
 - A.4, _Multiple Steps_, is defined in [core.agda](core.agda) on line 470.
 
 # Description of Agda Files
