@@ -1,4 +1,4 @@
-# hazelnut-dynamics-agdaA
+# hazelnut-dynamics-agda
 This repository is the mechanization of the work described in our
 [POPL19 paper](https://arxiv.org/pdf/1805.00155). It includes all of the
 definitions and proofs from Section 3, as claimed in Sec. 3.4 (Agda
