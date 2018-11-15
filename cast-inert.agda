@@ -12,21 +12,28 @@ module cast-inert where
   -- if a term is compelete and well typed, then the casts inside are all
   -- identity casts and there are no failed casts
   cast-inert : ∀{Δ Γ d τ} →
-                  Γ gcomplete →
                   d dcomplete →
                   Δ , Γ ⊢ d :: τ →
                   cast-id d
-  cast-inert gc dc TAConst = CIConst
-  cast-inert gc dc (TAVar x₁) = CIVar
-  cast-inert gc (DCLam dc x₁) (TALam x₂ wt) = CILam (cast-inert (gcomp-extend gc x₁ x₂) dc wt)
-  cast-inert gc (DCAp dc dc₁) (TAAp wt wt₁) = CIAp (cast-inert gc dc wt)
-                                                   (cast-inert gc dc₁ wt₁)
-  cast-inert gc () (TAEHole x x₁)
-  cast-inert gc () (TANEHole x wt x₁)
-  cast-inert gc (DCCast dc x x₁) (TACast wt x₂)
-    with eq-complete-consist x x₁ x₂
-  ... | refl = CICast (cast-inert gc dc wt)
-  cast-inert gc () (TAFailedCast wt x x₁ x₂)
+  cast-inert dc TAConst = CIConst
+  cast-inert dc (TAVar x₁) = CIVar
+  cast-inert (DCLam dc x₁) (TALam x₂ wt) = CILam (cast-inert dc wt)
+  cast-inert (DCAp dc dc₁) (TAAp wt wt₁) = CIAp (cast-inert dc wt) (cast-inert dc₁ wt₁)
+  cast-inert () (TAEHole x x₁)
+  cast-inert () (TANEHole x wt x₁)
+  cast-inert (DCCast dc x x₁) (TACast wt x₂)
+    with complete-consistency x₂ x x₁
+  ... | refl = CICast (cast-inert dc wt)
+  cast-inert () (TAFailedCast wt x x₁ x₂)
+
+  -- in a well typed complete internal expression, every cast is the
+  -- identity cast.
+  complete-casts : ∀{Γ Δ d τ1 τ2} →
+                   Γ , Δ ⊢ d ⟨ τ1 ⇒ τ2 ⟩ :: τ2 →
+                   d ⟨ τ1 ⇒ τ2 ⟩ dcomplete →
+                   τ1 == τ2
+  complete-casts wt comp with cast-inert comp wt
+  complete-casts wt comp | CICast qq = refl
 
   -- relates expressions to the same thing with all identity casts
   -- removed. note that this is a syntactic rewrite and it goes under

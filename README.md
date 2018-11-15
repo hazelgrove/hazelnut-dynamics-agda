@@ -81,6 +81,31 @@ the paper text can be found as follows:
   mechanization of this claim, we give a proof is given in terms of a few
   postulates encoding the results from Omar et al., POPL 2017.
 
+The extended paper with an appendix goes into more detail for some lemmas
+and definitions omitted from the main paper, some of which have been
+mechanized as well. Those can be found as follows:
+
+- A.1, _Substitution_, is defined in [core.agda](core.agda) at line 294, as
+  `[_/_]_` for terms and `apply-env` for substitutions `σ`.
+- Lemma A.1, _Substitution_ is in
+  [lemmas-subst-ta.agda](lemmas-subst-ta.agda).
+- Lemma A.2, _Canonical Value Forms_, is in
+  [canonical-value-forms.agda](canonical-value-forms.agda).
+- Lemma A.3, _Canonical Boxed Forms_, is in
+  [canonical-boxed-forms.agda](canonical-value-forms.agda).
+- Lemma A.4, _Canonical Indeterminate Forms_, is in
+  [canonical-indeterminate-forms.agda](canonical-value-forms.agda).
+- A.3, _Complete Programs_, is defined in [core.agda](core.agda) at line
+  160.
+- Definition A.5, _Typing Context Completeness_, is defined in
+  [core.agda](core.agda) at line 183.
+- Lemma A.6, _Complete Consistency_, is in
+  [lemmas-complete.agda](lemmas-complete.agda) as `complete-consistency` on
+  line 19.
+- Lemma A.7, _Complete Casts_, is in [cast-inert.agda](cast-inert.agda) as
+  `complete-casts` on line 28.
+- A.4, _Multiple Steps_, is defined in [core.agda](core.agda) on line 470.
+
 # Description of Agda Files
 
 The theorem statements rely on a variety of lemmas and smaller claims or

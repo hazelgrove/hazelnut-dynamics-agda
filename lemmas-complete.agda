@@ -16,15 +16,14 @@ module lemmas-complete where
   lem-ind-comp (DCCast comp x x₁) (ICastHoleGround x₂ ind x₃) = lem-ind-comp comp ind
 
   -- complete types that are consistent are equal
-  eq-complete-consist : ∀{τ1 τ2} → τ1 tcomplete → τ2 tcomplete → τ1 ~ τ2 → τ1 == τ2
-  eq-complete-consist TCBase TCBase consis = refl
-  eq-complete-consist TCBase (TCArr tc2 tc3) ()
-  eq-complete-consist (TCArr tc1 tc2) TCBase ()
-  eq-complete-consist (TCArr tc1 tc2) (TCArr tc3 tc4) TCRefl = refl
-  eq-complete-consist (TCArr tc1 tc2) (TCArr tc3 tc4) (TCArr consis1 consis2)
-    with eq-complete-consist tc1 tc3 consis1
-  ... | refl with eq-complete-consist tc2 tc4 consis2
-  ... | refl = refl
+  complete-consistency : ∀{τ1 τ2} → τ1 ~ τ2 → τ1 tcomplete → τ2 tcomplete → τ1 == τ2
+  complete-consistency TCRefl TCBase comp2 = refl
+  complete-consistency TCRefl (TCArr comp1 comp2) comp3 = refl
+  complete-consistency TCHole1 comp1 ()
+  complete-consistency TCHole2 () comp2
+  complete-consistency (TCArr consis consis₁) (TCArr comp1 comp2) (TCArr comp3 comp4)
+   with complete-consistency consis comp1 comp3 | complete-consistency consis₁ comp2 comp4
+  ... | refl | refl = refl
 
   -- a well typed complete term is assigned a complete type
   complete-ta : ∀{Γ Δ d τ} → (Γ gcomplete) →

@@ -24,4 +24,4 @@ module complete-progress where
   complete-progress wt comp | S x = S x
   complete-progress wt comp | BV (BVVal x) = V x
   complete-progress wt (DCCast comp x₂ ()) | BV (BVHoleCast x x₁)
-  complete-progress (TACast wt x) (DCCast comp x₃ x₄) | BV (BVArrCast x₁ x₂) = abort (x₁ (eq-complete-consist x₃ x₄ x))
+  complete-progress (TACast wt x) (DCCast comp x₃ x₄) | BV (BVArrCast x₁ x₂) = abort (x₁ (complete-consistency x x₃ x₄))
