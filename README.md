@@ -1,17 +1,15 @@
-# hazelnut-dynamics-agda
+# hazelnut-dynamics-agdaA
 This repository is the mechanization of the work described in our
 [POPL19 paper](https://arxiv.org/pdf/1805.00155). It includes all of the
 definitions and proofs from Section 3, as claimed in Sec. 3.4 (Agda
-Mechanization). The assumptions mentioned in that section are no longer
-needed, and the final version of the paper text will reflect that -- see
-the Postulates section below.
+Mechanization).
 
 # How To Check These Proofs
 
 These proofs are known to check under `Agda 2.5.1.1`. The most direct, if
-not easiest, option to check the proofs is to install that version of Agda,
-or one compatible with it, download the code in this repo, and run `agda
-all.agda` at the command line.
+not the easiest, option to check the proofs is to install that version of
+Agda or one compatible with it, download the code in this repo, and run
+`agda all.agda` at the command line.
 
 Alternatively, we have provided a [Docker file](Dockerfile) to make it
 easier to build that environment and check the proofs. To use it, first
@@ -93,8 +91,8 @@ more detail is provided in the comments inside each.
 On paper, we typically take it for granted that we can silently α-rename
 terms to equivalent terms whenever a collision of bound names is
 inconvenient. In a mechanization, we do not have that luxury and instead
-must be explicit in our treatment of binders in one way or
-another. Morally, we assume that all terms are in an α-normal form, where
+must be explicit in our treatment of binders in one way or another. In our
+development here, we assume that all terms are in an α-normal form where
 binders are globally not reused.
 
 That manifests in this development where we have chosen to add premises
@@ -103,26 +101,25 @@ needed. These premises are fairly benign, since α-equivalence tells us they
 can always be satisfied without changing the meaning of the term in
 question. Other standard approaches include using de Bruijn indices,
 Abstract Binding Trees, HOAS, or PHOAS to actually rewrite the terms when
-needed. We have chosen not to use these techniques in this case because
-_almost all_ of the theory we're interested in discussing here does not
-rely on these arguments, but the overhead quickly becomes pervasive and
-obfuscates the actual points of interest.
+needed. We have chosen not to use these techniques because _almost all_ of
+the theory we're interested in does not need them and their overhead
+quickly becomes pervasive, obfuscating the actual points of interest.
 
 Similarly, we make explicit some premises about disjointness of contexts or
 variables being apart from contexts in some of the premises of some rules
 that would typically be taken as read in an on-paper presentation. This is
 a slightly generalized version of Barendrecht's convention (Barendregt,
-1984), which we used in our [POPL17
-mechanization](https://github.com/hazelgrove/agda-popl17) as well for the
-same reason.
+1984), which we also used in our [POPL17
+mechanization](https://github.com/hazelgrove/agda-popl17) for the same
+reason.
 
-Since our base type system is bidirectional, the judgments defining it are
-mutually recursive. That means that anything type-directed is very likely
-to also be mutually recursive. The grammar of internal expressions is also
-mutually recursive with the definition of substitution environments. All
-told, a fair number of theorems are mutually recursive as this percolates
-through. We try to name things in a suggestive way, using `*-synth` and
-`*-ana` for the two halves of the same theorem.
+Since the type system for external terms is bidirectional, the judgments
+defining it are mutually recursive. That means that anything type-directed
+is very likely to also be mutually recursive. The grammar of internal
+expressions is also mutually recursive with the definition of substitution
+environments. All told, a fair number of theorems are mutually recursive as
+this percolates through. We try to name things in a suggestive way, using
+`x-synth` and `x-ana` for the two halves of a theorem named `x`.
 
 Both hole and type contexts are encoded as Agda functions from natural
 numbers to optional contents. In practice these mappings are always
@@ -147,6 +144,8 @@ Agda and we use it to reason about contexts.
   postulate some glue code that allows us to use those theorems in this
   work.
 
+There are no other postulates in this development.
+
 ## Meta Concerns
 - [all.agda](all.agda) is morally a make file: it includes every module in
   every other file, so running `$ agda all.agda` on a clean clone of this
@@ -170,18 +169,20 @@ are used pervasively throughout the rest of the development.
   this definition practical.
 - [core.agda](core.agda) gives the definitions of all the grammars and
   judgements in the order presented in the paper as types and metafunctions
-  in Agda. It also includes the definition of some judgements that are used
-  implicitly in on-paper notation but need to be made explicit in the
-  mechanization.
+  in Agda. It also includes the definition of the judgements that are used
+  implicitly on paper but need to be made explicit in a mechanization.
 
 ## Structural Properties
 
 - [contraction.agda](contraction.agda) argues that contexts are the same up
   to contraction, and therefore that every judgement that uses them enjoys
-  the contraction property.
+  the contraction property. Note that this proof is given for any sort of
+  context, so it establishes contraction in both the type and hole contexts
+  for those judgements that have both.
 - [exchange.agda](exchange.agda) argues that contexts are the same up to
   exchange, and therefore that every judgement that uses the enjoys the
-  exchange property.
+  exchange property. As above, this proof establishes exchange in both the
+  type and hole contexts for those jugements that have both.
 - [weakening.agda](weakening.agda) argues the weakening properties for
   those judgements where we needed it in the other proofs. This is not
   every weakening property for every judgement, and indeed some of them _do
@@ -200,10 +201,7 @@ are used pervasively throughout the rest of the development.
 
 ### Canonical Forms
 
-Together, these files give the canonical forms lemma for the language. They
-are broken down in a slightly more explicit way than in the paper text,
-where each type gets its own theorem. This is easier to use in the proof of
-type safety.
+Together, these files give the canonical forms lemma for the language.
 
 - [canonical-boxed-forms.agda](canonical-boxed-forms.agda)
 - [canonical-indeterminate-forms.agda](canonical-indeterminate-forms.agda)
@@ -227,24 +225,25 @@ type safety.
 
 ### Type Safety
 
-These first three files contain proofs of type safety for the core
-language, where terms and types may both have holes in them and still step.
+These files contain proofs of type safety for the internal language. Note
+that we only give a dynamic semantics for the internal language, which is
+related to the external language through elaboration.
 
 - [progress.agda](progress.agda) argues that any well typed internal
   expression either steps, is a boxed value, or is indeterminate.
 - [progress-checks.agda](progress-checks.agda) argues that the clauses in
-  the conclusion of progress are disjoint---i.e. no expression both steps
-  and is a boxed value.
+  the conclusion of progress are pairwise disjoint---i.e. that no
+  expression both steps and is a boxed value, and so on.
 - [preservation.agda](preservation.agda) argues that stepping preserves
   type assignment.
 
-  This is the main place that our assumption about alpha-normal terms
-  appears: the statement of preservation makes explicit the standard
-  on-paper convention that binders not be reused in its argument.
+  This is the main place that our assumption about α-normal terms appears:
+  the statement of preservation makes explicit the standard on-paper
+  convention that binders not be reused in its argument.
 
 We also argue that our dynamics is a conservative extension in the sense
-that if you use it to evaluate terms in the calculus that have no holes in
-them, you get the standard type safety theorems you might expect for the
+that if you use it to evaluate terms that happen to have no holes in them,
+you get the standard type safety theorems you might expect for the
 restricted fragment without holes.
 
 - [complete-elaboration.agda](complete-elaboration.agda) argues that the
@@ -261,8 +260,7 @@ restricted fragment without holes.
 - [continuity.agda](continuity.agda) includes a sketch of a proof of
   continuity. This is built on postulates of a result from our POPL17 work
   and a few properties that would need to be proven about the expression
-  forms from that work and the alpha-normal requirement we have in this
-  work.
+  forms from that work and the α-normal requirement we have in this work.
 
 ## Lemmas and Smaller Claims
 
@@ -272,31 +270,35 @@ the paper or mentioned only in passing. In terms of complexity and
 importance, they're somewhere between a lemma and a theorem.
 
 - [binders-disjoint-checks.agda](binders-disjoint-checks.agda) contains
-  some proofs that demonstrate that the `binders-disjoint` predicate acts
-  as expected. That judgement is defined inductively only on its left
-  argument. Since Agda judgements are not functions, lemmas are needed to
-  get the expected reduction behaivour in the right argument.
-- [cast-inert.agda](cast-inert.agda) shows a judgemental removal of
+  some proofs that demonstrate that `binders-disjoint` acts as
+  expected. That judgement is defined inductively only on its left
+  argument; since Agda datatypes do not define functions, explicit lemmas
+  are needed to get the expected reduction behaivour in the right argument.
+- [cast-inert.agda](cast-inert.agda) gives a judgemental removal of
   identity casts and argues that doing so does not change the type of the
   expression. It would also be possible to argue that removing the identity
-  casts produces a term that steps in the same way, but identity cast
-  removal is a structural operation that goes under binders while our
-  evaluation semantics does not. To establish that result, we'd need a
-  equational theory of evaluation, compatible with the given one, that we
-  do not develop.
+  casts produces a term that evaluates in the same way---but identity cast
+  removal is a syntactic operation that goes under binders while our
+  evaluation semantics does not. To establish that result, we'd need to
+  also give an equational theory of evaluation compatible with the given
+  one.
 - [disjointness.agda](disjointness.agda) characterizes the output hole
   contexts produced in elaboration, including disjointness guarantees
-  needed in the proofs of Elaborability and Elaboration Generality.
+  needed in the proofs of [Elaborability](elaborability.agda) and
+  [Elaboration Generality](elaboration-generality.agda).
 - [dom-eq.agda](dom-eq.agda) defines when two contexts have the same
-  context and some operations that preserve that property. This is used in
-  the proofs in [disjointness.agda](disjointness.agda).
-- [finality.agda](finality.agda) argues that a final expression only steps
-  to itself.
+  domain, regardless of the range type or contents, and some operations
+  that preserve that property. This is used in the proofs in
+  [disjointness.agda](disjointness.agda).
+- [finality.agda](finality.agda) argues that a final expression doesn't
+  step, and only multi-steps to itself. More properties of this nature are
+  proven in [progress-checks.agda](progress-checks.agda) but not called out
+  explicitly in the paper.
 - [focus-formation.agda](focus-formation.agda) argues that every `ε` is an
   evaluation context. As noted in [core.agda](core.agda), because we elide
-  finality premises in the stepping rules, every `ε` is trivially an
-  evaluation context, so this proof is extremely immediate; it would be
-  more involved if those premises were in place.
+  the boxed-in-red finality premises from the stepping rules, every `ε` is
+  trivially an evaluation context, so this proof is extremely immediate; it
+  would be slightly more involved if those premises were in place.
 - [ground-decidable.agda](ground-decidable.agda) argues that every type is
   either ground or not.
 - [grounding.agda](grounding.agda) argues the grounding property.
@@ -309,11 +311,11 @@ importance, they're somewhere between a lemma and a theorem.
 - [synth-unicity.agda](synth-unicity.agda) argues that the synthesis
   judgement produces at most one type for a term.
 
-These files contain small technical lemmas for the corresponding judgement
-or theorem. They are generally not surprising once stated, although it's
-perhaps not immediate why they're needed, and tend to obfuscate the actual
-proof text. They are corralled into their own modules in an effort to aid
-readability.
+These files contain technical lemmas for the corresponding judgement or
+theorem. They are generally not surprising once stated, although it's
+perhaps not immediate why they're needed, and they tend to obfuscate the
+actual proof text. They are corralled into their own modules in an effort
+to aid readability.
 
 - [lemmas-complete.agda](lemmas-complete.agda)
 - [lemmas-consistency.agda](lemmas-consistency.agda)
