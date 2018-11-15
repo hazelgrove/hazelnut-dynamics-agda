@@ -12,7 +12,7 @@ module canonical-indeterminate-forms where
     CIFBEHole : ∀ {Δ d} →
       Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ Γ ∈ tctx ]
         ((d == ⦇⦈⟨ u , σ ⟩) ×
-         ((u ::[ Γ ] b) ∈ Δ) ×
+         ((u :: b [ Γ ]) ∈ Δ) ×
          (Δ , ∅ ⊢ σ :s: Γ)
         )
        → cif-base Δ d
@@ -21,7 +21,7 @@ module canonical-indeterminate-forms where
         ((d == ⦇ d' ⦈⟨ u , σ ⟩) ×
          (Δ , ∅ ⊢ d' :: τ') ×
          (d' final) ×
-         ((u ::[ Γ ] b) ∈ Δ) ×
+         ((u :: b [ Γ ]) ∈ Δ) ×
          (Δ , ∅ ⊢ σ :s: Γ)
         )
         → cif-base Δ d
@@ -70,7 +70,7 @@ module canonical-indeterminate-forms where
     CIFAEHole : ∀{d Δ τ1 τ2} →
       Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ Γ ∈ tctx ]
         ((d == ⦇⦈⟨ u , σ ⟩) ×
-         ((u ::[ Γ ] (τ1 ==> τ2)) ∈ Δ) ×
+         ((u :: (τ1 ==> τ2) [ Γ ]) ∈ Δ) ×
          (Δ , ∅ ⊢ σ :s: Γ)
         )
       → cif-arr Δ d τ1 τ2
@@ -79,7 +79,7 @@ module canonical-indeterminate-forms where
         ((d == ⦇ d' ⦈⟨ u , σ ⟩) ×
          (Δ , ∅ ⊢ d' :: τ') ×
          (d' final) ×
-         ((u ::[ Γ ] (τ1 ==> τ2)) ∈ Δ) ×
+         ((u :: (τ1 ==> τ2) [ Γ ]) ∈ Δ) ×
          (Δ , ∅ ⊢ σ :s: Γ)
         )
         → cif-arr Δ d τ1 τ2
@@ -142,7 +142,7 @@ module canonical-indeterminate-forms where
     CIFHEHole : ∀ {Δ d} →
       Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ Γ ∈ tctx ]
         ((d == ⦇⦈⟨ u , σ ⟩) ×
-         ((u ::[ Γ ] ⦇⦈) ∈ Δ) ×
+         ((u :: ⦇⦈ [ Γ ]) ∈ Δ) ×
          (Δ , ∅ ⊢ σ :s: Γ)
         )
       → cif-hole Δ d
@@ -151,7 +151,7 @@ module canonical-indeterminate-forms where
         ((d == ⦇ d' ⦈⟨ u , σ ⟩) ×
          (Δ , ∅ ⊢ d' :: τ') ×
          (d' final) ×
-         ((u ::[ Γ ] ⦇⦈) ∈ Δ) ×
+         ((u :: ⦇⦈ [ Γ ]) ∈ Δ) ×
          (Δ , ∅ ⊢ σ :s: Γ)
         )
       → cif-hole Δ d

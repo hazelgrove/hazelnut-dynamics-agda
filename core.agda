@@ -79,8 +79,8 @@ module core where
   hctx = (htyp ctx × htyp) ctx
 
   -- notation for a triple to match the CMTT syntax
-  _::[_]_ : Nat → tctx → htyp → (Nat × (tctx × htyp))
-  u ::[ Γ ] τ = u , (Γ , τ)
+  _::_[_] : Nat → htyp → tctx → (Nat × (tctx × htyp))
+  u :: τ [ Γ ] = u , (Γ , τ)
 
   -- the hole name u does not appear in the term e
   data hole-name-new : (e : hexp) (u : Nat) → Set where
@@ -214,11 +214,11 @@ module core where
               Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2' ⊣ Δ2 →
               Γ ⊢ e1 ∘ e2 ⇒ τ ~> (d1 ⟨ τ1' ⇒ τ2 ==> τ ⟩) ∘ (d2 ⟨ τ2' ⇒ τ2 ⟩) ⊣ (Δ1 ∪ Δ2)
       ESEHole : ∀{ Γ u } →
-                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , Id Γ ⟩ ⊣  ■ (u ::[ Γ ] ⦇⦈)
+                Γ ⊢ ⦇⦈[ u ] ⇒ ⦇⦈ ~> ⦇⦈⟨ u , Id Γ ⟩ ⊣  ■ (u :: ⦇⦈ [ Γ ])
       ESNEHole : ∀{ Γ e τ d u Δ } →
                  Δ ## (■ (u , Γ , ⦇⦈)) →
                  Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈⟨ u , Id Γ  ⟩ ⊣ (Δ ,, u ::[ Γ ] ⦇⦈)
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈⟨ u , Id Γ  ⟩ ⊣ (Δ ,, u :: ⦇⦈ [ Γ ])
       ESAsc : ∀ {Γ e τ d τ' Δ} →
                  Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                  Γ ⊢ (e ·: τ) ⇒ τ ~> d ⟨ τ' ⇒ τ ⟩ ⊣ Δ
@@ -237,11 +237,11 @@ module core where
                   τ ~ τ' →
                   Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
       EAEHole : ∀{ Γ u τ  } →
-                Γ ⊢ ⦇⦈[ u ] ⇐ τ ~> ⦇⦈⟨ u , Id Γ  ⟩ :: τ ⊣ ■ (u ::[ Γ ] τ)
+                Γ ⊢ ⦇⦈[ u ] ⇐ τ ~> ⦇⦈⟨ u , Id Γ  ⟩ :: τ ⊣ ■ (u :: τ [ Γ ])
       EANEHole : ∀{ Γ e u τ d τ' Δ  } →
                  Δ ## (■ (u , Γ , τ)) →
                  Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈⟨ u , Id Γ  ⟩ :: τ ⊣ (Δ ,, u ::[ Γ ] τ)
+                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈⟨ u , Id Γ  ⟩ :: τ ⊣ (Δ ,, u :: τ [ Γ ])
 
   -- ground types
   data _ground : (τ : htyp) → Set where
