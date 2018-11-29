@@ -43,7 +43,7 @@ module elaborability where
     elaborability-ana {e = e1 ∘ e2} (ASubsume D x₁)              | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁
     -- the two holes are special-cased
     elaborability-ana {e = ⦇⦈[ x ]} (ASubsume _ _ )                   | _ , _ , _  = _ , _ , _ , EAEHole
-    elaborability-ana {Γ} {⦇ e ⦈[ x ]} (ASubsume (SNEHole new wt) x₂) | _ , _ , ESNEHole x₁ D' with elaborability-synth wt
+    elaborability-ana {Γ} {⦇⌜ e ⌟⦈[ x ]} (ASubsume (SNEHole new wt) x₂) | _ , _ , ESNEHole x₁ D' with elaborability-synth wt
     ... | w , y , z =  _ , _ , _ , EANEHole (elab-new-disjoint-synth new z) z
     -- the lambda cases
     elaborability-ana (ALam x₁ m wt)

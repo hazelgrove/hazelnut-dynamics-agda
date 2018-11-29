@@ -23,11 +23,11 @@ module binders-disjoint-checks where
     lem-bd-lam (BDFailedCast bd) = BDFailedCast (lem-bd-lam bd)
 
   mutual
-    lem-bdσ-hole : ∀{d u σ σ'} → binders-disjoint-σ σ ⦇ d ⦈⟨ u , σ' ⟩ → binders-disjoint-σ σ d
+    lem-bdσ-hole : ∀{d u σ σ'} → binders-disjoint-σ σ ⦇⌜ d ⌟⦈⟨ u , σ' ⟩ → binders-disjoint-σ σ d
     lem-bdσ-hole BDσId = BDσId
     lem-bdσ-hole (BDσSubst x bd) = BDσSubst (lem-bd-hole x) (lem-bdσ-hole bd)
 
-    lem-bd-hole : ∀{d1 d u σ} → binders-disjoint d1 ⦇ d ⦈⟨ u , σ ⟩ → binders-disjoint d1 d
+    lem-bd-hole : ∀{d1 d u σ} → binders-disjoint d1 ⦇⌜ d ⌟⦈⟨ u , σ ⟩ → binders-disjoint d1 d
     lem-bd-hole BDConst = BDConst
     lem-bd-hole BDVar = BDVar
     lem-bd-hole (BDLam bd (UBNEHole x₁ x₂)) = BDLam (lem-bd-hole bd) x₂

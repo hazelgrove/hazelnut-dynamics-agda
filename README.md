@@ -6,7 +6,7 @@ Mechanization).
 
 # How To Check These Proofs
 
-These proofs are known to check under `Agda 2.5.1.1`. The most direct, if
+These proofs are known to check under `Agda 2.5.4.2`. The most direct, if
 not the easiest, option to check the proofs is to install that version of
 Agda or one compatible with it, download the code in this repo, and run
 `agda all.agda` at the command line.
@@ -27,9 +27,10 @@ This may take a fair amount of time. When it finishes, run
 docker run hazel-popl19
 ```
 
-This should take less than a minute, output a lot of lines that begin with
-`Finished` or `Checking`, and end with the line `Finished all.` to indicate
-success.
+This should take less than a minute, produce a lot of output as Agda checks
+each module and function, and end with either the line `Finished all.` or
+`Loading all (/all.agdai).` to indicate success, depending on Docker-level
+caching.
 
 Most text editors that support Agda can be configured to use the version
 instead a Docker container instead of your host machine, so you can
@@ -175,7 +176,7 @@ There are no other postulates in this development.
 - [all.agda](all.agda) is morally a make file: it includes every module in
   every other file, so running `$ agda all.agda` on a clean clone of this
   repository will recheck every proof from scratch. It is known to load
-  cleanly with `Agda version 2.5.1.1`; we have not tested it on any other
+  cleanly with `Agda version 2.5.4.2`; we have not tested it on any other
   version.
 
 ## Prelude and Datatypes

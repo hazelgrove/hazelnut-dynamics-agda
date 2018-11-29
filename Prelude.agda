@@ -46,7 +46,6 @@ module Prelude where
   a ≠ b = (a == b) → ⊥
 
   {-# BUILTIN EQUALITY _==_ #-}
-  {-# BUILTIN REFL refl #-}
 
   -- transitivity of equality
   _·_ : {l : Level} {α : Set l} {x y z : α} → x == y → y == z → x == z

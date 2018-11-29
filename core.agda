@@ -20,7 +20,7 @@ module core where
     ·λ      : Nat → hexp → hexp
     ·λ_[_]_ : Nat → htyp → hexp → hexp
     ⦇⦈[_]   : Nat → hexp
-    ⦇_⦈[_]  : hexp → Nat → hexp
+    ⦇⌜_⌟⦈[_]  : hexp → Nat → hexp
     _∘_     : hexp → hexp → hexp
 
   -- the type of type contexts, i.e. Γs in the judegments below
@@ -39,7 +39,7 @@ module core where
       X         : Nat → ihexp
       ·λ_[_]_   : Nat → htyp → ihexp → ihexp
       ⦇⦈⟨_⟩     : (Nat × env) → ihexp
-      ⦇_⦈⟨_⟩    : ihexp → (Nat × env) → ihexp
+      ⦇⌜_⌟⦈⟨_⟩    : ihexp → (Nat × env) → ihexp
       _∘_       : ihexp → ihexp → ihexp
       _⟨_⇒_⟩    : ihexp → htyp → htyp → ihexp
       _⟨_⇒⦇⦈⇏_⟩ : ihexp → htyp → htyp → ihexp
@@ -101,7 +101,7 @@ module core where
     HNNEHole : ∀{u u' e} →
                u' ≠ u →
                hole-name-new e u →
-               hole-name-new (⦇ e ⦈[ u' ]) u
+               hole-name-new (⦇⌜ e ⌟⦈[ u' ]) u
     HNAp : ∀{ u e1 e2 } →
            hole-name-new e1 u →
            hole-name-new e2 u →
@@ -115,7 +115,7 @@ module core where
     HDLam1 : ∀{x e1 e2} → holes-disjoint e1 e2 → holes-disjoint (·λ x e1) e2
     HDLam2 : ∀{x e1 e2 τ} → holes-disjoint e1 e2 → holes-disjoint (·λ x [ τ ] e1) e2
     HDHole : ∀{u e2} → hole-name-new e2 u → holes-disjoint (⦇⦈[ u ]) e2
-    HDNEHole : ∀{u e1 e2} → hole-name-new e2 u → holes-disjoint e1 e2 → holes-disjoint (⦇ e1 ⦈[ u ]) e2
+    HDNEHole : ∀{u e1 e2} → hole-name-new e2 u → holes-disjoint e1 e2 → holes-disjoint (⦇⌜ e1 ⌟⦈[ u ]) e2
     HDAp :  ∀{e1 e2 e3} → holes-disjoint e1 e3 → holes-disjoint e2 e3 → holes-disjoint (e1 ∘ e2) e3
 
   -- bidirectional type checking judgements for hexp
@@ -139,7 +139,7 @@ module core where
       SNEHole : {Γ : tctx} {e : hexp} {τ : htyp} {u : Nat} →
                  hole-name-new e u →
                  Γ ⊢ e => τ →
-                 Γ ⊢ ⦇ e ⦈[ u ] => ⦇⦈
+                 Γ ⊢ ⦇⌜ e ⌟⦈[ u ] => ⦇⦈
       SLam    : {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} {x : Nat} →
                  x # Γ →
                  (Γ ,, (x , τ1)) ⊢ e => τ2 →
@@ -190,7 +190,7 @@ module core where
     CIVar    : ∀{x} → cast-id (X x)
     CILam    : ∀{x τ d} → cast-id d → cast-id (·λ x [ τ ] d)
     CIHole   : ∀{u} → cast-id (⦇⦈⟨ u ⟩)
-    CINEHole : ∀{d u} → cast-id d → cast-id (⦇ d ⦈⟨ u ⟩)
+    CINEHole : ∀{d u} → cast-id d → cast-id (⦇⌜ d ⌟⦈⟨ u ⟩)
     CIAp     : ∀{d1 d2} → cast-id d1 → cast-id d2 → cast-id (d1 ∘ d2)
     CICast   : ∀{d τ} → cast-id d → cast-id (d ⟨ τ ⇒ τ ⟩)
 
@@ -218,7 +218,7 @@ module core where
       ESNEHole : ∀{ Γ e τ d u Δ } →
                  Δ ## (■ (u , Γ , ⦇⦈)) →
                  Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇒ ⦇⦈ ~> ⦇ d ⦈⟨ u , Id Γ  ⟩ ⊣ (Δ ,, u :: ⦇⦈ [ Γ ])
+                 Γ ⊢ ⦇⌜ e ⌟⦈[ u ] ⇒ ⦇⦈ ~> ⦇⌜ d ⌟⦈⟨ u , Id Γ  ⟩ ⊣ (Δ ,, u :: ⦇⦈ [ Γ ])
       ESAsc : ∀ {Γ e τ d τ' Δ} →
                  Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                  Γ ⊢ (e ·: τ) ⇒ τ ~> d ⟨ τ' ⇒ τ ⟩ ⊣ Δ
@@ -232,7 +232,7 @@ module core where
               Γ ⊢ ·λ x e ⇐ τ ~> ·λ x [ τ1 ] d :: τ1 ==> τ2' ⊣ Δ
       EASubsume : ∀{e Γ τ' d Δ τ} →
                   ((u : Nat) → e ≠ ⦇⦈[ u ]) →
-                  ((e' : hexp) (u : Nat) → e ≠ ⦇ e' ⦈[ u ]) →
+                  ((e' : hexp) (u : Nat) → e ≠ ⦇⌜ e' ⌟⦈[ u ]) →
                   Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
                   τ ~ τ' →
                   Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
@@ -241,7 +241,7 @@ module core where
       EANEHole : ∀{ Γ e u τ d τ' Δ  } →
                  Δ ## (■ (u , Γ , τ)) →
                  Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
-                 Γ ⊢ ⦇ e ⦈[ u ] ⇐ τ ~> ⦇ d ⦈⟨ u , Id Γ  ⟩ :: τ ⊣ (Δ ,, u :: τ [ Γ ])
+                 Γ ⊢ ⦇⌜ e ⌟⦈[ u ] ⇐ τ ~> ⦇⌜ d ⌟⦈⟨ u , Id Γ  ⟩ :: τ ⊣ (Δ ,, u :: τ [ Γ ])
 
   -- ground types
   data _ground : (τ : htyp) → Set where
@@ -279,7 +279,7 @@ module core where
                  (u , (Γ' , τ)) ∈ Δ →
                  Δ , Γ ⊢ d :: τ' →
                  Δ , Γ ⊢ σ :s: Γ' →
-                 Δ , Γ ⊢ ⦇ d ⦈⟨ u , σ ⟩ :: τ
+                 Δ , Γ ⊢ ⦇⌜ d ⌟⦈⟨ u , σ ⟩ :: τ
       TACast : ∀{ Δ Γ d τ1 τ2} →
              Δ , Γ ⊢ d :: τ1 →
              τ1 ~ τ2 →
@@ -303,7 +303,7 @@ module core where
   [ d / y ] (·λ .y [ τ ] d') | Inl refl = ·λ y [ τ ] d'
   [ d / y ] (·λ x [ τ ] d')  | Inr x₁ = ·λ x [ τ ] ( [ d / y ] d')
   [ d / y ] ⦇⦈⟨ u , σ ⟩ = ⦇⦈⟨ u , Subst d y σ ⟩
-  [ d / y ] ⦇ d' ⦈⟨ u , σ  ⟩ =  ⦇ [ d / y ] d' ⦈⟨ u , Subst d y σ ⟩
+  [ d / y ] ⦇⌜ d' ⌟⦈⟨ u , σ  ⟩ =  ⦇⌜ [ d / y ] d' ⌟⦈⟨ u , Subst d y σ ⟩
   [ d / y ] (d1 ∘ d2) = ([ d / y ] d1) ∘ ([ d / y ] d2)
   [ d / y ] (d' ⟨ τ1 ⇒ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒ τ2 ⟩
   [ d / y ] (d' ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩
@@ -331,7 +331,7 @@ module core where
     -- indeterminate forms
     data _indet : (d : ihexp) → Set where
       IEHole : ∀{u σ} → ⦇⦈⟨ u , σ ⟩ indet
-      INEHole : ∀{d u σ} → d final → ⦇ d ⦈⟨ u , σ ⟩ indet
+      INEHole : ∀{d u σ} → d final → ⦇⌜ d ⌟⦈⟨ u , σ ⟩ indet
       IAp : ∀{d1 d2} → ((τ1 τ2 τ3 τ4 : htyp) (d1' : ihexp) →
                        d1 ≠ (d1' ⟨(τ1 ==> τ2) ⇒ (τ3 ==> τ4)⟩)) →
                        d1 indet →
@@ -370,7 +370,7 @@ module core where
     ⊙ : ectx
     _∘₁_ : ectx → ihexp → ectx
     _∘₂_ : ihexp → ectx → ectx
-    ⦇_⦈⟨_⟩ : ectx → (Nat × env ) → ectx
+    ⦇⌜_⌟⦈⟨_⟩ : ectx → (Nat × env ) → ectx
     _⟨_⇒_⟩ : ectx → htyp → htyp → ectx
     _⟨_⇒⦇⦈⇏_⟩ : ectx → htyp → htyp → ectx
 
@@ -393,7 +393,7 @@ module core where
             (d ∘₂ ε) evalctx
     ECNEHole : ∀{ε u σ} →
                ε evalctx →
-               ⦇ ε ⦈⟨ u , σ ⟩ evalctx
+               ⦇⌜ ε ⌟⦈⟨ u , σ ⟩ evalctx
     ECCast : ∀{ ε τ1 τ2} →
              ε evalctx →
              (ε ⟨ τ1 ⇒ τ2 ⟩) evalctx
@@ -413,7 +413,7 @@ module core where
            (d1 ∘ d2) == (d1 ∘₂ ε) ⟦ d2' ⟧
     FHNEHole : ∀{ d d' ε u σ} →
               d == ε ⟦ d' ⟧ →
-              ⦇ d ⦈⟨ (u , σ ) ⟩ ==  ⦇ ε ⦈⟨ (u , σ ) ⟩ ⟦ d' ⟧
+              ⦇⌜ d ⌟⦈⟨ (u , σ ) ⟩ ==  ⦇⌜ ε ⌟⦈⟨ (u , σ ) ⟩ ⟦ d' ⟧
     FHCast : ∀{ d d' ε τ1 τ2 } →
             d == ε ⟦ d' ⟧ →
             d ⟨ τ1 ⇒ τ2 ⟩ == ε ⟨ τ1 ⇒ τ2 ⟩ ⟦ d' ⟧
@@ -490,7 +490,7 @@ module core where
       FVar   : ∀{x y} → x ≠ y → fresh x (X y)
       FLam   : ∀{x y τ d} → x ≠ y → fresh x d → fresh x (·λ y [ τ ] d)
       FHole  : ∀{x u σ} → envfresh x σ → fresh x (⦇⦈⟨ u , σ ⟩)
-      FNEHole : ∀{x d u σ} → envfresh x σ → fresh x d → fresh x (⦇ d ⦈⟨ u , σ ⟩)
+      FNEHole : ∀{x d u σ} → envfresh x σ → fresh x d → fresh x (⦇⌜ d ⌟⦈⟨ u , σ ⟩)
       FAp     : ∀{x d1 d2} → fresh x d1 → fresh x d2 → fresh x (d1 ∘ d2)
       FCast   : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒ τ2 ⟩)
       FFailedCast : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩)
@@ -503,7 +503,7 @@ module core where
     FRHLam1  : ∀{x y e} → x ≠ y → freshh x e → freshh x (·λ y e)
     FRHLam2  : ∀{x τ e y} → x ≠ y → freshh x e → freshh x (·λ y [ τ ] e)
     FRHEHole : ∀{x u} → freshh x (⦇⦈[ u ])
-    FRHNEHole : ∀{x u e} → freshh x e → freshh x (⦇ e ⦈[ u ])
+    FRHNEHole : ∀{x u e} → freshh x e → freshh x (⦇⌜ e ⌟⦈[ u ])
     FRHAp : ∀{x e1 e2} → freshh x e1 → freshh x e2 → freshh x (e1 ∘ e2)
 
   -- x is not used in a binding site in d
@@ -526,7 +526,7 @@ module core where
       UBNEHole : ∀{x u σ d }
                   → unbound-in-σ x σ
                   → unbound-in x d
-                  → unbound-in x (⦇ d ⦈⟨ u , σ ⟩)
+                  → unbound-in x (⦇⌜ d ⌟⦈⟨ u , σ ⟩)
       UBAp : ∀{ x d1 d2 } →
             unbound-in x d1 →
             unbound-in x d2 →
@@ -553,7 +553,7 @@ module core where
                          → binders-disjoint (⦇⦈⟨ u , σ ⟩) d2
       BDNEHole : ∀{u σ d1 d2} → binders-disjoint-σ σ d2
                               → binders-disjoint d1 d2
-                              → binders-disjoint (⦇ d1 ⦈⟨ u , σ ⟩) d2
+                              → binders-disjoint (⦇⌜ d1 ⌟⦈⟨ u , σ ⟩) d2
       BDAp :  ∀{d1 d2 d3} → binders-disjoint d1 d3
                           → binders-disjoint d2 d3
                           → binders-disjoint (d1 ∘ d2) d3
@@ -581,7 +581,7 @@ module core where
                         → binders-unique (⦇⦈⟨ u , σ ⟩)
       BUNEHole : ∀{u σ d} → binders-unique d
                            → binders-unique-σ σ
-                           → binders-unique (⦇ d ⦈⟨ u , σ ⟩)
+                           → binders-unique (⦇⌜ d ⌟⦈⟨ u , σ ⟩)
       BUAp : ∀{d1 d2} → binders-unique d1
                        → binders-unique d2
                        → binders-disjoint d1 d2
