@@ -1,0 +1,216 @@
+POPL'19 AEC Paper #36 Reviews and Comments
+===========================================================================
+Paper #36 Live Functional Programming with Typed Holes
+
+
+Review #36A
+===========================================================================
+* Updated: 29 Oct 2018 5:55:37am EDT
+
+Overall merit
+-------------
+3. Weak accept
+
+Reviewer expertise
+------------------
+2. Some familiarity
+
+Artifact summary
+----------------
+The paper develops dynamic semantics for incomplete functional programs with the
+goal of enhancing live program editing experience in an IDE.  The artefact
+supplied by the authors is:
+
+ 1. an Agda mechanization of metatheory presented in Section 3 of the paper.
+
+ 2. an OCaml implementation of system described in the paper (there's a small
+    fragment of code written in Coq)
+
+Both artefacts are available as online GitHub repositories with the source code.
+Authors have also provided a Docker file to install a container with all the
+software required to build the Agda formalization.  Prototype implementation is
+also freely accessible online at www.hazel.org.
+
+General assesment
+-----------------
+# Artefact 1 - Agda mechanization
+
+The main strength of the artefact is that it provides formal proofs of theorems
+formulated by the authors, thus proving correctness of the proposed metatheory.
+Authors have provided a good table of contents that lists where exactly in the
+source code are the proofs of theorems from Section 3 of the paper.  The source
+code itself is well written - clean and with enough comments.
+
+One minor complaint would be the fact that the artefact relies on an old (2.5
+year) version of Agda, and thus building the artefact from source is
+burdensome (requires installing an old version of GHC).  However, with Agda's lack of guarantees on backward compatibility,
+it probably makes little sense to update to the latest version anyway.  A docker
+file provided by the authors mitigates the problem.
+
+In my opinion this artefact meets the expectations set by the paper and deserves
+an "accept".
+
+# Artefact 2 - OCaml implementation
+
+The main strength of this artefact is that it allows interactive experimentation
+with the proposed system.  However, I feel that there is a significant mismatch
+between what the paper promises and what the artefact actually delivers.
+Concretely, the paper suggest that the implementation provides various syntactic
+sugar constructs (tuples, recursive data types), but the only way to have these
+is using Church encodings.  Importantly, this does *NOT* invalidate findings of the paper.
+The implemented system is expressive enough to support the claims that authors
+make.  However, given the introduction to and mock-ups shown in Section 2, a
+reader will most likely expect more from the implementation.  Moreover, I found
+the source code lacking comments. Implementation of semantics in Coq has some,
+but not too many.  This makes reading the source code difficult.
+
+I feel that this artefact falls short of the expectations set by the paper.  At
+this point I rate it as a "weak reject", but if authors make changes discussed
+in the comments (and summarized below) my rating will go up.
+
+Suggestions for improvement
+---------------------------
+Regarding the first artefact, please provide additional instructions how to run
+Agda installation from a Docker container with agda-mode in Emacs.
+
+Regarding the second artefact, please update the paper to give reader an
+accurate expectation of what the artefact actually implements.  Most
+importantly, please point out that reproducing examples in the paper requires
+Church encodings.  This is not obvious from the text and figures.
+Perhaps prepare an extended version of the paper that contains an appendix with
+the actual code of the examples?
+
+
+
+Comment @A1 by Cyrus Omar <comar@cs.uchicago.edu>
+---------------------------------------------------------------------------
+Thank you for your feedback.
+
+1. Agda is rapidly evolving, and makes no guarantee of backwards compatibility between releases, so we have pinned our work on Hazelnut and now Hazelnut Live to a stable version of Agda. It is possible to connect Emacs to a Dockerized version of Agda: https://github.com/banacorn/docker-agda. We would be happy to include those instructions in the final version of the artifact.
+
+2. You can play with Hazel on hazel.org, and its source code is available on Github: https://github.com/hazelgrove/hazel. We would be happy to submit a snapshot of Hazel for review if requested, but it is rapidly evolving and the primary contribution of this paper is Hazelnut Live, so we focused on submitting the finished mechanization of Hazelnut Live for review.
+
+
+Comment @A2 by Reviewer A
+---------------------------------------------------------------------------
+Re 1. Being able to run agda-mode with a docker version of Agda looks like an improvement. And I do realize that even if you updated the development to the latest version of Agda there is no guarantee that it will compile correctly with any of the future versions. So I will not insist on that.
+
+Re 2. Indeed, formalization of the metatheory is the primary contribution. But the paper demonstrates a working system that implements these ideas and it makes one want to experiment with it - it is much more interesting to explore such a system in an interactive way rather than look at the proofs of its correctness! I realize that Hazel is evolving but I don't see it as an obstacle to submitting it as an artefact. Just create a git tag in the repository to mark the version used to obtain results in the paper. This will ensure that anyone in the future can easily reproduce results from the paper by checking out a corresponding tag. I dare to make a bold statement that it might be very useful to you, the developers, as well. Imagine yourselves in a few years writing a paper about some newest developments in Hazel and being able to easily go back to an older version of the project to compare its features with the latest version.
+
+
+Comment @A3 by Cyrus Omar <comar@cs.uchicago.edu>
+---------------------------------------------------------------------------
+OK, I confirmed with the AEC chairs that we can add the snapshot of the implementation for evaluation, so we made a release on GitHub:
+
+https://github.com/hazelgrove/hazel/releases/tag/popl19aec-final
+
+The installation instructions are available in the README.md file, and a prebuilt version of Hazel is available for use in the browser at `popl19aec-www/hazel.html`.
+
+We will include this in the final artifact as requested.
+
+
+Comment @A4 by Reviewer A
+---------------------------------------------------------------------------
+Thank you. Please give me some time to play with the implementation and update my review.
+
+
+Comment @A5 by Reviewer A
+---------------------------------------------------------------------------
+I just watched the Strange Loop talk on Hazel. As I understand it the current implementation is more-or-less the same as shown during that talk and the screenshots in the paper are mock-ups of an intended user interface. That being said, how do I:
+
+1. construct tuples?
+2. construct lists?
+3. use a map?
+
+I'd like to implement code that is semantically equivalent to what is shown in Fig.1 in the paper. I would appreciate if you could help me make the first steps.
+
+
+Comment @A6 by Cyrus Omar <comar@cs.uchicago.edu>
+---------------------------------------------------------------------------
+Yes, as detailed in the introductory part of Sec. 2, the language features shown in use in the figures in the paper are mocked up.
+
+The easiest way to implement the examples from Sec. 2 are by using Church encodings. See attached for a simple example demonstrating lists and map. The second screenshots demonstrates that the sidebar displays 3 closures as expected from the discussion around Fig. 1.
+
+
+Comment @A7 by Reviewer A
+---------------------------------------------------------------------------
+> The easiest way to implement the examples from Sec. 2 are by using Church encodings.
+
+Allow me to quote from introduction to Section 2:
+"some 'syntactic and semantic sugar' (...) was not available in Hazel as of this writing, e.g.
+ [A] pattern matching in function arguments,
+ [B] list notation
+ [C] and record labels (currently there are only tuples). [A, B, and C added by me]"
+ 
+ 1. [C] suggests that I can use tuples (not Church encodings of tuples)
+ 2. [B] suggests that I can have lists (again, I would assume recursive data types - not Church encodings), except that they don't have a convenient notation of the form `[1,2,3]`, so I have to say something like `Cons 1 (Cons 2 (Cons 2 Nil))`.
+ 3. [A] suggests that I can take apart these data types - lists, tuples - with pattern matching, except that I can't say:
+    ```
+    map f nil = _
+    map f (cons x xs) = _
+    ```
+    and have to do this instead:
+    ```
+    map f xs = case xs of { nil -> _; cons x xs' -> _ }
+    ```
+
+So the paper gives an impression that the system is more powerful that it actually seems to be. Is that correct?
+
+
+Comment @A8 by Cyrus Omar <comar@cs.uchicago.edu>
+---------------------------------------------------------------------------
+1. Apologies -- we did have tuples in a version of the code at the time of submission, but they were lost during a refactoring a few months ago (the plan was to add a "comma" operator into the infix operator syntax instead of having a separate tuple form, but that change isn't done yet). I should have remembered to mention that in my response earlier. We will remove the claim that there are tuples in the final version of the paper being prepared right now.
+
+2. We did not claim that there were recursive datatypes in the implementation, only that lists can be expressed. They can be expressed using the Church encodings as just discussed, or alternatively with a sum type with a type hole in recursive position.
+
+3. The phrase "pattern matching in function arguments" simply referred to the fact that we only show pattern matching in argument position in the examples in the paper -- we did not show an explicit case/match. There is in fact a case expression in Hazel and there is no support for nested patterns there. You can, however, case analyze on lists expressed as a sum type using this case form.
+
+We will rewrite the sentence you highlighted to make the status of our implementation more clear in the final version of the paper being prepared right now. The fundamental claim -- that you can express the examples in Sec. 2 in our current implementation with some "encoding tricks" and that all of the live programming features demonstrated in the figures in Sec. 2 are implemented -- holds.
+
+
+
+Review #36B
+===========================================================================
+* Updated: 28 Oct 2018 1:32:54pm EDT
+
+Overall merit
+-------------
+5. Strong accept
+
+Reviewer expertise
+------------------
+4. Expert
+
+Artifact summary
+----------------
+This paper presents Hazelnut, a functional language with support for both term- and type-level holes representing incomplete programs. Term-level holes are treated as stuck terms, while type-level holes behave like the 'any' type from gradual typing.
+
+The artefact consists of an Agda formalization of the Hazelnut Live core language and its metatheoretical properties, including preservation and progress for both incomplete and complete programs.
+
+General assesment
+-----------------
+I believe this artefact lives up to the expectations set by the paper. The Agda code is written in a clear way and closely follows the definitions and theorems in the paper. All theorems in the paper are proven (except for Theorem 4.2, which the paper does not claim to be formalized). Congratulations to the authors for the effort put into formalizing everything in such a disciplined way!
+
+The choice to represent variables as unique names and contexts as functions is a bit surprising, I would have expected a more standard approach using de Bruijn-indices. But since this does not seem to cause any serious problems (aside from requiring functional extensionality) I don't see this as a negative point.
+
+The code itself seems easy enough to modify and/or extend, although bigger extensions such as adding polymorphic types would probably require some re-thinking of the basic definitions.
+
+There are two minor questions I had that I'd like to see addressed either in the code or the paper:
+- Why is there a separate constructor for the identity substitution instead of it being defined as in the paper? 
+- Is there a particular reason why the proof of commutativity (Theorem 4.2) is not part of the formalization? If there was some kind of obstacle (other than lack of time) that prevented this, it would be interesting to know.
+
+---------------------------------------------------
+
+Below are some questions that I had while reading the paper but are not related directly to the artefact:
+
+I wonder how hole filling works for type holes, since all type holes are considered to be equal. In particular, it's possible to type the identity function at type ⦇⦈ -> ⦇⦈ but then fill in the two holes with different types, thus causing the function to become ill-typed. Wouldn't it be better to also give IDs to type holes? Otherwise it seems like you would run into a problem that you start with a program that is accepted, fill some holes, and end up with a program that is rejected even though all the hole fills were valid.
+
+To formulate the above question in a different way: I believe the analogous statement of commutativity (Theorem 4.2) does not hold for filling of type holes. Is this correct?
+
+Did you also consider the dual to hole filling, i.e. turning an existing sub-expression into a non-empty hole containing that subexpression? This seems like it would be another useful operation to have for editing code. Of course this does not preserve the dynamic semantics, but one would expect it at least preserves well-typedness.
+
+Suggestions for improvement
+---------------------------
+- In recent versions of Agda, the idiom brackets ⦇⦈ are reserved symbols, preventing the code from compiling. A simple search-and-replace (I replaced ⦇ by ⦇- and ⦈ by -⦈) fixed the problem. If it is not too much effort, it would be nice to rename these in the final version of the artefact as well.
+
+- A minor inconsistency between the paper and the Agda code: the rule FBoxedVal in the paper is called FBoxed in the Agda code.
