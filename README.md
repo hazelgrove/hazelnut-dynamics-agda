@@ -6,7 +6,7 @@ Mechanization).
 
 # How To Check These Proofs
 
-These proofs are known to check under `Agda 2.5.4.2`. The most direct, if
+These proofs are known to check under `Agda 2.6.2`. The most direct, if
 not the easiest, option to check the proofs is to install that version of
 Agda or one compatible with it, download the code in this repo, and run
 `agda all.agda` at the command line.
