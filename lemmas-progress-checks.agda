@@ -39,7 +39,7 @@ module lemmas-progress-checks where
   final-not-trans (FIndet x) = indet-not-trans x
 
   -- finals cast from a ground are still final
-  final-gnd-cast : ∀{ d τ } → d final → τ ground → (d ⟨ τ ⇒ ⦇⦈ ⟩) final
+  final-gnd-cast : ∀{ d τ } → d final → τ ground → (d ⟨ τ ⇒ ⦇-⦈ ⟩) final
   final-gnd-cast (FBoxedVal x) gnd = FBoxedVal (BVHoleCast gnd x)
   final-gnd-cast (FIndet x) gnd = FIndet (ICastGroundHole gnd x)
 

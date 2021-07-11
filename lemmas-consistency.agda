@@ -11,14 +11,14 @@ module lemmas-consistency where
 
   -- type consistency isn't transitive
   not-trans : ((t1 t2 t3 : htyp) → t1 ~ t2 → t2 ~ t3 → t1 ~ t3) → ⊥
-  not-trans t with t (b ==> b) ⦇⦈ b TCHole1 TCHole2
+  not-trans t with t (b ==> b) ⦇-⦈ b TCHole1 TCHole2
   ... | ()
 
   --  every pair of types is either consistent or not consistent
   ~dec : (t1 t2 : htyp) → ((t1 ~ t2) + (t1 ~̸ t2))
     -- this takes care of all hole cases, so we don't consider them below
-  ~dec _ ⦇⦈ = Inl TCHole1
-  ~dec ⦇⦈ _ = Inl TCHole2
+  ~dec _ ⦇-⦈ = Inl TCHole1
+  ~dec ⦇-⦈ _ = Inl TCHole2
     -- num cases
   ~dec b b = Inl TCRefl
   ~dec b (t2 ==> t3) = Inr ICBaseArr1

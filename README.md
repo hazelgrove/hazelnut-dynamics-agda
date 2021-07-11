@@ -176,7 +176,7 @@ There are no other postulates in this development.
 - [all.agda](all.agda) is morally a make file: it includes every module in
   every other file, so running `$ agda all.agda` on a clean clone of this
   repository will recheck every proof from scratch. It is known to load
-  cleanly with `Agda version 2.5.4.2`; we have not tested it on any other
+  cleanly with `Agda version 2.6.2`; we have not tested it on any other
   version.
 
 ## Prelude and Datatypes

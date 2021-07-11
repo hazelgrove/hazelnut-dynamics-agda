@@ -14,7 +14,7 @@ module lemmas-matching where
   -- function type
   matchconsisthole : ∀{t t'} →
                  t ▸arr t' →
-                 t ~ (⦇⦈ ==> ⦇⦈)
+                 t ~ (⦇-⦈ ==> ⦇-⦈)
   matchconsisthole MAHole = TCHole2
   matchconsisthole MAArr = TCArr TCHole1 TCHole1
 

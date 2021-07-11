@@ -51,7 +51,7 @@ module canonical-value-forms where
   canonical-value-forms-coverage1 (TAFailedCast wt x x₁ x₂) ()
 
   canonical-value-forms-coverage2 : ∀{Δ d} →
-                                   Δ , ∅ ⊢ d :: ⦇⦈ →
+                                   Δ , ∅ ⊢ d :: ⦇-⦈ →
                                    d val →
                                    ⊥
   canonical-value-forms-coverage2 (TAVar x₁) ()

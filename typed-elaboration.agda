@@ -17,10 +17,10 @@ module typed-elaboration where
     typed-elaboration-synth (ESAp {Δ1 = Δ1} _ d x₁ x₂ x₃ x₄)
       with typed-elaboration-ana x₃ | typed-elaboration-ana x₄
     ... | con1 , ih1 | con2 , ih2  = TAAp (TACast (weaken-ta-Δ1 d ih1) con1) (TACast (weaken-ta-Δ2 {Δ1 = Δ1} d ih2) con2)
-    typed-elaboration-synth (ESEHole {Γ = Γ} {u = u})  = TAEHole (ctx-top ∅ u (Γ , ⦇⦈) refl)(STAId (λ x τ z → z))
+    typed-elaboration-synth (ESEHole {Γ = Γ} {u = u})  = TAEHole (ctx-top ∅ u (Γ , ⦇-⦈) refl)(STAId (λ x τ z → z))
     typed-elaboration-synth (ESNEHole {Γ = Γ} {τ = τ} {u = u} {Δ = Δ} (d1 , d2) ex)
       with typed-elaboration-synth ex
-    ... | ih1 = TANEHole {Δ = Δ ,, (u , Γ , ⦇⦈)} (ctx-top Δ u (Γ , ⦇⦈) (d2 u (lem-domsingle _ _))) (weaken-ta-Δ1 (d1 , d2) ih1)(STAId (λ x τ₁ z → z))
+    ... | ih1 = TANEHole {Δ = Δ ,, (u , Γ , ⦇-⦈)} (ctx-top Δ u (Γ , ⦇-⦈) (d2 u (lem-domsingle _ _))) (weaken-ta-Δ1 (d1 , d2) ih1)(STAId (λ x τ₁ z → z))
     typed-elaboration-synth (ESAsc x)
       with typed-elaboration-ana x
     ... | con , ih = TACast ih con

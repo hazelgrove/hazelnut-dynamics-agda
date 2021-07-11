@@ -53,11 +53,11 @@ module binders-disjoint-checks where
     lem-bd-cast (BDFailedCast bd) = BDFailedCast (lem-bd-cast bd)
 
   mutual
-    lem-bdσ-failedcast : ∀{σ d τ1 τ2} → binders-disjoint-σ σ (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) → binders-disjoint-σ σ d
+    lem-bdσ-failedcast : ∀{σ d τ1 τ2} → binders-disjoint-σ σ (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) → binders-disjoint-σ σ d
     lem-bdσ-failedcast BDσId = BDσId
     lem-bdσ-failedcast (BDσSubst x bd) = BDσSubst (lem-bd-failedcast x) (lem-bdσ-failedcast bd)
 
-    lem-bd-failedcast : ∀{d1 d τ1 τ2} → binders-disjoint d1 (d ⟨ τ1 ⇒⦇⦈⇏ τ2 ⟩) → binders-disjoint d1 d
+    lem-bd-failedcast : ∀{d1 d τ1 τ2} → binders-disjoint d1 (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) → binders-disjoint d1 d
     lem-bd-failedcast BDConst = BDConst
     lem-bd-failedcast BDVar = BDVar
     lem-bd-failedcast (BDLam bd (UBFailedCast x₁)) = BDLam (lem-bd-failedcast bd) x₁
