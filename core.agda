@@ -167,18 +167,18 @@ module core where
   open typctx
 
   -- substitution in types
-  [_/_] : htyp → Nat → htyp → htyp 
-  [ τ / a ] b = b 
-  [ τ / a ] A b
-    with natEQ a b
-  [ τ / a ] A b | Inl refl = τ
-  [ τ / a ] A b | Inr neq = A b
-  [ τ / a ] ⦇-⦈ = ⦇-⦈
-  [ τ / a ] (τ1 ==> τ2) = (([ τ / a ] τ1) ==> ([ τ / a ] τ2))
-  [ τ / a ] (·∀ b τ')
-    with natEQ a b
-  [ τ / a ] (·∀ b τ') | Inl refl = ·∀ b τ'
-  [ τ / a ] (·∀ b τ') | Inr neq = ·∀ b ([ τ / a ] τ')
+  Typ[_/_]_ : htyp → Nat → htyp → htyp 
+  Typ[ τ / a ] b = b
+  Typ[ τ / a ] A a'
+    with natEQ a a'
+  Typ[ τ / a ] A a' | Inl refl = τ
+  Typ[ τ / a ] A a' | Inr neq = A a'
+  Typ[ τ / a ] ⦇-⦈ = ⦇-⦈
+  Typ[ τ / a ] (τ1 ==> τ2) = ((Typ[ τ / a ] τ1) ==> (Typ[ τ / a ] τ2))
+  Typ[ τ / a ] (·∀ a' τ')
+    with natEQ a a'
+  Typ[ τ / a ] (·∀ a' τ') | Inl refl = ·∀ a' τ'
+  Typ[ τ / a ] (·∀ a' τ') | Inr neq = ·∀ a' (Typ[ τ / a ] τ')
 
   -- bidirectional type checking judgements for hexp
   mutual
@@ -212,10 +212,10 @@ module core where
       STAp    : {Γ : tctx} {Θ : typctx} {e : hexp} {τ1 τ2 τ3 : htyp} {a : Nat} → 
                 Γ , Θ ⊢ e => τ2 →
                 τ2 ▸forall (·∀ a τ3) →
-                Γ , Θ ⊢ (e < τ1 >) => ([ τ1 / a ] τ3)
+                Γ , Θ ⊢ (e < τ1 >) => (Typ[ τ1 / a ] τ3)
 
     -- analysis
-    data _⊢_<=_ : (Γ : htyp ctx) (Θ : typctx) (e : hexp) (τ : htyp) → Set where
+    data _,_⊢_<=_ : (Γ : htyp ctx) (Θ : typctx) (e : hexp) (τ : htyp) → Set where
       ASubsume : {Γ : tctx} {Θ : typctx} {e : hexp} {τ τ' : htyp} →
                  Γ , Θ ⊢ e => τ' →
                  τ ~ τ' →
@@ -268,59 +268,61 @@ module core where
     CIConst  : cast-id c
     CIVar    : ∀{x} → cast-id (X x)
     CILam    : ∀{x τ d} → cast-id d → cast-id (·λ x [ τ ] d)
+    CITLam   : ∀{a d} → cast-id d → cast-id (·Λ a d)
     CIHole   : ∀{u} → cast-id (⦇-⦈⟨ u ⟩)
     CINEHole : ∀{d u} → cast-id d → cast-id (⦇⌜ d ⌟⦈⟨ u ⟩)
     CIAp     : ∀{d1 d2} → cast-id d1 → cast-id d2 → cast-id (d1 ∘ d2)
+    CITap    : ∀{τ d} → cast-id d → cast-id (d < τ >)
     CICast   : ∀{d τ} → cast-id d → cast-id (d ⟨ τ ⇒ τ ⟩)
 
   -- expansion
   mutual
     -- synthesis
-    data _⊢_⇒_~>_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : ihexp) (Δ : hctx) → Set where
-      ESConst : ∀{Γ} → Γ ⊢ c ⇒ b ~> c ⊣ ∅
-      ESVar   : ∀{Γ x τ} → (x , τ) ∈ Γ →
-                         Γ ⊢ X x ⇒ τ ~> X x ⊣ ∅
-      ESLam   : ∀{Γ x τ1 τ2 e d Δ } →
+    data _,_⊢_⇒_~>_⊣_ : (Γ : tctx) (Θ : typctx) (e : hexp) (τ : htyp) (d : ihexp) (Δ : hctx) → Set where
+      ESConst : ∀{Γ Θ} → Γ , Θ ⊢ c ⇒ b ~> c ⊣ ∅
+      ESVar   : ∀{Γ Θ x τ} → (x , τ) ∈ Γ →
+                         Γ , Θ ⊢ X x ⇒ τ ~> X x ⊣ ∅
+      ESLam   : ∀{Γ Θ x τ1 τ2 e d Δ} →
                      (x # Γ) →
-                     (Γ ,, (x , τ1)) ⊢ e ⇒ τ2 ~> d ⊣ Δ →
-                      Γ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ Δ
-      ESAp : ∀{Γ e1 τ τ1 τ1' τ2 τ2' d1 Δ1 e2 d2 Δ2 } →
+                     (Γ ,, (x , τ1)) , Θ ⊢ e ⇒ τ2 ~> d ⊣ Δ →
+                      Γ , Θ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ Δ
+      ESAp : ∀{Γ Θ e1 τ τ1 τ1' τ2 τ2' d1 Δ1 e2 d2 Δ2} →
               holes-disjoint e1 e2 →
               Δ1 ## Δ2 →
-              Γ ⊢ e1 => τ1 →
+              Γ , Θ ⊢ e1 => τ1 →
               τ1 ▸arr τ2 ==> τ →
-              Γ ⊢ e1 ⇐ (τ2 ==> τ) ~> d1 :: τ1' ⊣ Δ1 →
-              Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2' ⊣ Δ2 →
-              Γ ⊢ e1 ∘ e2 ⇒ τ ~> (d1 ⟨ τ1' ⇒ τ2 ==> τ ⟩) ∘ (d2 ⟨ τ2' ⇒ τ2 ⟩) ⊣ (Δ1 ∪ Δ2)
-      ESEHole : ∀{ Γ u } →
-                Γ ⊢ ⦇-⦈[ u ] ⇒ ⦇-⦈ ~> ⦇-⦈⟨ u , Id Γ ⟩ ⊣  ■ (u :: ⦇-⦈ [ Γ ])
-      ESNEHole : ∀{ Γ e τ d u Δ } →
+              Γ , Θ ⊢ e1 ⇐ (τ2 ==> τ) ~> d1 :: τ1' ⊣ Δ1 →
+              Γ , Θ ⊢ e2 ⇐ τ2 ~> d2 :: τ2' ⊣ Δ2 →
+              Γ , Θ ⊢ e1 ∘ e2 ⇒ τ ~> (d1 ⟨ τ1' ⇒ τ2 ==> τ ⟩) ∘ (d2 ⟨ τ2' ⇒ τ2 ⟩) ⊣ (Δ1 ∪ Δ2)
+      ESEHole : ∀{Γ Θ u} →
+                Γ , Θ ⊢ ⦇-⦈[ u ] ⇒ ⦇-⦈ ~> ⦇-⦈⟨ u , Id Γ ⟩ ⊣  ■ (u :: ⦇-⦈ [ Γ ])
+      ESNEHole : ∀{Γ Θ e τ d u Δ} →
                  Δ ## (■ (u , Γ , ⦇-⦈)) →
-                 Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
-                 Γ ⊢ ⦇⌜ e ⌟⦈[ u ] ⇒ ⦇-⦈ ~> ⦇⌜ d ⌟⦈⟨ u , Id Γ  ⟩ ⊣ (Δ ,, u :: ⦇-⦈ [ Γ ])
-      ESAsc : ∀ {Γ e τ d τ' Δ} →
-                 Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
-                 Γ ⊢ (e ·: τ) ⇒ τ ~> d ⟨ τ' ⇒ τ ⟩ ⊣ Δ
+                 Γ , Θ ⊢ e ⇒ τ ~> d ⊣ Δ →
+                 Γ , Θ ⊢ ⦇⌜ e ⌟⦈[ u ] ⇒ ⦇-⦈ ~> ⦇⌜ d ⌟⦈⟨ u , Id Γ  ⟩ ⊣ (Δ ,, u :: ⦇-⦈ [ Γ ])
+      ESAsc : ∀ {Γ Θ e τ d τ' Δ} →
+                 Γ , Θ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
+                 Γ , Θ ⊢ (e ·: τ) ⇒ τ ~> d ⟨ τ' ⇒ τ ⟩ ⊣ Δ
 
     -- analysis
-    data _⊢_⇐_~>_::_⊣_ : (Γ : tctx) (e : hexp) (τ : htyp) (d : ihexp) (τ' : htyp) (Δ : hctx) → Set where
-      EALam : ∀{Γ x τ τ1 τ2 e d τ2' Δ } →
+    data _,_⊢_⇐_~>_::_⊣_ : (Γ : tctx) (Θ : typctx) (e : hexp) (τ : htyp) (d : ihexp) (τ' : htyp) (Δ : hctx) → Set where
+      EALam : ∀{Γ Θ x τ τ1 τ2 e d τ2' Δ } →
               (x # Γ) →
               τ ▸arr τ1 ==> τ2 →
-              (Γ ,, (x , τ1)) ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
-              Γ ⊢ ·λ x e ⇐ τ ~> ·λ x [ τ1 ] d :: τ1 ==> τ2' ⊣ Δ
-      EASubsume : ∀{e Γ τ' d Δ τ} →
+              (Γ ,, (x , τ1)) , Θ ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
+              Γ , Θ ⊢ ·λ x e ⇐ τ ~> ·λ x [ τ1 ] d :: τ1 ==> τ2' ⊣ Δ
+      EASubsume : ∀{e Γ Θ τ' d Δ τ} →
                   ((u : Nat) → e ≠ ⦇-⦈[ u ]) →
                   ((e' : hexp) (u : Nat) → e ≠ ⦇⌜ e' ⌟⦈[ u ]) →
-                  Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
+                  Γ , Θ ⊢ e ⇒ τ' ~> d ⊣ Δ →
                   τ ~ τ' →
-                  Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
-      EAEHole : ∀{ Γ u τ  } →
-                Γ ⊢ ⦇-⦈[ u ] ⇐ τ ~> ⦇-⦈⟨ u , Id Γ  ⟩ :: τ ⊣ ■ (u :: τ [ Γ ])
-      EANEHole : ∀{ Γ e u τ d τ' Δ  } →
+                  Γ , Θ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
+      EAEHole : ∀{Γ Θ u τ} →
+                Γ , Θ ⊢ ⦇-⦈[ u ] ⇐ τ ~> ⦇-⦈⟨ u , Id Γ  ⟩ :: τ ⊣ ■ (u :: τ [ Γ ])
+      EANEHole : ∀{Γ Θ e u τ d τ' Δ} →
                  Δ ## (■ (u , Γ , τ)) →
-                 Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
-                 Γ ⊢ ⦇⌜ e ⌟⦈[ u ] ⇐ τ ~> ⦇⌜ d ⌟⦈⟨ u , Id Γ  ⟩ :: τ ⊣ (Δ ,, u :: τ [ Γ ])
+                 Γ , Θ ⊢ e ⇒ τ' ~> d ⊣ Δ →
+                 Γ , Θ ⊢ ⦇⌜ e ⌟⦈[ u ] ⇐ τ ~> ⦇⌜ d ⌟⦈⟨ u , Id Γ  ⟩ :: τ ⊣ (Δ ,, u :: τ [ Γ ])
 
   -- ground types
   data _ground : (τ : htyp) → Set where
