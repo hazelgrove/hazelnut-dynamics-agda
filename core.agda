@@ -59,8 +59,8 @@ module core where
       _,_~_ : ~ctx → Nat → Nat → ~ctx
 
     data _∋_~_ : (Γ : ~ctx) (a b : Nat) → Set where
-      H : ∀ {Γ a b} → (Γ , a ~ b) ∋ a ~ b
-      T : ∀ {Γ a b a' b'} → Γ ∋ a ~ b → (Γ , a' ~ b') ∋ a ~ b
+      H : ∀{Γ a b} → (Γ , a ~ b) ∋ a ~ b
+      T : ∀{Γ a b a' b'} → Γ ∋ a ~ b → (Γ , a' ~ b') ∋ a ~ b
 
   open ~ctx
 
@@ -68,17 +68,17 @@ module core where
   test1 = T H
 
   data _⊢_~_ : ~ctx → htyp → htyp → Set where 
-    TCVar  : ∀ {V a b} → V ∋ a ~ b → V ⊢ (A a) ~ (A b)
-    TCBase : ∀ {V} → V ⊢ b ~ b
-    TCHole1 : ∀ {V τ} → V ⊢ τ ~ ⦇-⦈
-    TCHole2 : ∀ {V τ} → V ⊢ ⦇-⦈ ~ τ
-    TCArr   : ∀ {V τ1 τ2 τ1' τ2'} →
-               V ⊢ τ1 ~ τ1' →
-               V ⊢ τ2 ~ τ2' →
-               V ⊢ τ1 ==> τ2 ~ τ1' ==> τ2'
-    TCForall : ∀ {V a b τ τ'} →
-              (V , a ~ b) ⊢ τ ~ τ' →
-              V ⊢ ·∀ a τ ~ ·∀ b τ'
+    TCVar  : ∀{Γ a b} → Γ ∋ a ~ b → Γ ⊢ (A a) ~ (A b)
+    TCBase : ∀{Γ} → Γ ⊢ b ~ b
+    TCHole1 : ∀{Γ τ} → Γ ⊢ τ ~ ⦇-⦈
+    TCHole2 : ∀{Γ τ} → Γ ⊢ ⦇-⦈ ~ τ
+    TCArr   : ∀{Γ τ1 τ2 τ1' τ2'} →
+               Γ ⊢ τ1 ~ τ1' →
+               Γ ⊢ τ2 ~ τ2' →
+               Γ ⊢ τ1 ==> τ2 ~ τ1' ==> τ2'
+    TCForall : ∀{Γ a b τ τ'} →
+              (Γ , a ~ b) ⊢ τ ~ τ' →
+              Γ ⊢ ·∀ a τ ~ ·∀ b τ'
 
   -- type consistency
   _~_ : (t1 t2 : htyp) → Set
@@ -101,7 +101,7 @@ module core where
     -- the 0 in the line below is a placeholder variable;
     -- I'm not sure if it's safe to use here TODO
     MFHole : ⦇-⦈ ▸forall (·∀ 0 ⦇-⦈)
-    MFForall  : ∀ {a τ} → (·∀ a τ) ▸forall (·∀ a τ)
+    MFForall  : ∀{a τ} → (·∀ a τ) ▸forall (·∀ a τ)
 
   -- the type of hole contexts, i.e. Δs in the judgements
   hctx : Set
