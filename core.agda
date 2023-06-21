@@ -52,26 +52,44 @@ module core where
   _⟨_⇒_⇒_⟩ : ihexp → htyp → htyp → htyp → ihexp
   d ⟨ t1 ⇒ t2 ⇒ t3 ⟩ = d ⟨ t1 ⇒ t2 ⟩ ⟨ t2 ⇒ t3 ⟩
 
+  module ~ctx where
+
+    data ~ctx : Set where
+      ~∅     : ~ctx
+      _,_~_ : ~ctx → Nat → Nat → ~ctx
+
+    data _∋_~_ : (Γ : ~ctx) (a b : Nat) → Set where
+      H : ∀ {Γ a b} → (Γ , a ~ b) ∋ a ~ b
+      T : ∀ {Γ a b a' b'} → Γ ∋ a ~ b → (Γ , a' ~ b') ∋ a ~ b
+
+  open ~ctx
+
+  test1 : ((~∅ , 4 ~ 5) , 5 ~ 4) ∋ 4 ~ 5
+  test1 = T H
+
+  data _⊢_~_ : ~ctx → htyp → htyp → Set where 
+    TCVar  : ∀ {V a b} → V ∋ a ~ b → V ⊢ (A a) ~ (A b)
+    TCBase : ∀ {V} → V ⊢ b ~ b
+    TCHole1 : ∀ {V τ} → V ⊢ τ ~ ⦇-⦈
+    TCHole2 : ∀ {V τ} → V ⊢ ⦇-⦈ ~ τ
+    TCArr   : ∀ {V τ1 τ2 τ1' τ2'} →
+               V ⊢ τ1 ~ τ1' →
+               V ⊢ τ2 ~ τ2' →
+               V ⊢ τ1 ==> τ2 ~ τ1' ==> τ2'
+    TCForall : ∀ {V a b τ τ'} →
+              (V , a ~ b) ⊢ τ ~ τ' →
+              V ⊢ ·∀ a τ ~ ·∀ b τ'
+
   -- type consistency
-  data _~_ : (t1 t2 : htyp) → Set where
-    TCRefl  : {τ : htyp} → τ ~ τ
-    TCHole1 : {τ : htyp} → τ ~ ⦇-⦈
-    TCHole2 : {τ : htyp} → ⦇-⦈ ~ τ
-    TCArr   : {τ1 τ2 τ1' τ2' : htyp} →
-               τ1 ~ τ1' →
-               τ2 ~ τ2' →
-               τ1 ==> τ2 ~ τ1' ==> τ2'
+  _~_ : (t1 t2 : htyp) → Set
+  _~_ = \(t1 t2 : htyp) → ~∅ ⊢ t1 ~ t2
+
+  test2 : (·∀ 2 (A 2)) ~ (·∀ 3 (A 3))
+  test2 = TCForall (TCVar H)
 
   -- type inconsistency
-  data _~̸_ : (τ1 τ2 : htyp) → Set where
-    ICBaseArr1 : {τ1 τ2 : htyp} → b ~̸ τ1 ==> τ2
-    ICBaseArr2 : {τ1 τ2 : htyp} → τ1 ==> τ2 ~̸ b
-    ICArr1 : {τ1 τ2 τ3 τ4 : htyp} →
-               τ1 ~̸ τ3 →
-               τ1 ==> τ2 ~̸ τ3 ==> τ4
-    ICArr2 : {τ1 τ2 τ3 τ4 : htyp} →
-               τ2 ~̸ τ4 →
-               τ1 ==> τ2 ~̸ τ3 ==> τ4
+  _~̸_ : (τ1 τ2 : htyp) → Set
+  τ1 ~̸  τ2 = ¬(τ1 ~ τ2)
 
   --- matching for arrows
   data _▸arr_ : htyp → htyp → Set where
