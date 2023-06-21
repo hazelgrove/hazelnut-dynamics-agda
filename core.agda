@@ -165,7 +165,6 @@ module core where
   open typctx
 
   -- substitution in types
-
   [_/_] : htyp → Nat → htyp → htyp 
   [ τ / a ] b = b 
   [ τ / a ] A b
@@ -205,6 +204,13 @@ module core where
                  x # Γ →
                  (Γ ,, (x , τ1)) , Θ ⊢ e => τ2 →
                  Γ , Θ ⊢ ·λ x [ τ1 ] e => τ1 ==> τ2
+      STLam   : {Γ : tctx} {Θ : typctx} {e : hexp} {τ : htyp} {a : Nat} → 
+                Γ , (Θ , a Type) ⊢ e => τ → 
+                Γ , Θ ⊢ (·Λ a e) => (·∀ a τ)
+      STAp    : {Γ : tctx} {Θ : typctx} {e : hexp} {τ1 τ2 τ3 : htyp} {a : Nat} → 
+                Γ , Θ ⊢ e => τ2 →
+                τ2 ▸forall (·∀ a τ3) →
+                Γ , Θ ⊢ (e < τ1 >) => ([ τ1 / a ] τ3)
 
     -- analysis
     data _⊢_<=_ : (Γ : htyp ctx) (Θ : typctx) (e : hexp) (τ : htyp) → Set where
@@ -217,6 +223,10 @@ module core where
                  τ ▸arr τ1 ==> τ2 →
                  (Γ ,, (x , τ1)) , Θ ⊢ e <= τ2 →
                  Γ , Θ ⊢ (·λ x e) <= τ
+      ATLam : {Γ : tctx} {Θ : typctx} {e : hexp} {τ1 τ2 : htyp} {a : Nat} → 
+                τ1 ▸forall (·∀ a τ2) → 
+                Γ , (Θ , a Type) ⊢ e <= τ2 → 
+                Γ , Θ ⊢ (·Λ a e) <= τ1
 
   -- those types without holes
   data _tcomplete : htyp → Set where
