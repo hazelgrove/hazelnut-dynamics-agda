@@ -25,7 +25,7 @@ module core where
     ⦇-⦈[_]   : Nat → hexp
     ⦇⌜_⌟⦈[_]  : hexp → Nat → hexp
     _∘_     : hexp → hexp → hexp
-    _⟦_⟧    : hexp → htyp → hexp
+    _<_>    : hexp → htyp → hexp
 
   -- the type of type contexts, i.e. Γs in the judegments below
   tctx : Set
