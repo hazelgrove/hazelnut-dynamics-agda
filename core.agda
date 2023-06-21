@@ -42,9 +42,11 @@ module core where
       c         : ihexp
       X         : Nat → ihexp
       ·λ_[_]_   : Nat → htyp → ihexp → ihexp
+      ·Λ        : Nat → ihexp → ihexp
       ⦇-⦈⟨_⟩     : (Nat × env) → ihexp
       ⦇⌜_⌟⦈⟨_⟩    : ihexp → (Nat × env) → ihexp
       _∘_       : ihexp → ihexp → ihexp
+      _<_>      : ihexp → htyp → ihexp
       _⟨_⇒_⟩    : ihexp → htyp → htyp → ihexp
       _⟨_⇒⦇-⦈⇏_⟩ : ihexp → htyp → htyp → ihexp
 
@@ -251,7 +253,9 @@ module core where
     DCVar : ∀{x} → (X x) dcomplete
     DCConst : c dcomplete
     DCLam : ∀{x τ d} → d dcomplete → τ tcomplete → (·λ x [ τ ] d) dcomplete
+    DCTLam : ∀{a d} → d dcomplete → (·Λ a d) dcomplete
     DCAp : ∀{d1 d2} → d1 dcomplete → d2 dcomplete → (d1 ∘ d2) dcomplete
+    DCTAp : ∀{τ d} → τ tcomplete → d dcomplete → (d < τ >) dcomplete
     DCCast : ∀{d τ1 τ2} → d dcomplete → τ1 tcomplete → τ2 tcomplete → (d ⟨ τ1 ⇒ τ2 ⟩) dcomplete
 
   -- contexts that only produce complete types
