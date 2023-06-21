@@ -96,6 +96,13 @@ module core where
     MAHole : ⦇-⦈ ▸arr ⦇-⦈ ==> ⦇-⦈
     MAArr  : {τ1 τ2 : htyp} → τ1 ==> τ2 ▸arr τ1 ==> τ2
 
+  --- matching for foralls
+  data _▸forall_ : htyp → htyp → Set where
+    -- the 0 in the line below is a placeholder variable;
+    -- I'm not sure if it's safe to use here TODO
+    MFHole : ⦇-⦈ ▸forall (·∀ 0 ⦇-⦈)
+    MFForall  : ∀ {a τ} → (·∀ a τ) ▸forall (·∀ a τ)
+
   -- the type of hole contexts, i.e. Δs in the judgements
   hctx : Set
   hctx = (htyp ctx × htyp) ctx
