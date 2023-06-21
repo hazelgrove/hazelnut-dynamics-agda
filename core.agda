@@ -151,6 +151,19 @@ module core where
     HDAp :  ∀{e1 e2 e3} → holes-disjoint e1 e3 → holes-disjoint e2 e3 → holes-disjoint (e1 ∘ e2) e3
     HDTAp : ∀{e1 e2 τ} → holes-disjoint e1 e2 → holes-disjoint (e1 < τ >) e2
 
+  -- definition of type context, represented as a list of naturals indexing type variables
+  module typctx where
+
+    data typctx : Set where
+      ~∅     : typctx
+      _,_Type : typctx → Nat → typctx
+
+    data _∋_Type : (Θ : typctx) (a : Nat) → Set where
+      H : ∀{Θ a} → (Θ , a Type) ∋ a Type
+      T : ∀{Θ a a'} → Θ ∋ a Type → (Θ , a' Type) ∋ a Type
+
+  open typctx
+
   -- bidirectional type checking judgements for hexp
   mutual
     -- synthesis
