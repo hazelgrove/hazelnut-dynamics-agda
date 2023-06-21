@@ -6,8 +6,10 @@ module core where
   -- types
   data htyp : Set where
     b     : htyp
+    A     : Nat → htyp
     ⦇-⦈    : htyp
     _==>_ : htyp → htyp → htyp
+    ·∀    : Nat → htyp → htyp
 
   -- arrow type constructors bind very tightly
   infixr 25  _==>_
@@ -19,9 +21,11 @@ module core where
     X       : Nat → hexp
     ·λ      : Nat → hexp → hexp
     ·λ_[_]_ : Nat → htyp → hexp → hexp
+    ·Λ      : Nat → hexp → hexp
     ⦇-⦈[_]   : Nat → hexp
     ⦇⌜_⌟⦈[_]  : hexp → Nat → hexp
     _∘_     : hexp → hexp → hexp
+    _⟦_⟧    : hexp → htyp → hexp
 
   -- the type of type contexts, i.e. Γs in the judegments below
   tctx : Set
