@@ -231,7 +231,9 @@ module core where
   -- those types without holes
   data _tcomplete : htyp → Set where
     TCBase : b tcomplete
+    TCVar : ∀{a} → (A a) tcomplete
     TCArr : ∀{τ1 τ2} → τ1 tcomplete → τ2 tcomplete → (τ1 ==> τ2) tcomplete
+    TCForall : ∀{a e} → e tcomplete → (·∀ a e) tcomplete 
 
   -- those external expressions without holes
   data _ecomplete : hexp → Set where
@@ -240,7 +242,9 @@ module core where
     ECVar : ∀{x} → (X x) ecomplete
     ECLam1 : ∀{x e} → e ecomplete → (·λ x e) ecomplete
     ECLam2 : ∀{x e τ} → e ecomplete → τ tcomplete → (·λ x [ τ ] e) ecomplete
+    ECTLam : ∀{a e} → e ecomplete → (·Λ a e) ecomplete
     ECAp : ∀{e1 e2} → e1 ecomplete → e2 ecomplete → (e1 ∘ e2) ecomplete
+    ECTAp : ∀{τ e} → τ tcomplete → e ecomplete → (e < τ >) ecomplete
 
   -- those internal expressions without holes
   data _dcomplete : ihexp → Set where
