@@ -124,9 +124,9 @@ module core where
     HNLam2 : ∀{x e u τ} →
              hole-name-new e u →
              hole-name-new (·λ x [ τ ] e) u
-    HNTLam : ∀{x e u} → 
+    HNTLam : ∀{a e u} → 
              hole-name-new e u → 
-             hole-name-new (·Λ x e) u
+             hole-name-new (·Λ a e) u
     HNHole : ∀{u u'} →
              u' ≠ u →
              hole-name-new (⦇-⦈[ u' ]) u
@@ -149,9 +149,11 @@ module core where
     HDVar : ∀{x e} → holes-disjoint (X x) e
     HDLam1 : ∀{x e1 e2} → holes-disjoint e1 e2 → holes-disjoint (·λ x e1) e2
     HDLam2 : ∀{x e1 e2 τ} → holes-disjoint e1 e2 → holes-disjoint (·λ x [ τ ] e1) e2
+    HDTLam : ∀{a e1 e2} → holes-disjoint e1 e2 → holes-disjoint (·Λ a e1) e2
     HDHole : ∀{u e2} → hole-name-new e2 u → holes-disjoint (⦇-⦈[ u ]) e2
     HDNEHole : ∀{u e1 e2} → hole-name-new e2 u → holes-disjoint e1 e2 → holes-disjoint (⦇⌜ e1 ⌟⦈[ u ]) e2
     HDAp :  ∀{e1 e2 e3} → holes-disjoint e1 e3 → holes-disjoint e2 e3 → holes-disjoint (e1 ∘ e2) e3
+    HDTAp : ∀{e1 e2 τ} → holes-disjoint e1 e2 → holes-disjoint (e1 < τ >) e2
 
   -- bidirectional type checking judgements for hexp
   mutual
