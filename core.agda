@@ -164,6 +164,21 @@ module core where
 
   open typctx
 
+  -- substitution in types
+
+  [_/_] : htyp → Nat → htyp → htyp 
+  [ τ / a ] b = b 
+  [ τ / a ] A b
+    with natEQ a b
+  [ τ / a ] A b | Inl refl = τ
+  [ τ / a ] A b | Inr neq = A b
+  [ τ / a ] ⦇-⦈ = ⦇-⦈
+  [ τ / a ] (τ1 ==> τ2) = (([ τ / a ] τ1) ==> ([ τ / a ] τ2))
+  [ τ / a ] (·∀ b τ')
+    with natEQ a b
+  [ τ / a ] (·∀ b τ') | Inl refl = ·∀ b τ'
+  [ τ / a ] (·∀ b τ') | Inr neq = ·∀ b ([ τ / a ] τ')
+
   -- bidirectional type checking judgements for hexp
   mutual
     -- synthesis
