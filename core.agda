@@ -52,6 +52,7 @@ module core where
   _⟨_⇒_⇒_⟩ : ihexp → htyp → htyp → htyp → ihexp
   d ⟨ t1 ⇒ t2 ⇒ t3 ⟩ = d ⟨ t1 ⇒ t2 ⟩ ⟨ t2 ⇒ t3 ⟩
 
+  -- definition of type consistency context, represented as a list of pairs of naturals indexing type variables
   module ~ctx where
 
     data ~ctx : Set where
@@ -64,9 +65,7 @@ module core where
 
   open ~ctx
 
-  test1 : ((~∅ , 4 ~ 5) , 5 ~ 4) ∋ 4 ~ 5
-  test1 = T H
-
+  -- type consistency in a type consistency context
   data _⊢_~_ : ~ctx → htyp → htyp → Set where 
     TCVar  : ∀{Γ a b} → Γ ∋ a ~ b → Γ ⊢ (A a) ~ (A b)
     TCBase : ∀{Γ} → Γ ⊢ b ~ b
@@ -83,9 +82,6 @@ module core where
   -- type consistency
   _~_ : (t1 t2 : htyp) → Set
   _~_ = \(t1 t2 : htyp) → ~∅ ⊢ t1 ~ t2
-
-  test2 : (·∀ 2 (A 2)) ~ (·∀ 3 (A 3))
-  test2 = TCForall (TCVar H)
 
   -- type inconsistency
   _~̸_ : (τ1 τ2 : htyp) → Set
