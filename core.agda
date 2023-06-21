@@ -167,41 +167,41 @@ module core where
   -- bidirectional type checking judgements for hexp
   mutual
     -- synthesis
-    data _⊢_=>_ : (Γ : tctx) (e : hexp) (τ : htyp) → Set where
-      SConst  : {Γ : tctx} → Γ ⊢ c => b
-      SAsc    : {Γ : tctx} {e : hexp} {τ : htyp} →
-                 Γ ⊢ e <= τ →
-                 Γ ⊢ (e ·: τ) => τ
-      SVar    : {Γ : tctx} {τ : htyp} {x : Nat} →
+    data _,_⊢_=>_ : (Γ : tctx) (Θ : typctx) (e : hexp) (τ : htyp) → Set where
+      SConst  : {Γ : tctx} {Θ : typctx} → Γ , Θ ⊢ c => b
+      SAsc    : {Γ : tctx} {Θ : typctx} {e : hexp} {τ : htyp} →
+                 Γ , Θ ⊢ e <= τ →
+                 Γ , Θ ⊢ (e ·: τ) => τ
+      SVar    : {Γ : tctx} {Θ : typctx} {τ : htyp} {x : Nat} →
                  (x , τ) ∈ Γ →
-                 Γ ⊢ X x => τ
-      SAp     : {Γ : tctx} {e1 e2 : hexp} {τ τ1 τ2 : htyp} →
+                 Γ , Θ ⊢ X x => τ
+      SAp     : {Γ : tctx} {Θ : typctx} {e1 e2 : hexp} {τ τ1 τ2 : htyp} →
                  holes-disjoint e1 e2 →
-                 Γ ⊢ e1 => τ1 →
+                 Γ , Θ ⊢ e1 => τ1 →
                  τ1 ▸arr τ2 ==> τ →
-                 Γ ⊢ e2 <= τ2 →
-                 Γ ⊢ (e1 ∘ e2) => τ
-      SEHole  : {Γ : tctx} {u : Nat} → Γ ⊢ ⦇-⦈[ u ] => ⦇-⦈
-      SNEHole : {Γ : tctx} {e : hexp} {τ : htyp} {u : Nat} →
+                 Γ , Θ ⊢ e2 <= τ2 →
+                 Γ , Θ ⊢ (e1 ∘ e2) => τ
+      SEHole  : {Γ : tctx} {Θ : typctx} {u : Nat} → Γ , Θ ⊢ ⦇-⦈[ u ] => ⦇-⦈
+      SNEHole : {Γ : tctx} {Θ : typctx} {e : hexp} {τ : htyp} {u : Nat} →
                  hole-name-new e u →
-                 Γ ⊢ e => τ →
-                 Γ ⊢ ⦇⌜ e ⌟⦈[ u ] => ⦇-⦈
-      SLam    : {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} {x : Nat} →
+                 Γ , Θ ⊢ e => τ →
+                 Γ , Θ ⊢ ⦇⌜ e ⌟⦈[ u ] => ⦇-⦈
+      SLam    : {Γ : tctx} {Θ : typctx} {e : hexp} {τ1 τ2 : htyp} {x : Nat} →
                  x # Γ →
-                 (Γ ,, (x , τ1)) ⊢ e => τ2 →
-                 Γ ⊢ ·λ x [ τ1 ] e => τ1 ==> τ2
+                 (Γ ,, (x , τ1)) , Θ ⊢ e => τ2 →
+                 Γ , Θ ⊢ ·λ x [ τ1 ] e => τ1 ==> τ2
 
     -- analysis
-    data _⊢_<=_ : (Γ : htyp ctx) (e : hexp) (τ : htyp) → Set where
-      ASubsume : {Γ : tctx} {e : hexp} {τ τ' : htyp} →
-                 Γ ⊢ e => τ' →
+    data _⊢_<=_ : (Γ : htyp ctx) (Θ : typctx) (e : hexp) (τ : htyp) → Set where
+      ASubsume : {Γ : tctx} {Θ : typctx} {e : hexp} {τ τ' : htyp} →
+                 Γ , Θ ⊢ e => τ' →
                  τ ~ τ' →
-                 Γ ⊢ e <= τ
-      ALam : {Γ : tctx} {e : hexp} {τ τ1 τ2 : htyp} {x : Nat} →
+                 Γ , Θ ⊢ e <= τ
+      ALam : {Γ : tctx} {Θ : typctx} {e : hexp} {τ τ1 τ2 : htyp} {x : Nat} →
                  x # Γ →
                  τ ▸arr τ1 ==> τ2 →
-                 (Γ ,, (x , τ1)) ⊢ e <= τ2 →
-                 Γ ⊢ (·λ x e) <= τ
+                 (Γ ,, (x , τ1)) , Θ ⊢ e <= τ2 →
+                 Γ , Θ ⊢ (·λ x e) <= τ
 
   -- those types without holes
   data _tcomplete : htyp → Set where
