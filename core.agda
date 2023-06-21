@@ -124,6 +124,9 @@ module core where
     HNLam2 : ∀{x e u τ} →
              hole-name-new e u →
              hole-name-new (·λ x [ τ ] e) u
+    HNTLam : ∀{x e u} → 
+             hole-name-new e u → 
+             hole-name-new (·Λ x e) u
     HNHole : ∀{u u'} →
              u' ≠ u →
              hole-name-new (⦇-⦈[ u' ]) u
@@ -131,10 +134,13 @@ module core where
                u' ≠ u →
                hole-name-new e u →
                hole-name-new (⦇⌜ e ⌟⦈[ u' ]) u
-    HNAp : ∀{ u e1 e2 } →
+    HNAp : ∀{u e1 e2} →
            hole-name-new e1 u →
            hole-name-new e2 u →
            hole-name-new (e1 ∘ e2) u
+    HNTAp : ∀{u e τ} →
+        hole-name-new e u → 
+        hole-name-new (e < τ >) u
 
   -- two terms that do not share any hole names
   data holes-disjoint : (e1 : hexp) → (e2 : hexp) → Set where
