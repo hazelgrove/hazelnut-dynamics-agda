@@ -340,6 +340,7 @@ module core where
   data _ground : (τ : htyp) → Set where
     GBase : b ground
     GHole : ⦇-⦈ ==> ⦇-⦈ ground
+    GForall : ∀{a} → ·∀ a ⦇-⦈ ground
 
   mutual
     -- substitution typing
@@ -412,6 +413,7 @@ module core where
   data _val : (d : ihexp) → Set where
     VConst : c val
     VLam   : ∀{x τ d} → (·λ x [ τ ] d) val
+    VTLam  : ∀{a d} → (·Λ a d) val
 
   -- boxed values
   data _boxedval : (d : ihexp) → Set where
