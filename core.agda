@@ -412,6 +412,23 @@ module core where
   [ d / y ] (d' ⟨ τ1 ⇒ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒ τ2 ⟩
   [ d / y ] (d' ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩
 
+  -- terms' type substitution
+  Typ[_/_]_ : htyp → Nat → ihexp → ihexp
+  Typ[ t / a ] c = c
+  Typ[ t / a ] X x = X x
+  Typ[ t / a ] (·λ x [ τ ] d') = (·λ x [ Typ[t/a]τ ] d')
+  Typ[ t / a ] ·Λ b d 
+    with natEQ a b -- If a and b are equal, they will not be free so do not recurse in.
+  Typ[ t / a ] ·Λ .a d | Inl refl = ·Λ .a d
+  Typ[ t / a ] ·Λ b d | Inr neq = ·Λ b (Typ[t/a]d)
+  -- TODO: May need to add into hole substitutions?
+  Typ[ t / a ] ⦇-⦈⟨ u , σ ⟩ = ⦇-⦈⟨ u , σ ⟩
+  Typ[ t / a ] ⦇⌜ d ⌟⦈⟨ u , σ  ⟩ =  ⦇⌜ Typ[ t / a ] d ⌟⦈⟨ u , σ ⟩
+  Typ[ t / a ] (d1 ∘ d2) = (Typ[ t / a ] d1) ∘ (Typ[ t / a ] d2)
+  Typ[ t / a ] (d < τ >) = (Typ[ t / a ] d) < Typ[ t / a ] τ >
+  Typ[ t / a ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = ([ t / a ] d) ⟨ (Typ[t/a]τ1) ⇒ (Typ[t/a]τ2) ⟩
+  Typ[ t / a ] (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = ([ t / a ] d) ⟨ (Typ[t/a]τ1) ⇒⦇-⦈⇏ (Typ[t/a]τ2) ⟩
+
   -- applying an environment to an expression
   apply-env : env → ihexp → ihexp
   apply-env (Id Γ) d = d
@@ -587,7 +604,7 @@ module core where
     ITTyApCast : ∀{d a τ b τ' t } →
                -- d final → -- red brackets
                  ·∀ a τ1 α≢ ·∀ b τ2 ->
-                 ((d ⟨ (·∀ a τ) ⇒ (·∀ b τ')⟩)<t>) →> ((d<ty>)⟨τ[t/a] ⇒ τ'[t/b]⟩)
+                 ((d ⟨ (·∀ a τ) ⇒ (·∀ b τ')⟩)<t>) →> ((d<ty>)⟨Typ[t/a]τ ⇒ Typ[t/b]τ'⟩)
     ITGround : ∀{ d τ τ'} →
                -- d final → -- red brackets
                τ ▸gnd τ' →
