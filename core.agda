@@ -54,6 +54,7 @@ module core where
   _⟨_⇒_⇒_⟩ : ihexp → htyp → htyp → htyp → ihexp
   d ⟨ t1 ⇒ t2 ⇒ t3 ⟩ = d ⟨ t1 ⇒ t2 ⟩ ⟨ t2 ⇒ t3 ⟩
 
+  
   -- definition of type consistency context, represented as a list of pairs of naturals indexing type variables
   module ~ctx where
 
@@ -67,6 +68,19 @@ module core where
 
   open ~ctx
 
+  data _⊢_α≡_ : ~ctx → htyp → htyp → Set where 
+    AEqBase : ∀{Γ} → Γ ⊢ b α≡ b 
+    AEqVar : ∀{Γ a a'} → Γ ∋ a ~ a' → Γ ⊢ (A a) α≡ (A a')
+    AEqHole : ∀{Γ} → Γ ⊢ ⦇-⦈ α≡ ⦇-⦈
+    AEqArr : ∀{Γ τ1 τ2 τ3 τ4} → Γ ⊢ τ1 α≡ τ2 → Γ ⊢ τ3 α≡ τ4 → Γ ⊢ (τ1 ==> τ2) α≡ (τ3 ==> τ4)
+    AEqForall : ∀{Γ a a' τ1 τ2} → (_,_~_ Γ a a') ⊢ τ1 α≡ τ2 → Γ ⊢ (·∀ a τ1) α≡ (·∀ a' τ2)
+
+  _α≡_ : htyp → htyp → Set
+  τ1 α≡ τ2 = ~∅ ⊢ τ1 α≡ τ2
+
+  _α≢_ : htyp → htyp → Set
+  τ1 α≢ τ2 = ¬(τ1 α≡ τ2)
+  
   -- type consistency in a type consistency context
   data _⊢_~_ : ~ctx → htyp → htyp → Set where 
     TCVar  : ∀{Γ a b} → Γ ∋ a ~ b → Γ ⊢ (A a) ~ (A b)
@@ -413,21 +427,21 @@ module core where
   [ d / y ] (d' ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩
 
   -- terms' type substitution
-  Typ[_/_]_ : htyp → Nat → ihexp → ihexp
-  Typ[ t / a ] c = c
-  Typ[ t / a ] X x = X x
-  Typ[ t / a ] (·λ x [ τ ] d') = (·λ x [ Typ[t/a]τ ] d')
-  Typ[ t / a ] ·Λ b d 
-    with natEQ a b -- If a and b are equal, they will not be free so do not recurse in.
-  Typ[ t / a ] ·Λ .a d | Inl refl = ·Λ .a d
-  Typ[ t / a ] ·Λ b d | Inr neq = ·Λ b (Typ[t/a]d)
+  TTyp[_/_]_ : htyp → Nat → ihexp → ihexp
+  TTyp[ t / a ] c = c
+  TTyp[ t / a ] X x = X x
+  TTyp[ t / a ] (·λ x [ τ ] d') = (·λ x [ (Typ[ t / a ] τ) ] d')
+  TTyp[ t / a ] (·Λ a' d) 
+    with natEQ a a' -- If a and a' are equal, they will not be free so do not recurse in.
+  TTyp[ t / a ] (·Λ .a d) | Inl refl = ·Λ a d
+  TTyp[ t / a ] (·Λ a' d) | Inr neq = ·Λ a' (TTyp[ t / a ] d)
   -- TODO: May need to add into hole substitutions?
-  Typ[ t / a ] ⦇-⦈⟨ u , σ ⟩ = ⦇-⦈⟨ u , σ ⟩
-  Typ[ t / a ] ⦇⌜ d ⌟⦈⟨ u , σ  ⟩ =  ⦇⌜ Typ[ t / a ] d ⌟⦈⟨ u , σ ⟩
-  Typ[ t / a ] (d1 ∘ d2) = (Typ[ t / a ] d1) ∘ (Typ[ t / a ] d2)
-  Typ[ t / a ] (d < τ >) = (Typ[ t / a ] d) < Typ[ t / a ] τ >
-  Typ[ t / a ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = ([ t / a ] d) ⟨ (Typ[t/a]τ1) ⇒ (Typ[t/a]τ2) ⟩
-  Typ[ t / a ] (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = ([ t / a ] d) ⟨ (Typ[t/a]τ1) ⇒⦇-⦈⇏ (Typ[t/a]τ2) ⟩
+  TTyp[ t / a ] ⦇-⦈⟨ u , σ ⟩ = ⦇-⦈⟨ u , σ ⟩
+  TTyp[ t / a ] ⦇⌜ d ⌟⦈⟨ u , σ  ⟩ =  ⦇⌜ TTyp[ t / a ] d ⌟⦈⟨ u , σ ⟩
+  TTyp[ t / a ] (d1 ∘ d2) = (TTyp[ t / a ] d1) ∘ (TTyp[ t / a ] d2)
+  TTyp[ t / a ] (d < τ >) = (TTyp[ t / a ] d) < Typ[ t / a ] τ >
+  TTyp[ t / a ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (TTyp[ t / a ] d) ⟨ (Typ[ t / a ] τ1) ⇒ (Typ[ t / a ] τ2) ⟩
+  TTyp[ t / a ] (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = (TTyp[ t / a ] d) ⟨ (Typ[ t / a ] τ1) ⇒⦇-⦈⇏ (Typ[ t / a ] τ2) ⟩
 
   -- applying an environment to an expression
   apply-env : env → ihexp → ihexp
@@ -452,19 +466,6 @@ module core where
                    d boxedval ->
                    d ⟨ (·∀ a τ1) ⇒ (·∀ b τ2) ⟩ boxedval
     BVHoleCast : ∀{ τ d } → τ ground → d boxedval → d ⟨ τ ⇒ ⦇-⦈ ⟩ boxedval
-
-  data _⊢_α≡_ : ~ctx → htyp → htyp → Set where 
-    AEqBase : ∀{Γ} → Γ ⊢ b α≡ b 
-    AEqVar : ∀{Γ a a'} → Γ ∋ a ~ a' → Γ ⊢ (A a) α≡ (A a')
-    AEqHole : ∀{Γ} → Γ ⊢ ⦇-⦈ α≡ ⦇-⦈
-    AEqArr : ∀{Γ τ1 τ2 τ3 τ4} → Γ ⊢ τ1 α≡ τ2 → Γ ⊢ τ3 α≡ τ4 → Γ ⊢ (τ1 ==> τ2) α≡ (τ3 ==> τ4)
-    AEqForall : ∀{Γ a a' τ1 τ2} → (_,_~_ Γ a a') ⊢ τ1 α≡ τ2 → Γ ⊢ (·∀ a τ1) α≡ (·∀ a' τ2)
-
-  _α≡_ : htyp → htyp → Set
-  τ1 α≡ τ2 = ~∅ ⊢ τ1 α≡ τ2
-
-  _α≢_ : htyp → htyp → Set
-  τ1 α≢ τ2 = ¬(τ1 α≡ τ2)
 
   mutual
     -- indeterminate forms
@@ -537,7 +538,7 @@ module core where
             (d ∘₂ ε) evalctx
     ECTyAp : ∀{ε t} →
             ε evalctx →
-            (ε<t>) evalctx
+            (ε < t >) evalctx
     ECNEHole : ∀{ε u σ} →
                ε evalctx →
                ⦇⌜ ε ⌟⦈⟨ u , σ ⟩ evalctx
@@ -560,7 +561,7 @@ module core where
            (d1 ∘ d2) == (d1 ∘₂ ε) ⟦ d2' ⟧
     FHTyAp : ∀{d d' t ε} →
            d == ε ⟦ d' ⟧ →
-           (d<t>) == (ε<t>) ⟦ d' ⟧
+           (d < t >) == (ε < t >) ⟦ d' ⟧
     FHNEHole : ∀{ d d' ε u σ} →
               d == ε ⟦ d' ⟧ →
               ⦇⌜ d ⌟⦈⟨ (u , σ ) ⟩ ==  ⦇⌜ ε ⌟⦈⟨ (u , σ ) ⟩ ⟦ d' ⟧
@@ -582,8 +583,8 @@ module core where
     ITLam : ∀{ x τ d1 d2 } →
             -- d2 final → -- red brackets
             ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1)
-    ITTyLam : ∀{ τ d } →
-              ((·Λ a d)<t>) →> ([ t / a ] d)
+    ITTyLam : ∀{ a d t } →
+              ((·Λ a d) < t >) →> (TTyp[ t / a ] d)
     ITCastID : ∀{d τ } →
                -- d final → -- red brackets
                (d ⟨ τ ⇒ τ ⟩) →> d
@@ -603,8 +604,8 @@ module core where
                ((d1 ⟨ (τ1 ==> τ2) ⇒ (τ1' ==> τ2')⟩) ∘ d2) →> ((d1 ∘ (d2 ⟨ τ1' ⇒ τ1 ⟩)) ⟨ τ2 ⇒ τ2' ⟩)
     ITTyApCast : ∀{d a τ b τ' t } →
                -- d final → -- red brackets
-                 ·∀ a τ1 α≢ ·∀ b τ2 ->
-                 ((d ⟨ (·∀ a τ) ⇒ (·∀ b τ')⟩)<t>) →> ((d<ty>)⟨Typ[t/a]τ ⇒ Typ[t/b]τ'⟩)
+                 ·∀ a τ α≢ ·∀ b τ' ->
+                 ((d ⟨ (·∀ a τ) ⇒ (·∀ b τ')⟩) < t >) →> ((d < t >)⟨ Typ[ t / a ] τ ⇒ Typ[ t / b ] τ' ⟩)
     ITGround : ∀{ d τ τ'} →
                -- d final → -- red brackets
                τ ▸gnd τ' →
