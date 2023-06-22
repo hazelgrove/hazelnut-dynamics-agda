@@ -430,7 +430,7 @@ module core where
                 τ1 ==> τ2 ≠ τ3 ==> τ4 →
                 d boxedval →
                 d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ boxedval
-    BVForallCast : ∀{ d τ1 a τ2 b } ->
+    BVForallCast : ∀{ d a τ1 b τ2 } ->
                    ·∀ a τ1 α≢ ·∀ b τ2 ->
                    d boxedval ->
                    d ⟨ (·∀ a τ1) ⇒ (·∀ b τ2) ⟩ boxedval
@@ -463,7 +463,7 @@ module core where
                  τ1 ==> τ2 ≠ τ3 ==> τ4 →
                  d indet →
                  d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ indet
-      ICastForall : ∀{ d τ1 a τ2 b } ->
+      ICastForall : ∀{ d a τ1 b τ2 } ->
                    ·∀ a τ1 α≢ ·∀ b τ2 ->
                    d indet ->
                    d ⟨ (·∀ a τ1) ⇒ (·∀ b τ2) ⟩ indet
@@ -496,6 +496,7 @@ module core where
     ⊙ : ectx
     _∘₁_ : ectx → ihexp → ectx
     _∘₂_ : ihexp → ectx → ectx
+    _<_> : ectx -> htyp -> ectx
     ⦇⌜_⌟⦈⟨_⟩ : ectx → (Nat × env ) → ectx
     _⟨_⇒_⟩ : ectx → htyp → htyp → ectx
     _⟨_⇒⦇-⦈⇏_⟩ : ectx → htyp → htyp → ectx
@@ -517,6 +518,9 @@ module core where
             -- d final → -- red brackets
             ε evalctx →
             (d ∘₂ ε) evalctx
+    ECTyAp : ∀{ε t} →
+            ε evalctx →
+            (ε<t>) evalctx
     ECNEHole : ∀{ε u σ} →
                ε evalctx →
                ⦇⌜ ε ⌟⦈⟨ u , σ ⟩ evalctx
@@ -537,6 +541,9 @@ module core where
            -- d1 final → -- red brackets
            d2 == ε ⟦ d2' ⟧ →
            (d1 ∘ d2) == (d1 ∘₂ ε) ⟦ d2' ⟧
+    FHTyAp : ∀{d d' t ε} →
+           d == ε ⟦ d' ⟧ →
+           (d<t>) == (ε<t>) ⟦ d' ⟧
     FHNEHole : ∀{ d d' ε u σ} →
               d == ε ⟦ d' ⟧ →
               ⦇⌜ d ⌟⦈⟨ (u , σ ) ⟩ ==  ⦇⌜ ε ⌟⦈⟨ (u , σ ) ⟩ ⟦ d' ⟧
@@ -558,6 +565,8 @@ module core where
     ITLam : ∀{ x τ d1 d2 } →
             -- d2 final → -- red brackets
             ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1)
+    ITTyLam : ∀{ τ d } →
+              ((·Λ a d)<t>) →> ([ t / a ] d)
     ITCastID : ∀{d τ } →
                -- d final → -- red brackets
                (d ⟨ τ ⇒ τ ⟩) →> d
@@ -575,6 +584,10 @@ module core where
                -- d1 final → -- red brackets
                -- d2 final → -- red brackets
                ((d1 ⟨ (τ1 ==> τ2) ⇒ (τ1' ==> τ2')⟩) ∘ d2) →> ((d1 ∘ (d2 ⟨ τ1' ⇒ τ1 ⟩)) ⟨ τ2 ⇒ τ2' ⟩)
+    ITTyApCast : ∀{d a τ b τ' t } →
+               -- d final → -- red brackets
+                 ·∀ a τ1 α≢ ·∀ b τ2 ->
+                 ((d ⟨ (·∀ a τ) ⇒ (·∀ b τ')⟩)<t>) →> ((d<ty>)⟨τ[t/a] ⇒ τ'[t/b]⟩)
     ITGround : ∀{ d τ τ'} →
                -- d final → -- red brackets
                τ ▸gnd τ' →
@@ -610,7 +623,7 @@ module core where
                            → x ≠ y
                            → envfresh x (Subst d y σ)
 
-    -- ... for inernal expressions
+    -- ... for internal expressions
     data fresh : Nat → ihexp → Set where
       FConst : ∀{x} → fresh x c
       FVar   : ∀{x y} → x ≠ y → fresh x (X y)
