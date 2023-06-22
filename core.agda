@@ -430,6 +430,10 @@ module core where
                 τ1 ==> τ2 ≠ τ3 ==> τ4 →
                 d boxedval →
                 d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ boxedval
+    BVForallCast : ∀{ d τ1 a τ2 b } ->
+                   ·∀ a τ1 α≢ ·∀ b τ2 ->
+                   d boxedval ->
+                   d ⟨ (·∀ a τ1) ⇒ (·∀ b τ2) ⟩ boxedval
     BVHoleCast : ∀{ τ d } → τ ground → d boxedval → d ⟨ τ ⇒ ⦇-⦈ ⟩ boxedval
 
   data _⊢_α≡_ : ~ctx → htyp → htyp → Set where 
@@ -459,6 +463,10 @@ module core where
                  τ1 ==> τ2 ≠ τ3 ==> τ4 →
                  d indet →
                  d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ indet
+      ICastForall : ∀{ d τ1 a τ2 b } ->
+                   ·∀ a τ1 α≢ ·∀ b τ2 ->
+                   d indet ->
+                   d ⟨ (·∀ a τ1) ⇒ (·∀ b τ2) ⟩ indet
       ICastGroundHole : ∀{ τ d } →
                         τ ground →
                         d indet →
