@@ -432,6 +432,19 @@ module core where
                 d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ boxedval
     BVHoleCast : ∀{ τ d } → τ ground → d boxedval → d ⟨ τ ⇒ ⦇-⦈ ⟩ boxedval
 
+  data _⊢_α≡_ : ~ctx → htyp → htyp → Set where 
+    AEqBase : ∀{Γ} → Γ ⊢ b α≡ b 
+    AEqVar : ∀{Γ a a'} → Γ ∋ a ~ a' → Γ ⊢ (A a) α≡ (A a')
+    AEqHole : ∀{Γ} → Γ ⊢ ⦇-⦈ α≡ ⦇-⦈
+    AEqArr : ∀{Γ τ1 τ2 τ3 τ4} → Γ ⊢ τ1 α≡ τ2 → Γ ⊢ τ3 α≡ τ4 → Γ ⊢ (τ1 ==> τ2) α≡ (τ3 ==> τ4)
+    AEqForall : ∀{Γ a a' τ1 τ2} → (_,_~_ Γ a a') ⊢ τ1 α≡ τ2 → Γ ⊢ (·∀ a τ1) α≡ (·∀ a' τ2)
+
+  _α≡_ : htyp → htyp → Set
+  τ1 α≡ τ2 = ~∅ ⊢ τ1 α≡ τ2
+
+  _α≢_ : htyp → htyp → Set
+  τ1 α≢ τ2 = ¬(τ1 α≡ τ2)
+
   mutual
     -- indeterminate forms
     data _indet : (d : ihexp) → Set where
