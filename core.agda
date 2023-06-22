@@ -345,46 +345,46 @@ module core where
 
   mutual
     -- substitution typing
-    data _,_⊢_:s:_ : hctx → tctx → env → tctx → Set where
-      STAId : ∀{Γ Γ' Δ} →
+    data _,_,_⊢_:s:_ : hctx → tctx → typctx → env → tctx → Set where
+      STAId : ∀{Γ Γ' Δ Θ} →
                   ((x : Nat) (τ : htyp) → (x , τ) ∈ Γ' → (x , τ) ∈ Γ) →
-                  Δ , Γ ⊢ Id Γ' :s: Γ'
-      STASubst : ∀{Γ Δ σ y Γ' d τ } →
-               Δ , Γ ,, (y , τ) ⊢ σ :s: Γ' →
-               Δ , Γ ⊢ d :: τ →
-               Δ , Γ ⊢ Subst d y σ :s: Γ'
+                  Δ , Γ , Θ ⊢ Id Γ' :s: Γ'
+      STASubst : ∀{Γ Δ Θ σ y Γ' d τ } →
+               Δ , (Γ ,, (y , τ)) , Θ ⊢ σ :s: Γ' →
+               Δ , Γ , Θ ⊢ d :: τ →
+               Δ , Γ , Θ ⊢ Subst d y σ :s: Γ'
 
     -- type assignment
-    data _,_⊢_::_ : (Δ : hctx) (Γ : tctx) (d : ihexp) (τ : htyp) → Set where
-      TAConst : ∀{Δ Γ} → Δ , Γ ⊢ c :: b
-      TAVar : ∀{Δ Γ x τ} → (x , τ) ∈ Γ → Δ , Γ ⊢ X x :: τ
-      TALam : ∀{ Δ Γ x τ1 d τ2} →
+    data _,_,_⊢_::_ : (Δ : hctx) (Γ : tctx) (Θ : typctx) (d : ihexp) (τ : htyp) → Set where
+      TAConst : ∀{Δ Γ Θ} → Δ , Γ , Θ ⊢ c :: b
+      TAVar : ∀{Δ Γ Θ x τ} → (x , τ) ∈ Γ → Δ , Γ , Θ ⊢ X x :: τ
+      TALam : ∀{ Δ Γ Θ x τ1 d τ2} →
               x # Γ →
-              Δ , (Γ ,, (x , τ1)) ⊢ d :: τ2 →
-              Δ , Γ ⊢ ·λ x [ τ1 ] d :: (τ1 ==> τ2)
-      TAAp : ∀{ Δ Γ d1 d2 τ1 τ} →
-             Δ , Γ ⊢ d1 :: τ1 ==> τ →
-             Δ , Γ ⊢ d2 :: τ1 →
-             Δ , Γ ⊢ d1 ∘ d2 :: τ
-      TAEHole : ∀{ Δ Γ σ u Γ' τ} →
+              Δ , (Γ ,, (x , τ1)) , Θ ⊢ d :: τ2 →
+              Δ , Γ , Θ ⊢ ·λ x [ τ1 ] d :: (τ1 ==> τ2)
+      TAAp : ∀{Δ Γ Θ d1 d2 τ1 τ} →
+             Δ , Γ , Θ ⊢ d1 :: τ1 ==> τ →
+             Δ , Γ , Θ ⊢ d2 :: τ1 →
+             Δ , Γ , Θ ⊢ d1 ∘ d2 :: τ
+      TAEHole : ∀{Δ Γ Θ σ u Γ' τ} →
                 (u , (Γ' , τ)) ∈ Δ →
-                Δ , Γ ⊢ σ :s: Γ' →
-                Δ , Γ ⊢ ⦇-⦈⟨ u , σ ⟩ :: τ
-      TANEHole : ∀ { Δ Γ d τ' Γ' u σ τ } →
+                Δ , Γ , Θ ⊢ σ :s: Γ' →
+                Δ , Γ , Θ ⊢ ⦇-⦈⟨ u , σ ⟩ :: τ
+      TANEHole : ∀ {Δ Γ Θ d τ' Γ' u σ τ } →
                  (u , (Γ' , τ)) ∈ Δ →
-                 Δ , Γ ⊢ d :: τ' →
-                 Δ , Γ ⊢ σ :s: Γ' →
-                 Δ , Γ ⊢ ⦇⌜ d ⌟⦈⟨ u , σ ⟩ :: τ
-      TACast : ∀{ Δ Γ d τ1 τ2} →
-             Δ , Γ ⊢ d :: τ1 →
+                 Δ , Γ , Θ ⊢ d :: τ' →
+                 Δ , Γ , Θ ⊢ σ :s: Γ' →
+                 Δ , Γ , Θ ⊢ ⦇⌜ d ⌟⦈⟨ u , σ ⟩ :: τ
+      TACast : ∀{Δ Γ Θ d τ1 τ2} →
+             Δ , Γ , Θ ⊢ d :: τ1 →
              τ1 ~ τ2 →
-             Δ , Γ ⊢ d ⟨ τ1 ⇒ τ2 ⟩ :: τ2
-      TAFailedCast : ∀{Δ Γ d τ1 τ2} →
-             Δ , Γ ⊢ d :: τ1 →
+             Δ , Γ , Θ ⊢ d ⟨ τ1 ⇒ τ2 ⟩ :: τ2
+      TAFailedCast : ∀{Δ Γ Θ d τ1 τ2} →
+             Δ , Γ , Θ ⊢ d :: τ1 →
              τ1 ground →
              τ2 ground →
              τ1 ≠ τ2 →
-             Δ , Γ ⊢ d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ :: τ2
+             Δ , Γ , Θ ⊢ d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ :: τ2
 
   -- substitution
   [_/_]_ : ihexp → Nat → ihexp → ihexp
