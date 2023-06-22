@@ -339,7 +339,7 @@ module core where
   -- ground types
   data _ground : (τ : htyp) → Set where
     GBase : b ground
-    GVar : ∀{a} → (A a) ground
+    -- GVar : ∀{a} → (A a) ground
     GHole : ⦇-⦈ ==> ⦇-⦈ ground
     GForall : ∀{a} → ·∀ a ⦇-⦈ ground
 

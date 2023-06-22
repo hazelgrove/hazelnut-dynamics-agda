@@ -5,12 +5,9 @@ module ground-decidable where
   ground-decidable : (τ : htyp) → (τ ground) + ¬(τ ground)
   ground-decidable b = Inl GBase
   ground-decidable ⦇-⦈ = Inr (λ ())
-  ground-decidable (A _) = Inl GVar
   ground-decidable (⦇-⦈ ==> ⦇-⦈) = Inl GHole
   ground-decidable (b ==> _) = Inr (λ ())
   ground-decidable (_ ==> b) = Inr (λ ())
-  ground-decidable ((A _) ==> _) = Inr (λ ())
-  ground-decidable (_ ==> (A _)) = Inr (λ ())
   ground-decidable ((_ ==> _) ==> _) = Inr (λ ())
   ground-decidable (_ ==> (_ ==> _)) = Inr (λ ())
   ground-decidable ((·∀ _ _) ==> _) = Inr (λ ())
@@ -20,7 +17,9 @@ module ground-decidable where
   ground-decidable (·∀ _ (A _)) = Inr (λ ())
   ground-decidable (·∀ _ (_ ==> _)) = Inr (λ ())
   ground-decidable (·∀ _ (·∀ _ _)) = Inr (λ ())
-
+  ground-decidable (A _) = Inr (λ ())
+  ground-decidable ((A _) ==> _) = Inr (λ ())
+  ground-decidable (_ ==> (A _)) = Inr (λ ())
   -- I don't know where this is used
   -- ground-arr-lem : (τ : htyp) → ((τ ground) → ⊥) → (τ ≠  ⦇-⦈) → Σ[ τ1 ∈ htyp ] Σ[ τ2 ∈ htyp ] ((τ == (τ1 ==> τ2)) × ((τ1 ==> τ2) ≠ (⦇-⦈ ==> ⦇-⦈)))
   -- ground-arr-lem b ng nh = abort (ng GBase)
