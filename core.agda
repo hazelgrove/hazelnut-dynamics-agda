@@ -362,10 +362,17 @@ module core where
               x # Γ →
               Δ , (Γ ,, (x , τ1)) , Θ ⊢ d :: τ2 →
               Δ , Γ , Θ ⊢ ·λ x [ τ1 ] d :: (τ1 ==> τ2)
+      TATLam : ∀{ Δ Γ Θ a d τ} →
+              -- do we need an analogue of the previous premise, x # Γ? TODO
+              Δ , Γ , (Θ , a Type) ⊢ d :: τ →
+              Δ , Γ , Θ ⊢ ·Λ a d :: (·∀ a τ)
       TAAp : ∀{Δ Γ Θ d1 d2 τ1 τ} →
              Δ , Γ , Θ ⊢ d1 :: τ1 ==> τ →
              Δ , Γ , Θ ⊢ d2 :: τ1 →
              Δ , Γ , Θ ⊢ d1 ∘ d2 :: τ
+      TATAp : ∀ {Δ Γ Θ d τ1 τ2 a} → 
+                Δ , Γ , Θ ⊢ d :: (·∀ a τ2) →
+                Δ , Γ , Θ ⊢ (d < τ1 >) :: (Typ[ τ1 / a ] τ2)
       TAEHole : ∀{Δ Γ Θ σ u Γ' τ} →
                 (u , (Γ' , τ)) ∈ Δ →
                 Δ , Γ , Θ ⊢ σ :s: Γ' →
