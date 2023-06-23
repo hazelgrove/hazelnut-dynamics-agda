@@ -461,9 +461,9 @@ module core where
                 τ1 ==> τ2 ≠ τ3 ==> τ4 →
                 d boxedval →
                 d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ boxedval
-    BVForallCast : ∀{ d a τ1 b τ2 } ->
-                   ·∀ a τ1 α≢ ·∀ b τ2 ->
-                   d boxedval ->
+    BVForallCast : ∀{ d a τ1 b τ2 } →
+                   ·∀ a τ1 α≢ ·∀ b τ2 →
+                   d boxedval →
                    d ⟨ (·∀ a τ1) ⇒ (·∀ b τ2) ⟩ boxedval
     BVHoleCast : ∀{ τ d } → τ ground → d boxedval → d ⟨ τ ⇒ ⦇-⦈ ⟩ boxedval
 
@@ -481,9 +481,9 @@ module core where
                  τ1 ==> τ2 ≠ τ3 ==> τ4 →
                  d indet →
                  d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ indet
-      ICastForall : ∀{ d a τ1 b τ2 } ->
-                   ·∀ a τ1 α≢ ·∀ b τ2 ->
-                   d indet ->
+      ICastForall : ∀{ d a τ1 b τ2 } →
+                   ·∀ a τ1 α≢ ·∀ b τ2 →
+                   d indet →
                    d ⟨ (·∀ a τ1) ⇒ (·∀ b τ2) ⟩ indet
       ICastGroundHole : ∀{ τ d } →
                         τ ground →
@@ -514,7 +514,7 @@ module core where
     ⊙ : ectx
     _∘₁_ : ectx → ihexp → ectx
     _∘₂_ : ihexp → ectx → ectx
-    _<_> : ectx -> htyp -> ectx
+    _<_> : ectx → htyp → ectx
     ⦇⌜_⌟⦈⟨_⟩ : ectx → (Nat × env ) → ectx
     _⟨_⇒_⟩ : ectx → htyp → htyp → ectx
     _⟨_⇒⦇-⦈⇏_⟩ : ectx → htyp → htyp → ectx
@@ -588,6 +588,10 @@ module core where
     ITCastID : ∀{d τ } →
                -- d final → -- red brackets
                (d ⟨ τ ⇒ τ ⟩) →> d
+    ITCastAlpha : ∀{d τ τ' } →
+               -- d final → -- red brackets
+               τ α≡ τ' →
+               (d ⟨ τ ⇒ τ' ⟩) →> d
     ITCastSucceed : ∀{d τ } →
                     -- d final → -- red brackets
                     τ ground →
@@ -596,7 +600,7 @@ module core where
                  -- d final → -- red brackets
                  τ1 ground →
                  τ2 ground →
-                 τ1 ≠ τ2 →
+                 τ1 α≢ τ2 →
                  (d ⟨ τ1 ⇒ ⦇-⦈ ⇒ τ2 ⟩) →> (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
     ITApCast : ∀{d1 d2 τ1 τ2 τ1' τ2' } →
                -- d1 final → -- red brackets
@@ -604,7 +608,7 @@ module core where
                ((d1 ⟨ (τ1 ==> τ2) ⇒ (τ1' ==> τ2')⟩) ∘ d2) →> ((d1 ∘ (d2 ⟨ τ1' ⇒ τ1 ⟩)) ⟨ τ2 ⇒ τ2' ⟩)
     ITTyApCast : ∀{d a τ b τ' t } →
                -- d final → -- red brackets
-                 ·∀ a τ α≢ ·∀ b τ' ->
+                 ·∀ a τ α≢ ·∀ b τ' →
                  ((d ⟨ (·∀ a τ) ⇒ (·∀ b τ')⟩) < t >) →> ((d < t >)⟨ Typ[ t / a ] τ ⇒ Typ[ t / b ] τ' ⟩)
     ITGround : ∀{ d τ τ'} →
                -- d final → -- red brackets
