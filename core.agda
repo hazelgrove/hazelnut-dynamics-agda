@@ -588,7 +588,9 @@ module core where
     ITCastID : ∀{d τ } →
                -- d final → -- red brackets
                (d ⟨ τ ⇒ τ ⟩) →> d
-    ITCastAlpha : ∀{d τ τ' } →
+    ITCastAlpha : ∀{d τ τ' } → 
+               -- Maybe should just be merged with above rule?
+               -- Would make commutativity/strong normalization proofs easier.
                -- d final → -- red brackets
                τ α≡ τ' →
                (d ⟨ τ ⇒ τ' ⟩) →> d
