@@ -54,9 +54,27 @@ module core where
   _⟨_⇒_⇒_⟩ : ihexp → htyp → htyp → htyp → ihexp
   d ⟨ t1 ⇒ t2 ⇒ t3 ⟩ = d ⟨ t1 ⇒ t2 ⟩ ⟨ t2 ⇒ t3 ⟩
 
+  -- definition of type context, represented as a list of naturals indexing type variables
+  module typctx where
+
+    record typctx : Set where
+      field
+        n : Nat
+
+    data _∋_Type : (Θ : typctx) (a : Nat) → Set where
+      ax : {Θ : typctx} {a : Nat} -> a < typctx.n Θ -> Θ ∋ a Type
+    
+    ~∅ : typctx
+    ~∅ = record { n = Z }
+    
+    [_newtyp] : typctx -> typctx 
+    [ Θ newtyp] = record { n = 1+ (typctx.n Θ) }
+
+  open typctx
+  
   -- type consistency in a context of type variables (represented by the number of binders passed)
-  data _⊢_~_ : Nat → htyp → htyp → Set where 
-    TCVar  : ∀{Γ a} → a < Γ → Γ ⊢ (A a) ~ (A a)
+  data _⊢_~_ : typctx → htyp → htyp → Set where 
+    TCVar  : ∀{Γ a} → a < typctx.n Γ → Γ ⊢ (A a) ~ (A a)
     TCBase : ∀{Γ} → Γ ⊢ b ~ b
     TCHole1 : ∀{Γ τ} → Γ ⊢ τ ~ ⦇-⦈
     TCHole2 : ∀{Γ τ} → Γ ⊢ ⦇-⦈ ~ τ
@@ -65,16 +83,16 @@ module core where
                Γ ⊢ τ2 ~ τ2' →
                Γ ⊢ τ1 ==> τ2 ~ τ1' ==> τ2'
     TCForall : ∀{Γ τ τ'} →
-              (1+ Γ) ⊢ τ ~ τ' →
+              [ Γ newtyp] ⊢ τ ~ τ' →
               Γ ⊢ ·∀ τ ~ ·∀ τ'
 
   -- type inconsistency in a context
-  _⊢_~̸_ : Nat → htyp → htyp → Set
+  _⊢_~̸_ : typctx → htyp → htyp → Set
   Γ ⊢ τ1 ~̸ τ2 = ¬(Γ ⊢ τ1 ~ τ2)
 
   -- type consistency
   _~_ : (t1 t2 : htyp) → Set
-  _~_ = \(t1 t2 : htyp) → Z ⊢ t1 ~ t2
+  _~_ = \(t1 t2 : htyp) → ~∅ ⊢ t1 ~ t2
 
   -- type inconsistency
   _~̸_ : (t1 t2 : htyp) → Set
@@ -142,20 +160,6 @@ module core where
     HDAp :  ∀{e1 e2 e3} → holes-disjoint e1 e3 → holes-disjoint e2 e3 → holes-disjoint (e1 ∘ e2) e3
     HDTAp : ∀{e1 e2 τ} → holes-disjoint e1 e2 → holes-disjoint (e1 < τ >) e2
 
-  -- definition of type context, represented as a list of naturals indexing type variables
-  module typctx where
-
-    record typctx : Set where
-      field
-        n : Nat
-
-    data _∋_Type : (Θ : typctx) (a : Nat) → Set where
-      ax : {Θ : typctx} {a : Nat} -> a < typctx.n Θ -> Θ ∋ a Type
-    
-    [_newtyp] : typctx -> typctx 
-    [ Θ newtyp] = record { n = 1+ (typctx.n Θ) }
-
-  open typctx
 
   -- substitution in types
   Typ[_/_]_ : htyp → Nat → htyp → htyp 
