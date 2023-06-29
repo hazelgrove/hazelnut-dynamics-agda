@@ -9,7 +9,7 @@ module core where
     A     : Nat → htyp
     ⦇-⦈    : htyp
     _==>_ : htyp → htyp → htyp
-    ·∀    : Nat → htyp → htyp
+    ·∀    : htyp → htyp
 
   -- arrow type constructors bind very tightly
   infixr 25  _==>_
@@ -21,7 +21,7 @@ module core where
     X       : Nat → hexp
     ·λ      : Nat → hexp → hexp
     ·λ_[_]_ : Nat → htyp → hexp → hexp
-    ·Λ      : Nat → hexp → hexp
+    ·Λ      : hexp → hexp
     ⦇-⦈[_]   : Nat → hexp
     ⦇⌜_⌟⦈[_]  : hexp → Nat → hexp
     _∘_     : hexp → hexp → hexp
@@ -42,7 +42,7 @@ module core where
       c         : ihexp
       X         : Nat → ihexp
       ·λ_[_]_   : Nat → htyp → ihexp → ihexp
-      ·Λ        : Nat → ihexp → ihexp
+      ·Λ        : ihexp → ihexp
       ⦇-⦈⟨_⟩     : (Nat × env) → ihexp
       ⦇⌜_⌟⦈⟨_⟩    : ihexp → (Nat × env) → ihexp
       _∘_       : ihexp → ihexp → ihexp
@@ -54,38 +54,9 @@ module core where
   _⟨_⇒_⇒_⟩ : ihexp → htyp → htyp → htyp → ihexp
   d ⟨ t1 ⇒ t2 ⇒ t3 ⟩ = d ⟨ t1 ⇒ t2 ⟩ ⟨ t2 ⇒ t3 ⟩
 
-  
-  -- definition of type consistency context, represented as a list of pairs of naturals indexing type variables
-  module ~ctx where
-
-    data ~ctx : Set where
-      ~∅     : ~ctx
-      _,_~_ : ~ctx → Nat → Nat → ~ctx
-    
-
-    data _∋_~_ : (Γ : ~ctx) (a b : Nat) → Set where
-      H : ∀{Γ a b} → (Γ , a ~ b) ∋ a ~ b
-      HSym : ∀{Γ a b} → (Γ , a ~ b) ∋ b ~ a
-      T : ∀{Γ a b a' b'} → Γ ∋ a ~ b → (Γ , a' ~ b') ∋ a ~ b
-
-  open ~ctx
-
-  data _⊢_α≡_ : ~ctx → htyp → htyp → Set where 
-    AEqBase : ∀{Γ} → Γ ⊢ b α≡ b 
-    AEqVar : ∀{Γ a b} → Γ ∋ a ~ b → Γ ⊢ (A a) α≡ (A b)
-    AEqHole : ∀{Γ} → Γ ⊢ ⦇-⦈ α≡ ⦇-⦈
-    AEqArr : ∀{Γ τ1 τ2 τ3 τ4} → Γ ⊢ τ1 α≡ τ2 → Γ ⊢ τ3 α≡ τ4 → Γ ⊢ (τ1 ==> τ2) α≡ (τ3 ==> τ4)
-    AEqForall : ∀{Γ a τ1 b τ2} → (Γ , a ~ b) ⊢ τ1 α≡ τ2 → Γ ⊢ (·∀ a τ1) α≡ (·∀ b τ2)
-
-  _α≡_ : htyp → htyp → Set
-  τ1 α≡ τ2 = ~∅ ⊢ τ1 α≡ τ2
-
-  _α≢_ : htyp → htyp → Set
-  τ1 α≢ τ2 = ¬(τ1 α≡ τ2)
-  
-  -- type consistency in a type consistency context
-  data _⊢_~_ : ~ctx → htyp → htyp → Set where 
-    TCVar  : ∀{Γ a b} → Γ ∋ a ~ b → Γ ⊢ (A a) ~ (A b)
+  -- type consistency in a context of type variables (represented by the number of binders passed)
+  data _⊢_~_ : Nat → htyp → htyp → Set where 
+    TCVar  : ∀{Γ a} → a < Γ → Γ ⊢ (A a) ~ (A a)
     TCBase : ∀{Γ} → Γ ⊢ b ~ b
     TCHole1 : ∀{Γ τ} → Γ ⊢ τ ~ ⦇-⦈
     TCHole2 : ∀{Γ τ} → Γ ⊢ ⦇-⦈ ~ τ
@@ -93,38 +64,21 @@ module core where
                Γ ⊢ τ1 ~ τ1' →
                Γ ⊢ τ2 ~ τ2' →
                Γ ⊢ τ1 ==> τ2 ~ τ1' ==> τ2'
-    TCForall : ∀{Γ a b τ τ'} →
-              (Γ , a ~ b) ⊢ τ ~ τ' →
-              Γ ⊢ ·∀ a τ ~ ·∀ b τ'
-              
-  
+    TCForall : ∀{Γ τ τ'} →
+              (1+ Γ) ⊢ τ ~ τ' →
+              Γ ⊢ ·∀ τ ~ ·∀ τ'
 
   -- type inconsistency in a context
-  _⊢_~̸_ : ~ctx → htyp → htyp → Set
+  _⊢_~̸_ : Nat → htyp → htyp → Set
   Γ ⊢ τ1 ~̸ τ2 = ¬(Γ ⊢ τ1 ~ τ2)
-{-  data _⊢_~̸_ : ~ctx → htyp → htyp → Set where 
-    ICBaseArr1 : {Γ : ~ctx} {τ1 τ2 : htyp} → Γ ⊢ b ~̸ τ1 ==> τ2
-    ICBaseArr2 : {Γ : ~ctx} {τ1 τ2 : htyp} → Γ ⊢ τ1 ==> τ2 ~̸ b
-    ICArr1 : {Γ : ~ctx} {τ1 τ2 τ3 τ4 : htyp} →
-               Γ ⊢ τ1 ~̸ τ3 →
-               Γ ⊢ τ1 ==> τ2 ~̸ τ3 ==> τ4
-    ICArr2 : {Γ : ~ctx} {τ1 τ2 τ3 τ4 : htyp} →
-               Γ ⊢ τ2 ~̸ τ4 →
-               Γ ⊢ τ1 ==> τ2 ~̸ τ3 ==> τ4
-    ICBaseForall1 : {Γ : ~ctx} {a : Nat} {τ : htyp} → Γ ⊢ b ~̸ ·∀ a τ
-    ICBaseForall2 : {Γ : ~ctx} {a : Nat} {τ : htyp} → Γ ⊢ ·∀ a τ ~̸ b
-    ICVar : {Γ : ~ctx} {a b : Nat} → a ≠ b → Γ ⊢ A a ~̸ A b
-    ICBaseVar1 : {Γ : ~ctx} {a : Nat} → Γ ⊢ b ~̸ A a
-    ICBaseVar2 : {Γ : ~ctx} {a : Nat} → Γ ⊢ A a ~̸ b
--}
+
   -- type consistency
   _~_ : (t1 t2 : htyp) → Set
-  _~_ = \(t1 t2 : htyp) → ~∅ ⊢ t1 ~ t2
+  _~_ = \(t1 t2 : htyp) → Z ⊢ t1 ~ t2
 
   -- type inconsistency
   _~̸_ : (t1 t2 : htyp) → Set
   _~̸_ = \(t1 t2 : htyp) → ¬(t1 ~ t2)
---  τ1 ~̸ τ2 = ~∅ ⊢ τ1 ~̸ τ2
 
   --- matching for arrows
   data _▸arr_ : htyp → htyp → Set where
@@ -133,10 +87,8 @@ module core where
 
   --- matching for foralls
   data _▸forall_ : htyp → htyp → Set where
-    -- the 0 in the line below is a placeholder variable;
-    -- I'm not sure if it's safe to use here TODO
-    MFHole : ⦇-⦈ ▸forall (·∀ 0 ⦇-⦈)
-    MFForall  : ∀{a τ} → (·∀ a τ) ▸forall (·∀ a τ)
+    MFHole : ⦇-⦈ ▸forall (·∀ ⦇-⦈)
+    MFForall  : ∀{τ} → (·∀ τ) ▸forall (·∀ τ)
 
   -- the type of hole contexts, i.e. Δs in the judgements
   hctx : Set
@@ -159,9 +111,9 @@ module core where
     HNLam2 : ∀{x e u τ} →
              hole-name-new e u →
              hole-name-new (·λ x [ τ ] e) u
-    HNTLam : ∀{a e u} → 
+    HNTLam : ∀{e u} → 
              hole-name-new e u → 
-             hole-name-new (·Λ a e) u
+             hole-name-new (·Λ e) u
     HNHole : ∀{u u'} →
              u' ≠ u →
              hole-name-new (⦇-⦈[ u' ]) u
@@ -184,7 +136,7 @@ module core where
     HDVar : ∀{x e} → holes-disjoint (X x) e
     HDLam1 : ∀{x e1 e2} → holes-disjoint e1 e2 → holes-disjoint (·λ x e1) e2
     HDLam2 : ∀{x e1 e2 τ} → holes-disjoint e1 e2 → holes-disjoint (·λ x [ τ ] e1) e2
-    HDTLam : ∀{a e1 e2} → holes-disjoint e1 e2 → holes-disjoint (·Λ a e1) e2
+    HDTLam : ∀{e1 e2} → holes-disjoint e1 e2 → holes-disjoint (·Λ e1) e2
     HDHole : ∀{u e2} → hole-name-new e2 u → holes-disjoint (⦇-⦈[ u ]) e2
     HDNEHole : ∀{u e1 e2} → hole-name-new e2 u → holes-disjoint e1 e2 → holes-disjoint (⦇⌜ e1 ⌟⦈[ u ]) e2
     HDAp :  ∀{e1 e2 e3} → holes-disjoint e1 e3 → holes-disjoint e2 e3 → holes-disjoint (e1 ∘ e2) e3
@@ -193,13 +145,15 @@ module core where
   -- definition of type context, represented as a list of naturals indexing type variables
   module typctx where
 
-    data typctx : Set where
-      ~∅     : typctx
-      _,_Type : typctx → Nat → typctx
+    record typctx : Set where
+      field
+        n : Nat
 
     data _∋_Type : (Θ : typctx) (a : Nat) → Set where
-      H : ∀{Θ a} → (Θ , a Type) ∋ a Type
-      T : ∀{Θ a a'} → Θ ∋ a Type → (Θ , a' Type) ∋ a Type
+      ax : {Θ : typctx} {a : Nat} -> a < typctx.n Θ -> Θ ∋ a Type
+    
+    [_newtyp] : typctx -> typctx 
+    [ Θ newtyp] = record { n = 1+ (typctx.n Θ) }
 
   open typctx
 
@@ -209,13 +163,15 @@ module core where
   Typ[ τ / a ] A a'
     with natEQ a a'
   Typ[ τ / a ] A a' | Inl refl = τ
-  Typ[ τ / a ] A a' | Inr neq = A a'
+  Typ[ τ / a ] A a' | Inr neq with natLT a a'
+  -- Technically only necessary with alpha renaming or free variables, which we don't have,
+  -- But better to have this logic here than not.
+  ... | Inl (LTZ {n}) = A n
+  ... | Inl (LTS {n} {m} p) = A m
+  ... | Inr _ = A a'
   Typ[ τ / a ] ⦇-⦈ = ⦇-⦈
   Typ[ τ / a ] (τ1 ==> τ2) = ((Typ[ τ / a ] τ1) ==> (Typ[ τ / a ] τ2))
-  Typ[ τ / a ] (·∀ a' τ')
-    with natEQ a a'
-  Typ[ τ / a ] (·∀ a' τ') | Inl refl = ·∀ a' τ'
-  Typ[ τ / a ] (·∀ a' τ') | Inr neq = ·∀ a' (Typ[ τ / a ] τ')
+  Typ[ τ / a ] (·∀ τ') = ·∀ (Typ[ τ / (1+ a) ] τ')
 
   -- bidirectional type checking judgements for hexp
   mutual
@@ -243,13 +199,13 @@ module core where
                  x # Γ →
                  (Γ ,, (x , τ1)) , Θ ⊢ e => τ2 →
                  Γ , Θ ⊢ ·λ x [ τ1 ] e => τ1 ==> τ2
-      STLam   : {Γ : tctx} {Θ : typctx} {e : hexp} {τ : htyp} {a : Nat} → 
-                Γ , (Θ , a Type) ⊢ e => τ → 
-                Γ , Θ ⊢ (·Λ a e) => (·∀ a τ)
-      STAp    : {Γ : tctx} {Θ : typctx} {e : hexp} {τ1 τ2 τ3 : htyp} {a : Nat} → 
+      STLam   : {Γ : tctx} {Θ : typctx} {e : hexp} {τ : htyp} → 
+                Γ , [ Θ newtyp] ⊢ e => τ → 
+                Γ , Θ ⊢ (·Λ e) => (·∀ τ)
+      STAp    : {Γ : tctx} {Θ : typctx} {e : hexp} {τ1 τ2 τ3 : htyp} → 
                 Γ , Θ ⊢ e => τ2 →
-                τ2 ▸forall (·∀ a τ3) →
-                Γ , Θ ⊢ (e < τ1 >) => (Typ[ τ1 / a ] τ3)
+                τ2 ▸forall (·∀ τ3) →
+                Γ , Θ ⊢ (e < τ1 >) => (Typ[ τ1 / Z ] τ3)
 
     -- analysis
     data _,_⊢_<=_ : (Γ : htyp ctx) (Θ : typctx) (e : hexp) (τ : htyp) → Set where
@@ -262,17 +218,17 @@ module core where
                  τ ▸arr τ1 ==> τ2 →
                  (Γ ,, (x , τ1)) , Θ ⊢ e <= τ2 →
                  Γ , Θ ⊢ (·λ x e) <= τ
-      ATLam : {Γ : tctx} {Θ : typctx} {e : hexp} {τ1 τ2 : htyp} {a : Nat} → 
-                τ1 ▸forall (·∀ a τ2) → 
-                Γ , (Θ , a Type) ⊢ e <= τ2 → 
-                Γ , Θ ⊢ (·Λ a e) <= τ1
+      ATLam : {Γ : tctx} {Θ : typctx} {e : hexp} {τ1 τ2 : htyp} → 
+                τ1 ▸forall (·∀ τ2) → 
+                Γ , [ Θ newtyp] ⊢ e <= τ2 → 
+                Γ , Θ ⊢ (·Λ e) <= τ1
 
   -- those types without holes
   data _tcomplete : htyp → Set where
     TCBase : b tcomplete
     TCVar : ∀{a} → (A a) tcomplete
     TCArr : ∀{τ1 τ2} → τ1 tcomplete → τ2 tcomplete → (τ1 ==> τ2) tcomplete
-    TCForall : ∀{a e} → e tcomplete → (·∀ a e) tcomplete 
+    TCForall : ∀{e} → e tcomplete → (·∀ e) tcomplete 
 
   -- those external expressions without holes
   data _ecomplete : hexp → Set where
@@ -281,7 +237,7 @@ module core where
     ECVar : ∀{x} → (X x) ecomplete
     ECLam1 : ∀{x e} → e ecomplete → (·λ x e) ecomplete
     ECLam2 : ∀{x e τ} → e ecomplete → τ tcomplete → (·λ x [ τ ] e) ecomplete
-    ECTLam : ∀{a e} → e ecomplete → (·Λ a e) ecomplete
+    ECTLam : ∀{e} → e ecomplete → (·Λ e) ecomplete
     ECAp : ∀{e1 e2} → e1 ecomplete → e2 ecomplete → (e1 ∘ e2) ecomplete
     ECTAp : ∀{τ e} → τ tcomplete → e ecomplete → (e < τ >) ecomplete
 
@@ -290,7 +246,7 @@ module core where
     DCVar : ∀{x} → (X x) dcomplete
     DCConst : c dcomplete
     DCLam : ∀{x τ d} → d dcomplete → τ tcomplete → (·λ x [ τ ] d) dcomplete
-    DCTLam : ∀{a d} → d dcomplete → (·Λ a d) dcomplete
+    DCTLam : ∀{d} → d dcomplete → (·Λ d) dcomplete
     DCAp : ∀{d1 d2} → d1 dcomplete → d2 dcomplete → (d1 ∘ d2) dcomplete
     DCTAp : ∀{τ d} → τ tcomplete → d dcomplete → (d < τ >) dcomplete
     DCCast : ∀{d τ1 τ2} → d dcomplete → τ1 tcomplete → τ2 tcomplete → (d ⟨ τ1 ⇒ τ2 ⟩) dcomplete
@@ -305,7 +261,7 @@ module core where
     CIConst  : cast-id c
     CIVar    : ∀{x} → cast-id (X x)
     CILam    : ∀{x τ d} → cast-id d → cast-id (·λ x [ τ ] d)
-    CITLam   : ∀{a d} → cast-id d → cast-id (·Λ a d)
+    CITLam   : ∀{d} → cast-id d → cast-id (·Λ d)
     CIHole   : ∀{u} → cast-id (⦇-⦈⟨ u ⟩)
     CINEHole : ∀{d u} → cast-id d → cast-id (⦇⌜ d ⌟⦈⟨ u ⟩)
     CIAp     : ∀{d1 d2} → cast-id d1 → cast-id d2 → cast-id (d1 ∘ d2)
@@ -323,9 +279,9 @@ module core where
                      (x # Γ) →
                      (Γ ,, (x , τ1)) , Θ ⊢ e ⇒ τ2 ~> d ⊣ Δ →
                       Γ , Θ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ Δ
-      ESTLam  : ∀{Γ Θ e τ a d Δ} → 
-                Γ , (Θ , a Type) ⊢ e ⇒ τ ~> d ⊣ Δ → 
-                Γ , Θ ⊢ (·Λ a e) ⇒ (·∀ a τ) ~> (·Λ a d) ⊣ Δ
+      ESTLam  : ∀{Γ Θ e τ d Δ} → 
+                Γ , [ Θ newtyp] ⊢ e ⇒ τ ~> d ⊣ Δ → 
+                Γ , Θ ⊢ (·Λ e) ⇒ (·∀ τ) ~> (·Λ d) ⊣ Δ
       ESAp : ∀{Γ Θ e1 τ τ1 τ1' τ2 τ2' d1 Δ1 e2 d2 Δ2} →
               holes-disjoint e1 e2 →
               Δ1 ## Δ2 →
@@ -334,11 +290,11 @@ module core where
               Γ , Θ ⊢ e1 ⇐ (τ2 ==> τ) ~> d1 :: τ1' ⊣ Δ1 →
               Γ , Θ ⊢ e2 ⇐ τ2 ~> d2 :: τ2' ⊣ Δ2 →
               Γ , Θ ⊢ e1 ∘ e2 ⇒ τ ~> (d1 ⟨ τ1' ⇒ τ2 ==> τ ⟩) ∘ (d2 ⟨ τ2' ⇒ τ2 ⟩) ⊣ (Δ1 ∪ Δ2)
-      ESTAp : ∀{Γ Θ a e τ1 τ2 τ3 τ2' d Δ} → 
+      ESTAp : ∀{Γ Θ e τ1 τ2 τ3 τ2' d Δ} → 
                 Γ , Θ ⊢ e => τ2 →
-                τ2 ▸forall (·∀ a τ3) →
-                Γ , Θ ⊢ e ⇐ (·∀ a τ3) ~> d :: τ2' ⊣ Δ →
-                Γ , Θ ⊢ (e < τ1 >) ⇒ (Typ[ τ1 / a ] τ3) ~> (d ⟨ τ2' ⇒ (·∀ a τ3)⟩) < τ1 > ⊣ Δ
+                τ2 ▸forall (·∀ τ3) →
+                Γ , Θ ⊢ e ⇐ (·∀ τ3) ~> d :: τ2' ⊣ Δ →
+                Γ , Θ ⊢ (e < τ1 >) ⇒ (Typ[ τ1 / Z ] τ3) ~> (d ⟨ τ2' ⇒ (·∀ τ3)⟩) < τ1 > ⊣ Δ
       ESEHole : ∀{Γ Θ u} →
                 Γ , Θ ⊢ ⦇-⦈[ u ] ⇒ ⦇-⦈ ~> ⦇-⦈⟨ u , Id Γ ⟩ ⊣  ■ (u :: ⦇-⦈ [ Γ ])
       ESNEHole : ∀{Γ Θ e τ d u Δ} →
@@ -356,10 +312,10 @@ module core where
               τ ▸arr τ1 ==> τ2 →
               (Γ ,, (x , τ1)) , Θ ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
               Γ , Θ ⊢ ·λ x e ⇐ τ ~> ·λ x [ τ1 ] d :: τ1 ==> τ2' ⊣ Δ
-      EATLam : ∀{Γ Θ a e τ1 τ2 τ2' d Δ} → 
-                τ1 ▸forall (·∀ a τ2) → 
-                Γ , (Θ , a Type) ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
-                Γ , Θ ⊢ (·Λ a e) ⇐ τ1 ~> (·Λ a d) :: (·∀ a τ2') ⊣ Δ
+      EATLam : ∀{Γ Θ e τ1 τ2 τ2' d Δ} → 
+                τ1 ▸forall (·∀ τ2) → 
+                Γ , [ Θ newtyp] ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
+                Γ , Θ ⊢ (·Λ e) ⇐ τ1 ~> (·Λ d) :: (·∀ τ2') ⊣ Δ
       EASubsume : ∀{e Γ Θ τ' d Δ τ} →
                   ((u : Nat) → e ≠ ⦇-⦈[ u ]) →
                   ((e' : hexp) (u : Nat) → e ≠ ⦇⌜ e' ⌟⦈[ u ]) →
@@ -378,7 +334,7 @@ module core where
     GBase : b ground
     -- GVar : ∀{a} → (A a) ground
     GHole : ⦇-⦈ ==> ⦇-⦈ ground
-    GForall : ∀{a} → ·∀ a ⦇-⦈ ground
+    GForall : ·∀ ⦇-⦈ ground
 
   mutual
     -- substitution typing
@@ -399,17 +355,16 @@ module core where
               x # Γ →
               Δ , (Γ ,, (x , τ1)) , Θ ⊢ d :: τ2 →
               Δ , Γ , Θ ⊢ ·λ x [ τ1 ] d :: (τ1 ==> τ2)
-      TATLam : ∀{ Δ Γ Θ a d τ} →
-              -- do we need an analogue of the previous premise, x # Γ? TODO
-              Δ , Γ , (Θ , a Type) ⊢ d :: τ →
-              Δ , Γ , Θ ⊢ ·Λ a d :: (·∀ a τ)
+      TATLam : ∀{ Δ Γ Θ d τ} →
+              Δ , Γ , [ Θ newtyp] ⊢ d :: τ →
+              Δ , Γ , Θ ⊢ ·Λ d :: (·∀ τ)
       TAAp : ∀{Δ Γ Θ d1 d2 τ1 τ} →
              Δ , Γ , Θ ⊢ d1 :: τ1 ==> τ →
              Δ , Γ , Θ ⊢ d2 :: τ1 →
              Δ , Γ , Θ ⊢ d1 ∘ d2 :: τ
-      TATAp : ∀ {Δ Γ Θ d τ1 τ2 a} → 
-                Δ , Γ , Θ ⊢ d :: (·∀ a τ2) →
-                Δ , Γ , Θ ⊢ (d < τ1 >) :: (Typ[ τ1 / a ] τ2)
+      TATAp : ∀ {Δ Γ Θ d τ1 τ2} → 
+                Δ , Γ , Θ ⊢ d :: (·∀ τ2) →
+                Δ , Γ , Θ ⊢ (d < τ1 >) :: (Typ[ τ1 / Z ] τ2)
       TAEHole : ∀{Δ Γ Θ σ u Γ' τ} →
                 (u , (Γ' , τ)) ∈ Δ →
                 Δ , Γ , Θ ⊢ σ :s: Γ' →
@@ -441,7 +396,7 @@ module core where
     with natEQ x y
   [ d / y ] (·λ .y [ τ ] d') | Inl refl = ·λ y [ τ ] d'
   [ d / y ] (·λ x [ τ ] d')  | Inr x₁ = ·λ x [ τ ] ( [ d / y ] d')
-  [ d / y ] ·Λ a d' = ·Λ a ([ d / y ] d')
+  [ d / y ] ·Λ d' = ·Λ ([ d / y ] d')
   [ d / y ] ⦇-⦈⟨ u , σ ⟩ = ⦇-⦈⟨ u , Subst d y σ ⟩
   [ d / y ] ⦇⌜ d' ⌟⦈⟨ u , σ  ⟩ =  ⦇⌜ [ d / y ] d' ⌟⦈⟨ u , Subst d y σ ⟩
   [ d / y ] (d1 ∘ d2) = ([ d / y ] d1) ∘ ([ d / y ] d2)
@@ -454,10 +409,7 @@ module core where
   TTyp[ t / a ] c = c
   TTyp[ t / a ] X x = X x
   TTyp[ t / a ] (·λ x [ τ ] d') = (·λ x [ (Typ[ t / a ] τ) ] d')
-  TTyp[ t / a ] (·Λ a' d) 
-    with natEQ a a' -- If a and a' are equal, they will not be free so do not recurse in.
-  TTyp[ t / a ] (·Λ .a d) | Inl refl = ·Λ a d
-  TTyp[ t / a ] (·Λ a' d) | Inr neq = ·Λ a' (TTyp[ t / a ] d)
+  TTyp[ t / a ] (·Λ d) = ·Λ (TTyp[ t / (1+ a) ] d)
   -- TODO: May need to add into hole substitutions?
   TTyp[ t / a ] ⦇-⦈⟨ u , σ ⟩ = ⦇-⦈⟨ u , σ ⟩
   TTyp[ t / a ] ⦇⌜ d ⌟⦈⟨ u , σ  ⟩ =  ⦇⌜ TTyp[ t / a ] d ⌟⦈⟨ u , σ ⟩
@@ -475,7 +427,7 @@ module core where
   data _val : (d : ihexp) → Set where
     VConst : c val
     VLam   : ∀{x τ d} → (·λ x [ τ ] d) val
-    VTLam  : ∀{a d} → (·Λ a d) val
+    VTLam  : ∀{d} → (·Λ d) val
 
   -- boxed values
   data _boxedval : (d : ihexp) → Set where
@@ -484,10 +436,10 @@ module core where
                 τ1 ==> τ2 ≠ τ3 ==> τ4 →
                 d boxedval →
                 d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ boxedval
-    BVForallCast : ∀{ d a τ1 b τ2 } →
-                   ·∀ a τ1 α≢ ·∀ b τ2 →
+    BVForallCast : ∀{ d τ1 τ2 } →
+                   τ1 ≠ τ2 →
                    d boxedval →
-                   d ⟨ (·∀ a τ1) ⇒ (·∀ b τ2) ⟩ boxedval
+                   d ⟨ (·∀ τ1) ⇒ (·∀ τ2) ⟩ boxedval
     BVHoleCast : ∀{ τ d } → τ ground → d boxedval → d ⟨ τ ⇒ ⦇-⦈ ⟩ boxedval
 
   mutual
@@ -504,10 +456,10 @@ module core where
                  τ1 ==> τ2 ≠ τ3 ==> τ4 →
                  d indet →
                  d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ indet
-      ICastForall : ∀{ d a τ1 b τ2 } →
-                   ·∀ a τ1 α≢ ·∀ b τ2 →
+      ICastForall : ∀{ d τ1 τ2 } →
+                   τ1 ≠ τ2 →
                    d indet →
-                   d ⟨ (·∀ a τ1) ⇒ (·∀ b τ2) ⟩ indet
+                   d ⟨ (·∀ τ1) ⇒ (·∀ τ2) ⟩ indet
       ICastGroundHole : ∀{ τ d } →
                         τ ground →
                         d indet →
@@ -606,17 +558,11 @@ module core where
     ITLam : ∀{ x τ d1 d2 } →
             -- d2 final → -- red brackets
             ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1)
-    ITTyLam : ∀{ a d t } →
-              ((·Λ a d) < t >) →> (TTyp[ t / a ] d)
+    ITTyLam : ∀{ d t } →
+              ((·Λ d) < t >) →> (TTyp[ t / Z ] d)
     ITCastID : ∀{d τ } →
                -- d final → -- red brackets
                (d ⟨ τ ⇒ τ ⟩) →> d
-    ITCastAlpha : ∀{d τ τ' } → 
-               -- Maybe should just be merged with above rule?
-               -- Would make commutativity/strong normalization proofs easier.
-               -- d final → -- red brackets
-               τ α≡ τ' →
-               (d ⟨ τ ⇒ τ' ⟩) →> d
     ITCastSucceed : ∀{d τ } →
                     -- d final → -- red brackets
                     τ ground →
@@ -625,16 +571,16 @@ module core where
                  -- d final → -- red brackets
                  τ1 ground →
                  τ2 ground →
-                 τ1 α≢ τ2 →
+                 τ1 ≠ τ2 →
                  (d ⟨ τ1 ⇒ ⦇-⦈ ⇒ τ2 ⟩) →> (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
     ITApCast : ∀{d1 d2 τ1 τ2 τ1' τ2' } →
                -- d1 final → -- red brackets
                -- d2 final → -- red brackets
                ((d1 ⟨ (τ1 ==> τ2) ⇒ (τ1' ==> τ2')⟩) ∘ d2) →> ((d1 ∘ (d2 ⟨ τ1' ⇒ τ1 ⟩)) ⟨ τ2 ⇒ τ2' ⟩)
-    ITTyApCast : ∀{d a τ b τ' t } →
+    ITTyApCast : ∀{d τ τ' t } →
                -- d final → -- red brackets
-                 ·∀ a τ α≢ ·∀ b τ' →
-                 ((d ⟨ (·∀ a τ) ⇒ (·∀ b τ')⟩) < t >) →> ((d < t >)⟨ Typ[ t / a ] τ ⇒ Typ[ t / b ] τ' ⟩)
+                 ·∀ τ ≠ ·∀ τ' →
+                 ((d ⟨ (·∀ τ) ⇒ (·∀ τ')⟩) < t >) →> ((d < t >)⟨ Typ[ t / Z ] τ ⇒ Typ[ t / Z ] τ' ⟩)
     ITGround : ∀{ d τ τ'} →
                -- d final → -- red brackets
                τ ▸gnd τ' →
