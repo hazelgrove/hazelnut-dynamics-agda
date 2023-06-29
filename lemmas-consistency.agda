@@ -73,41 +73,37 @@ module lemmas-consistency where
   ... | _ | Inl refl | _ | Inl refl = Inl HSym
   
   --  every pair of types is either consistent or not consistent
-  ~dec : (Γ : ~ctx) (t1 t2 : htyp) → ((Γ ⊢ t1 ~ t2) + (Γ ⊢ t1 ~̸ t2))
+  ~dec : {Γ : ~ctx} (t1 t2 : htyp) → ((Γ ⊢ t1 ~ t2) + (Γ ⊢ t1 ~̸ t2))
     -- this takes care of all hole cases, so we don't consider them below
-  ~dec _ _ ⦇-⦈ = Inl TCHole1
-  ~dec _ ⦇-⦈ _ = Inl TCHole2
+  ~dec _ ⦇-⦈ = Inl TCHole1
+  ~dec ⦇-⦈ _ = Inl TCHole2
     -- num cases
-  ~dec _ b b = Inl TCBase
-  ~dec Γ (t1 ==> t2) (t3 ==> t4) with ~dec Γ t1 t3 | ~dec Γ t2 t4
+  ~dec b b = Inl TCBase
+  ~dec (t1 ==> t2) (t3 ==> t4) with ~dec t1 t3 | ~dec t2 t4
   ... | Inl x | Inl y = Inl (TCArr x y)
   ... | Inl _ | Inr y = Inr (\{(TCArr l r) -> y r})
   ... | Inr x | _     = Inr (\{(TCArr l r) -> x l})
-  ~dec _ _ _ = Inr (λ ())
-  
-{-
-  ~dec _ b (t2 ==> t3) = Inr ICBaseArr1
-    -- arrow cases
-  ~dec _ (t1 ==> t2) b = Inr ICBaseArr2
-  ~dec Γ (t1 ==> t2) (t3 ==> t4) with ~dec Γ t1 t3 | ~dec Γ t2 t4
-  ... | Inl x | Inl y = Inl (TCArr x y)
-  ... | Inl _ | Inr y = Inr (ICArr2 y)
-  ... | Inr x | _     = Inr (ICArr1 x)
-  ~dec Γ (A x) (A y) with natEQ x y | ~Γdec Γ x
-  ... | Inl refl | Inl inenv = Inl (TCVar inenv)
-  ... | Inl refl | Inr ninenv = Inr {!!}
-  ... | Inr neq | _ = Inr (ICVar neq)
-  ~dec _ b (A x) = Inr ICBaseVar1
-  ~dec _ (A x) b = Inr ICBaseVar2
--}
+  ~dec {Γ} (A x) (A y) with ∋dec Γ x y
+  ... | Inl p = Inl (TCVar p)
+  ... | Inr p = Inr (\{(TCVar p') -> p p'})
+  ~dec {Γ} (·∀ x t1) (·∀ y t2) with ~dec {(_,_~_ Γ x y)} t1 t2
+  ... | Inl p = Inl (TCForall p)
+  ... | Inr p = Inr (\{(TCForall p') -> p p'})
+    -- cases with mismatched constructors
+  ~dec b (A x) = Inr (λ ())
+  ~dec b (t2 ==> t3) = Inr (λ ())
+  ~dec b (·∀ x t2) = Inr (λ ())
+  ~dec (t1 ==> t2) b = Inr (λ ())
+  ~dec (t1 ==> t2) (A x) = Inr (λ ())
+  ~dec (t1 ==> t2) (·∀ x t3) = Inr (λ ())
+  ~dec (A x) b = Inr (λ ())
+  ~dec (A x) (t2 ==> t3) = Inr (λ ())
+  ~dec (A x) (·∀ x₁ t2) = Inr (λ ())
+  ~dec (·∀ x t1) b = Inr (λ ())
+  ~dec (·∀ x t1) (t2 ==> t3) = Inr (λ ())
+  ~dec (·∀ x t1) (A x₁) = Inr (λ ())
 
-{-
   -- no pair of types is both consistent and not consistent
   ~apart : {t1 t2 : htyp} → (t1 ~̸ t2) → (t1 ~ t2) → ⊥
-  ~apart ICBaseArr1 ()
-  ~apart ICBaseArr2 ()
-  ~apart (ICArr1 x) TCRefl = ~apart x TCRefl
-  ~apart (ICArr1 x) (TCArr y y₁) = ~apart x y
-  ~apart (ICArr2 x) TCRefl = ~apart x TCRefl
-  ~apart (ICArr2 x) (TCArr y y₁) = ~apart x y₁
--}
+  -- By definition
+  ~apart x y = x y
