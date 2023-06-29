@@ -60,20 +60,22 @@ module core where
 
     data ~ctx : Set where
       ~∅     : ~ctx
-      _,_ : ~ctx → Nat → ~ctx
+      _,_~_ : ~ctx → Nat → Nat → ~ctx
+    
 
-    data _∋_ : (Γ : ~ctx) (a : Nat) → Set where
-      H : ∀{Γ a} → (Γ , a) ∋ a
-      T : ∀{Γ a a'} → Γ ∋ a → (Γ , a') ∋ a
+    data _∋_~_ : (Γ : ~ctx) (a b : Nat) → Set where
+      H : ∀{Γ a b} → (Γ , a ~ b) ∋ a ~ b
+      HSym : ∀{Γ a b} → (Γ , a ~ b) ∋ b ~ a
+      T : ∀{Γ a b a' b'} → Γ ∋ a ~ b → (Γ , a' ~ b') ∋ a ~ b
 
   open ~ctx
 
   data _⊢_α≡_ : ~ctx → htyp → htyp → Set where 
     AEqBase : ∀{Γ} → Γ ⊢ b α≡ b 
-    AEqVar : ∀{Γ a} → Γ ∋ a → Γ ⊢ (A a) α≡ (A a)
+    AEqVar : ∀{Γ a b} → Γ ∋ a ~ b → Γ ⊢ (A a) α≡ (A b)
     AEqHole : ∀{Γ} → Γ ⊢ ⦇-⦈ α≡ ⦇-⦈
     AEqArr : ∀{Γ τ1 τ2 τ3 τ4} → Γ ⊢ τ1 α≡ τ2 → Γ ⊢ τ3 α≡ τ4 → Γ ⊢ (τ1 ==> τ2) α≡ (τ3 ==> τ4)
-    AEqForall : ∀{Γ a τ1 τ2} → (_,_ Γ a) ⊢ τ1 α≡ τ2 → Γ ⊢ (·∀ a τ1) α≡ (·∀ a τ2)
+    AEqForall : ∀{Γ a τ1 b τ2} → (Γ , a ~ b) ⊢ τ1 α≡ τ2 → Γ ⊢ (·∀ a τ1) α≡ (·∀ b τ2)
 
   _α≡_ : htyp → htyp → Set
   τ1 α≡ τ2 = ~∅ ⊢ τ1 α≡ τ2
@@ -83,7 +85,7 @@ module core where
   
   -- type consistency in a type consistency context
   data _⊢_~_ : ~ctx → htyp → htyp → Set where 
-    TCVar  : ∀{Γ a} → Γ ∋ a → Γ ⊢ (A a) ~ (A a)
+    TCVar  : ∀{Γ a b} → Γ ∋ a ~ b → Γ ⊢ (A a) ~ (A b)
     TCBase : ∀{Γ} → Γ ⊢ b ~ b
     TCHole1 : ∀{Γ τ} → Γ ⊢ τ ~ ⦇-⦈
     TCHole2 : ∀{Γ τ} → Γ ⊢ ⦇-⦈ ~ τ
@@ -91,9 +93,9 @@ module core where
                Γ ⊢ τ1 ~ τ1' →
                Γ ⊢ τ2 ~ τ2' →
                Γ ⊢ τ1 ==> τ2 ~ τ1' ==> τ2'
-    TCForall : ∀{Γ a τ τ'} →
-              (Γ , a) ⊢ τ ~ τ' →
-              Γ ⊢ ·∀ a τ ~ ·∀ a τ' -- TODO: We assume the same binding name here.
+    TCForall : ∀{Γ a b τ τ'} →
+              (Γ , a ~ b) ⊢ τ ~ τ' →
+              Γ ⊢ ·∀ a τ ~ ·∀ b τ'
               
   
 
