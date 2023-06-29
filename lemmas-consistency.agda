@@ -20,7 +20,17 @@ module lemmas-consistency where
   ... | T {Γ} {a} {d} {a'} {d'} w = T {Γ} {d} {a} {a'} {d'} (∋symr w)
   
   ⊢~comm : {Γ : ~ctx} {a b a' b' : Nat} {t1 t2 : htyp} → (_,_~_ (_,_~_ Γ a b) a' b') ⊢ t1 ~ t2 → (_,_~_ (_,_~_ Γ a' b') a b) ⊢ t1 ~ t2
-  ⊢~comm = {!!}
+  ⊢~comm TCBase = TCBase
+  ⊢~comm TCHole1 = TCHole1
+  ⊢~comm TCHole2 = TCHole2
+  ⊢~comm (TCArr p1 p2) = TCArr (⊢~comm p1) (⊢~comm p2)
+  ⊢~comm (TCVar p) with p
+  ... | H = TCVar (T H)
+  ... | HSym = TCVar (T HSym)
+  ... | T H = TCVar H
+  ... | T HSym = TCVar HSym
+  ... | T (T t) = TCVar (T (T t))
+  ⊢~comm (TCForall p) = {!!}
   
   ⊢~lsym : {Γ : ~ctx} {a b : Nat} {t1 t2 : htyp} → (_,_~_ Γ a b) ⊢ t1 ~ t2 → (_,_~_ Γ b a) ⊢ t1 ~ t2
   ⊢~lsym TCBase = TCBase
@@ -38,8 +48,8 @@ module lemmas-consistency where
   ⊢~rsym TCHole1 = TCHole2
   ⊢~rsym TCHole2 = TCHole1
   ⊢~rsym (TCArr p1 p2) = TCArr (⊢~rsym p1) (⊢~rsym p2)
-  ⊢~rsym (TCForall p) = TCForall (⊢~rsym (⊢~lsym p))
   ⊢~rsym (TCVar p) = TCVar (∋symr p)
+  ⊢~rsym (TCForall p) = TCForall (⊢~rsym (⊢~lsym p))
   
   -- case for empty context
   ~sym : {t1 t2 : htyp} → t1 ~ t2 → t2 ~ t1
