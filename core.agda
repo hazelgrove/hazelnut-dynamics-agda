@@ -6,7 +6,7 @@ module core where
   -- types
   data htyp : Set where
     b     : htyp
-    A     : Nat → htyp
+    T     : Nat → htyp
     ⦇-⦈    : htyp
     _==>_ : htyp → htyp → htyp
     ·∀    : htyp → htyp
@@ -74,7 +74,7 @@ module core where
   
   -- type consistency in a context of type variables (represented by the number of binders passed)
   data _⊢_~_ : typctx → htyp → htyp → Set where 
-    TCVar  : ∀{Γ a} → a < typctx.n Γ → Γ ⊢ (A a) ~ (A a)
+    TCVar  : ∀{Γ a} → a < typctx.n Γ → Γ ⊢ (T a) ~ (T a)
     TCBase : ∀{Γ} → Γ ⊢ b ~ b
     TCHole1 : ∀{Γ τ} → Γ ⊢ τ ~ ⦇-⦈
     TCHole2 : ∀{Γ τ} → Γ ⊢ ⦇-⦈ ~ τ
@@ -164,15 +164,15 @@ module core where
   -- substitution in types
   Typ[_/_]_ : htyp → Nat → htyp → htyp 
   Typ[ τ / a ] b = b
-  Typ[ τ / a ] A a'
+  Typ[ τ / a ] T a'
     with natEQ a a'
-  Typ[ τ / a ] A a' | Inl refl = τ
-  Typ[ τ / a ] A a' | Inr neq with natLT a a'
+  Typ[ τ / a ] T a' | Inl refl = τ
+  Typ[ τ / a ] T a' | Inr neq with natLT a a'
   -- Technically only necessary with alpha renaming or free variables, which we don't have,
   -- But better to have this logic here than not.
-  ... | Inl (LTZ {n}) = A n
-  ... | Inl (LTS {n} {m} p) = A m
-  ... | Inr _ = A a'
+  ... | Inl (LTZ {n}) = T n
+  ... | Inl (LTS {n} {m} p) = T m
+  ... | Inr _ = T a'
   Typ[ τ / a ] ⦇-⦈ = ⦇-⦈
   Typ[ τ / a ] (τ1 ==> τ2) = ((Typ[ τ / a ] τ1) ==> (Typ[ τ / a ] τ2))
   Typ[ τ / a ] (·∀ τ') = ·∀ (Typ[ τ / (1+ a) ] τ')
@@ -230,7 +230,7 @@ module core where
   -- those types without holes
   data _tcomplete : htyp → Set where
     TCBase : b tcomplete
-    TCVar : ∀{a} → (A a) tcomplete
+    TCVar : ∀{a} → (T a) tcomplete
     TCArr : ∀{τ1 τ2} → τ1 tcomplete → τ2 tcomplete → (τ1 ==> τ2) tcomplete
     TCForall : ∀{e} → e tcomplete → (·∀ e) tcomplete 
 
@@ -336,7 +336,7 @@ module core where
   -- ground types
   data _ground : (τ : htyp) → Set where
     GBase : b ground
-    -- GVar : ∀{a} → (A a) ground
+    -- GVar : ∀{a} → (T a) ground
     GHole : ⦇-⦈ ==> ⦇-⦈ ground
     GForall : ·∀ ⦇-⦈ ground
 

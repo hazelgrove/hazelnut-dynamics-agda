@@ -34,27 +34,27 @@ module lemmas-consistency where
   ... | Inl x | Inl y = Inl (TCArr x y)
   ... | Inl _ | Inr y = Inr (\{(TCArr l r) -> y r})
   ... | Inr x | _     = Inr (\{(TCArr l r) -> x l})
-  ~dec {Γ} (A x) (A y) with natEQ x y
+  ~dec {Γ} (T x) (T y) with natEQ x y
   ... | Inl refl with natLT x (typctx.n Γ) 
   ...   | Inl p = Inl (TCVar p)
   ...   | Inr p = Inr (\{(TCVar p') -> p p'})
-  ~dec {Γ} (A x) (A y) | Inr neq = Inr (\{(TCVar _) -> neq refl})
+  ~dec {Γ} (T x) (T y) | Inr neq = Inr (\{(TCVar _) -> neq refl})
   ~dec {Γ} (·∀ t1) (·∀ t2) with ~dec {[ Γ newtyp]} t1 t2
   ... | Inl p = Inl (TCForall p)
   ... | Inr p = Inr (\{(TCForall p') -> p p'})
     -- cases with mismatched constructors
-  ~dec b (A x) = Inr (λ ())
-  ~dec b (t1 ==> t2) = {! Inr (λ ()) !}
+  ~dec b (T x) = Inr (λ ())
+  ~dec b (t1 ==> t2) = Inr (λ ())
   ~dec b (·∀ t1) = Inr (λ ())
   ~dec (t1 ==> t2) b = Inr (λ ())
-  ~dec (t1 ==> t2) (A x) = Inr (λ ())
+  ~dec (t1 ==> t2) (T x) = Inr (λ ())
   ~dec (t1 ==> t2) (·∀ t3) = Inr (λ ())
-  ~dec (A x) b = Inr (λ ())
-  ~dec (A x) (t1 ==> t2) = Inr (λ ())
-  ~dec (A x) (·∀ t1) = Inr (λ ())
+  ~dec (T x) b = Inr (λ ())
+  ~dec (T x) (t1 ==> t2) = Inr (λ ())
+  ~dec (T x) (·∀ t1) = Inr (λ ())
   ~dec (·∀ t1) b = Inr (λ ())
   ~dec (·∀ t1) (t2 ==> t3) = Inr (λ ())
-  ~dec (·∀ t1) (A x) = Inr (λ ())
+  ~dec (·∀ t1) (T x) = Inr (λ ())
 
   -- no pair of types is both consistent and not consistent
   ~apart : {t1 t2 : htyp} → (t1 ~̸ t2) → (t1 ~ t2) → ⊥
