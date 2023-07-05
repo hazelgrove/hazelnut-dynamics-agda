@@ -35,19 +35,19 @@ module canonical-value-forms where
   canonical-value-forms-arr (TACast wt x) ()
   canonical-value-forms-arr (TAFailedCast x x₁ x₂ x₃) ()
 
-  canonical-values-forms-typfun : ∀{Δ d τ} →
+  canonical-value-forms-typfun : ∀{Δ d τ} →
                               Δ , ∅ , ~∅ ⊢ d :: (·∀ τ) →
                               d val →
                                 Σ[ d' ∈ ihexp ] 
                                 ((d == (·Λ d')) ×
                                  (Δ , ∅ , [ ~∅ newtyp] ⊢ d' :: τ))
-  canonical-values-forms-typfun (TAVar x₁) ()
-  canonical-values-forms-typfun (TATLam p) VTLam = _ , refl , p
-  canonical-values-forms-typfun (TAAp wt wt₁) ()
-  canonical-values-forms-typfun (TAEHole x x₁) ()
-  canonical-values-forms-typfun (TANEHole x wt x₁) ()
-  canonical-values-forms-typfun (TACast wt x) ()
-  canonical-values-forms-typfun (TAFailedCast x x₁ x₂ x₃) ()
+  canonical-value-forms-typfun (TAVar x₁) ()
+  canonical-value-forms-typfun (TATLam p) VTLam = _ , refl , p
+  canonical-value-forms-typfun (TAAp wt wt₁) ()
+  canonical-value-forms-typfun (TAEHole x x₁) ()
+  canonical-value-forms-typfun (TANEHole x wt x₁) ()
+  canonical-value-forms-typfun (TACast wt x) ()
+  canonical-value-forms-typfun (TAFailedCast x x₁ x₂ x₃) ()
   
   -- this argues (somewhat informally, because you still have to inspect
   -- the types of the theorems above and manually verify this property)
