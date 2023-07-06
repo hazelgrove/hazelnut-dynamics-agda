@@ -130,9 +130,11 @@ module disjointness where
   holes-disjoint-disjoint HVar he2 HDVar = empty-disj _
   holes-disjoint-disjoint (HLam1 he1) he2 (HDLam1 hd) = holes-disjoint-disjoint he1 he2 hd
   holes-disjoint-disjoint (HLam2 he1) he2 (HDLam2 hd) = holes-disjoint-disjoint he1 he2 hd
+  holes-disjoint-disjoint (HTLam he1) he2 (HDTLam hd) = holes-disjoint-disjoint he1 he2 hd
   holes-disjoint-disjoint HEHole he2 (HDHole x) = lem-apart-sing-disj (lem-apart-new he2 x)
   holes-disjoint-disjoint (HNEHole he1) he2 (HDNEHole x hd) = disjoint-parts (holes-disjoint-disjoint he1 he2 hd) (lem-apart-sing-disj (lem-apart-new he2 x))
   holes-disjoint-disjoint (HAp he1 he2) he3 (HDAp hd hd₁) = disjoint-parts (holes-disjoint-disjoint he1 he3 hd) (holes-disjoint-disjoint he2 he3 hd₁)
+  holes-disjoint-disjoint (HTAp he1) he2 (HDTAp hd) = holes-disjoint-disjoint he1 he2 hd
 
   -- the holes of an expression have the same domain as the context
   -- produced during expansion; that is, we don't add anything we don't
@@ -143,6 +145,7 @@ module disjointness where
                     Γ , Θ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                     dom-eq Δ H
     holes-delta-ana (HLam1 h) (EALam x₁ x₂ exp) = holes-delta-ana h exp
+    holes-delta-ana (HTLam h) (EATLam x₁ x₂) = holes-delta-ana h x₂
     holes-delta-ana h (EASubsume x x₁ x₂ x₃) = holes-delta-synth h x₂
     holes-delta-ana (HEHole {u = u}) EAEHole = dom-single u
     holes-delta-ana (HNEHole {u = u} h) (EANEHole x x₁) =
@@ -158,11 +161,13 @@ module disjointness where
     holes-delta-synth (HAsc h) (ESAsc x) = holes-delta-ana h x
     holes-delta-synth HVar (ESVar x₁) = dom-∅
     holes-delta-synth (HLam2 h) (ESLam x₁ exp) = holes-delta-synth h exp
+    holes-delta-synth (HTLam h) (ESTLam exp) = holes-delta-synth h exp
     holes-delta-synth (HEHole {u = u}) ESEHole = dom-single u
     holes-delta-synth (HNEHole {u = u} h) (ESNEHole x exp) = dom-union ((##-comm (lem-apart-sing-disj (lem-apart-new h (elab-disjoint-new-synth exp x)))))
                                                                        (holes-delta-synth h exp)
                                                                        (dom-single u)
     holes-delta-synth (HAp h h₁) (ESAp x x₁ x₂ x₃ x₄ x₅) = dom-union (holes-disjoint-disjoint h h₁ x) (holes-delta-ana h x₄) (holes-delta-ana h₁ x₅)
+    holes-delta-synth (HTAp h) (ESTAp x₁ x₂ x₃) = holes-delta-ana h x₃
 
   -- this is the main result of this file:
   --
@@ -175,7 +180,7 @@ module disjointness where
   -- proof technique here is explcitly *not* structurally inductive on the
   -- expansion judgement, because that approach relies on weakening of
   -- expansion, which is false because of the substitution contexts. giving
-  -- expansion weakning would take away unicity, so we avoid the whole
+  -- expansion weakening would take away unicity, so we avoid the whole
   -- question.
   elab-ana-disjoint : ∀{ e1 e2 τ1 τ2 e1' e2' τ1' τ2' Γ Θ Δ1 Δ2 } →
           holes-disjoint e1 e2 →
