@@ -456,6 +456,10 @@ module core where
                        d1 indet →
                        d2 final →
                        (d1 ∘ d2) indet
+      ITAp : ∀{d τ} → ((τ1 τ2 : htyp) (d' : ihexp) →
+                       d ≠ (d' ⟨(·∀ τ1) ⇒ (·∀ τ2)⟩)) →
+                       d indet →
+                       (d < τ >) indet
       ICastArr : ∀{d τ1 τ2 τ3 τ4} →
                  τ1 ==> τ2 ≠ τ3 ==> τ4 →
                  d indet →
@@ -515,7 +519,7 @@ module core where
             -- d final → -- red brackets
             ε evalctx →
             (d ∘₂ ε) evalctx
-    ECTyAp : ∀{ε t} →
+    ECTAp : ∀{ε t} →
             ε evalctx →
             (ε < t >) evalctx
     ECNEHole : ∀{ε u σ} →
@@ -538,7 +542,7 @@ module core where
            -- d1 final → -- red brackets
            d2 == ε ⟦ d2' ⟧ →
            (d1 ∘ d2) == (d1 ∘₂ ε) ⟦ d2' ⟧
-    FHTyAp : ∀{d d' t ε} →
+    FHTAp : ∀{d d' t ε} →
            d == ε ⟦ d' ⟧ →
            (d < t >) == (ε < t >) ⟦ d' ⟧
     FHNEHole : ∀{ d d' ε u σ} →
@@ -581,7 +585,7 @@ module core where
                -- d1 final → -- red brackets
                -- d2 final → -- red brackets
                ((d1 ⟨ (τ1 ==> τ2) ⇒ (τ1' ==> τ2')⟩) ∘ d2) →> ((d1 ∘ (d2 ⟨ τ1' ⇒ τ1 ⟩)) ⟨ τ2 ⇒ τ2' ⟩)
-    ITTyApCast : ∀{d τ τ' t } →
+    ITTApCast : ∀{d τ τ' t } →
                -- d final → -- red brackets
                  ·∀ τ ≠ ·∀ τ' →
                  ((d ⟨ (·∀ τ) ⇒ (·∀ τ')⟩) < t >) →> ((d < t >)⟨ Typ[ t / Z ] τ ⇒ Typ[ t / Z ] τ' ⟩)
