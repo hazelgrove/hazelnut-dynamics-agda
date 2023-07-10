@@ -7,10 +7,10 @@ open import lemmas-disjointness
 module lemmas-freshness where
   -- if x is fresh in an hexp, it's fresh in its expansion
   mutual
-    fresh-elab-synth1 : ∀{x e τ d Γ Δ} →
+    fresh-elab-synth1 : ∀{x e τ d Γ Θ Δ} →
                          x # Γ →
                          freshh x e →
-                         Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
+                         Γ , Θ ⊢ e ⇒ τ ~> d ⊣ Δ →
                          fresh x d
     fresh-elab-synth1 _ FRHConst ESConst = FConst
     fresh-elab-synth1 apt (FRHAsc frsh) (ESAsc x₁) = FCast (fresh-elab-ana1 apt frsh x₁)
@@ -22,10 +22,10 @@ module lemmas-freshness where
                                FAp (FCast (fresh-elab-ana1 apt frsh x₅))
                                    (FCast (fresh-elab-ana1 apt frsh₁ x₆))
 
-    fresh-elab-ana1 : ∀{ x e τ d τ' Γ Δ} →
+    fresh-elab-ana1 : ∀{ x e τ d τ' Γ Θ Δ} →
                       x # Γ →
                       freshh x e →
-                      Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
+                      Γ , Θ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                       fresh x d
     fresh-elab-ana1 {Γ = Γ}  apt (FRHLam1 x₁ frsh) (EALam x₂ x₃ exp) = FLam x₁ (fresh-elab-ana1 (apart-extend1 Γ x₁ apt) frsh exp )
     fresh-elab-ana1 apt frsh (EASubsume x₁ x₂ x₃ x₄) = fresh-elab-synth1 apt frsh x₃
@@ -34,9 +34,9 @@ module lemmas-freshness where
 
   -- if x is fresh in the expansion of an hexp, it's fresh in that hexp
   mutual
-    fresh-elab-synth2 : ∀{x e τ d Γ Δ} →
+    fresh-elab-synth2 : ∀{x e τ d Γ Θ Δ} →
                          fresh x d →
-                         Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
+                         Γ , Θ ⊢ e ⇒ τ ~> d ⊣ Δ →
                          freshh x e
     fresh-elab-synth2 FConst ESConst = FRHConst
     fresh-elab-synth2 (FVar x₂) (ESVar x₃) = FRHVar x₂
@@ -48,9 +48,9 @@ module lemmas-freshness where
                               (fresh-elab-ana2 frsh₁ x₆)
     fresh-elab-synth2 (FCast frsh) (ESAsc x₁) = FRHAsc (fresh-elab-ana2 frsh x₁)
 
-    fresh-elab-ana2 : ∀{ x e τ d τ' Γ Δ} →
+    fresh-elab-ana2 : ∀{ x e τ d τ' Γ Θ Δ} →
                       fresh x d →
-                      Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
+                      Γ , Θ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                       freshh x e
     fresh-elab-ana2 (FLam x₁ frsh) (EALam x₂ x₃ exp) = FRHLam1 x₁ (fresh-elab-ana2 frsh exp)
     fresh-elab-ana2 frsh (EASubsume x₁ x₂ x₃ x₄) = fresh-elab-synth2 frsh x₃
