@@ -648,7 +648,7 @@ module core where
     FRHEHole : ∀{x u} → freshh x (⦇-⦈[ u ])
     FRHNEHole : ∀{x u e} → freshh x e → freshh x (⦇⌜ e ⌟⦈[ u ])
     FRHAp : ∀{x e1 e2} → freshh x e1 → freshh x e2 → freshh x (e1 ∘ e2)
-    FTAp    : ∀{x τ e} → freshh x e → freshh x (e < τ >)
+    FRHTAp    : ∀{x τ e} → freshh x e → freshh x (e < τ >)
 
   -- x is not used in a binding site in d
   mutual
