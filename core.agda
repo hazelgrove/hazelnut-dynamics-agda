@@ -629,9 +629,11 @@ module core where
       FConst : ∀{x} → fresh x c
       FVar   : ∀{x y} → x ≠ y → fresh x (X y)
       FLam   : ∀{x y τ d} → x ≠ y → fresh x d → fresh x (·λ y [ τ ] d)
+      FTLam  : ∀{x d} → fresh x d → fresh x (·Λ d)
       FHole  : ∀{x u σ} → envfresh x σ → fresh x (⦇-⦈⟨ u , σ ⟩)
       FNEHole : ∀{x d u σ} → envfresh x σ → fresh x d → fresh x (⦇⌜ d ⌟⦈⟨ u , σ ⟩)
       FAp     : ∀{x d1 d2} → fresh x d1 → fresh x d2 → fresh x (d1 ∘ d2)
+      FTAp    : ∀{x τ d} → fresh x d → fresh x (d < τ >)
       FCast   : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒ τ2 ⟩)
       FFailedCast : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
 
@@ -642,9 +644,11 @@ module core where
     FRHVar   : ∀{x y} → x ≠ y → freshh x (X y)
     FRHLam1  : ∀{x y e} → x ≠ y → freshh x e → freshh x (·λ y e)
     FRHLam2  : ∀{x τ e y} → x ≠ y → freshh x e → freshh x (·λ y [ τ ] e)
+    FRHTLam  : ∀{x e} → freshh x e → freshh x (·Λ e)
     FRHEHole : ∀{x u} → freshh x (⦇-⦈[ u ])
     FRHNEHole : ∀{x u e} → freshh x e → freshh x (⦇⌜ e ⌟⦈[ u ])
     FRHAp : ∀{x e1 e2} → freshh x e1 → freshh x e2 → freshh x (e1 ∘ e2)
+    FTAp    : ∀{x τ e} → freshh x e → freshh x (e < τ >)
 
   -- x is not used in a binding site in d
   mutual
@@ -661,6 +665,7 @@ module core where
       UBLam2 : ∀{x d y τ} → x ≠ y
                            → unbound-in x d
                            → unbound-in x (·λ_[_]_ y τ d)
+      UBTLam : ∀{x d} → unbound-in x d → unbound-in x (·Λ d)
       UBHole : ∀{x u σ} → unbound-in-σ x σ
                          → unbound-in x (⦇-⦈⟨ u , σ ⟩)
       UBNEHole : ∀{x u σ d }
@@ -671,6 +676,7 @@ module core where
             unbound-in x d1 →
             unbound-in x d2 →
             unbound-in x (d1 ∘ d2)
+      UBTAp : ∀{x τ d} → unbound-in x d → unbound-in x (d < τ >)
       UBCast : ∀{x d τ1 τ2} → unbound-in x d → unbound-in x (d ⟨ τ1 ⇒ τ2 ⟩)
       UBFailedCast : ∀{x d τ1 τ2} → unbound-in x d → unbound-in x (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
 
@@ -689,6 +695,8 @@ module core where
       BDLam : ∀{x τ d1 d2} → binders-disjoint d1 d2
                             → unbound-in x d2
                             → binders-disjoint (·λ_[_]_ x τ d1) d2
+      BDTLam :  ∀{d1 d2} → binders-disjoint d1 d2
+                          → binders-disjoint (·Λ d1) d2
       BDHole : ∀{u σ d2} → binders-disjoint-σ σ d2
                          → binders-disjoint (⦇-⦈⟨ u , σ ⟩) d2
       BDNEHole : ∀{u σ d1 d2} → binders-disjoint-σ σ d2
@@ -697,6 +705,8 @@ module core where
       BDAp :  ∀{d1 d2 d3} → binders-disjoint d1 d3
                           → binders-disjoint d2 d3
                           → binders-disjoint (d1 ∘ d2) d3
+      BDTAp : ∀{d1 d2 τ} → binders-disjoint d1 d2
+                          → binders-disjoint (d1 < τ >) d2
       BDCast : ∀{d1 d2 τ1 τ2} → binders-disjoint d1 d2 → binders-disjoint (d1 ⟨ τ1 ⇒ τ2 ⟩) d2
       BDFailedCast : ∀{d1 d2 τ1 τ2} → binders-disjoint d1 d2 → binders-disjoint (d1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) d2
 
@@ -717,6 +727,8 @@ module core where
       BULam : {x : Nat} {τ : htyp} {d : ihexp} → binders-unique d
                                                 → unbound-in x d
                                                 → binders-unique (·λ_[_]_ x τ d)
+      BUTLam : ∀{d} → binders-unique d
+                       → binders-unique (·Λ d)
       BUEHole : ∀{u σ} → binders-unique-σ σ
                         → binders-unique (⦇-⦈⟨ u , σ ⟩)
       BUNEHole : ∀{u σ d} → binders-unique d
@@ -726,6 +738,8 @@ module core where
                        → binders-unique d2
                        → binders-disjoint d1 d2
                        → binders-unique (d1 ∘ d2)
+      BUTAp : ∀{d τ} → binders-unique d
+                       → binders-unique (d < τ >)
       BUCast : ∀{d τ1 τ2} → binders-unique d
                            → binders-unique (d ⟨ τ1 ⇒ τ2 ⟩)
       BUFailedCast : ∀{d τ1 τ2} → binders-unique d
