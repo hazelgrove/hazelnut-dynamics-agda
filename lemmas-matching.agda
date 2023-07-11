@@ -2,6 +2,10 @@ open import Prelude
 open import core
 
 module lemmas-matching where
+
+  consistency-refl : (τ : htyp) → τ ~ τ
+  consistency-refl = {! !}
+
   -- matching produces unique answers for arrows, sums, and products
   ▸arr-unicity : ∀{ t t2 t3 } →
                  t ▸arr t2 →
@@ -20,7 +24,7 @@ module lemmas-matching where
 
   match-consist : ∀{τ1 τ2} → τ1 ▸arr τ2 → (τ2 ~ τ1)
   match-consist MAHole = TCHole1
-  match-consist MAArr = TCRefl
+  match-consist (MAArr {τ1} {τ2}) = consistency-refl (τ1 ==> τ2)
 
   match-unicity : ∀{ τ τ1 τ2} → τ ▸arr τ1 → τ ▸arr τ2 → τ1 == τ2
   match-unicity MAHole MAHole = refl
