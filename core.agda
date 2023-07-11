@@ -560,6 +560,9 @@ module core where
     MGArr : ∀{τ1 τ2} →
             (τ1 ==> τ2) ≠ (⦇-⦈ ==> ⦇-⦈) →
             (τ1 ==> τ2) ▸gnd (⦇-⦈ ==> ⦇-⦈)
+    MGForall : ∀{τ} →
+            (τ ≠ ⦇-⦈) →
+            (·∀ τ) ▸gnd (·∀ ⦇-⦈)
 
   -- instruction transition judgement
   data _→>_ : (d d' : ihexp) → Set where
