@@ -1,3 +1,4 @@
+open import Nat
 open import Prelude
 open import core
 
@@ -8,16 +9,16 @@ module lemmas-ground where
                       (τ ≠ (⦇-⦈ ==> ⦇-⦈))
   ground-arr-not-hole notg refl = notg GHole
 
-  -- not ground types either have to be hole or an arrow
-  notground : ∀{τ} → (τ ground → ⊥) → (τ == ⦇-⦈) + (Σ[ τ1 ∈ htyp ] Σ[ τ2 ∈ htyp ] (τ == (τ1 ==> τ2)))
+  -- not ground types either have to be hole, a type variable, an arrow, or a forall
+  notground : ∀{τ} → 
+              (τ ground → ⊥) → 
+              (τ == ⦇-⦈) 
+              + (Σ[ x ∈ Nat ] (τ == (T x)))
+              + (Σ[ τ1 ∈ htyp ] Σ[ τ2 ∈ htyp ] (τ == (τ1 ==> τ2)))
+              + (Σ[ τ1 ∈ htyp ] (τ == (·∀ τ1)))
   notground {b} gnd = abort (gnd GBase)
   notground {⦇-⦈} gnd = Inl refl
-  notground {b ==> b} gnd = Inr (b , b , refl)
-  notground {b ==> ⦇-⦈} gnd = Inr (b , ⦇-⦈ , refl)
-  notground {b ==> τ2 ==> τ3} gnd = Inr (b , τ2 ==> τ3 , refl)
-  notground {⦇-⦈ ==> b} gnd = Inr (⦇-⦈ , b , refl)
-  notground {⦇-⦈ ==> ⦇-⦈} gnd = abort (gnd GHole)
-  notground {⦇-⦈ ==> τ2 ==> τ3} gnd = Inr (⦇-⦈ , τ2 ==> τ3 , refl)
-  notground {(τ1 ==> τ2) ==> b} gnd = Inr (τ1 ==> τ2 , b , refl)
-  notground {(τ1 ==> τ2) ==> ⦇-⦈} gnd = Inr (τ1 ==> τ2 , ⦇-⦈ , refl)
-  notground {(τ1 ==> τ2) ==> τ3 ==> τ4} gnd = Inr (τ1 ==> τ2 , τ3 ==> τ4 , refl)
+  notground {T x} gnd = Inr (Inl (x , refl))
+  notground {τ1 ==> τ2} gnd = Inr (Inr (Inl (τ1 , τ2 , refl)))
+  notground {·∀ τ} gnd = Inr (Inr (Inr (τ , refl)))
+
