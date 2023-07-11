@@ -29,44 +29,44 @@ module exchange where
                         ! (∪assoc Γ (■ (y , τ2)) (■ (x , τ1)) (disjoint-singles (flip neq))))
 
   -- the above exchange principle used via transport in the judgements we needed
-  exchange-subst-Γ : ∀{Δ Γ x y τ1 τ2 σ Γ'} →
+  exchange-subst-Γ : ∀{Δ Γ x y τ1 τ2 σ Γ' Θ} →
                    x ≠ y →
-                   Δ , (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ σ :s: Γ' →
-                   Δ , (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ σ :s: Γ'
-  exchange-subst-Γ {Δ} {Γ} {x} {y} {τ1} {τ2} {σ} {Γ'} x≠y =
-    tr (λ qq → Δ , qq ⊢ σ :s: Γ') (swap Γ x≠y)
+                   Δ , (Γ ,, (x , τ1) ,, (y , τ2)) , Θ ⊢ σ :s: Γ' →
+                   Δ , (Γ ,, (y , τ2) ,, (x , τ1)) , Θ ⊢ σ :s: Γ'
+  exchange-subst-Γ {Δ} {Γ} {x} {y} {τ1} {τ2} {σ} {Γ'}{Θ} x≠y =
+    tr (λ qq → Δ , qq , Θ ⊢ σ :s: Γ') (swap Γ x≠y)
 
-  exchange-synth : ∀{Γ x y τ τ1 τ2 e}
+  exchange-synth : ∀{Γ x y τ τ1 τ2 e Θ}
                        → x ≠ y
-                       → (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ e => τ
-                       → (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ e => τ
-  exchange-synth {Γ} {x} {y} {τ} {τ1} {τ2} {e} neq  =
-    tr (λ qq → qq ⊢ e => τ) (swap Γ neq)
+                       → (Γ ,, (x , τ1) ,, (y , τ2)) , Θ ⊢ e => τ
+                       → (Γ ,, (y , τ2) ,, (x , τ1)) , Θ ⊢ e => τ
+  exchange-synth {Γ} {x} {y} {τ} {τ1} {τ2} {e} {Θ} neq  =
+    tr (λ qq → qq , Θ ⊢ e => τ) (swap Γ neq)
 
-  exchange-ana : ∀{Γ x y τ τ1 τ2 e}
+  exchange-ana : ∀{Γ x y τ τ1 τ2 e Θ}
                        → x ≠ y
-                       → (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ e <= τ
-                       → (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ e <= τ
-  exchange-ana {Γ} {x} {y} {τ} {τ1} {τ2} {e} neq  =
-    tr (λ qq → qq ⊢ e <= τ) (swap Γ neq)
+                       → (Γ ,, (x , τ1) ,, (y , τ2)) , Θ ⊢ e <= τ
+                       → (Γ ,, (y , τ2) ,, (x , τ1)) , Θ ⊢ e <= τ
+  exchange-ana {Γ} {x} {y} {τ} {τ1} {τ2} {e} {Θ} neq  =
+    tr (λ qq → qq , Θ ⊢ e <= τ) (swap Γ neq)
 
-  exchange-elab-synth : ∀{Γ x y τ1 τ2 e τ d Δ} →
+  exchange-elab-synth : ∀{Γ x y τ1 τ2 e τ d Δ Θ} →
                         x ≠ y →
-                        (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ e ⇒ τ ~> d ⊣ Δ →
-                        (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ e ⇒ τ ~> d ⊣ Δ
-  exchange-elab-synth {Γ = Γ} {e = e} {τ = τ} {d = d } {Δ = Δ} neq =
-    tr (λ qq → qq ⊢ e ⇒ τ ~> d ⊣ Δ) (swap Γ neq)
+                        (Γ ,, (x , τ1) ,, (y , τ2)) , Θ ⊢ e ⇒ τ ~> d ⊣ Δ →
+                        (Γ ,, (y , τ2) ,, (x , τ1)) , Θ ⊢ e ⇒ τ ~> d ⊣ Δ
+  exchange-elab-synth {Γ = Γ} {e = e} {τ = τ} {d = d } {Δ = Δ} {Θ} neq =
+    tr (λ qq → qq , Θ ⊢ e ⇒ τ ~> d ⊣ Δ) (swap Γ neq)
 
-  exchange-elab-ana : ∀ {Γ x y τ1 τ2 τ τ' d e Δ} →
+  exchange-elab-ana : ∀ {Γ x y τ1 τ2 τ τ' d e Δ Θ} →
                       x ≠ y →
-                      (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
-                      (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
-  exchange-elab-ana {Γ = Γ} {τ = τ} {τ' = τ'} {d = d} {e = e} {Δ = Δ} neq =
-    tr (λ qq → qq ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ) (swap Γ neq)
+                      (Γ ,, (x , τ1) ,, (y , τ2)) , Θ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
+                      (Γ ,, (y , τ2) ,, (x , τ1)) , Θ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
+  exchange-elab-ana {Γ = Γ} {τ = τ} {τ' = τ'} {d = d} {e = e} {Δ = Δ} {Θ = Θ} neq =
+    tr (λ qq → qq , Θ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ) (swap Γ neq)
 
-  exchange-ta-Γ : ∀{Γ x y τ1 τ2 d τ Δ } →
+  exchange-ta-Γ : ∀{Γ x y τ1 τ2 d τ Δ Θ } →
                 x ≠ y →
-                Δ , (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ d :: τ →
-                Δ , (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ d :: τ
-  exchange-ta-Γ {Γ = Γ} {d = d} {τ = τ} {Δ = Δ} neq =
-    tr (λ qq → Δ , qq ⊢ d :: τ) (swap Γ neq)
+                Δ , (Γ ,, (x , τ1) ,, (y , τ2)) , Θ ⊢ d :: τ →
+                Δ , (Γ ,, (y , τ2) ,, (x , τ1)) , Θ ⊢ d :: τ
+  exchange-ta-Γ {Γ = Γ} {d = d} {τ = τ} {Δ = Δ} {Θ = Θ} neq =
+    tr (λ qq → Δ , qq , Θ ⊢ d :: τ) (swap Γ neq)
