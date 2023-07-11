@@ -94,3 +94,24 @@ module weakening where
     weaken-ta (FNEHole x₁ frsh) (TANEHole x₂ wt x₃) = TANEHole x₂ (weaken-ta frsh wt) (weaken-subst-Γ x₁ x₃)
     weaken-ta (FCast frsh) (TACast wt x₁) = TACast (weaken-ta frsh wt) x₁
     weaken-ta (FFailedCast frsh) (TAFailedCast wt x₁ x₂ x₃) = TAFailedCast (weaken-ta frsh wt) x₁ x₂ x₃
+
+  mutual 
+    weaken-subst-Θ : ∀{Γ Δ σ Γ' Θ} →
+                     Δ , Γ , Θ ⊢ σ :s: Γ' →
+                     Δ , Γ , typctx.[ Θ newtyp] ⊢ σ :s: Γ'
+    weaken-subst-Θ (STAId x) = STAId x
+    weaken-subst-Θ (STASubst x x₁) = STASubst (weaken-subst-Θ x) (weaken-ta-typ x₁)
+    
+    weaken-ta-typ : ∀{Γ Δ Θ d τ} →
+                    Δ , Γ , Θ ⊢ d :: τ →
+                    Δ , Γ , typctx.[ Θ newtyp] ⊢ d :: τ
+    weaken-ta-typ TAConst = TAConst
+    weaken-ta-typ (TAVar x) = TAVar x
+    weaken-ta-typ (TALam x x₁) = TALam x (weaken-ta-typ x₁)
+    weaken-ta-typ (TATLam x) = TATLam (weaken-ta-typ x)
+    weaken-ta-typ (TAAp x x₁) = TAAp (weaken-ta-typ x) (weaken-ta-typ x₁)
+    weaken-ta-typ (TATAp x) = TATAp (weaken-ta-typ x)
+    weaken-ta-typ (TAEHole x x₁) = TAEHole x (weaken-subst-Θ x₁)
+    weaken-ta-typ (TANEHole x x₁ x₂) = TANEHole x (weaken-ta-typ x₁) (weaken-subst-Θ x₂)
+    weaken-ta-typ (TACast x x₁) = TACast (weaken-ta-typ x) x₁
+    weaken-ta-typ (TAFailedCast x x₁ x₂ x₃) = TAFailedCast (weaken-ta-typ x) x₁ x₂ x₃
