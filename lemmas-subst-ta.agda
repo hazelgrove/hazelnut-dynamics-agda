@@ -61,7 +61,7 @@ module lemmas-subst-ta where
                                          (weaken-ta (binders-fresh wt2 bu2 bd' y#Γ) wt2))
   lem-subst apt (BDTLam bd) bu (TATLam wt1) wt2 = TATLam (lem-subst apt bd bu wt1 {!   !})
   lem-subst apt (BDAp bd bd₁) bu3 (TAAp wt1 wt2) wt3 = TAAp (lem-subst apt bd bu3 wt1 wt3) (lem-subst apt bd₁ bu3 wt2 wt3)
-  lem-subst apt (BDTAp bd) bu (TATAp wt1) wt2 = {! TATAp (lem-subst) !}
+  lem-subst apt (BDTAp bd) bu (TATAp wt1) wt2 = {!  !}
   lem-subst apt bd bu2 (TAEHole inΔ sub) wt2 = TAEHole inΔ (STASubst sub wt2)
   lem-subst apt (BDNEHole x₁ bd) bu2 (TANEHole x₃ wt1 x₄) wt2 = TANEHole x₃ (lem-subst apt bd bu2 wt1 wt2) (STASubst x₄ wt2)
   lem-subst apt (BDCast bd) bu2 (TACast wt1 x₁) wt2 = TACast (lem-subst apt bd bu2 wt1 wt2) x₁
