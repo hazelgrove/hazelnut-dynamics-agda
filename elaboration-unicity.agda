@@ -7,21 +7,27 @@ open import lemmas-matching
 
 module elaboration-unicity where
   mutual
-    elaboration-unicity-synth : {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} {d1 d2 : ihexp} {Δ1 Δ2 : hctx} →
-                            Γ ⊢ e ⇒ τ1 ~> d1 ⊣ Δ1 →
-                            Γ ⊢ e ⇒ τ2 ~> d2 ⊣ Δ2 →
+    elaboration-unicity-synth : ∀{Γ e τ1 τ2 d1 d2 Δ1 Δ2 Θ} →
+                            Γ , Θ ⊢ e ⇒ τ1 ~> d1 ⊣ Δ1 →
+                            Γ , Θ ⊢ e ⇒ τ2 ~> d2 ⊣ Δ2 →
                             τ1 == τ2 × d1 == d2 × Δ1 == Δ2
     elaboration-unicity-synth ESConst ESConst = refl , refl , refl
     elaboration-unicity-synth (ESVar {Γ = Γ} x₁) (ESVar x₂) = ctxunicity {Γ = Γ} x₁ x₂ , refl , refl
     elaboration-unicity-synth (ESLam apt1 d1) (ESLam apt2 d2)
       with elaboration-unicity-synth d1 d2
     ... | ih1 , ih2 , ih3 = ap1 _ ih1  , ap1 _ ih2 , ih3
+    elaboration-unicity-synth (ESTLam d1) (ESTLam d2)
+      with elaboration-unicity-synth d1 d2
+    ... | ih1 , ih2 , ih3 rewrite ih1 | ih2 = refl , refl , ih3
     elaboration-unicity-synth (ESAp _ _ x x₁ x₂ x₃) (ESAp _ _ x₄ x₅ x₆ x₇)
       with synthunicity x x₄
     ... | refl with match-unicity x₁ x₅
     ... | refl with elaboration-unicity-ana x₂ x₆
     ... | refl , refl , refl with elaboration-unicity-ana x₃ x₇
     ... | refl , refl , refl = refl , refl , refl
+    elaboration-unicity-synth (ESTAp x1 m1 d1) (ESTAp x2 m2 d2)
+      with synthunicity x1 x2 
+    ... | refl = {!   !}
     elaboration-unicity-synth ESEHole ESEHole = refl , refl , refl
     elaboration-unicity-synth (ESNEHole _ d1) (ESNEHole _ d2)
       with elaboration-unicity-synth d1 d2
@@ -30,16 +36,19 @@ module elaboration-unicity where
       with elaboration-unicity-ana x x₁
     ... | refl , refl , refl = refl , refl , refl
 
-    elaboration-unicity-ana : {Γ : tctx} {e : hexp} {τ τ1 τ2 : htyp} {d1 d2 : ihexp} {Δ1 Δ2 : hctx} →
-                          Γ ⊢ e ⇐ τ ~> d1 :: τ1 ⊣ Δ1  →
-                          Γ ⊢ e ⇐ τ ~> d2 :: τ2 ⊣ Δ2 →
+    elaboration-unicity-ana : ∀{Γ e τ τ1 τ2 d1 d2 Δ1 Δ2 Θ}  →
+                          Γ , Θ ⊢ e ⇐ τ ~> d1 :: τ1 ⊣ Δ1  →
+                          Γ , Θ ⊢ e ⇐ τ ~> d2 :: τ2 ⊣ Δ2 →
                           d1 == d2 × τ1 == τ2 × Δ1 == Δ2
     elaboration-unicity-ana (EALam x₁ m D1) (EALam x₂ m2 D2)
       with match-unicity m m2
     ... | refl with elaboration-unicity-ana D1 D2
     ... | refl , refl , refl = refl , refl , refl
+    elaboration-unicity-ana (EATLam m D1) (EATLam m2 D2) = {!   !}
+    elaboration-unicity-ana (EATLam m D1) (EASubsume x₁ x₂ x₃ x₄) = {!   !}
     elaboration-unicity-ana (EALam x₁ m D1) (EASubsume x₂ x₃ () x₅)
     elaboration-unicity-ana (EASubsume x₁ x₂ () x₄) (EALam x₅ m D2)
+    elaboration-unicity-ana (EASubsume x x₁ x₃ x₄) (EATLam x₅ x₆) = {!   !}
     elaboration-unicity-ana (EASubsume x x₁ x₂ x₃) (EASubsume x₄ x₅ x₆ x₇)
       with elaboration-unicity-synth x₂ x₆
     ... | refl , refl , refl = refl , refl , refl
