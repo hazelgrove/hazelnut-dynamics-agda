@@ -6,12 +6,12 @@ module lemmas-consistency where
 
   open typctx
 
-  ~refl : (t : htyp) → t ~ t
-  ~refl b = TCBase
-  ~refl ⦇-⦈ = TCHole1
-  ~refl (t1 ==> t2) = TCArr (~refl t1) (~refl t2)
-  ~refl (T p) = TCVar 
-  ~refl (·∀ t1) = TCForall (~refl t1)
+  ~refl : {t : htyp} → t ~ t
+  ~refl {b} = TCBase
+  ~refl {⦇-⦈} = TCHole1
+  ~refl {(t1 ==> t2)} = TCArr ~refl ~refl
+  ~refl {(T p)} = TCVar 
+  ~refl {(·∀ t1)} = TCForall ~refl
 
   -- ⊢~sym : {Γ : typctx} {t1 t2 : htyp} → Γ ⊢ t1 ~ t2 → Γ ⊢ t2 ~ t1
   -- ⊢~sym TCBase = TCBase
