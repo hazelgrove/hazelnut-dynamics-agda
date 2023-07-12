@@ -99,7 +99,7 @@ module core where
     TCVar  : ∀{a} → (T a) ~ (T a)
     TCBase : b ~ b
     TCHole1 : ∀{τ} → τ ~ ⦇-⦈
-    TCHole2 : ∀{Γ τ} → ⦇-⦈ ~ τ
+    TCHole2 : ∀{τ} → ⦇-⦈ ~ τ
     TCArr   : ∀{τ1 τ2 τ1' τ2'} →
                τ1 ~ τ1' →
                τ2 ~ τ2' →
