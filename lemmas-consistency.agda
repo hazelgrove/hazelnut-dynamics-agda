@@ -6,6 +6,17 @@ module lemmas-consistency where
 
   open typctx
 
+  ⊢~refl : {Γ : typctx} (t : htyp) → Γ ⊢ t ~ t
+  ⊢~refl b = TCBase
+  ⊢~refl ⦇-⦈ = TCHole1
+  ⊢~refl (t1 ==> t2) = {!   !}
+  ⊢~refl (T p) = {!   !}
+  ⊢~refl (·∀ t1) = {!   !}
+  
+  -- case for empty context
+  ~refl : (t : htyp) → t ~ t
+  ~refl = ⊢~refl
+
   ⊢~sym : {Γ : typctx} {t1 t2 : htyp} → Γ ⊢ t1 ~ t2 → Γ ⊢ t2 ~ t1
   ⊢~sym TCBase = TCBase
   ⊢~sym TCHole1 = TCHole2
