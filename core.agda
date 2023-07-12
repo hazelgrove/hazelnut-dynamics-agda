@@ -561,7 +561,7 @@ module core where
             (τ1 ==> τ2) ≠ (⦇-⦈ ==> ⦇-⦈) →
             (τ1 ==> τ2) ▸gnd (⦇-⦈ ==> ⦇-⦈)
     MGForall : ∀{τ} →
-            (τ ≠ ⦇-⦈) →
+            (·∀ τ ≠ ·∀ ⦇-⦈) →
             (·∀ τ) ▸gnd (·∀ ⦇-⦈)
 
   -- instruction transition judgement
