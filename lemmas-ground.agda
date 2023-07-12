@@ -7,7 +7,7 @@ module lemmas-ground where
   ground-arr-not-hole : ∀{τ} →
                       (τ ground → ⊥) →
                       (τ ≠ (⦇-⦈ ==> ⦇-⦈))
-  ground-arr-not-hole notg refl = notg GHole
+  ground-arr-not-hole notg refl = notg GArr
 
   -- not ground types either have to be hole, a type variable, an arrow, or a forall
   notground : ∀{τ} → 

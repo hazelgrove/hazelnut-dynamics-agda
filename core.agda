@@ -337,7 +337,7 @@ module core where
   data _ground : (τ : htyp) → Set where
     GBase : b ground
     -- GVar : ∀{a} → (T a) ground
-    GHole : ⦇-⦈ ==> ⦇-⦈ ground
+    GArr : ⦇-⦈ ==> ⦇-⦈ ground
     GForall : ·∀ ⦇-⦈ ground
 
   mutual
