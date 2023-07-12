@@ -27,3 +27,27 @@ module lemmas-matching where
   match-unicity : ∀{ τ τ1 τ2} → τ ▸arr τ1 → τ ▸arr τ2 → τ1 == τ2
   match-unicity MAHole MAHole = refl
   match-unicity MAArr MAArr = refl
+
+  -- matching produces unique answers for arrows, sums, and products
+  ▸forall-unicity : ∀{ t t2 t3 } →
+                 t ▸forall t2 →
+                 t ▸forall t3 →
+                 t2 == t3
+  ▸forall-unicity MFHole MFHole = refl
+  ▸forall-unicity MFForall MFForall = refl
+
+  -- if an arrow matches, then it's consistent with the least restrictive
+  -- function type
+  forall-matchconsisthole : ∀{t t'} →
+                 t ▸forall t' →
+                 t ~ (·∀ ⦇-⦈)
+  forall-matchconsisthole MFHole = TCHole2
+  forall-matchconsisthole MFForall = TCForall TCHole1
+
+  forall-match-consist : ∀{τ1 τ2} → τ1 ▸forall τ2 → (τ2 ~ τ1)
+  forall-match-consist MFHole = TCHole1
+  forall-match-consist (MFForall {τ}) = ~refl
+
+  forall-match-unicity : ∀{ τ τ1 τ2} → τ ▸forall τ1 → τ ▸forall τ2 → τ1 == τ2
+  forall-match-unicity MFHole MFHole = refl
+  forall-match-unicity MFForall MFForall = refl
