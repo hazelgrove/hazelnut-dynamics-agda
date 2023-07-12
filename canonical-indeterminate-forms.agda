@@ -132,8 +132,8 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-arr (TAEHole x x₁) IEHole = CIFAEHole (_ , _ , _ , refl , x , x₁)
   canonical-indeterminate-forms-arr (TANEHole x wt x₁) (INEHole x₂) = CIFANEHole (_ , _ , _ , _ , _ , refl , wt , x₂ , x , x₁)
   canonical-indeterminate-forms-arr (TACast wt x) (ICastArr x₁ ind) = CIFACast (_ , _ , _ , _ , _ , refl , wt , ind , x₁)
-  canonical-indeterminate-forms-arr (TACast wt TCHole2) (ICastHoleGround x₁ ind GHole) = CIFACastHole (_ , refl , refl , refl , wt , ind , x₁)
-  canonical-indeterminate-forms-arr (TAFailedCast x x₁ GHole x₃) (IFailedCast x₄ x₅ GHole x₇) = CIFAFailedCast (_ , _ , refl , refl , refl , x , x₅ , x₇)
+  canonical-indeterminate-forms-arr (TACast wt TCHole2) (ICastHoleGround x₁ ind GArr) = CIFACastHole (_ , refl , refl , refl , wt , ind , x₁)
+  canonical-indeterminate-forms-arr (TAFailedCast x x₁ GArr x₃) (IFailedCast x₄ x₅ GArr x₇) = CIFAFailedCast (_ , _ , refl , refl , refl , x , x₅ , x₇)
 
 
   -- this type gives somewhat nicer syntax for the output of the canonical
