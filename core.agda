@@ -72,27 +72,41 @@ module core where
 
   open typctx
   
-  -- type consistency in a context of type variables (represented by the number of binders passed)
-  data _⊢_~_ : typctx → htyp → htyp → Set where 
-    TCVar  : ∀{Γ a} → a < typctx.n Γ → Γ ⊢ (T a) ~ (T a)
-    TCBase : ∀{Γ} → Γ ⊢ b ~ b
-    TCHole1 : ∀{Γ τ} → Γ ⊢ τ ~ ⦇-⦈
-    TCHole2 : ∀{Γ τ} → Γ ⊢ ⦇-⦈ ~ τ
-    TCArr   : ∀{Γ τ1 τ2 τ1' τ2'} →
-               Γ ⊢ τ1 ~ τ1' →
-               Γ ⊢ τ2 ~ τ2' →
-               Γ ⊢ τ1 ==> τ2 ~ τ1' ==> τ2'
-    TCForall : ∀{Γ τ τ'} →
-              [ Γ newtyp] ⊢ τ ~ τ' →
-              Γ ⊢ ·∀ τ ~ ·∀ τ'
+  -- -- type consistency in a context of type variables (represented by the number of binders passed)
+  -- data _⊢_~_ : typctx → htyp → htyp → Set where 
+  --   TCVar  : ∀{Γ a} → a < typctx.n Γ → Γ ⊢ (T a) ~ (T a)
+  --   TCBase : ∀{Γ} → Γ ⊢ b ~ b
+  --   TCHole1 : ∀{Γ τ} → Γ ⊢ τ ~ ⦇-⦈
+  --   TCHole2 : ∀{Γ τ} → Γ ⊢ ⦇-⦈ ~ τ
+  --   TCArr   : ∀{Γ τ1 τ2 τ1' τ2'} →
+  --              Γ ⊢ τ1 ~ τ1' →
+  --              Γ ⊢ τ2 ~ τ2' →
+  --              Γ ⊢ τ1 ==> τ2 ~ τ1' ==> τ2'
+  --   TCForall : ∀{Γ τ τ'} →
+  --             [ Γ newtyp] ⊢ τ ~ τ' →
+  --             Γ ⊢ ·∀ τ ~ ·∀ τ'
 
-  -- type inconsistency in a context
-  _⊢_~̸_ : typctx → htyp → htyp → Set
-  Γ ⊢ τ1 ~̸ τ2 = ¬(Γ ⊢ τ1 ~ τ2)
+  -- -- type inconsistency in a context
+  -- _⊢_~̸_ : typctx → htyp → htyp → Set
+  -- Γ ⊢ τ1 ~̸ τ2 = ¬(Γ ⊢ τ1 ~ τ2)
 
-  -- type consistency
-  _~_ : (t1 t2 : htyp) → Set
-  _~_ = \(t1 t2 : htyp) → ~∅ ⊢ t1 ~ t2
+  -- -- type consistency
+  -- _~_ : (t1 t2 : htyp) → Set
+  -- _~_ = \(t1 t2 : htyp) → ~∅ ⊢ t1 ~ t2
+
+
+  data _~_ : htyp → htyp → Set where 
+    TCVar  : ∀{a} → (T a) ~ (T a)
+    TCBase : b ~ b
+    TCHole1 : ∀{τ} → τ ~ ⦇-⦈
+    TCHole2 : ∀{Γ τ} → ⦇-⦈ ~ τ
+    TCArr   : ∀{τ1 τ2 τ1' τ2'} →
+               τ1 ~ τ1' →
+               τ2 ~ τ2' →
+               τ1 ==> τ2 ~ τ1' ==> τ2'
+    TCForall : ∀{τ τ'} →
+              τ ~ τ' →
+              ·∀ τ ~ ·∀ τ'
 
   -- type inconsistency
   _~̸_ : (t1 t2 : htyp) → Set
