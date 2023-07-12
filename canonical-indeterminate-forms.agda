@@ -38,11 +38,11 @@ module canonical-indeterminate-forms where
         )
         → cif-base Δ d
     CIFBTAp : ∀ {Δ d} →
-      Σ[ d1 ∈ ihexp ] Σ[ τ ∈ htyp ] Σ[ τ2 ∈ htyp ]
+      Σ[ d1 ∈ ihexp ] Σ[ τ ∈ htyp ]
         ((d == d1 < τ >) ×
-         (Δ , ∅ , ~∅ ⊢ d1 :: ·∀ τ2) ×
+         (Δ , ∅ , ~∅ ⊢ d1 :: ·∀ b) ×
          (d1 indet) ×
-         ((τ1 τ1 : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ τ1) ⇒ (·∀ τ2)⟩))
+         ((τ1 τ1' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ τ1) ⇒ (·∀ τ1')⟩))
         )
         → cif-base Δ d
     CIFBCast : ∀ {Δ d} →
@@ -66,10 +66,10 @@ module canonical-indeterminate-forms where
                                        Δ , ∅ , ~∅ ⊢ d :: b →
                                        d indet →
                                        cif-base Δ d
-  canonical-indeterminate-forms-base TAConst ()
+--  canonical-indeterminate-forms-base TAConst ()
   canonical-indeterminate-forms-base (TAVar x₁) ()
   canonical-indeterminate-forms-base (TAAp wt wt₁) (IAp x ind x₁) = CIFBAp (_ , _ , _ , refl , wt , wt₁ , ind , x₁ , x)
-  canonical-indeterminate-forms-base (TATAp wt) (ITAp x ind) = ?
+  canonical-indeterminate-forms-base {d = d < x₂ >} tp (ITAp x ind) = CIFBTAp (_ , _ , refl , _ , ind , x)
   canonical-indeterminate-forms-base (TAEHole x x₁) IEHole = CIFBEHole (_ , _ , _ , refl , x , x₁)
   canonical-indeterminate-forms-base (TANEHole x wt x₁) (INEHole x₂) = CIFBNEHole (_ , _ , _ , _ , _ , refl , wt , x₂ , x , x₁)
   canonical-indeterminate-forms-base (TACast wt x) (ICastHoleGround x₁ ind x₂) = CIFBCast (_ , refl , wt , ind , x₁)
