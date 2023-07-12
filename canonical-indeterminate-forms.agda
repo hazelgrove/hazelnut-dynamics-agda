@@ -69,7 +69,7 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-base TAConst ()
   canonical-indeterminate-forms-base (TAVar x₁) ()
   canonical-indeterminate-forms-base (TAAp wt wt₁) (IAp x ind x₁) = CIFBAp (_ , _ , _ , refl , wt , wt₁ , ind , x₁ , x)
-  canonical-indeterminate-forms-base (TATAp wt) (ITAp x ind) = CIFBTAp (_ , _ , _ , refl , wt , ind , x)
+  canonical-indeterminate-forms-base (TATAp wt) (ITAp x ind) = ?
   canonical-indeterminate-forms-base (TAEHole x x₁) IEHole = CIFBEHole (_ , _ , _ , refl , x , x₁)
   canonical-indeterminate-forms-base (TANEHole x wt x₁) (INEHole x₂) = CIFBNEHole (_ , _ , _ , _ , _ , refl , wt , x₂ , x , x₁)
   canonical-indeterminate-forms-base (TACast wt x) (ICastHoleGround x₁ ind x₂) = CIFBCast (_ , refl , wt , ind , x₁)
