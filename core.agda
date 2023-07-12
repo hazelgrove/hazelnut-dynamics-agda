@@ -191,6 +191,9 @@ module core where
   Typ[ τ / a ] (τ1 ==> τ2) = ((Typ[ τ / a ] τ1) ==> (Typ[ τ / a ] τ2))
   Typ[ τ / a ] (·∀ τ') = ·∀ (Typ[ τ / (1+ a) ] τ')
 
+  -- Type substitution binds tighter than consistency (20)
+  infixl 21 Typ[_/_]_
+  
   -- bidirectional type checking judgements for hexp
   mutual
     -- synthesis
@@ -583,7 +586,7 @@ module core where
     ITLam : ∀{ x τ d1 d2 } →
             -- d2 final → -- red brackets
             ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1)
-    ITTyLam : ∀{ d t } →
+    ITTLam : ∀{ d t } →
               ((·Λ d) < t >) →> (TTyp[ t / Z ] d)
     ITCastID : ∀{d τ } →
                -- d final → -- red brackets
@@ -604,7 +607,7 @@ module core where
                ((d1 ⟨ (τ1 ==> τ2) ⇒ (τ1' ==> τ2')⟩) ∘ d2) →> ((d1 ∘ (d2 ⟨ τ1' ⇒ τ1 ⟩)) ⟨ τ2 ⇒ τ2' ⟩)
     ITTApCast : ∀{d τ τ' t } →
                -- d final → -- red brackets
-                 ·∀ τ ≠ ·∀ τ' →
+               --  ·∀ τ ≠ ·∀ τ' →
                  ((d ⟨ (·∀ τ) ⇒ (·∀ τ')⟩) < t >) →> ((d < t >)⟨ Typ[ t / Z ] τ ⇒ Typ[ t / Z ] τ' ⟩)
     ITGround : ∀{ d τ τ'} →
                -- d final → -- red brackets
