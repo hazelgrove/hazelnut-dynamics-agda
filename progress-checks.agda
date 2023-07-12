@@ -58,10 +58,6 @@ module progress-checks where
     indet-not-step (ICastArr x ind) (d0' , Step FHOuter (ITCastID) FHOuter) = x refl
     indet-not-step (ICastArr x ind) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = indet-not-step ind (_ , Step x₁ x₂ x₃)
     indet-not-step (ICastForall x ind) (d0' , Step FHOuter (ITCastID) FHOuter) = x refl
-    -- indet-not-step (ITAp x ind) (_ , Step FHOuter (IApCast) FHOuter) = x _ _ _ refl
-    indet-not-step (ICastArr x ind) (d0' , Step FHOuter (ITCastID) FHOuter) = x refl
-    indet-not-step (ICastArr x ind) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = indet-not-step ind (_ , Step x₁ x₂ x₃)
-    indet-not-step (ICastForall x ind) (_ , Step FHOuter (ITCastID) FHOuter) = x refl
     indet-not-step (ICastForall x ind) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = indet-not-step ind (_ , Step x₁ x₂ x₃)
     indet-not-step (ICastGroundHole () ind) (d' , Step FHOuter (ITCastID) FHOuter)
     indet-not-step (ICastGroundHole x ind) (d' , Step FHOuter (ITCastSucceed ()) FHOuter)
