@@ -21,8 +21,8 @@ module lemmas-progress-checks where
   indet-not-trans IEHole ()
   indet-not-trans (INEHole x) ()
   indet-not-trans (IAp x₁ () x₂) (ITLam)
-  indet-not-trans (IAp x (ICastArr x₁ ind) x₂) (ITApCast ) = x _ _ _ _ _ refl
-  indet-not-trans (ITAp x (ICastForall _ _)) (ITTApCast _) = x _ _ _ refl
+  indet-not-trans (IAp x (ICastArr x₁ ind) x₂) (ITApCast) = x _ _ _ _ _ refl
+  indet-not-trans (ITAp x (ICastForall _ _)) (ITTApCast) = x _ _ _ refl
   indet-not-trans (ICastArr x ind) (ITCastID) = x refl
   indet-not-trans (ICastForall x ind) (ITCastID) = x refl
   indet-not-trans (ICastGroundHole () ind) (ITCastID)
