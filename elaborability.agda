@@ -20,8 +20,8 @@ module elaborability where
     elaborability-synth (SAp dis wt1 m wt2)
       with elaborability-ana (ASubsume wt1 (match-consist m)) | elaborability-ana wt2
     ... | _ , _ , _ , D1 | _ , _ , _ , D2 = _ , _ , ESAp dis (elab-ana-disjoint dis D1 D2) wt1 m D1 D2
-    elaborability-synth (STAp wt m) with elaborability-ana (ASubsume wt (match-consist m))
-    ... | _ , _ , wt' = _ , _ , ESTAp wt m wt'
+    elaborability-synth (STAp wt m) with elaborability-ana (ASubsume wt (forall-match-consist m))
+    ... | _ , _ , _ , wt' = _ , _ , ESTAp wt m wt'
     elaborability-synth SEHole = _ , _ , ESEHole
     elaborability-synth (SNEHole new wt)
       with elaborability-synth wt
@@ -44,9 +44,9 @@ module elaborability where
     elaborability-ana {e = X x} (ASubsume D x₁)                  | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁
     elaborability-ana {e = ·λ x e} (ASubsume D x₁)               | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁
     elaborability-ana {e = ·λ x [ x₁ ] e} (ASubsume D x₂)        | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₂
-    elaborability-ana {e = ·Λ e} (ASubsume D x₁)                 | _ , _ , D' = {!   !} 
+    elaborability-ana {e = ·Λ e} (ASubsume D x₁)                 | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁ 
     elaborability-ana {e = e1 ∘ e2} (ASubsume D x₁)              | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁
-    elaborability-ana {e = e < τ >} (ASubsume D x₁)              | _ , _ , D' = {!   !} 
+    elaborability-ana {e = e < τ >} (ASubsume D x₁)              | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁ 
     -- the two holes are special-cased
     elaborability-ana {e = ⦇-⦈[ x ]} (ASubsume _ _ )                   | _ , _ , _  = _ , _ , _ , EAEHole
     elaborability-ana {Γ} {⦇⌜ e ⌟⦈[ x ]} (ASubsume (SNEHole new wt) x₂) | _ , _ , ESNEHole x₁ D' with elaborability-synth wt
