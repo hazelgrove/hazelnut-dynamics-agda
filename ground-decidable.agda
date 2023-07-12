@@ -5,7 +5,7 @@ module ground-decidable where
   ground-decidable : (τ : htyp) → (τ ground) + ¬(τ ground)
   ground-decidable b = Inl GBase
   ground-decidable ⦇-⦈ = Inr (λ ())
-  ground-decidable (⦇-⦈ ==> ⦇-⦈) = Inl GHole
+  ground-decidable (⦇-⦈ ==> ⦇-⦈) = Inl GArr
   ground-decidable (b ==> _) = Inr (λ ())
   ground-decidable (_ ==> b) = Inr (λ ())
   ground-decidable ((_ ==> _) ==> _) = Inr (λ ())

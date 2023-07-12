@@ -37,7 +37,8 @@ module progress-checks where
   boxedval-not-step (BVForallCast x bv) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = boxedval-not-step bv (_ , Step x₁ x₂ x₃)
   boxedval-not-step (BVHoleCast () bv) (d' , Step FHOuter (ITCastID) FHOuter)
   boxedval-not-step (BVHoleCast x bv) (d' , Step FHOuter (ITCastSucceed ()) FHOuter)
-  boxedval-not-step (BVHoleCast GHole bv) (_ , Step FHOuter (ITGround (MGArr x)) FHOuter) = x refl
+  boxedval-not-step (BVHoleCast GArr bv) (_ , Step FHOuter (ITGround (MGArr x)) FHOuter) = x refl
+  boxedval-not-step (BVHoleCast GForall bv) (_ , Step FHOuter (ITGround (MGForall x)) FHOuter) = x refl
   boxedval-not-step (BVHoleCast x bv) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = boxedval-not-step bv (_ , Step x₁ x₂ x₃)
   boxedval-not-step (BVHoleCast x x₁) (_ , Step FHOuter (ITExpand ()) FHOuter)
   boxedval-not-step (BVHoleCast x x₁) (_ , Step FHOuter (ITCastFail x₂ () x₄) FHOuter)
@@ -64,11 +65,13 @@ module progress-checks where
     indet-not-step (ICastForall x ind) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = indet-not-step ind (_ , Step x₁ x₂ x₃)
     indet-not-step (ICastGroundHole () ind) (d' , Step FHOuter (ITCastID) FHOuter)
     indet-not-step (ICastGroundHole x ind) (d' , Step FHOuter (ITCastSucceed ()) FHOuter)
-    indet-not-step (ICastGroundHole GHole ind) (_ , Step FHOuter (ITGround (MGArr x₁)) FHOuter) = x₁ refl
+    indet-not-step (ICastGroundHole GArr ind) (_ , Step FHOuter (ITGround (MGArr x₁)) FHOuter) = x₁ refl
+    indet-not-step (ICastGroundHole GForall ind) (_ , Step FHOuter (ITGround (MGForall x₁)) FHOuter) = x₁ refl
     indet-not-step (ICastGroundHole x ind) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = indet-not-step ind (_ , Step x₁ x₂ x₃)
     indet-not-step (ICastHoleGround x ind ()) (d' , Step FHOuter (ITCastID ) FHOuter)
     indet-not-step (ICastHoleGround x ind g) (d' , Step FHOuter (ITCastSucceed  x₂) FHOuter) = x _ _ refl
-    indet-not-step (ICastHoleGround x ind GHole) (_ , Step FHOuter (ITExpand (MGArr x₂)) FHOuter) = x₂ refl
+    indet-not-step (ICastHoleGround x ind GArr) (_ , Step FHOuter (ITExpand (MGArr x₂)) FHOuter) = x₂ refl
+    indet-not-step (ICastHoleGround x ind GForall) (_ , Step FHOuter (ITExpand (MGForall x₂)) FHOuter) = x₂ refl
     indet-not-step (ICastHoleGround x ind g) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = indet-not-step ind (_ , Step x₁ x₂ x₃)
     indet-not-step (ICastGroundHole x x₁) (_ , Step FHOuter (ITExpand ()) FHOuter)
     indet-not-step (ICastHoleGround x x₁ x₂) (_ , Step FHOuter (ITGround ()) FHOuter)

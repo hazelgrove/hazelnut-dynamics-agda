@@ -96,7 +96,7 @@ module progress where
   progress (TACast wt TCHole1) | I x | ⦇-⦈ = S (_ , Step FHOuter ITCastID FHOuter)
   progress (TACast wt TCHole1) | I x | τ11 ==> τ12
     with ground-decidable (τ11 ==> τ12)
-  progress (TACast wt TCHole1) | I x₁ | .⦇-⦈ ==> .⦇-⦈ | Inl GHole = I (ICastGroundHole GHole x₁)
+  progress (TACast wt TCHole1) | I x₁ | .⦇-⦈ ==> .⦇-⦈ | Inl GArr = I (ICastGroundHole GArr x₁)
   progress (TACast wt TCHole1) | I x₁ | τ11 ==> τ12 | Inr x =  S (_ , Step FHOuter (ITGround (MGArr (ground-arr-not-hole x))) FHOuter)
     -- if second type is hole
   progress (TACast wt (TCHole2 {b})) | I x
@@ -111,13 +111,13 @@ module progress where
   progress (TACast wt (TCHole2 {⦇-⦈}))| I x = S (_ , Step FHOuter ITCastID FHOuter)
   progress (TACast wt (TCHole2 {τ11 ==> τ12})) | I x
     with ground-decidable (τ11 ==> τ12)
-  progress (TACast wt (TCHole2 {.⦇-⦈ ==> .⦇-⦈})) | I x₁ | Inl GHole
+  progress (TACast wt (TCHole2 {.⦇-⦈ ==> .⦇-⦈})) | I x₁ | Inl GArr
     with canonical-indeterminate-forms-hole wt x₁
-  progress (TACast wt (TCHole2 {.⦇-⦈ ==> .⦇-⦈})) | I x | Inl GHole | CIFHEHole (_ , _ , _ , refl , _)          = I (ICastHoleGround (λ _ _ ()) x GHole)
-  progress (TACast wt (TCHole2 {.⦇-⦈ ==> .⦇-⦈})) | I x | Inl GHole | CIFHNEHole (_ , _ , _ , _ , _ , refl , _) = I (ICastHoleGround (λ _ _ ()) x GHole)
-  progress (TACast wt (TCHole2 {.⦇-⦈ ==> .⦇-⦈})) | I x | Inl GHole | CIFHAp (_ , _ , _ , refl , _ )            = I (ICastHoleGround (λ _ _ ()) x GHole)
-  progress (TACast wt (TCHole2 {.⦇-⦈ ==> .⦇-⦈})) | I x | Inl GHole | CIFHCast (_ , ._ , refl , _ , GBase , _)  = S (_ , Step FHOuter (ITCastFail GBase GHole (λ ())) FHOuter )
-  progress (TACast wt (TCHole2 {.⦇-⦈ ==> .⦇-⦈})) | I x | Inl GHole | CIFHCast (_ , ._ , refl , _ , GHole , _)  = S (_ , Step FHOuter (ITCastSucceed GHole) FHOuter)
+  progress (TACast wt (TCHole2 {.⦇-⦈ ==> .⦇-⦈})) | I x | Inl GArr | CIFHEHole (_ , _ , _ , refl , _)          = I (ICastHoleGround (λ _ _ ()) x GArr)
+  progress (TACast wt (TCHole2 {.⦇-⦈ ==> .⦇-⦈})) | I x | Inl GArr | CIFHNEHole (_ , _ , _ , _ , _ , refl , _) = I (ICastHoleGround (λ _ _ ()) x GArr)
+  progress (TACast wt (TCHole2 {.⦇-⦈ ==> .⦇-⦈})) | I x | Inl GArr | CIFHAp (_ , _ , _ , refl , _ )            = I (ICastHoleGround (λ _ _ ()) x GArr)
+  progress (TACast wt (TCHole2 {.⦇-⦈ ==> .⦇-⦈})) | I x | Inl GArr | CIFHCast (_ , ._ , refl , _ , GBase , _)  = S (_ , Step FHOuter (ITCastFail GBase GArr (λ ())) FHOuter )
+  progress (TACast wt (TCHole2 {.⦇-⦈ ==> .⦇-⦈})) | I x | Inl GArr | CIFHCast (_ , ._ , refl , _ , GArr , _)  = S (_ , Step FHOuter (ITCastSucceed GArr) FHOuter)
   progress (TACast wt (TCHole2 {τ11 ==> τ12})) | I x₁ | Inr x = S (_ , Step FHOuter (ITExpand (MGArr (ground-arr-not-hole x))) FHOuter)
     -- if both are arrows
   progress (TACast wt (TCArr {τ1} {τ2} {τ1'} {τ2'} c1 c2)) | I x
@@ -135,7 +135,7 @@ module progress where
   progress (TACast wt (TCHole1 {⦇-⦈})) | BV x₁ | Inr x = S (_ , Step FHOuter ITCastID FHOuter)
   progress (TACast wt (TCHole1 {τ1 ==> τ2})) | BV x₁ | Inr x
     with (htype-dec  (τ1 ==> τ2) (⦇-⦈ ==> ⦇-⦈))
-  progress (TACast wt (TCHole1 {.⦇-⦈ ==> .⦇-⦈})) | BV x₂ | Inr x₁ | Inl refl = BV (BVHoleCast GHole x₂)
+  progress (TACast wt (TCHole1 {.⦇-⦈ ==> .⦇-⦈})) | BV x₂ | Inr x₁ | Inl refl = BV (BVHoleCast GArr x₂)
   progress (TACast wt (TCHole1 {τ1 ==> τ2})) | BV x₂ | Inr x₁ | Inr x = S (_ , Step FHOuter (ITGround (MGArr x)) FHOuter)
     -- if right is hole
   progress {τ = τ} (TACast wt TCHole2) | BV x
