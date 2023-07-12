@@ -33,6 +33,17 @@ module lemmas-consistency where
   ~sym (TCVar) = TCVar
   ~sym (TCForall p) = TCForall (~sym p)
 
+  -- type substitution preserves consistency
+  ~Typ[] : {t1 t2 t : htyp} {n : Nat} → t1 ~ t2 → Typ[ t / n ] t1 ~ Typ[ t / n ] t2
+  ~Typ[] TCBase = TCBase
+  ~Typ[] TCHole1 = TCHole1
+  ~Typ[] TCHole2 = TCHole2
+  ~Typ[] {n = a} (TCVar {a = a'}) with natEQ a a'
+  ... | Inl Refl = ~refl
+  ... | Inr ne = ~refl
+  ~Typ[] (TCArr x x') = TCArr (~Typ[] x) (~Typ[] x')
+  ~Typ[] (TCForall x) = TCForall (~Typ[] x)
+  
   -- type consistency isn't transitive
   not-trans : ((t1 t2 t3 : htyp) → t1 ~ t2 → t2 ~ t3 → t1 ~ t3) → ⊥
   not-trans t with t (b ==> b) ⦇-⦈ b TCHole1 TCHole2
