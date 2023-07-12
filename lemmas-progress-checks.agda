@@ -28,11 +28,11 @@ module lemmas-progress-checks where
   indet-not-trans (ICastGroundHole () ind) (ITCastID)
   indet-not-trans (ICastGroundHole x ind) (ITCastSucceed ())
   indet-not-trans (ICastGroundHole GHole ind) (ITGround (MGArr x)) = x refl
-  indet-not-trans (ICastGroundHole x x₁) (ITGround (MGForall x₂)) = {!   !}
+  indet-not-trans (ICastGroundHole GForall x₁) (ITGround (MGForall x₂)) = x₂ refl
   indet-not-trans (ICastHoleGround x ind ()) (ITCastID)
   indet-not-trans (ICastHoleGround x ind x₁) (ITCastSucceed x₂) = x _ _ refl
   indet-not-trans (ICastHoleGround x ind GHole) (ITExpand (MGArr x₂)) = x₂ refl
-  indet-not-trans (ICastHoleGround x x₁ x₂) (ITExpand (MGForall x₃)) = {!   !}
+  indet-not-trans (ICastHoleGround x x₁ GForall) (ITExpand (MGForall x₃)) = x₃ refl
   indet-not-trans (ICastGroundHole x a) (ITExpand ())
   indet-not-trans (ICastHoleGround x a x₁) (ITGround ())
   indet-not-trans (ICastGroundHole x x₁) (ITCastFail x₂ () x₄)
