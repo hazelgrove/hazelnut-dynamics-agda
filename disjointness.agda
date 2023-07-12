@@ -32,7 +32,7 @@ module disjointness where
                               Δ ## (■ (u , Γ' , τ'))
     elab-new-disjoint-ana hn (EASubsume x x₁ x₂ x₃) = elab-new-disjoint-synth hn x₂
     elab-new-disjoint-ana (HNLam1 hn) (EALam x₁ x₂ ex) = elab-new-disjoint-ana hn ex
-    elab-new-disjoint-ana (HNTLam hn) (EATLam x₁ x₂) = elab-new-disjoint-ana hn x₂
+    -- elab-new-disjoint-ana (HNTLam hn) (EATLam x₁ x₂) = elab-new-disjoint-ana hn x₂
     elab-new-disjoint-ana (HNHole x) EAEHole = disjoint-singles x
     elab-new-disjoint-ana (HNNEHole x hn) (EANEHole x₁ x₂) = disjoint-parts (elab-new-disjoint-synth hn x₂) (disjoint-singles x)
 
@@ -62,7 +62,7 @@ module disjointness where
                                 Δ ## (■ (u , Γ' , τ')) →
                                 hole-name-new e u
     elab-disjoint-new-ana (EALam x₁ x₂ ex) disj = HNLam1 (elab-disjoint-new-ana ex disj)
-    elab-disjoint-new-ana (EATLam x₁ x₂) x = HNTLam (elab-disjoint-new-ana x₂ x)
+    -- elab-disjoint-new-ana (EATLam x₁ x₂) x = HNTLam (elab-disjoint-new-ana x₂ x)
     elab-disjoint-new-ana (EASubsume x x₁ x₂ x₃) disj = elab-disjoint-new-synth x₂ disj
     elab-disjoint-new-ana EAEHole disj = HNHole (singles-notequal disj)
     elab-disjoint-new-ana (EANEHole {Δ = Δ} x x₁) disj = HNNEHole (singles-notequal (disjoint-union2 {Γ1 = Δ} disj))
@@ -145,7 +145,7 @@ module disjointness where
                     Γ , Θ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                     dom-eq Δ H
     holes-delta-ana (HLam1 h) (EALam x₁ x₂ exp) = holes-delta-ana h exp
-    holes-delta-ana (HTLam h) (EATLam x₁ x₂) = holes-delta-ana h x₂
+    -- holes-delta-ana (HTLam h) (EATLam x₁ x₂) = holes-delta-ana h x₂
     holes-delta-ana h (EASubsume x x₁ x₂ x₃) = holes-delta-synth h x₂
     holes-delta-ana (HEHole {u = u}) EAEHole = dom-single u
     holes-delta-ana (HNEHole {u = u} h) (EANEHole x x₁) =

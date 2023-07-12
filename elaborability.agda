@@ -55,5 +55,5 @@ module elaborability where
     elaborability-ana (ALam x₁ m wt)
       with elaborability-ana wt
     ... | _ , _ , _ , D' = _ , _ , _ , EALam x₁ m D'
-    elaborability-ana (ATLam m wt) with elaborability-ana wt
-    ... | _ , _ , _ , D' = _ , _ , _ , EATLam m D'
+    -- elaborability-ana (ATLam m wt) with elaborability-ana wt
+    -- ... | _ , _ , _ , D' = _ , _ , _ , (EASubsume (λ _ ()) (λ _ _ ()) (ESTLam {!   !}) {!   !})

@@ -16,9 +16,9 @@ module type-assignment-unicity where
   type-assignment-unicity (TALam _ d1) (TALam _ d2)
     with type-assignment-unicity d1 d2
   ... | refl = refl
-  type-assignment-unicity (TATLam d1) (TATLam d2)
-    with type-assignment-unicity d1 d2
-  ... | refl = refl
+  -- type-assignment-unicity (TATLam d1) (TATLam d2)
+  --   with type-assignment-unicity d1 d2
+  -- ... | refl = refl
   type-assignment-unicity (TAAp x x₁) (TAAp y y₁)
     with type-assignment-unicity x y
   ... | refl = refl

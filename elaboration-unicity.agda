@@ -27,7 +27,9 @@ module elaboration-unicity where
     ... | refl , refl , refl = refl , refl , refl
     elaboration-unicity-synth (ESTAp x1 m1 d1) (ESTAp x2 m2 d2)
       with synthunicity x1 x2 
-    ... | refl = {!   !}
+    ... | refl with forall-match-unicity m1 m2
+    ... | refl with elaboration-unicity-ana d1 d2 
+    ... | refl , refl , refl = refl , refl , refl
     elaboration-unicity-synth ESEHole ESEHole = refl , refl , refl
     elaboration-unicity-synth (ESNEHole _ d1) (ESNEHole _ d2)
       with elaboration-unicity-synth d1 d2
@@ -44,11 +46,14 @@ module elaboration-unicity where
       with match-unicity m m2
     ... | refl with elaboration-unicity-ana D1 D2
     ... | refl , refl , refl = refl , refl , refl
-    elaboration-unicity-ana (EATLam m D1) (EATLam m2 D2) = {!   !}
-    elaboration-unicity-ana (EATLam m D1) (EASubsume x₁ x₂ x₃ x₄) = {!   !}
+    -- elaboration-unicity-ana (EATLam m D1) (EATLam m2 D2)
+    --   with forall-match-unicity m m2
+    -- ... | refl with elaboration-unicity-ana D1 D2
+    -- ... | refl , refl , refl = refl , refl , refl
     elaboration-unicity-ana (EALam x₁ m D1) (EASubsume x₂ x₃ () x₅)
     elaboration-unicity-ana (EASubsume x₁ x₂ () x₄) (EALam x₅ m D2)
-    elaboration-unicity-ana (EASubsume x x₁ x₃ x₄) (EATLam x₅ x₆) = {!   !}
+    -- elaboration-unicity-ana (EATLam m D1) (EASubsume x x₁ (ESTLam D2) x₄) = {!   !}
+    -- elaboration-unicity-ana (EASubsume x x₁ (ESTLam D2) x₄) (EATLam m D1) = {!   !}
     elaboration-unicity-ana (EASubsume x x₁ x₂ x₃) (EASubsume x₄ x₅ x₆ x₇)
       with elaboration-unicity-synth x₂ x₆
     ... | refl , refl , refl = refl , refl , refl
@@ -60,3 +65,4 @@ module elaboration-unicity where
     elaboration-unicity-ana (EANEHole _ x) (EANEHole _ x₁)
       with elaboration-unicity-synth x x₁
     ... | refl , refl , refl = refl , refl , refl
+ 

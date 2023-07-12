@@ -24,7 +24,7 @@ module elaboration-generality where
                           Γ , Θ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                           Γ , Θ ⊢ e <= τ
     elaboration-generality-ana (EALam apt m ex) = ALam apt m (elaboration-generality-ana ex)
-    elaboration-generality-ana (EATLam m ex) = ATLam m (elaboration-generality-ana ex)
+    -- elaboration-generality-ana (EATLam m ex) = ATLam m (elaboration-generality-ana ex)
     elaboration-generality-ana (EASubsume x x₁ x₂ x₃) = ASubsume (elaboration-generality-synth x₂) x₃
     elaboration-generality-ana EAEHole = ASubsume SEHole TCHole1
     elaboration-generality-ana (EANEHole dis x) = ASubsume (SNEHole (elab-disjoint-new-synth x dis) (elaboration-generality-synth x)) TCHole1
