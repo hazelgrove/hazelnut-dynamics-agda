@@ -23,7 +23,7 @@ module weakening where
     weaken-ta-Δ1 disj (TALam x₁ wt) = TALam x₁ (weaken-ta-Δ1 disj wt)
     weaken-ta-Δ1 disj (TATLam wt) = TATLam (weaken-ta-Δ1 disj wt)
     weaken-ta-Δ1 disj (TAAp wt wt₁) = TAAp (weaken-ta-Δ1 disj wt) (weaken-ta-Δ1 disj wt₁)
-    weaken-ta-Δ1 disj (TATAp wt) = TATAp (weaken-ta-Δ1 disj wt)
+    weaken-ta-Δ1 disj (TATAp wt eq) = TATAp (weaken-ta-Δ1 disj wt) eq
     weaken-ta-Δ1 {Δ1} {Δ2} {Γ} disj (TAEHole {u = u} {Γ' = Γ'} x x₁) = TAEHole (x∈∪l Δ1 Δ2 u _ x ) (weaken-subst-Δ disj x₁)
     weaken-ta-Δ1 {Δ1} {Δ2} {Γ} disj (TANEHole {Γ' = Γ'} {u = u} x wt x₁) = TANEHole (x∈∪l Δ1 Δ2 u _ x) (weaken-ta-Δ1 disj wt) (weaken-subst-Δ disj x₁)
     weaken-ta-Δ1 disj (TACast wt x) = TACast (weaken-ta-Δ1 disj wt) x
@@ -89,7 +89,7 @@ module weakening where
     weaken-ta {Γ = Γ} {τ' = τ'} (FLam x₁ x₃) (TALam {x = y} x₄ wt) | Inr x₂ = TALam (apart-extend1 Γ (flip x₁) x₄) (exchange-ta-Γ {Γ = Γ} (flip x₁) (weaken-ta x₃ wt))
     weaken-ta (FTLam frsh) (TATLam x₁) = TATLam (weaken-ta frsh x₁)
     weaken-ta (FAp frsh frsh₁) (TAAp wt wt₁) = TAAp (weaken-ta frsh wt) (weaken-ta frsh₁ wt₁)
-    weaken-ta (FTAp frsh) (TATAp x₁) = TATAp (weaken-ta frsh x₁)
+    weaken-ta (FTAp frsh) (TATAp x₁ eq) = TATAp (weaken-ta frsh x₁) eq
     weaken-ta (FHole x₁) (TAEHole x₂ x₃) = TAEHole x₂ (weaken-subst-Γ x₁ x₃)
     weaken-ta (FNEHole x₁ frsh) (TANEHole x₂ wt x₃) = TANEHole x₂ (weaken-ta frsh wt) (weaken-subst-Γ x₁ x₃)
     weaken-ta (FCast frsh) (TACast wt x₁) = TACast (weaken-ta frsh wt) x₁
@@ -110,7 +110,7 @@ module weakening where
     weaken-ta-typ (TALam x x₁) = TALam x (weaken-ta-typ x₁)
     weaken-ta-typ (TATLam x) = TATLam (weaken-ta-typ x)
     weaken-ta-typ (TAAp x x₁) = TAAp (weaken-ta-typ x) (weaken-ta-typ x₁)
-    weaken-ta-typ (TATAp x) = TATAp (weaken-ta-typ x)
+    weaken-ta-typ (TATAp x eq) = TATAp (weaken-ta-typ x) eq
     weaken-ta-typ (TAEHole x x₁) = TAEHole x (weaken-subst-Θ x₁)
     weaken-ta-typ (TANEHole x x₁ x₂) = TANEHole x (weaken-ta-typ x₁) (weaken-subst-Θ x₂)
     weaken-ta-typ (TACast x x₁) = TACast (weaken-ta-typ x) x₁
