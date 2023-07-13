@@ -107,6 +107,14 @@ module core where
     TCForall : ∀{τ τ'} →
               τ ~ τ' →
               ·∀ τ ~ ·∀ τ'
+  
+  -- well-formedness
+  data _⊢_wf : typctx -> htyp -> Set where
+    WFVar : ∀{Γ a} → a < typctx.n Γ → Γ ⊢ T a wf
+    WFBase : ∀{Γ} -> Γ ⊢ b wf
+    WFHole : ∀{Γ} -> Γ ⊢ ⦇-⦈ wf
+    WFArr : ∀{Γ t1 t2} -> Γ ⊢ t1 wf -> Γ ⊢  t2 wf -> Γ ⊢ t1 ==> t2 wf
+    WFForall : ∀{Γ t} -> [ Γ newtyp] ⊢ t wf -> Γ ⊢ ·∀ t wf
 
   -- type inconsistency
   _~̸_ : (t1 t2 : htyp) → Set
@@ -385,7 +393,7 @@ module core where
              Δ , Γ , Θ ⊢ d1 ∘ d2 :: τ
       TATAp : ∀ {Δ Γ Θ d τ1 τ2} → 
                 Δ , Γ , Θ ⊢ d :: (·∀ τ2) →
-                Δ , Γ , Θ ⊢ (d < τ1 >) :: (Typ[ τ1 / Z ] τ2)
+                Δ , {- CTyp [ ] -} Γ , Θ ⊢ (d < τ1 >) :: (Typ[ τ1 / Z ] τ2)
       TAEHole : ∀{Δ Γ Θ σ u Γ' τ} →
                 (u , (Γ' , τ)) ∈ Δ →
                 Δ , Γ , Θ ⊢ σ :s: Γ' →
@@ -764,3 +772,6 @@ module core where
                            → binders-unique (d ⟨ τ1 ⇒ τ2 ⟩)
       BUFailedCast : ∀{d τ1 τ2} → binders-unique d
                                  → binders-unique (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
+    
+    no-free-tvars : tctx → Set
+    no-free-tvars Γ = ∀{x y} -> (x , y) ∈ Γ → ~∅ ⊢ y wf
