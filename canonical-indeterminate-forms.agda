@@ -113,6 +113,22 @@ module canonical-indeterminate-forms where
          ((τ3 τ4 τ3' τ4' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨ τ3 ==> τ4 ⇒ τ3' ==> τ4' ⟩))
         )
         → cif-arr Δ d τ1 τ2
+    CIFATApArr : ∀ {Δ d τ1 τ2} →
+      Σ[ d1 ∈ ihexp ] Σ[ τ ∈ htyp ] Σ[ τ1 ∈ htyp ] Σ[ τ2 ∈ htyp ]
+        ((d == d1 < τ >) ×
+         (Δ , ∅ , ~∅ ⊢ d1 :: ·∀ (τ1 ==> τ2)) ×
+         (d1 indet) ×
+         ((τ3 τ3' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ τ3) ⇒ (·∀ τ3')⟩))
+        )
+        → cif-arr Δ d τ1 τ2
+    CIFATApId : ∀ {Δ d τ1 τ2} →
+      Σ[ d1 ∈ ihexp ] Σ[ τ1 ∈ htyp ] Σ[ τ2 ∈ htyp ]
+        ((d == d1 < τ1 ==> τ2 >) ×
+         (Δ , ∅ , ~∅ ⊢ d1 :: ·∀ (T Z)) ×
+         (d1 indet) ×
+         ((τ3 τ3' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ τ3) ⇒ (·∀ τ3')⟩))
+        )
+        → cif-arr Δ d τ1 τ2
     CIFACast : ∀{d Δ τ1 τ2} →
       Σ[ d' ∈ ihexp ] Σ[ τ1 ∈ htyp ] Σ[ τ2 ∈ htyp ] Σ[ τ1' ∈ htyp ] Σ[ τ2' ∈ htyp ]
         ((d == d' ⟨ (τ1' ==> τ2') ⇒ (τ1 ==> τ2) ⟩) ×
@@ -149,6 +165,8 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-arr (TAVar x₁) ()
   canonical-indeterminate-forms-arr (TALam _ wt) ()
   canonical-indeterminate-forms-arr (TAAp wt wt₁) (IAp x ind x₁) = CIFAAp (_ , _ , _ , _ , _ , refl , wt , wt₁ , ind , x₁ , x)
+  canonical-indeterminate-forms-arr (TATAp {τ1 = τ1} {τ2 = τ3 ==> τ4} wt eq) (ITAp x ind) rewrite eq = CIFATApArr ( _ , τ1 , τ3 , τ4 , refl , wt , ind , x)
+  canonical-indeterminate-forms-arr (TATAp {τ2 = T Z} wt eq) (ITAp x ind) rewrite eq = CIFATApId ( _ , _ , _ , refl , wt , ind , x )
   canonical-indeterminate-forms-arr (TAEHole x x₁) IEHole = CIFAEHole (_ , _ , _ , refl , x , x₁)
   canonical-indeterminate-forms-arr (TANEHole x wt x₁) (INEHole x₂) = CIFANEHole (_ , _ , _ , _ , _ , refl , wt , x₂ , x , x₁)
   canonical-indeterminate-forms-arr (TACast wt x) (ICastArr x₁ ind) = CIFACast (_ , _ , _ , _ , _ , refl , wt , ind , x₁)
@@ -185,6 +203,22 @@ module canonical-indeterminate-forms where
          ((τ3 τ4 τ3' τ4' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨ τ3 ==> τ4 ⇒ τ3' ==> τ4' ⟩))
         )
       → cif-hole Δ d
+    CIFHTApHole : ∀ {Δ d} →
+      Σ[ d1 ∈ ihexp ] Σ[ τ ∈ htyp ]
+        ((d == d1 < τ >) ×
+         (Δ , ∅ , ~∅ ⊢ d1 :: ·∀ ⦇-⦈) ×
+         (d1 indet) ×
+         ((τ1 τ1' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ τ1) ⇒ (·∀ τ1')⟩))
+        )
+        → cif-hole Δ d
+    CIFHTApId : ∀ {Δ d} →
+      Σ[ d1 ∈ ihexp ] Σ[ τ ∈ htyp ]
+        ((d == d1 < ⦇-⦈ >) ×
+         (Δ , ∅ , ~∅ ⊢ d1 :: ·∀ (T Z)) ×
+         (d1 indet) ×
+         ((τ1 τ1' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ τ1) ⇒ (·∀ τ1')⟩))
+        )
+        → cif-hole Δ d
     CIFHCast : ∀ {Δ d} →
       Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ]
         ((d == d' ⟨ τ' ⇒ ⦇-⦈ ⟩) ×
@@ -200,7 +234,8 @@ module canonical-indeterminate-forms where
                                        cif-hole Δ d
   canonical-indeterminate-forms-hole (TAVar x₁) ()
   canonical-indeterminate-forms-hole (TAAp wt wt₁) (IAp x ind x₁) = CIFHAp (_ , _ , _ , refl , wt , wt₁ , ind , x₁ , x)
-  canonical-indeterminate-forms-hole (TATAp wt wt₁) (ITAp x ind) = {!   !}
+  canonical-indeterminate-forms-hole (TATAp {τ2 = ⦇-⦈} wt wt₁) (ITAp x ind) = CIFHTApHole ( _ , (_ , (refl , (wt , ind , x))) )
+  canonical-indeterminate-forms-hole (TATAp {τ1 = τ1} {τ2 = T Z} wt eq) (ITAp x ind) rewrite eq = CIFHTApId ( _ , (τ1 , (refl , (wt , ind , x))) )
   canonical-indeterminate-forms-hole (TAEHole x x₁) IEHole = CIFHEHole (_ , _ , _ , refl , x , x₁)
   canonical-indeterminate-forms-hole (TANEHole x wt x₁) (INEHole x₂) = CIFHNEHole (_ , _ , _ , _ , _ , refl , wt , x₂ , x , x₁)
   canonical-indeterminate-forms-hole (TACast wt x) (ICastGroundHole x₁ ind) = CIFHCast (_ , _ , refl , wt , x₁ , ind)
@@ -211,35 +246,13 @@ module canonical-indeterminate-forms where
                                            Δ , ∅ , ~∅ ⊢ d :: τ →
                                            d indet →
                                            τ ≠ b →
+                                           ((n : Nat) → τ ≠ (T n)) →
                                            ((τ1 : htyp) (τ2 : htyp) → τ ≠ (τ1 ==> τ2)) →
                                            τ ≠ ⦇-⦈ →
+                                           ((τ1 : htyp)  → τ ≠ (·∀ τ1)) →
                                            ⊥
-  canonical-indeterminate-forms-coverage {τ = b} n1 n2 nb na nh = nb refl
-  canonical-indeterminate-forms-coverage {τ = τ ==> τ₁} n1 n2 nb na nh = na τ τ₁ refl
-  canonical-indeterminate-forms-coverage {τ = ⦇-⦈} n1 n2 nb na nh = nh refl
-  canonical-indeterminate-forms-coverage {τ = T x₅} x x₁ x₂ x₃ x₄ = {!   !}
-  canonical-indeterminate-forms-coverage {τ = ·∀ τ} x x₁ x₂ x₃ x₄ = {!   !}
-  -- canonical-indeterminate-forms-coverage TAConst () nb na nh
-  -- canonical-indeterminate-forms-coverage (TAVar x₁) () nb na nh
-  -- canonical-indeterminate-forms-coverage (TALam _ wt) () nb na nh
-  -- canonical-indeterminate-forms-coverage {τ = b} (TAAp wt wt₁) (IAp x ind x₁) nb na nh = nb refl
-  -- canonical-indeterminate-forms-coverage {τ = ⦇-⦈} (TAAp wt wt₁) (IAp x ind x₁) nb na nh = nh refl
-  -- canonical-indeterminate-forms-coverage {τ = τ ==> τ₁} (TAAp wt wt₁) (IAp x ind x₁) nb na nh = na τ τ₁ refl
-  -- canonical-indeterminate-forms-coverage {τ = ·∀ τ} (TAAp wt wt₁) (IAp x ind x₁) nb na nh = {!   !}
-  -- canonical-indeterminate-forms-coverage {τ = τ} (TATAp wt wt₁) (ITAp x ind) nb na nh = {!   !}
-  -- canonical-indeterminate-forms-coverage {τ = b} (TAEHole x x₁) IEHole nb na nh = nb refl
-  -- canonical-indeterminate-forms-coverage {τ = ⦇-⦈} (TAEHole x x₁) IEHole nb na nh = nh refl
-  -- canonical-indeterminate-forms-coverage {τ = τ ==> τ₁} (TAEHole x x₁) IEHole nb na nh = na τ τ₁ refl
-  -- canonical-indeterminate-forms-coverage {τ = ·∀ τ} (TAEHole x x₁) IEHole nb na nh = {!   !}
-  -- canonical-indeterminate-forms-coverage {τ = b} (TANEHole x wt x₁) (INEHole x₂) nb na nh = nb refl
-  -- canonical-indeterminate-forms-coverage {τ = ⦇-⦈} (TANEHole x wt x₁) (INEHole x₂) nb na nh = nh refl
-  -- canonical-indeterminate-forms-coverage {τ = τ ==> τ₁} (TANEHole x wt x₁) (INEHole x₂) nb na nh = na τ τ₁ refl
-  -- canonical-indeterminate-forms-coverage {τ = ·∀ τ} (TANEHole x wt x₁) (INEHole x₂) nb na nh = {!   !}
-  -- canonical-indeterminate-forms-coverage (TACast wt x) (ICastArr x₁ ind) nb na nh = na _ _ refl
-  -- canonical-indeterminate-forms-coverage (TACast wt x) (ICastGroundHole x₁ ind) nb na nh = nh refl
-  -- canonical-indeterminate-forms-coverage {τ = b} (TACast wt x) (ICastHoleGround x₁ ind x₂) nb na nh = nb refl
-  -- canonical-indeterminate-forms-coverage {τ = ⦇-⦈} (TACast wt x) (ICastHoleGround x₁ ind x₂) nb na nh = nh refl
-  -- canonical-indeterminate-forms-coverage {τ = τ ==> τ₁} (TACast wt x) (ICastHoleGround x₁ ind x₂) nb na nh = na τ τ₁ refl
-  -- canonical-indeterminate-forms-coverage {τ = b} (TAFailedCast x x₁ x₂ x₃) (IFailedCast x₄ x₅ x₆ x₇) = λ z _ _₁ → z refl
-  -- canonical-indeterminate-forms-coverage {τ = ⦇-⦈} (TAFailedCast x x₁ x₂ x₃) (IFailedCast x₄ x₅ x₆ x₇) = λ _ _₁ z → z refl
-  -- canonical-indeterminate-forms-coverage {τ = τ ==> τ₁} (TAFailedCast x x₁ x₂ x₃) (IFailedCast x₄ x₅ x₆ x₇) = λ _ z _₁ → z τ τ₁ refl
+  canonical-indeterminate-forms-coverage {τ = b} _ _ nb nv na nf nh = nb refl
+  canonical-indeterminate-forms-coverage {τ = T x} _ _ nb nv na nf nh = nv x refl
+  canonical-indeterminate-forms-coverage {τ = ⦇-⦈} _ _ nb nv na nf nh = nf refl
+  canonical-indeterminate-forms-coverage {τ = τ ==> τ₁} _ _ nb nv na nf nh = na τ τ₁ refl
+  canonical-indeterminate-forms-coverage {τ = ·∀ τ} _ _ nb nv na nf nh = nh τ refl
