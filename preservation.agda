@@ -26,7 +26,7 @@ module preservation where
   ... | refl = D3
   wt-different-fill (FHAp1 eps) (TAAp D1 D2) D3 D4 (FHAp1 D5) = TAAp (wt-different-fill eps D1 D3 D4 D5) D2
   wt-different-fill (FHAp2 eps) (TAAp D1 D2) D3 D4 (FHAp2 D5) = TAAp D1 (wt-different-fill eps D2 D3 D4 D5)
-  wt-different-fill (FHTAp eps) (TATAp D1) D2 D3 (FHTAp D4) = TATAp (wt-different-fill eps D1 D2 D3 D4)
+  wt-different-fill (FHTAp eps) (TATAp D1 eq) D2 D3 (FHTAp D4) = TATAp (wt-different-fill eps D1 D2 D3 D4) eq
   wt-different-fill (FHNEHole eps) (TANEHole x D1 x₁) D2 D3 (FHNEHole D4) = TANEHole x (wt-different-fill eps D1 D2 D3 D4) x₁
   wt-different-fill (FHCast eps) (TACast D1 x) D2 D3 (FHCast D4) = TACast (wt-different-fill eps D1 D2 D3 D4) x
   wt-different-fill (FHFailedCast x) (TAFailedCast y x₁ x₂ x₃) D3 D4 (FHFailedCast eps) = TAFailedCast (wt-different-fill x y D3 D4 eps) x₁ x₂ x₃
@@ -46,8 +46,8 @@ module preservation where
   wt-filling (TAAp ta ta₁) (FHAp1 eps) = wt-filling ta eps
   wt-filling (TAAp ta ta₁) (FHAp2 eps) = wt-filling ta₁ eps
 
-  wt-filling (TATAp ta) FHOuter = _ , TATAp ta
-  wt-filling (TATAp ta) (FHTAp eps) = wt-filling ta eps
+  wt-filling (TATAp ta eq) FHOuter = _ , TATAp ta eq
+  wt-filling (TATAp ta eq) (FHTAp eps) = wt-filling ta eps
 
   wt-filling (TAEHole x x₁) FHOuter = _ , TAEHole x x₁
   wt-filling (TANEHole x ta x₁) FHOuter = _ , TANEHole x ta x₁
