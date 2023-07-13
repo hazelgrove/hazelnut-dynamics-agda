@@ -251,7 +251,7 @@ module canonical-indeterminate-forms where
                                            τ ≠ ⦇-⦈ →
                                            ((τ1 : htyp)  → τ ≠ (·∀ τ1)) →
                                            ⊥
-  canonical-indeterminate-forms-coverage {τ = b} _ _ nb nv na nf nh = nb refl
+  canonical-indeterminate-forms-coverage {τ = b} _ _ nb _ na nf nh = nb refl
   canonical-indeterminate-forms-coverage {τ = T x} _ _ nb nv na nf nh = nv x refl
   canonical-indeterminate-forms-coverage {τ = ⦇-⦈} _ _ nb nv na nf nh = nf refl
   canonical-indeterminate-forms-coverage {τ = τ ==> τ₁} _ _ nb nv na nf nh = na τ τ₁ refl
