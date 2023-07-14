@@ -208,6 +208,7 @@ module core where
     data _,_⊢_=>_ : (Γ : tctx) (Θ : typctx) (e : hexp) (τ : htyp) → Set where
       SConst  : {Γ : tctx} {Θ : typctx} → Γ , Θ ⊢ c => b
       SAsc    : {Γ : tctx} {Θ : typctx} {e : hexp} {τ : htyp} →
+                 Θ ⊢ τ wf
                  Γ , Θ ⊢ e <= τ →
                  Γ , Θ ⊢ (e ·: τ) => τ
       SVar    : {Γ : tctx} {Θ : typctx} {τ : htyp} {x : Nat} →
@@ -226,12 +227,14 @@ module core where
                  Γ , Θ ⊢ ⦇⌜ e ⌟⦈[ u ] => ⦇-⦈
       SLam    : {Γ : tctx} {Θ : typctx} {e : hexp} {τ1 τ2 : htyp} {x : Nat} →
                  x # Γ →
+                 Θ ⊢ τ1 wf
                  (Γ ,, (x , τ1)) , Θ ⊢ e => τ2 →
                  Γ , Θ ⊢ ·λ x [ τ1 ] e => τ1 ==> τ2
       STLam   : {Γ : tctx} {Θ : typctx} {e : hexp} {τ : htyp} → 
                 Γ , [ Θ newtyp] ⊢ e => τ → 
                 Γ , Θ ⊢ (·Λ e) => (·∀ τ)
       STAp    : {Γ : tctx} {Θ : typctx} {e : hexp} {τ1 τ2 τ3 : htyp} → 
+                Θ ⊢ τ1 wf
                 Γ , Θ ⊢ e => τ2 →
                 τ2 ▸forall (·∀ τ3) →
                 Γ , Θ ⊢ (e < τ1 >) => (Typ[ τ1 / Z ] τ3)
@@ -306,6 +309,7 @@ module core where
                          Γ , Θ ⊢ X x ⇒ τ ~> X x ⊣ ∅
       ESLam   : ∀{Γ Θ x τ1 τ2 e d Δ} →
                      (x # Γ) →
+                     Θ ⊢ τ1 wf
                      (Γ ,, (x , τ1)) , Θ ⊢ e ⇒ τ2 ~> d ⊣ Δ →
                       Γ , Θ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ Δ
       ESTLam  : ∀{Γ Θ e τ d Δ} → 
@@ -320,6 +324,7 @@ module core where
               Γ , Θ ⊢ e2 ⇐ τ2 ~> d2 :: τ2' ⊣ Δ2 →
               Γ , Θ ⊢ e1 ∘ e2 ⇒ τ ~> (d1 ⟨ τ1' ⇒ τ2 ==> τ ⟩) ∘ (d2 ⟨ τ2' ⇒ τ2 ⟩) ⊣ (Δ1 ∪ Δ2)
       ESTAp : ∀{Γ Θ e τ1 τ2 τ3 τ2' d Δ} → 
+                Θ ⊢ τ1 wf
                 Γ , Θ ⊢ e => τ2 →
                 τ2 ▸forall (·∀ τ3) →
                 Γ , Θ ⊢ e ⇐ (·∀ τ3) ~> d :: τ2' ⊣ Δ →
@@ -331,6 +336,7 @@ module core where
                  Γ , Θ ⊢ e ⇒ τ ~> d ⊣ Δ →
                  Γ , Θ ⊢ ⦇⌜ e ⌟⦈[ u ] ⇒ ⦇-⦈ ~> ⦇⌜ d ⌟⦈⟨ u , Id Γ  ⟩ ⊣ (Δ ,, u :: ⦇-⦈ [ Γ ])
       ESAsc : ∀ {Γ Θ e τ d τ' Δ} →
+                 Θ ⊢ τ wf
                  Γ , Θ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                  Γ , Θ ⊢ (e ·: τ) ⇒ τ ~> d ⟨ τ' ⇒ τ ⟩ ⊣ Δ
 
@@ -382,6 +388,7 @@ module core where
       TAVar : ∀{Δ Γ Θ x τ} → (x , τ) ∈ Γ → Δ , Γ , Θ ⊢ X x :: τ
       TALam : ∀{ Δ Γ Θ x τ1 d τ2} →
               x # Γ →
+              Θ ⊢ τ1 wf
               Δ , (Γ ,, (x , τ1)) , Θ ⊢ d :: τ2 →
               Δ , Γ , Θ ⊢ ·λ x [ τ1 ] d :: (τ1 ==> τ2)
       TATLam : ∀{ Δ Γ Θ d τ} →
@@ -392,6 +399,7 @@ module core where
              Δ , Γ , Θ ⊢ d2 :: τ1 →
              Δ , Γ , Θ ⊢ d1 ∘ d2 :: τ
       TATAp : ∀ {Δ Γ Θ d τ1 τ2 τ3} → 
+                Θ ⊢ τ1 wf
                 Δ , Γ , Θ ⊢ d :: (·∀ τ2) →
                 Typ[ τ1 / Z ] τ2 == τ3 → 
                 Δ , {- CTyp [ ] -} Γ , Θ ⊢ (d < τ1 >) :: τ3
