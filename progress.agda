@@ -178,7 +178,7 @@ module progress where
   progress (TACast wt TCHole2) | BV x₂ | _ , _ , refl , _ , _ | Inr x₁ | Inr x
     with notground x
   progress (TACast wt TCHole2) | BV x₃ | _ , _ , refl , _ , _ | Inr _ | Inr _ | Inl refl = S (_ , Step FHOuter ITCastID FHOuter)
-  progress (TACast wt TCHole2) | BV x₃ | _ , _ , refl , _ , _ | Inr _ | Inr x | Inr  (Inl (_ , refl)) = {!   !} -- S(_ , Step FHOuter (ITExpand (MGArr (ground-arr-not-hole x))) FHOuter )
+  progress (TACast wt TCHole2) | BV x₃ | _ , _ , refl , gnd , _ | Inr _ | Inr x | Inr (Inl (_ , refl)) = S(_ , Step FHOuter (ITCastFail gnd {!   !} {!   !}) FHOuter ) -- S(_ , Step FHOuter (ITExpand (MGArr (ground-arr-not-hole x))) FHOuter )
   progress (TACast wt TCHole2) | BV x₃ | _ , _ , refl , _ , _ | Inr _ | Inr x | Inr (Inr (Inl (_ , _ , refl))) = S(_ , Step FHOuter (ITExpand (MGArr (ground-arr-not-hole x))) FHOuter )
   progress (TACast wt TCHole2) | BV x₃ | _ , _ , refl , _ , _ | Inr _ | Inr x | Inr (Inr (Inr (_ , refl))) = {!   !} -- S(_ , Step FHOuter (ITExpand (MGArr (ground-arr-not-hole x))) FHOuter )
     -- if both arrows
