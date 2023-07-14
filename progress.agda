@@ -24,6 +24,9 @@ module progress where
     I  : ∀{d Δ} → d indet → ok d Δ
     BV : ∀{d Δ} → d boxedval → ok d Δ
 
+  forall-lemma : ∀{τ1 τ2} → (τ1 == τ2) → ·∀ τ1 == ·∀ τ2
+  forall-lemma e rewrite e = refl 
+
   progress : {Δ : hctx} {d : ihexp} {τ : htyp} →
              Δ , ∅ , ~∅ ⊢ d :: τ →
              ok d Δ
@@ -158,7 +161,10 @@ module progress where
   progress (TACast wt (TCArr c1 c2)) | I x₁ | Inl refl = S (_ , Step FHOuter ITCastID FHOuter)
   progress (TACast wt (TCArr c1 c2)) | I x₁ | Inr x = I (ICastArr x x₁)
     -- if both are foralls 
-  progress (TACast wt (TCForall con)) | _ = {!   !}
+  progress (TACast wt (TCForall {τ1} {τ2} con)) | I x
+    with htype-dec (·∀ τ1) (·∀ τ2) 
+  progress (TACast wt (TCForall con)) | I x | Inl refl = S (_ , Step FHOuter ITCastID FHOuter)
+  progress (TACast wt (TCForall con)) | I x₁ | Inr x = I (ICastForall (λ {e → x (forall-lemma e)}) x₁)
 
     -- boxed value cases, inspect how the casts are realted by consistency
     -- step by ID if the casts are the same
@@ -174,7 +180,10 @@ module progress where
     with (htype-dec  (τ1 ==> τ2) (⦇-⦈ ==> ⦇-⦈))
   progress (TACast wt (TCHole1 {.⦇-⦈ ==> .⦇-⦈})) | BV x₂ | Inr x₁ | Inl refl = BV (BVHoleCast GArr x₂)
   progress (TACast wt (TCHole1 {τ1 ==> τ2})) | BV x₂ | Inr x₁ | Inr x = S (_ , Step FHOuter (ITGround (MGArr x)) FHOuter)
-  progress (TACast wt (TCHole1 {·∀ τ})) | BV x₁ | Inr x = {!   !}
+  progress (TACast wt (TCHole1 {·∀ τ})) | BV x₁ | Inr x 
+    with (htype-dec  (·∀ τ) (·∀ ⦇-⦈))
+  progress (TACast wt (TCHole1 {·∀ .⦇-⦈})) | BV x₁ | Inr x | Inl refl = BV (BVHoleCast GForall x₁)
+  progress (TACast wt (TCHole1 {·∀ τ})) | BV x₁ | Inr x₂ | Inr x = S (_ , Step FHOuter (ITGround (MGForall x)) FHOuter) 
     -- if right is hole
   progress {τ = τ} (TACast wt TCHole2) | BV x
     with canonical-boxed-forms-hole wt x
@@ -187,7 +196,7 @@ module progress where
   progress (TACast wt TCHole2) | BV x₂ | _ , _ , refl , _ , _ | Inr x₁ | Inr x
     with notground x
   progress (TACast wt TCHole2) | BV x₃ | _ , _ , refl , _ , _ | Inr _ | Inr _ | Inl refl = S (_ , Step FHOuter ITCastID FHOuter)
-  progress (TACast wt TCHole2) | BV x₃ | _ , _ , refl , gnd , _ | Inr _ | Inr x | Inr (Inl (_ , refl)) = S(_ , Step FHOuter (ITCastFail gnd {!   !} {!   !}) FHOuter ) -- S(_ , Step FHOuter (ITExpand (MGArr (ground-arr-not-hole x))) FHOuter )
+  progress (TACast wt TCHole2) | BV x₃ | _ , _ , refl , gnd , _ | Inr _ | Inr x | Inr (Inl (_ , refl)) =  {!   !} 
   progress (TACast wt TCHole2) | BV x₃ | _ , _ , refl , _ , _ | Inr _ | Inr x | Inr (Inr (Inl (_ , _ , refl))) = S(_ , Step FHOuter (ITExpand (MGArr (ground-arr-not-hole x))) FHOuter )
   progress {τ = ·∀ τ} (TACast wt TCHole2) | BV x₃ | _ , _ , refl , _ , _ | Inr _ | Inr x | Inr (Inr (Inr (_ , refl))) = S(_ , Step FHOuter (ITExpand (MGForall (ground-forall-not-hole x))) FHOuter )
     -- if both arrows
@@ -195,6 +204,10 @@ module progress where
     with htype-dec (τ1 ==> τ2) (τ1' ==> τ2')
   progress (TACast wt (TCArr c1 c2)) | BV x₁ | Inl refl = S (_ , Step FHOuter ITCastID FHOuter)
   progress (TACast wt (TCArr c1 c2)) | BV x₁ | Inr x = BV (BVArrCast x x₁)
+  progress (TACast wt (TCForall {τ1} {τ2} _)) | BV x
+    with htype-dec (·∀ τ1) (·∀ τ2)
+  progress (TACast wt (TCForall {τ1} {τ2} _)) | BV x₁ | Inl refl = S (_ , Step FHOuter ITCastID FHOuter)
+  progress (TACast wt (TCForall {τ1} {τ2} _)) | BV x₁ | Inr x = BV (BVForallCast (λ {e → x ((forall-lemma e))}) x₁)
 
    -- failed casts
   progress (TAFailedCast wt y z w)
