@@ -388,7 +388,7 @@ module core where
       TAVar : ∀{Δ Γ Θ x τ} → (x , τ) ∈ Γ → Δ , Γ , Θ ⊢ X x :: τ
       TALam : ∀{ Δ Γ Θ x τ1 d τ2} →
               x # Γ →
-              Θ ⊢ τ1 wf
+              Θ ⊢ τ1 wf →
               Δ , (Γ ,, (x , τ1)) , Θ ⊢ d :: τ2 →
               Δ , Γ , Θ ⊢ ·λ x [ τ1 ] d :: (τ1 ==> τ2)
       TATLam : ∀{ Δ Γ Θ d τ} →
@@ -782,5 +782,7 @@ module core where
       BUFailedCast : ∀{d τ1 τ2} → binders-unique d
                                  → binders-unique (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
     
-    no-free-tvars : tctx → Set
-    no-free-tvars Γ = ∀{x y} -> (x , y) ∈ Γ → ~∅ ⊢ y wf
+    data closed-tctx : tctx → Set where
+      CCtx : ∀{Γ} -> (∀{x y} -> (x , y) ∈ Γ → ~∅ ⊢ y wf) -> closed-tctx Γ
+    -- data closed-ihexp : ihexp → Set where
+    --  CTVar 
