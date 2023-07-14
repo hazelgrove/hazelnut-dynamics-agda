@@ -783,7 +783,7 @@ module core where
       BUFailedCast : ∀{d τ1 τ2} → binders-unique d
                                  → binders-unique (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
     
-    data closed-tctx : tctx → Set where
-      CCtx : ∀{Γ} -> (∀{x y} -> (x , y) ∈ Γ → ~∅ ⊢ y wf) -> closed-tctx Γ
+    data _⊢_tctxwf : typctx -> tctx → Set where
+      CCtx : ∀{Θ Γ} -> (∀{x y} -> (x , y) ∈ Γ → Θ ⊢ y wf) -> Θ ⊢ Γ tctxwf
     -- data closed-ihexp : ihexp → Set where
     --  CTVar 
