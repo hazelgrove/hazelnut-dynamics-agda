@@ -82,7 +82,14 @@ module progress where
 
     -- type applications
   
-  progress (TATAp wt eq) = {!   !}
+  progress (TATAp wt eq) with progress wt 
+  ... | S (_ , Step x y z) = S (_ , (Step (FHTAp x) y (FHTAp z)))
+  ... | I x = {!   !}
+  ... | (BV v) with canonical-boxed-forms-forall wt v 
+  ... | CBFTLam (x , y , z) rewrite y = S (_ , Step FHOuter ITTLam FHOuter)
+  ... | CBFCastForall (x , y , z , w , v) rewrite z = S (_ , Step FHOuter ITTApCast FHOuter) 
+  -- progress (TATAp (TAEHole x x₁) eq) = I (ITAp (λ τ1 τ2 d' ()) IEHole)
+  
 
     -- empty holes are indeterminate
   progress (TAEHole _ _ ) = I IEHole
@@ -114,7 +121,9 @@ module progress where
     with ground-decidable (τ11 ==> τ12)
   progress (TACast wt TCHole1) | I x₁ | .⦇-⦈ ==> .⦇-⦈ | Inl GArr = I (ICastGroundHole GArr x₁)
   progress (TACast wt TCHole1) | I x₁ | τ11 ==> τ12 | Inr x =  S (_ , Step FHOuter (ITGround (MGArr (ground-arr-not-hole x))) FHOuter)
-  progress (TACast wt TCHole1) | I x | ·∀ τ = {!   !}
+  progress (TACast wt TCHole1) | I x | ·∀ τ with ground-decidable (·∀ τ)
+  progress (TACast wt TCHole1) | I x | ·∀ .⦇-⦈ | Inl GForall = I (ICastGroundHole GForall x)
+  progress (TACast wt TCHole1) | I x₁ | ·∀ τ | Inr x  = S (_ , Step FHOuter (ITGround (MGForall (ground-forall-not-hole x))) FHOuter)
     -- if second type is hole
   progress (TACast wt (TCHole2 {b})) | I x
     with canonical-indeterminate-forms-hole wt x
@@ -180,7 +189,7 @@ module progress where
   progress (TACast wt TCHole2) | BV x₃ | _ , _ , refl , _ , _ | Inr _ | Inr _ | Inl refl = S (_ , Step FHOuter ITCastID FHOuter)
   progress (TACast wt TCHole2) | BV x₃ | _ , _ , refl , gnd , _ | Inr _ | Inr x | Inr (Inl (_ , refl)) = S(_ , Step FHOuter (ITCastFail gnd {!   !} {!   !}) FHOuter ) -- S(_ , Step FHOuter (ITExpand (MGArr (ground-arr-not-hole x))) FHOuter )
   progress (TACast wt TCHole2) | BV x₃ | _ , _ , refl , _ , _ | Inr _ | Inr x | Inr (Inr (Inl (_ , _ , refl))) = S(_ , Step FHOuter (ITExpand (MGArr (ground-arr-not-hole x))) FHOuter )
-  progress (TACast wt TCHole2) | BV x₃ | _ , _ , refl , _ , _ | Inr _ | Inr x | Inr (Inr (Inr (_ , refl))) = {!   !} -- S(_ , Step FHOuter (ITExpand (MGArr (ground-arr-not-hole x))) FHOuter )
+  progress {τ = ·∀ τ} (TACast wt TCHole2) | BV x₃ | _ , _ , refl , _ , _ | Inr _ | Inr x | Inr (Inr (Inr (_ , refl))) = S(_ , Step FHOuter (ITExpand (MGForall (ground-forall-not-hole x))) FHOuter )
     -- if both arrows
   progress (TACast wt (TCArr {τ1} {τ2} {τ1'} {τ2'} c1 c2)) | BV x
     with htype-dec (τ1 ==> τ2) (τ1' ==> τ2')
