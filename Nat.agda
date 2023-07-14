@@ -49,3 +49,8 @@ module Nat where
     where
       foo : {x y : Nat} -> x == y -> 1+ x == 1+ y
       foo eq rewrite eq = refl
+
+  lt-trans : {x y z : Nat} -> x < y -> y < z -> x < z
+  lt-trans LTZ (LTS _) = LTZ
+  lt-trans (LTS p) (LTS p') = LTS (lt-trans p p')
+
