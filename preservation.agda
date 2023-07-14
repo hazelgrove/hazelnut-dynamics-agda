@@ -9,6 +9,8 @@ open import binders-disjoint-checks
 
 open import lemmas-subst-ta
 
+open import lemmas-free-tvars
+
 module preservation where
   open typctx
 
@@ -59,14 +61,15 @@ module preservation where
 
   lemma-tysubst : ∀{ Δ Γ Θ d τ t n } -> no-free-tvars Γ -> Δ , Γ , [ Θ newtyp] ⊢ d :: τ -> Δ , Γ , Θ ⊢ (TTyp[ t / n ] d) :: Typ[ t / n ] τ
   lemma-tysubst _ TAConst = TAConst
-  lemma-tysubst nfv (TAVar x) = TAVar (nfv x)
-  lemma-tysubst (TALam x y) = TALam (lemma-tysubst x) (lemma-tysubst y)
-  lemma-tysubst (TATLam x) = {!!}
-  lemma-tysubst (TAAp x) = {!!}
-  lemma-tysubst (TAEHole x x₁) = {!!}
-  lemma-tysubst (TANEHole x x₁ x₂) = {!!}
-  lemma-tysubst (TACast x x₁) = {!!}
-  lemma-tysubst (TAFailedCast x x₁ x₂ x₃) = {!!}
+  lemma-tysubst nfv (TAVar x) = TAVar {! wf-no-subst (nfv x) !} -- TAVar (nfv x)
+  lemma-tysubst nfv (TALam x y) = {!!} -- TALam (lemma-tysubst x) (lemma-tysubst y)
+  lemma-tysubst nfv (TATLam x) = {!!}
+  lemma-tysubst nfv (TAAp x cong) = {!!}
+  lemma-tysubst nfv (TATAp x eq) = {!!}
+  lemma-tysubst nfv (TAEHole x x₁) = {!!}
+  lemma-tysubst nfv (TANEHole x x₁ x₂) = {!!}
+  lemma-tysubst nfv (TACast x x₁) = {!!}
+  lemma-tysubst nfv (TAFailedCast x x₁ x₂ x₃) = {!!}
 
   -- instruction transitions preserve type
   preserve-trans : ∀{ Δ Γ Θ d τ d' } →
@@ -80,10 +83,11 @@ module preservation where
   preserve-trans bd nfv (TALam _ ta) ()
   preserve-trans (BUAp (BULam bd x₁) bd₁ (BDLam x₂ x₃)) nfv (TAAp (TALam apt ta) ta₁) ITLam = lem-subst apt x₂ bd₁ ta ta₁
   preserve-trans bd nfv (TATLam ta) ()
-  -- preserve-trans bd (TAAp (TACast ta TCBase) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ ~refl)) ~refl
   preserve-trans bd nfv (TAAp (TACast ta (TCArr x x₁)) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ (~sym x))) x₁
-  preserve-trans bd nfv (TATAp (TACast ta (TCForall x))) ITTApCast = TACast (TATAp ta) (~Typ[] x)
-  preserve-trans bd nfv (TATAp (TATLam x)) ITTLam = lemma-tysubst nfv x
+  preserve-trans bd nfv (TATAp (TATLam x) eq) ITTLam with eq 
+  ... | refl = lemma-tysubst nfv x
+  preserve-trans bd nfv (TATAp (TACast ta (TCForall x)) eq) ITTApCast with eq
+  ... | refl = TACast (TATAp ta refl) (~Typ[] x)
   preserve-trans bd nfv (TAEHole x x₁) ()
   preserve-trans bd nfv (TANEHole x ta x₁) ()
   preserve-trans bd nfv (TACast ta x) (ITCastID) = ta
@@ -112,7 +116,7 @@ module preservation where
              Δ , Γ , Θ ⊢ d' :: τ
   preservation bd D (Step x x₁ x₂)
     with wt-filling D x
-  ... | (_ , wt) = wt-different-fill x D wt (preserve-trans (lem-bd-ε1 x bd) wt x₁) x₂
+  ... | (_ , wt) = {!!} -- wt-different-fill x D wt (preserve-trans (lem-bd-ε1 x bd) wt x₁) x₂
 
   -- note that the exact statement of preservation in the paper, where Γ is
   -- empty indicating that the terms are closed, is an immediate corrolary
@@ -123,3 +127,4 @@ module preservation where
              d ↦ d' →
              Δ , ∅ , ~∅ ⊢ d' :: τ
   preservation' = preservation
+ 
