@@ -6,7 +6,27 @@ module lemmas-free-tvars where
 
   open typctx
 
-  nftv-no-subst : ∀{t n y o} -> o ⊢ y wf -> typctx.n o < n + typctx.n o == n -> y == (Typ[ t / n ] y)
+  nftv-no-subst : ∀{t n y o} -> o ⊢ y wf -> ((n < typctx.n o) -> ⊥) -> y == (Typ[ t / n ] y)
+  nftv-no-subst {n = n} {y = T a} {o = o} (WFVar l) lte with natEQ n a
+--  ... | Inl refl | Inr eq = abort (lt-ne l (! eq)) 
+--  ... | Inl refl | Inl lt = abort (lt-antisym l lt)
+--  ... | Inr neq | Inr eq = {!!}
+--  ... | Inr neq | Inl lt = {!!}
+  ... | Inl refl = abort (lte l) 
+  ... | Inr neq with natLT n a
+  ... | Inl (LTZ) = abort (lte (let p1 , p2 = lt-gtz {typctx.n o} l in foo p2))
+    where
+      foo : {n m : Nat} -> n == 1+ m -> Z < n
+      foo p rewrite p = LTZ
+  ... | Inl (LTS p) = {!!}
+  ... | Inr _ = refl
+
+--  nftv-no-subst (WFVar ()) (Inl LTZ)
+--  nftv-no-subst {n = n} {o = o} (WFVar l) (Inr refl) with l
+--  ... | LTZ = refl
+--  ... | LTS p = abort {! lt_ne {typctx.n o} {n} p !}
+  nftv-no-subst WFBase _ = refl
+  nftv-no-subst WFHole _ = refl
   nftv-no-subst {n = n} (WFForall p) pf = foo (nftv-no-subst p {!   !})
     where
       foo : ∀{A B} -> A == B -> ·∀ A == ·∀ B
@@ -15,8 +35,8 @@ module lemmas-free-tvars where
   
   wf-no-subst : ∀{t n y} -> ~∅ ⊢ y wf -> y == (Typ[ t / n ] y)
   wf-no-subst {n = n} p with n 
-  ... | Z = nftv-no-subst p (Inr refl) 
-  ... | 1+ n = nftv-no-subst p (Inl LTZ) 
+  ... | Z = nftv-no-subst p {!!} -- (Inr refl) 
+  ... | 1+ n = nftv-no-subst p {!!} -- (Inl LTZ) 
   {-
   wf-no-subst (WFVar ())
   wf-no-subst WFBase = refl
@@ -39,3 +59,4 @@ module lemmas-free-tvars where
 -}
   
   
+ 

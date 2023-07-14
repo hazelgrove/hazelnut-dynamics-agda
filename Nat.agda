@@ -34,3 +34,18 @@ module Nat where
   natLT (1+ n) (1+ m) with natLT n m
   ... | Inl p = Inl (LTS p)
   ... | Inr p = Inr (\{(LTS p') -> p p'})
+
+  lt-ne : {x y : Nat} -> x < y -> (x == y) → ⊥
+  lt-ne LTZ = \ ()
+  lt-ne (LTS {n} {m} p) = \eq -> lt-ne p ((1+inj n m eq))
+
+  lt-antisym : {x y : Nat} -> x < y -> y < x -> ⊥
+  lt-antisym LTZ = λ ()
+  lt-antisym (LTS p) (LTS p') = lt-antisym p p'
+
+  lt-gtz : {x y : Nat} -> y < x -> Σ[ z ∈ Nat ] (x == 1+ z)
+  lt-gtz (LTZ {n}) = n , refl
+  lt-gtz (LTS {n} {m} p) = let p1 , p2 = lt-gtz p in 1+ p1 , foo p2
+    where
+      foo : {x y : Nat} -> x == y -> 1+ x == 1+ y
+      foo eq rewrite eq = refl
