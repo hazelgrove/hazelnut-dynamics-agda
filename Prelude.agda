@@ -96,3 +96,8 @@ module Prelude where
   -- non-equality is commutative
   flip : {A : Set} {x y : A} → (x == y → ⊥) → (y == x → ⊥)
   flip neq eq = neq (! eq)
+
+    -- equality is symmetric
+  sym : {A : Set} {x y : A} → (x == y) → (y == x)
+  sym refl = refl
+
