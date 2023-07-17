@@ -54,3 +54,8 @@ module Nat where
   lt-trans LTZ (LTS _) = LTZ
   lt-trans (LTS p) (LTS p') = LTS (lt-trans p p')
 
+  lt-right-incr : {x y : Nat} -> x < y -> x < 1+ y
+  lt-right-incr LTZ = LTZ
+  lt-right-incr (LTS p) = LTS (lt-right-incr p)
+
+
