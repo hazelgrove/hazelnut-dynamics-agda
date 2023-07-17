@@ -233,11 +233,12 @@ module core where
       STLam   : {Θ : typctx} {Γ : tctx} {e : hexp} {τ : htyp} → 
                 [ Θ newtyp] , Γ ⊢ e => τ → 
                 Θ , Γ ⊢ (·Λ e) => (·∀ τ)
-      STAp    : {Θ : typctx} {Γ : tctx} {e : hexp} {τ1 τ2 τ3 : htyp} → 
+      STAp    : {Θ : typctx} {Γ : tctx} {e : hexp} {τ1 τ2 τ3 τ4 : htyp} → 
                 Θ ⊢ τ1 wf →
                 Θ , Γ ⊢ e => τ2 →
                 τ2 ▸forall (·∀ τ3) →
-                Θ , Γ ⊢ (e < τ1 >) => (Typ[ τ1 / Z ] τ3)
+                Typ[ τ1 / Z ] τ3 == τ4 →
+                Θ , Γ ⊢ (e < τ1 >) => τ4
 
     -- analysis
     data _,_⊢_<=_ : (Θ : typctx) (Γ : htyp ctx) (e : hexp) (τ : htyp) → Set where
