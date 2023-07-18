@@ -53,28 +53,6 @@ wf-sub {τ1 = τ1} {τ2 = ⦇-⦈} wf1 wf2 leq = WFHole
 wf-sub {τ1 = τ1} {τ2 = τ2 ==> τ3} wf1 (WFArr wf2 wf3) leq = WFArr (wf-sub wf1 wf2 leq) (wf-sub wf1 wf3 leq)
 wf-sub {τ1 = τ1} {τ2 = ·∀ τ2} wf1 (WFForall wf2) leq = WFForall (wf-sub (weakening-t-wf wf1) wf2 (LTS leq))
 
-
--- wf-sub : ∀ {Θ n τ1 τ2} → Θ ⊢ τ1 wf → Θ ⊢ τ2 wf → Θ ⊢ Typ[ τ1 / m ] τ2 wf
--- wf-sub {τ1 = τ1} {τ2 = b} wf1 wf2 = WFBase
--- wf-sub {n = n} {τ1 = τ1} {τ2 = T m} wf1 wf2 with natEQ n m 
--- ... | Inl refl = wf1
--- ... | Inr neq with natLT n m 
--- wf-sub {n = .Z} {τ1 = τ1} {T .(1+ n)} wf1 (WFVar (LTS x)) | Inr neq | Inl (LTZ {n}) = WFVar (lt-right-incr x)
--- wf-sub {n = .(1+ n)} {τ1 = τ1} {T .(1+ m)} wf1 (WFVar (LTS x)) | Inr neq | Inl (LTS {n} {m} p) = WFVar (lt-right-incr x) -- T m
--- wf-sub {n = n} {τ1 = τ1} {T m} wf1 (WFVar x) | Inr neq | Inr ose = WFVar x --  (lt-right-incr-neq x {!  !}) --T a'
--- wf-sub {τ1 = τ1} {τ2 = ⦇-⦈} wf1 wf2 = WFHole 
--- wf-sub {τ1 = τ1} {τ2 = τ2 ==> τ3} wf1 (WFArr wf2 wf3) = WFArr (wf-sub wf1 wf2) (wf-sub wf1 wf3)
--- wf-sub {τ1 = τ1} {τ2 = ·∀ τ2} wf1 (WFForall wf2) = WFForall (wf-sub (weakening-t-wf wf1) wf2)
-
--- wf-sub : ∀ {Θ τ1 τ2} → Θ ⊢ τ1 wf → Θ ⊢ τ2 wf → Θ ⊢ Typ[ τ1 / Z ] τ2 wf
--- wf-sub {τ1 = τ1} {τ2 = b} wf1 wf2 = WFBase
--- wf-sub {τ1 = τ1} {τ2 = T Z} wf1 wf2 = wf1
--- wf-sub {τ1 = τ1} {τ2 = T (1+ x)} wf1  (WFVar (LTS x₁)) = WFVar (lt-right-incr x₁)
--- wf-sub {τ1 = τ1} {τ2 = ⦇-⦈} wf1 wf2 = WFHole
--- wf-sub {τ1 = τ1} {τ2 = τ2 ==> τ3} wf1  (WFArr wf2 wf3) = WFArr (wf-sub wf1 wf2) (wf-sub wf1 wf3)
--- wf-sub {τ1 = τ1} {τ2 = ·∀ τ2} wf1  (WFForall wf2) = WFForall {!   !}
-
-
 wf-ta : ∀{Θ Γ d τ Δ} → 
                   Θ ⊢ Γ tctxwf → 
                   Δ , Θ , Γ ⊢ d :: τ → 
