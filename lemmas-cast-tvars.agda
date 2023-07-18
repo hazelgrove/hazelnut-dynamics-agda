@@ -3,6 +3,7 @@ open import Prelude
 open import core
 open typctx
 open import contexts
+open import typed-elaboration
 
 data contains-tvar-cast : (d : ihexp) → Set where 
   CTVCast1 : ∀{d n τ} → contains-tvar-cast (d ⟨ (T n) ⇒ τ ⟩)
@@ -73,6 +74,22 @@ wf-sub {τ1 = τ1} {τ2 = ·∀ τ2} wf1 (WFForall wf2) leq = WFForall (wf-sub (
 -- wf-sub {τ1 = τ1} {τ2 = τ2 ==> τ3} wf1  (WFArr wf2 wf3) = WFArr (wf-sub wf1 wf2) (wf-sub wf1 wf3)
 -- wf-sub {τ1 = τ1} {τ2 = ·∀ τ2} wf1  (WFForall wf2) = WFForall {!   !}
 
+
+wf-ta : ∀{Θ Γ d τ Δ} → 
+                  Θ ⊢ Γ tctxwf → 
+                  Δ , Θ , Γ ⊢ d :: τ → 
+                  Θ ⊢ τ wf 
+wf-ta tcwf TAConst = WFBase
+wf-ta (CCtx wts) (TAVar x) = wts x
+wf-ta tcwf (TALam x x₁ ta) = WFArr x₁ (wf-ta (CCtx (merge-tctx-wf tcwf x₁ x)) ta)
+wf-ta tcwf (TATLam ta) = {!   !}
+wf-ta tcwf (TAAp ta ta₁) = {!   !}
+wf-ta tcwf (TATAp x ta x₁) = {!   !}
+wf-ta tcwf (TAEHole x x₁) = {!   !}
+wf-ta tcwf (TANEHole x ta x₁) = {!   !}
+wf-ta tcwf (TACast ta x) = {!   !}
+wf-ta tcwf (TAFailedCast ta x x₁ x₂) = {!   !}
+
 mutual 
   wf-synth : ∀{Θ Γ e τ} → 
                     Θ ⊢ Γ tctxwf → 
@@ -124,6 +141,8 @@ mutual
                     Θ ⊢ Γ tctxwf → 
                     Θ , Γ ⊢ e ⇒ τ ~> d ⊣ Δ → 
                     Θ ⊢ τ wf 
+-- can probably prove this using typed elaboration.
+--  elab-wf-synth = wf-ta {!!} {!!}
   elab-wf-synth _ ESConst = WFBase
   elab-wf-synth (CCtx wts) (ESVar x) = wts x
   elab-wf-synth ctxwf (ESLam apt x₂ elab) = WFArr x₂ (elab-wf-synth (CCtx (merge-tctx-wf ctxwf x₂ apt)) elab)
@@ -133,7 +152,7 @@ mutual
   elab-wf-synth ctxwf (ESTAp wf wt _ _ eq) rewrite (sym eq) = wf-sub wf (weakening-t-wf (wf-synth ctxwf wt)) LTZ
   elab-wf-synth _ ESEHole = WFHole
   elab-wf-synth _ (ESNEHole _ _) = WFHole
-  elab-wf-synth _ (ESAsc wf _) = wf
+  elab-wf-synth _ (ESAsc wf _) = wf-ta
 
   elab-wf-ana : ∀{Γ Θ e τ1 τ2 d Δ} → 
                     Θ ⊢ Γ tctxwf → 
@@ -146,6 +165,7 @@ mutual
   elab-wf-ana ctxwf wf1 EAEHole = wf1
   elab-wf-ana ctxwf wf1 (EANEHole x x₁) = wf1
 
+                    
   -- issue : Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ] Σ[ e ∈ hexp ] Σ[ τ ∈ htyp ] Σ[ ctxwf ∈ (Θ ⊢ Γ tctxwf) ] Σ[ twf ∈ (Θ , Γ ⊢ e => τ) ] (Θ ⊢ τ wf → ⊥)
   -- issue =  (record { n = 5 }) , (λ _ → None) , ((·Λ ((⦇-⦈[ 0 ]) ·: (T 5))) < b >) , (T 5) , CCtx (λ ()) , STAp WFBase (STLam (SAsc (WFVar (LTS (LTS (LTS (LTS (LTS LTZ)))))) (ASubsume SEHole TCHole1))) MFForall {!   !} , {!   !}
   
@@ -229,4 +249,5 @@ mutual
 --                           ⊥
 --   no-tvar-cast-elab-ana (EALam x x₁ wt) (TVCastLam cast) = no-tvar-cast-elab-ana wt cast
 --   no-tvar-cast-elab-ana (EASubsume x x₁ x₂ x₃) cast = no-tvar-cast-elab-synth x₂ cast             
+ 
  

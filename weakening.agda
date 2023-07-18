@@ -20,10 +20,10 @@ module weakening where
                                   → (Δ1 ∪ Δ2) , Γ , Θ ⊢ d :: τ
     weaken-ta-Δ1 disj TAConst = TAConst
     weaken-ta-Δ1 disj (TAVar x₁) = TAVar x₁
-    weaken-ta-Δ1 disj (TALam x₁ wt) = TALam x₁ (weaken-ta-Δ1 disj wt)
+    weaken-ta-Δ1 disj (TALam x₁ wf wt) = TALam x₁ wf (weaken-ta-Δ1 disj wt)
     weaken-ta-Δ1 disj (TATLam wt) = TATLam (weaken-ta-Δ1 disj wt)
     weaken-ta-Δ1 disj (TAAp wt wt₁) = TAAp (weaken-ta-Δ1 disj wt) (weaken-ta-Δ1 disj wt₁)
-    weaken-ta-Δ1 disj (TATAp wt eq) = TATAp (weaken-ta-Δ1 disj wt) eq
+    weaken-ta-Δ1 disj (TATAp wf wt eq) = TATAp wf (weaken-ta-Δ1 disj wt) eq
     weaken-ta-Δ1 {Δ1} {Δ2} {Γ} disj (TAEHole {u = u} {Γ' = Γ'} x x₁) = TAEHole (x∈∪l Δ1 Δ2 u _ x ) (weaken-subst-Δ disj x₁)
     weaken-ta-Δ1 {Δ1} {Δ2} {Γ} disj (TANEHole {Γ' = Γ'} {u = u} x wt x₁) = TANEHole (x∈∪l Δ1 Δ2 u _ x) (weaken-ta-Δ1 disj wt) (weaken-subst-Δ disj x₁)
     weaken-ta-Δ1 disj (TACast wt x) = TACast (weaken-ta-Δ1 disj wt) x
@@ -44,13 +44,13 @@ module weakening where
   -- variable you can just α-convert it away and not worry.
   mutual
     weaken-synth : ∀{ x Γ e τ τ' Θ} → freshh x e
-                                  → Γ , Θ ⊢ e => τ
-                                  → (Γ ,, (x , τ')) , Θ ⊢ e => τ
+                                  → Θ , Γ ⊢ e => τ
+                                  → Θ , (Γ ,, (x , τ')) ⊢ e => τ
     weaken-synth FRHConst SConst = SConst
-    weaken-synth (FRHAsc frsh) (SAsc x₁) = SAsc (weaken-ana frsh x₁)
+    weaken-synth (FRHAsc frsh) (SAsc wf x₁) = SAsc wf (weaken-ana frsh x₁)
     weaken-synth {Γ = Γ} (FRHVar {x = x} x₁) (SVar {x = y} x₂) = SVar (x∈∪l Γ (■(x , _)) y _  x₂)
-    weaken-synth {Γ = Γ} (FRHLam2 x₁ frsh) (SLam x₂ wt) =
-                    SLam (apart-extend1 Γ (flip x₁) x₂)
+    weaken-synth {Γ = Γ} (FRHLam2 x₁ frsh) (SLam x₂ wf wt) =
+                    SLam (apart-extend1 Γ (flip x₁) x₂) wf
                          (exchange-synth {Γ = Γ} (flip x₁) ((weaken-synth frsh wt)))
     weaken-synth (FRHTLam x₁) (STLam x₂) = STLam (weaken-synth x₁ x₂)
     weaken-synth FRHEHole SEHole = SEHole
@@ -59,8 +59,8 @@ module weakening where
     weaken-synth (FRHTAp x₁) (STAp x₂ x₃) = STAp (weaken-synth x₁ x₂) x₃
 
     weaken-ana : ∀{x Γ e τ τ' Θ} → freshh x e
-                               → Γ , Θ ⊢ e <= τ
-                               → (Γ ,, (x , τ')) , Θ ⊢ e <= τ
+                               → Θ , Γ ⊢ e <= τ
+                               → Θ , (Γ ,, (x , τ')) ⊢ e <= τ
     weaken-ana frsh (ASubsume x₁ x₂) = ASubsume (weaken-synth frsh x₁) x₂
     weaken-ana {Γ = Γ} (FRHLam1 neq frsh) (ALam x₂ x₃ wt) =
                      ALam (apart-extend1 Γ (flip neq) x₂)
@@ -71,8 +71,8 @@ module weakening where
   mutual
     weaken-subst-Γ : ∀{ x Γ Δ σ Γ' τ Θ} →
                      envfresh x σ →
-                     Δ , Γ , Θ ⊢ σ :s: Γ' →
-                     Δ , (Γ ,, (x , τ)) , Θ ⊢ σ :s: Γ'
+                     Δ , Θ , Γ ⊢ σ :s: Γ' →
+                     Δ , Θ , (Γ ,, (x , τ)) ⊢ σ :s: Γ'
     weaken-subst-Γ {Γ = Γ} (EFId x₁) (STAId x₂) = STAId (λ x τ x₃ → x∈∪l Γ _ x τ (x₂ x τ x₃) )
     weaken-subst-Γ {x = x} {Γ = Γ} (EFSubst x₁ efrsh x₂) (STASubst {y = y} {τ = τ'} subst x₃) =
       STASubst (exchange-subst-Γ {Γ = Γ} (flip x₂) (weaken-subst-Γ {Γ = Γ ,, (y , τ')} efrsh subst))
@@ -80,8 +80,8 @@ module weakening where
 
     weaken-ta : ∀{x Γ Δ d τ τ' Θ} →
                 fresh x d →
-                Δ , Γ , Θ ⊢ d :: τ →
-                Δ , Γ ,, (x , τ') , Θ ⊢ d :: τ
+                Δ , Θ , Γ ⊢ d :: τ →
+                Δ , Θ , Γ ,, (x , τ') ⊢ d :: τ
     weaken-ta _ TAConst = TAConst
     weaken-ta {x} {Γ} {_} {_} {τ} {τ'} (FVar x₂) (TAVar x₃) = TAVar (x∈∪l Γ (■ (x , τ')) _ _ x₃)
     weaken-ta {x = x} frsh (TALam {x = y} x₂ wt) with natEQ x y
@@ -97,14 +97,14 @@ module weakening where
 
   mutual 
     weaken-subst-Θ : ∀{Γ Δ σ Γ' Θ} →
-                     Δ , Γ , Θ ⊢ σ :s: Γ' →
-                     Δ , Γ , typctx.[ Θ newtyp] ⊢ σ :s: Γ'
+                     Δ , Θ , Γ ⊢ σ :s: Γ' →
+                     Δ , typctx.[ Θ newtyp] , Γ ⊢ σ :s: Γ'
     weaken-subst-Θ (STAId x) = STAId x
     weaken-subst-Θ (STASubst x x₁) = STASubst (weaken-subst-Θ x) (weaken-ta-typ x₁)
     
     weaken-ta-typ : ∀{Γ Δ Θ d τ} →
-                    Δ , Γ , Θ ⊢ d :: τ →
-                    Δ , Γ , typctx.[ Θ newtyp] ⊢ d :: τ
+                    Δ , Θ , Γ ⊢ d :: τ →
+                    Δ , typctx.[ Θ newtyp] , Γ ⊢ d :: τ
     weaken-ta-typ TAConst = TAConst
     weaken-ta-typ (TAVar x) = TAVar x
     weaken-ta-typ (TALam x x₁) = TALam x (weaken-ta-typ x₁)

@@ -59,22 +59,25 @@ module preservation where
   wt-filling (TAFailedCast x y z w) FHOuter = _ , TAFailedCast x y z w
   wt-filling (TAFailedCast x x₁ x₂ x₃) (FHFailedCast y) = wt-filling x y
 
-  lemma-tysubst : ∀{ Δ Γ Θ d τ t n } -> no-free-tvars Γ -> Δ , Γ , [ Θ newtyp] ⊢ d :: τ -> Δ , Γ , Θ ⊢ (TTyp[ t / n ] d) :: Typ[ t / n ] τ
+  lemma-tysubst : ∀{ Δ Γ Θ d τ t n } -> closed-tctx Γ -> Δ , Γ , [ Θ newtyp] ⊢ d :: τ -> Δ , Γ , Θ ⊢ (TTyp[ t / n ] d) :: Typ[ t / n ] τ
   lemma-tysubst _ TAConst = TAConst
-  lemma-tysubst nfv (TAVar x) = TAVar {! wf-no-subst (nfv x) !} -- TAVar (nfv x)
-  lemma-tysubst nfv (TALam x y) = {!!} -- TALam (lemma-tysubst x) (lemma-tysubst y)
-  lemma-tysubst nfv (TATLam x) = {!!}
-  lemma-tysubst nfv (TAAp x cong) = {!!}
-  lemma-tysubst nfv (TATAp x eq) = {!!}
-  lemma-tysubst nfv (TAEHole x x₁) = {!!}
-  lemma-tysubst nfv (TANEHole x x₁ x₂) = {!!}
-  lemma-tysubst nfv (TACast x x₁) = {!!}
-  lemma-tysubst nfv (TAFailedCast x x₁ x₂ x₃) = {!!}
+  lemma-tysubst {Γ = Γ} {d = X var} (NFTVCtx nfv) (TAVar x) = let x' = foo {var} {Γ} (wf-no-subst (nfv x)) x in TAVar x' -- TAVar ((foo {!x!} {!(wf-no-subst (nfv x))!}))
+    where
+      foo : ∀{x Γ} {t1 t2 : htyp} -> t1 == t2 -> (x , t1) ∈ Γ -> (x , t2) ∈ Γ
+      foo eq p rewrite eq = p
+  lemma-tysubst _ (TALam x y) = TALam x {!   !} -- TALam (lemma-tysubst x) (lemma-tysubst y)
+  lemma-tysubst _ (TATLam x) = {!!}
+  lemma-tysubst _ (TAAp x cong) = {!!}
+  lemma-tysubst _ (TATAp x eq) = {!!}
+  lemma-tysubst _ (TAEHole x x₁) = {!!}
+  lemma-tysubst _ (TANEHole x x₁ x₂) = {!!}
+  lemma-tysubst _ (TACast x x₁) = {!!}
+  lemma-tysubst _ (TAFailedCast x x₁ x₂ x₃) = {!!}
 
   -- instruction transitions preserve type
   preserve-trans : ∀{ Δ Γ Θ d τ d' } →
             binders-unique d →
-            no-free-tvars Γ →
+            closed-tctx Γ →
             Δ , Γ , Θ ⊢ d :: τ →
             d →> d' →
             Δ , Γ , Θ ⊢ d' :: τ
@@ -127,4 +130,4 @@ module preservation where
              d ↦ d' →
              Δ , ∅ , ~∅ ⊢ d' :: τ
   preservation' = preservation
- 
+  
