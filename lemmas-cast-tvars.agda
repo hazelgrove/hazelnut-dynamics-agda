@@ -19,21 +19,31 @@ data is-tvar-cast : (d : ihexp) → Set where
   TVCast1 : ∀{d n τ} → is-tvar-cast (d ⟨ (T n) ⇒ τ ⟩)
   TVCast2 : ∀{d n τ} → is-tvar-cast (d ⟨ τ ⇒ (T n) ⟩)
 
-merge-tctx-wf : ∀ {Θ Γ x x' τ τ'} → Θ ⊢ Γ tctxwf → Θ ⊢ τ wf → (x' , τ') ∈ (Γ ,, (x , τ)) → Θ ⊢ τ' wf -- Θ ⊢ (Γ ,, (x , τ)) tctxwf 
-merge-tctx-wf a d e = {!   !}
--- merge-tctx-wf {x = x} {x' = x'} {τ = τ} {τ' = τ'} ctxwf twf mem with (natEQ x x')
--- merge-tctx-wf {x = x} {x' = x'} {τ = τ} {τ' = τ'} ctxwf twf mem | Inl refl with (ctxunicity {n = x} {t = τ} {t' = τ'} {!   !} {!   !})
--- merge-tctx-wf {x = x} {x' = x'} {τ = τ} {τ' = τ'} ctxwf twf mem | Inl refl | unic = {! twf ? !} 
--- merge-tctx-wf {x = x} {x' = x'} {τ = τ} {τ' = τ'} ctxwf twf mem | Inr absurd = {! ctxwf !} 
-
-weakening-tctx-wf : ∀ {Θ Γ} → Θ ⊢ Γ tctxwf → [ Θ newtyp] ⊢ Γ tctxwf
-weakening-tctx-wf h = {!   !}
+merge-tctx-wf : ∀ {Θ Γ x x' τ τ'} → Θ ⊢ Γ tctxwf → Θ ⊢ τ wf → x # Γ → (x' , τ') ∈ (Γ ,, (x , τ)) → Θ ⊢ τ' wf
+merge-tctx-wf {x = x} {x' = x'} {τ = τ} {τ' = τ'} ctxwf twf apt h with (natEQ x x') 
+merge-tctx-wf {Γ = Γ} {x = x} {x' = x'} {τ = τ} {τ' = τ'} ctxwf twf apt h | Inl eq rewrite (sym eq) 
+  with ctxunicity {Γ = (Γ ,, (x , τ))} {n = x} {t = τ} {t' = τ'} (x∈∪r Γ (■ (x , τ)) x τ (x∈■ x τ) (lem-apart-sing-disj apt)) h 
+... | eq2 rewrite (sym eq2) = twf
+merge-tctx-wf {Γ = Γ} {τ = τ} (CCtx wfs) twf apt h | Inr n with lem-neq-union-eq {Γ = Γ} {τ = τ} (flip n) h
+... | map = wfs map
 
 weakening-t-wf : ∀ {Θ τ} → Θ ⊢ τ wf → [ Θ newtyp] ⊢ τ wf
-weakening-t-wf h = {!   !}
+weakening-t-wf (WFVar x) = WFVar (lt-right-incr x)
+weakening-t-wf WFBase = WFBase
+weakening-t-wf WFHole = WFHole
+weakening-t-wf (WFArr wf wf₁) = WFArr (weakening-t-wf wf) (weakening-t-wf wf₁)
+weakening-t-wf (WFForall wf) = WFForall (weakening-t-wf wf)
 
-wf-sub : ∀ {Θ τ1 τ2} → [ Θ newtyp] ⊢ τ1 wf → Θ ⊢ τ2 wf → Θ ⊢ Typ[ τ1 / Z ] τ2 wf
-wf-sub a d = {!   !}
+weakening-tctx-wf : ∀ {Θ Γ} → Θ ⊢ Γ tctxwf → [ Θ newtyp] ⊢ Γ tctxwf
+weakening-tctx-wf (CCtx x) = CCtx (λ x₁ → weakening-t-wf (x x₁))
+
+wf-sub : ∀ {Θ τ1 τ2} → Θ ⊢ τ1 wf → [ Θ newtyp] ⊢ τ2 wf → Θ ⊢ Typ[ τ1 / Z ] τ2 wf
+wf-sub {τ1 = τ1} {τ2 = b} wf1 wf2 = WFBase
+wf-sub {τ1 = τ1} {τ2 = T Z} wf1 wf2 = wf1
+wf-sub {τ1 = τ1} {τ2 = T (1+ x)} wf1 (WFVar (LTS x₁)) = WFVar x₁
+wf-sub {τ1 = τ1} {τ2 = ⦇-⦈} wf1 wf2 = WFHole
+wf-sub {τ1 = τ1} {τ2 = τ2 ==> τ3} wf1 (WFArr wf2 wf3) = WFArr (wf-sub wf1 wf2) (wf-sub wf1 wf3)
+wf-sub {τ1 = τ1} {τ2 = ·∀ τ2} wf1 (WFForall wf2) = {!   !}
 
 mutual 
   wf-synth : ∀{Θ Γ e τ} → 
@@ -47,10 +57,10 @@ mutual
   wf-synth ctxwf (SAp x wt MAArr x₂) = wf-synth-arr ctxwf wt
   wf-synth ctxwf SEHole = WFHole
   wf-synth ctxwf (SNEHole x wt) = WFHole
-  wf-synth ctxwf (SLam x x₁ wt) = WFArr x₁ (wf-synth (CCtx (merge-tctx-wf ctxwf x₁)) wt)
+  wf-synth ctxwf (SLam apt x₁ wt) = WFArr x₁ (wf-synth (CCtx (merge-tctx-wf ctxwf x₁ apt)) wt)
   wf-synth ctxwf (STLam wt) = WFForall (wf-synth (weakening-tctx-wf ctxwf) wt)
   wf-synth ctxwf (STAp x wt MFHole eq) rewrite (sym eq) = WFHole
-  wf-synth ctxwf (STAp x wt MFForall eq) rewrite (sym eq) = wf-sub (weakening-t-wf x) (wf-synth-forall ctxwf wt)
+  wf-synth ctxwf (STAp x wt MFForall eq) rewrite (sym eq) = wf-sub x (wf-synth-forall ctxwf wt)
 
   wf-synth-arr : ∀{Θ Γ e τ τ'} → 
                     Θ ⊢ Γ tctxwf → 
@@ -61,17 +71,24 @@ mutual
   ... | WFArr _ wf = wf
   wf-synth-arr ctxwf (SAp _ wf MAArr _) with wf-synth-arr ctxwf wf 
   ... | WFArr _ wf = wf
-  wf-synth-arr ctxwf (SLam _ wf wt) = wf-synth (CCtx (merge-tctx-wf ctxwf wf)) wt
-  wf-synth-arr ctxwf (STAp wf wt MFForall eq) with wf-synth-forall ctxwf wt
-  ... | wf' with wf-sub (weakening-t-wf wf) wf'
+  wf-synth-arr ctxwf (SLam apt wf wt) = wf-synth (CCtx (merge-tctx-wf ctxwf wf apt)) wt
+  wf-synth-arr ctxwf (STAp wf wt MFForall eq) with wf-sub wf (wf-synth-forall ctxwf wt)
   ... | wf rewrite eq with wf
   ... | WFArr _ wf = wf
 
   wf-synth-forall : ∀{Θ Γ e τ} → 
                     Θ ⊢ Γ tctxwf → 
                     Θ , Γ ⊢ e => (·∀ τ) → 
-                    Θ ⊢ τ wf 
-  wf-synth-forall a d = {!   !}
+                    [ Θ newtyp] ⊢ τ wf 
+  wf-synth-forall ctxwf (SAsc (WFForall x) x₁) = x
+  wf-synth-forall (CCtx wfs) (SVar x) with (wfs x)
+  ... | WFForall wf = wf
+  wf-synth-forall ctxwf (SAp x wt MAArr x₂) with wf-synth-arr ctxwf wt 
+  ... | WFForall wf = wf
+  wf-synth-forall ctxwf (STLam wt) = wf-synth (weakening-tctx-wf ctxwf) wt
+  wf-synth-forall ctxwf (STAp x wt MFForall eq) with wf-sub x (wf-synth-forall ctxwf wt)
+  ... | wt rewrite (eq) with wt 
+  ... | WFForall wt = wt
 
 
 mutual 
@@ -82,11 +99,11 @@ mutual
                     Θ ⊢ τ wf 
   elab-wf-synth _ ESConst = WFBase
   elab-wf-synth (CCtx wts) (ESVar x) = wts x
-  elab-wf-synth ctxwf (ESLam x₁ x₂ elab) = WFArr x₂ (elab-wf-synth (CCtx (merge-tctx-wf ctxwf x₂)) elab)
+  elab-wf-synth ctxwf (ESLam apt x₂ elab) = WFArr x₂ (elab-wf-synth (CCtx (merge-tctx-wf ctxwf x₂ apt)) elab)
   elab-wf-synth ctxwf (ESTLam elab) = WFForall (elab-wf-synth (weakening-tctx-wf ctxwf) elab)
   elab-wf-synth ctxwf (ESAp _ _ _ MAHole _ _) = WFHole
   elab-wf-synth ctxwf (ESAp _ _ wt MAArr _ _) = wf-synth-arr ctxwf wt
-  elab-wf-synth ctxwf (ESTAp wf wt _ _ eq) rewrite (sym eq) = wf-sub (weakening-t-wf wf) (wf-synth ctxwf wt)
+  elab-wf-synth ctxwf (ESTAp wf wt _ _ eq) rewrite (sym eq) = wf-sub wf (weakening-t-wf (wf-synth ctxwf wt))
   elab-wf-synth _ ESEHole = WFHole
   elab-wf-synth _ (ESNEHole _ _) = WFHole
   elab-wf-synth _ (ESAsc wf _) = wf
@@ -96,8 +113,8 @@ mutual
                     Θ ⊢ τ1 wf → 
                     Θ , Γ ⊢ e ⇐ τ1 ~> d :: τ2 ⊣ Δ → 
                     Θ ⊢ τ2 wf 
-  elab-wf-ana ctxwf wf1 (EALam x MAHole wt) = WFArr WFHole (elab-wf-ana (CCtx (merge-tctx-wf ctxwf WFHole)) wf1 wt)
-  elab-wf-ana ctxwf (WFArr wf1 wf2) (EALam x MAArr wt) = WFArr wf1 (elab-wf-ana (CCtx (merge-tctx-wf ctxwf wf1)) wf2 wt)
+  elab-wf-ana ctxwf wf1 (EALam apt MAHole wt) = WFArr WFHole (elab-wf-ana (CCtx (merge-tctx-wf ctxwf WFHole apt)) wf1 wt)
+  elab-wf-ana ctxwf (WFArr wf1 wf2) (EALam apt MAArr wt) = WFArr wf1 (elab-wf-ana (CCtx (merge-tctx-wf ctxwf wf1 apt)) wf2 wt)
   elab-wf-ana ctxwf wf1 (EASubsume x x₁ wt x₃) = elab-wf-synth ctxwf wt
   elab-wf-ana ctxwf wf1 EAEHole = wf1
   elab-wf-ana ctxwf wf1 (EANEHole x x₁) = wf1
