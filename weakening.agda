@@ -119,11 +119,11 @@ module weakening where
                     Δ , typctx.[ Θ newtyp] , Γ ⊢ d :: τ
     weaken-ta-typ TAConst = TAConst
     weaken-ta-typ (TAVar x) = TAVar x
-    weaken-ta-typ (TALam x x₁ x₂) = TALam x {! weakening-t-wf x₁  !} (weaken-ta-typ x₂)
+    weaken-ta-typ (TALam x x₁ x₂) = TALam x (weaken-t-wf x₁) (weaken-ta-typ x₂)
     weaken-ta-typ (TATLam x) = TATLam (weaken-ta-typ x)
     weaken-ta-typ (TAAp x x₁) = TAAp (weaken-ta-typ x) (weaken-ta-typ x₁)
-    weaken-ta-typ (TATAp wf x eq) = TATAp {!   !} (weaken-ta-typ x) eq
+    weaken-ta-typ (TATAp wf x eq) = TATAp (weaken-t-wf wf) (weaken-ta-typ x) eq
     weaken-ta-typ (TAEHole x x₁) = TAEHole x (weaken-subst-Θ x₁)
     weaken-ta-typ (TANEHole x x₁ x₂) = TANEHole x (weaken-ta-typ x₁) (weaken-subst-Θ x₂)
-    weaken-ta-typ (TACast x wf x₁) = TACast (weaken-ta-typ x) {!   !} x₁
+    weaken-ta-typ (TACast x wf x₁) = TACast (weaken-ta-typ x) (weaken-t-wf wf) x₁
     weaken-ta-typ (TAFailedCast x x₁ x₂ x₃) = TAFailedCast (weaken-ta-typ x) x₁ x₂ x₃
