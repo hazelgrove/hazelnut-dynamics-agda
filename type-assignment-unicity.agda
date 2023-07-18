@@ -9,7 +9,7 @@ module type-assignment-unicity where
   -- type assignment only assigns one type
   type-assignment-unicity : {Γ : tctx} {d : ihexp} {τ' τ : htyp} {Δ : hctx} {Θ : typctx} →
                               Δ , Θ , Γ ⊢ d :: τ →
-                              Δ , Θ , Γ  ⊢ d :: τ' →
+                              Δ , Θ , Γ ⊢ d :: τ' →
                               τ == τ'
   type-assignment-unicity TAConst TAConst = refl
   type-assignment-unicity {Γ = Γ} (TAVar x₁) (TAVar x₂) = ctxunicity {Γ = Γ} x₁ x₂
