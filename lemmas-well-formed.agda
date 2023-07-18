@@ -5,20 +5,22 @@ open typctx
 open import contexts
 open import typed-elaboration
 
-data contains-tvar-cast : (d : ihexp) → Set where 
-  CTVCast1 : ∀{d n τ} → contains-tvar-cast (d ⟨ (T n) ⇒ τ ⟩)
-  CTVCast2 : ∀{d n τ} → contains-tvar-cast (d ⟨ τ ⇒ (T n) ⟩)
-  CTVCastLam : ∀{d x τ} → contains-tvar-cast d → contains-tvar-cast (·λ x [ τ ] d)
-  CTVCastTLam : ∀{d} → contains-tvar-cast d → contains-tvar-cast (·Λ d)
-  CTVCastAp1 : ∀{d1 d2} →  contains-tvar-cast d1 → contains-tvar-cast (d1 ∘ d2)
-  CTVCastAp2 : ∀{d1 d2} → contains-tvar-cast d2 → contains-tvar-cast (d1 ∘ d2)
-  CTVCastTAp : ∀{d τ} → contains-tvar-cast d → contains-tvar-cast (d < τ >)
-  CTVCastCast : ∀{d τ1 τ2} → contains-tvar-cast d → contains-tvar-cast (d ⟨ τ1 ⇒ τ2 ⟩)
-  CTVCastFailedCast : ∀{d τ1 τ2} → contains-tvar-cast d → contains-tvar-cast (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
+-- I doubt we need these
 
-data is-tvar-cast : (d : ihexp) → Set where 
-  TVCast1 : ∀{d n τ} → is-tvar-cast (d ⟨ (T n) ⇒ τ ⟩)
-  TVCast2 : ∀{d n τ} → is-tvar-cast (d ⟨ τ ⇒ (T n) ⟩)
+-- data contains-tvar-cast : (d : ihexp) → Set where 
+--   CTVCast1 : ∀{d n τ} → contains-tvar-cast (d ⟨ (T n) ⇒ τ ⟩)
+--   CTVCast2 : ∀{d n τ} → contains-tvar-cast (d ⟨ τ ⇒ (T n) ⟩)
+--   CTVCastLam : ∀{d x τ} → contains-tvar-cast d → contains-tvar-cast (·λ x [ τ ] d)
+--   CTVCastTLam : ∀{d} → contains-tvar-cast d → contains-tvar-cast (·Λ d)
+--   CTVCastAp1 : ∀{d1 d2} →  contains-tvar-cast d1 → contains-tvar-cast (d1 ∘ d2)
+--   CTVCastAp2 : ∀{d1 d2} → contains-tvar-cast d2 → contains-tvar-cast (d1 ∘ d2)
+--   CTVCastTAp : ∀{d τ} → contains-tvar-cast d → contains-tvar-cast (d < τ >)
+--   CTVCastCast : ∀{d τ1 τ2} → contains-tvar-cast d → contains-tvar-cast (d ⟨ τ1 ⇒ τ2 ⟩)
+--   CTVCastFailedCast : ∀{d τ1 τ2} → contains-tvar-cast d → contains-tvar-cast (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
+
+-- data is-tvar-cast : (d : ihexp) → Set where 
+--   TVCast1 : ∀{d n τ} → is-tvar-cast (d ⟨ (T n) ⇒ τ ⟩)
+--   TVCast2 : ∀{d n τ} → is-tvar-cast (d ⟨ τ ⇒ (T n) ⟩)
 
 merge-tctx-wf : ∀ {Θ Γ x x' τ τ'} → Θ ⊢ Γ tctxwf → Θ ⊢ τ wf → x # Γ → (x' , τ') ∈ (Γ ,, (x , τ)) → Θ ⊢ τ' wf
 merge-tctx-wf {x = x} {x' = x'} {τ = τ} {τ' = τ'} ctxwf twf apt h with (natEQ x x') 
