@@ -122,34 +122,32 @@ module lemmas-well-formed where
                       Θ ⊢ Γ tctxwf → 
                       Θ , Γ ⊢ e ⇒ τ ~> d ⊣ Δ → 
                       Θ ⊢ τ wf 
-  -- can probably prove this using typed elaboration.
-  --  elab-wf-synth = wf-ta {!!} {!!}
+  -- A: can probably prove this using typed elaboration.
+  -- T: but typed-elaboration currently depends on theorems in this file, and no circ dependencies
+  -- T: this could be avoided by separating the theorems but I think these should stay together
     elab-wf-synth _ ESConst = WFBase
     elab-wf-synth (CCtx wts) (ESVar x) = wts x
-    elab-wf-synth ctxwf (ESLam apt x₂ elab) = WFArr x₂ (elab-wf-synth (CCtx (merge-tctx-wf ctxwf x₂ apt)) elab)
+    elab-wf-synth ctxwf (ESLam apt x₂ elab) = WFArr x₂ (elab-wf-synth (merge-tctx-wf ctxwf x₂ apt) elab)
     elab-wf-synth ctxwf (ESTLam elab) = WFForall (elab-wf-synth (weaken-tctx-wf ctxwf) elab)
     elab-wf-synth ctxwf (ESAp _ _ _ MAHole _ _) = WFHole
     elab-wf-synth ctxwf (ESAp _ _ wt MAArr _ _) = wf-synth-arr ctxwf wt
-    elab-wf-synth ctxwf (ESTAp wf wt _ _ eq) rewrite (sym eq) = wf-sub wf (weaken-t-wf (wf-synth ctxwf wt)) LTZ
+    elab-wf-synth ctxwf (ESTAp wf wt MFHole wt2 eq) rewrite (sym eq) = WFHole
+    elab-wf-synth ctxwf (ESTAp wf wt MFForall wt2 eq) rewrite (sym eq) = wf-sub wf (wf-synth-forall ctxwf wt) LTZ
     elab-wf-synth _ ESEHole = WFHole
     elab-wf-synth _ (ESNEHole _ _) = WFHole
-    elab-wf-synth _ (ESAsc wf _) = wf-ta
+    elab-wf-synth _ (ESAsc wf _) = wf
 
     elab-wf-ana : ∀{Γ Θ e τ1 τ2 d Δ} → 
                       Θ ⊢ Γ tctxwf → 
                       Θ ⊢ τ1 wf → 
                       Θ , Γ ⊢ e ⇐ τ1 ~> d :: τ2 ⊣ Δ → 
                       Θ ⊢ τ2 wf 
-    elab-wf-ana ctxwf wf1 (EALam apt MAHole wt) = WFArr WFHole (elab-wf-ana (CCtx (merge-tctx-wf ctxwf WFHole apt)) wf1 wt)
-    elab-wf-ana ctxwf (WFArr wf1 wf2) (EALam apt MAArr wt) = WFArr wf1 (elab-wf-ana (CCtx (merge-tctx-wf ctxwf wf1 apt)) wf2 wt)
+    elab-wf-ana ctxwf wf1 (EALam apt MAHole wt) = WFArr WFHole (elab-wf-ana (merge-tctx-wf ctxwf WFHole apt) wf1 wt)
+    elab-wf-ana ctxwf (WFArr wf1 wf2) (EALam apt MAArr wt) = WFArr wf1 (elab-wf-ana (merge-tctx-wf ctxwf wf1 apt) wf2 wt)
     elab-wf-ana ctxwf wf1 (EASubsume x x₁ wt x₃) = elab-wf-synth ctxwf wt
     elab-wf-ana ctxwf wf1 EAEHole = wf1
     elab-wf-ana ctxwf wf1 (EANEHole x x₁) = wf1
 
-                      
-    -- issue : Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ] Σ[ e ∈ hexp ] Σ[ τ ∈ htyp ] Σ[ ctxwf ∈ (Θ ⊢ Γ tctxwf) ] Σ[ twf ∈ (Θ , Γ ⊢ e => τ) ] (Θ ⊢ τ wf → ⊥)
-    -- issue =  (record { n = 5 }) , (λ _ → None) , ((·Λ ((⦇-⦈[ 0 ]) ·: (T 5))) < b >) , (T 5) , CCtx (λ ()) , STAp WFBase (STLam (SAsc (WFVar (LTS (LTS (LTS (LTS (LTS LTZ)))))) (ASubsume SEHole TCHole1))) MFForall {!   !} , {!   !}
-    
   -- mutual 
   --   no-tvar-elab-synth : ∀{e τ n d Δ} → 
   --                     ~∅ , ∅ ⊢ e ⇒ (T n) ~> d ⊣ Δ → 
