@@ -28,17 +28,6 @@ merge-tctx-wf {Γ = Γ} {x = x} {x' = x'} {τ = τ} {τ' = τ'} ctxwf twf apt h 
 merge-tctx-wf {Γ = Γ} {τ = τ} (CCtx wfs) twf apt h | Inr n with lem-neq-union-eq {Γ = Γ} {τ = τ} (flip n) h
 ... | map = wfs map
 
-weakening-t-wf : ∀ {Θ τ} → Θ ⊢ τ wf → [ Θ newtyp] ⊢ τ wf
-weakening-t-wf (WFVar x) = WFVar (lt-right-incr x)
-weakening-t-wf WFBase = WFBase
-weakening-t-wf WFHole = WFHole
-weakening-t-wf (WFArr wf wf₁) = WFArr (weakening-t-wf wf) (weakening-t-wf wf₁)
-weakening-t-wf (WFForall wf) = WFForall (weakening-t-wf wf)
-
-weakening-tctx-wf : ∀ {Θ Γ} → Θ ⊢ Γ tctxwf → [ Θ newtyp] ⊢ Γ tctxwf
-weakening-tctx-wf (CCtx x) = CCtx (λ x₁ → weakening-t-wf (x x₁))
-
-
 wf-sub : ∀ {Θ m τ1 τ2} → Θ ⊢ τ1 wf → [ Θ newtyp] ⊢ τ2 wf → m < (1+ (typctx.n Θ)) → Θ ⊢ Typ[ τ1 / m ] τ2 wf
 wf-sub {τ1 = τ1} {τ2 = b} wf1 wf2 leq = WFBase
 wf-sub {m = m} {τ1 = τ1} {τ2 = T v} wf1 wf2 leq with natEQ m v 
