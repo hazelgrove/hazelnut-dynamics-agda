@@ -31,5 +31,5 @@ module lemmas-free-tvars where
   wf-no-subst : ∀{t n y} -> ~∅ ⊢ y wf -> y == (Typ[ t / n ] y)
   wf-no-subst {n = n} p = nftv-no-subst p (\ ()) 
 
-  empty-tctx-closed : closed-tctx ∅
+  empty-tctx-closed : ∀{o} -> o ⊢ ∅ tctxwf
   empty-tctx-closed = CCtx (λ ())
