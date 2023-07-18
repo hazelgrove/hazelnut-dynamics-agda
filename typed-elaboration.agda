@@ -47,9 +47,9 @@ module typed-elaboration where
     ... | con1 , ih1 | con2 , ih2  = TAAp (TACast (weaken-ta-Δ1 d ih1) (WFArr wf1 wf2) con1) (TACast (weaken-ta-Δ2 {Δ1 = Δ1} d ih2) wf1 con2)
     typed-elaboration-synth ctxwf (ESTAp wf x m ex eq) 
       with match-forall-wf (wf-synth ctxwf x) m
-    ... | WFForall wf'
-      with typed-elaboration-ana ctxwf (WFForall wf') ex 
-    ... | con , ih = TATAp wf (TACast ih (WFForall wf') con) {!   !}
+    ... | wf'
+      with typed-elaboration-ana ctxwf wf' ex 
+    ... | con , ih = TATAp wf (TACast ih wf' con) eq
     typed-elaboration-synth ctxwf (ESEHole {Γ = Γ} {u = u})  = TAEHole (ctx-top ∅ u (Γ , ⦇-⦈) refl)(STAId (λ x τ z → z))
     typed-elaboration-synth ctxwf (ESNEHole {Γ = Γ} {τ = τ} {u = u} {Δ = Δ} (d1 , d2) ex)
       with typed-elaboration-synth ctxwf ex

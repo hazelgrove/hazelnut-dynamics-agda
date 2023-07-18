@@ -134,7 +134,7 @@ module core where
   --- matching for foralls
   data _▸forall_ : htyp → htyp → Set where
     MFHole : ⦇-⦈ ▸forall (·∀ ⦇-⦈)
-    MFForall  : ∀{τ} → (·∀ τ) ▸forall (·∀ τ)
+    MFForall : ∀{τ} → (·∀ τ) ▸forall (·∀ τ)
 
   -- the type of hole contexts, i.e. Δs in the judgements
   hctx : Set
@@ -335,7 +335,7 @@ module core where
                 Θ , Γ ⊢ e => τ2 →
                 τ2 ▸forall (·∀ τ3) →
                 Θ , Γ ⊢ e ⇐ (·∀ τ3) ~> d :: τ2' ⊣ Δ →
-                Typ[ τ1 / Z ] τ2 == τ4 →
+                Typ[ τ1 / Z ] τ3 == τ4 →
                 Θ , Γ ⊢ (e < τ1 >) ⇒ τ4 ~> (d ⟨ τ2' ⇒ (·∀ τ3)⟩) < τ1 > ⊣ Δ
       ESEHole : ∀{Θ Γ u} →
                 Θ , Γ ⊢ ⦇-⦈[ u ] ⇒ ⦇-⦈ ~> ⦇-⦈⟨ u , Id Γ ⟩ ⊣  ■ (u :: ⦇-⦈ [ Γ ])
