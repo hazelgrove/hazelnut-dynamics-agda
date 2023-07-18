@@ -58,4 +58,34 @@ module Nat where
   lt-right-incr LTZ = LTZ
   lt-right-incr (LTS p) = LTS (lt-right-incr p)
 
+  lt-right-incr-neq : {x y : Nat} -> x < 1+ y -> ((x == y) -> ⊥) -> x < y
+  lt-right-incr-neq {y = 0} LTZ d = abort (d refl)
+  lt-right-incr-neq {y = (1+ y')} LTZ d = LTZ
+  lt-right-incr-neq {y = 0} (LTS ()) d 
+  lt-right-incr-neq {x = (1+ x')} {y = (1+ y')} (LTS a) d = LTS (lt-right-incr-neq {x = x'} {y = y'} a λ x → d (foo x))
+    where 
+      foo : {a b : Nat} -> a == b -> (1+ a) == (1+ b)
+      foo eq rewrite eq = refl
 
+  lt-lte-is-lt : {a b c : Nat} -> (a < b) -> (b < (1+ c)) -> (a < c)
+  lt-lte-is-lt {a = Z} {c = Z} lt LTZ = lt
+  lt-lte-is-lt {a = Z} {c = Z} lt (LTS ())
+  lt-lte-is-lt {a = Z} {c = 1+ c} lt lte = LTZ
+  lt-lte-is-lt {a = 1+ a} {c = Z} lt LTZ = lt
+  lt-lte-is-lt {a = 1+ a} {c = Z} lt (LTS ())
+  lt-lte-is-lt {a = 1+ a} {b = 1+ b} {c = 1+ c} (LTS lt) (LTS lte) = LTS (lt-lte-is-lt lt lte)
+
+  trichotomy : (a b : Nat) -> (a < b + b < a + a == b)
+  trichotomy Z Z = Inr (Inr refl)
+  trichotomy (1+ a) Z = Inr (Inl LTZ)
+  trichotomy Z (1+ b) = Inl LTZ
+  trichotomy (1+ a) (1+ b) with trichotomy a b  
+  ... | Inl x = Inl (LTS x)
+  ... | Inr (Inl x) = Inr (Inl (LTS x))
+  ... | Inr (Inr x) rewrite x = Inr (Inr refl)
+
+  trichotomy-lemma : {a b : Nat} -> (a == b → ⊥) -> (a < b → ⊥) -> (b < a)
+  trichotomy-lemma {a = a} {b = b} neq nlt with trichotomy a b 
+  ... | Inl x = abort (nlt x)
+  ... | Inr (Inl x) = x
+  ... | Inr (Inr x) = abort (neq x)
