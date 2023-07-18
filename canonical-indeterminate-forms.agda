@@ -8,6 +8,9 @@ open typctx
 
 module canonical-indeterminate-forms where
 
+  forall-injective : ∀ {m n} → ·∀ m == ·∀ n → m == n
+  forall-injective refl = refl
+
   -- this type gives somewhat nicer syntax for the output of the canonical
   -- forms lemma for indeterminates at base type
   data cif-base : (Δ : hctx) (d : ihexp) → Set where
@@ -172,6 +175,93 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-arr (TACast wt _ x) (ICastArr x₁ ind) = CIFACast (_ , _ , _ , _ , _ , refl , wt , ind , x₁)
   canonical-indeterminate-forms-arr (TACast wt _ TCHole2) (ICastHoleGround x₁ ind GArr) = CIFACastHole (_ , refl , refl , refl , wt , ind , x₁)
   canonical-indeterminate-forms-arr (TAFailedCast x x₁ GArr x₃) (IFailedCast x₄ x₅ GArr x₇) = CIFAFailedCast (_ , _ , refl , refl , refl , x , x₅ , x₇)
+
+  -- this type gives somewhat nicer syntax for the output of the canonical
+  -- forms lemma for indeterminates at forall type
+  data cif-forall : (Δ : hctx) (d : ihexp) (τ : htyp) → Set where
+    CIFFEHole : ∀{d Δ τ} →
+      Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ Γ ∈ tctx ]
+        ((d == ⦇-⦈⟨ u , σ ⟩) ×
+         ((u :: (·∀ τ) [ Γ ]) ∈ Δ) ×
+         (Δ , ~∅ , ∅ ⊢ σ :s: Γ)
+        )
+      → cif-forall Δ d τ
+    CIFFNEHole : ∀{d Δ τ} →
+      Σ[ u ∈ Nat ] Σ[ σ ∈ env ] Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ] Σ[ Γ ∈ tctx ]
+        ((d == ⦇⌜ d' ⌟⦈⟨ u , σ ⟩) ×
+         (Δ , ~∅ , ∅ ⊢ d' :: τ') ×
+         (d' final) ×
+         ((u :: (·∀ τ) [ Γ ]) ∈ Δ) ×
+         (Δ , ~∅ , ∅ ⊢ σ :s: Γ)
+        )
+        → cif-forall Δ d τ
+    CIFFAp : ∀{d Δ τ} →
+      Σ[ d1 ∈ ihexp ] Σ[ d2 ∈ ihexp ] Σ[ τ' ∈ htyp ]
+        ((d == d1 ∘ d2) ×
+         (Δ , ~∅ , ∅ ⊢ d1 :: τ' ==> (·∀ τ)) ×
+         (Δ , ~∅ , ∅ ⊢ d2 :: τ') ×
+         (d1 indet) ×
+         (d2 final) ×
+         ((τ3 τ4 τ3' τ4' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨ τ3 ==> τ4 ⇒ τ3' ==> τ4' ⟩))
+        )
+        → cif-forall Δ d τ
+    CIFFTApForall : ∀ {Δ d τ} →
+      Σ[ d1 ∈ ihexp ] Σ[ τ ∈ htyp ] Σ[ τ' ∈ htyp ] 
+        ((d == d1 < τ >) ×
+         (Δ , ~∅ , ∅ ⊢ d1 :: ·∀ (·∀ τ')) ×
+         (d1 indet) ×
+         ((τ2 τ2' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ τ2) ⇒ (·∀ τ2')⟩))
+        )
+        → cif-forall Δ d τ
+    CIFFTApId : ∀ {Δ d τ} →
+      Σ[ d1 ∈ ihexp ] Σ[ τ1 ∈ htyp ]
+        ((d == d1 < ·∀ τ1 >) ×
+         (Δ , ~∅ , ∅ ⊢ d1 :: ·∀ (T Z)) ×
+         (d1 indet) ×
+         ((τ3 τ3' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ τ3) ⇒ (·∀ τ3')⟩))
+        )
+        → cif-forall Δ d τ
+    CIFFCast : ∀{d Δ τ} →
+      Σ[ d' ∈ ihexp ] Σ[ τ1 ∈ htyp ] Σ[ τ1' ∈ htyp ]
+        ((d == d' ⟨ (·∀ τ1') ⇒ (·∀ τ1) ⟩) ×
+          (Δ , ~∅ , ∅ ⊢ d' :: ·∀ τ1') ×
+          (d' indet) ×
+          ((·∀ τ1') ≠ (·∀ τ1))
+        )
+       → cif-forall Δ d τ
+    CIFFCastHole : ∀{d Δ τ} →
+      Σ[ d' ∈ ihexp ]
+        ((d == (d' ⟨ ⦇-⦈ ⇒ ·∀ ⦇-⦈ ⟩)) ×
+         (τ == ⦇-⦈) ×
+         (Δ , ~∅ , ∅ ⊢ d' :: ⦇-⦈) ×
+         (d' indet) ×
+         ((d'' : ihexp) (τ' : htyp) → d' ≠ (d'' ⟨ τ' ⇒ ⦇-⦈ ⟩))
+        )
+        → cif-forall Δ d τ
+    CIFFFailedCast : ∀{d Δ τ} →
+      Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ]
+          ((d == (d' ⟨ τ' ⇒⦇-⦈⇏ ·∀ ⦇-⦈ ⟩) ) ×
+           (τ == ⦇-⦈) ×
+           (Δ , ~∅ , ∅ ⊢ d' :: τ') ×
+           (τ' ground) ×
+           (τ' ≠ (·∀ ⦇-⦈))
+           )
+          → cif-forall Δ d τ
+
+  canonical-indeterminate-forms-forall : ∀{Δ d τ} →
+                                       Δ , ~∅ , ∅ ⊢ d :: (·∀ τ) →
+                                       d indet →
+                                       cif-forall Δ d τ
+  -- canonical-indeterminate-forms-forall = {!   !}
+  canonical-indeterminate-forms-forall (TAVar x₁) ()
+  canonical-indeterminate-forms-forall (TAAp wt wt₁) (IAp x ind x₁) = CIFFAp (_ , _ , _ , refl , wt , wt₁ , ind , x₁ , x)
+  canonical-indeterminate-forms-forall (TATAp {τ1 = τ1} {τ2 = ·∀ τ3} wf wt eq) (ITAp x ind) rewrite eq = CIFFTApForall ( _ , _ , _ , refl , wt , ind , x)
+  canonical-indeterminate-forms-forall (TATAp {τ2 = T Z} wf wt eq) (ITAp x ind) rewrite eq = CIFFTApId ( _ , _ , refl , wt , ind , x )
+  canonical-indeterminate-forms-forall (TAEHole x x₁) IEHole = CIFFEHole (_ , _ , _ , refl , x , x₁)
+  canonical-indeterminate-forms-forall (TANEHole x wt x₁) (INEHole x₂) = CIFFNEHole (_ , _ , _ , _ , _ , refl , wt , x₂ , x , x₁)
+  canonical-indeterminate-forms-forall (TACast wt _ x) (ICastForall x₁ ind) = CIFFCast (_ , _ , _ , refl , wt , ind , λ x₃ → x₁ (forall-injective x₃) )
+  canonical-indeterminate-forms-forall (TACast wt _ TCHole2) (ICastHoleGround x₁ ind GForall) = CIFFCastHole (_ , refl , refl , wt , ind , x₁)
+  canonical-indeterminate-forms-forall (TAFailedCast x x₁ GForall x₃) (IFailedCast x₄ x₅ GForall x₇) = CIFFFailedCast (_ , _ , refl , refl , x , x₅ , x₇)
 
 
   -- this type gives somewhat nicer syntax for the output of the canonical
