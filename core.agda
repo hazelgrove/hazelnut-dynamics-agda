@@ -108,13 +108,19 @@ module core where
               τ ~ τ' →
               ·∀ τ ~ ·∀ τ'
   
-  -- well-formedness
+  -- well-formedness of types
   data _⊢_wf : typctx -> htyp -> Set where
     WFVar : ∀{Γ a} → a < typctx.n Γ → Γ ⊢ T a wf
     WFBase : ∀{Γ} -> Γ ⊢ b wf
     WFHole : ∀{Γ} -> Γ ⊢ ⦇-⦈ wf
     WFArr : ∀{Γ t1 t2} -> Γ ⊢ t1 wf -> Γ ⊢  t2 wf -> Γ ⊢ t1 ==> t2 wf
     WFForall : ∀{Γ t} -> [ Γ newtyp] ⊢ t wf -> Γ ⊢ ·∀ t wf
+
+  -- well-formedness of contexts
+  data _⊢_tctxwf : typctx -> tctx → Set where
+    CCtx : ∀{Θ Γ} -> (∀{x y} -> (x , y) ∈ Γ → Θ ⊢ y wf) -> Θ ⊢ Γ tctxwf
+  -- data closed-ihexp : ihexp → Set where
+  --  CTVar 
 
   -- type inconsistency
   _~̸_ : (t1 t2 : htyp) → Set
@@ -784,8 +790,3 @@ module core where
                            → binders-unique (d ⟨ τ1 ⇒ τ2 ⟩)
       BUFailedCast : ∀{d τ1 τ2} → binders-unique d
                                  → binders-unique (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
-    
-    data _⊢_tctxwf : typctx -> tctx → Set where
-      CCtx : ∀{Θ Γ} -> (∀{x y} -> (x , y) ∈ Γ → Θ ⊢ y wf) -> Θ ⊢ Γ tctxwf
-    -- data closed-ihexp : ihexp → Set where
-    --  CTVar 
