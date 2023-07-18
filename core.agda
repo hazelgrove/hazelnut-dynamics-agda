@@ -119,6 +119,7 @@ module core where
   -- well-formedness of contexts
   data _⊢_tctxwf : typctx -> tctx → Set where
     CCtx : ∀{Θ Γ} -> (∀{x y} -> (x , y) ∈ Γ → Θ ⊢ y wf) -> Θ ⊢ Γ tctxwf
+
   -- data closed-ihexp : ihexp → Set where
   --  CTVar 
 
@@ -143,6 +144,10 @@ module core where
   -- notation for a triple to match the CMTT syntax
   _::_[_] : Nat → htyp → tctx → (Nat × (tctx × htyp))
   u :: τ [ Γ ] = u , (Γ , τ)
+
+  -- well-formedness of hole contexts
+  data _⊢_hctxwf : typctx -> hctx → Set where
+    HCtx : ∀{Θ Δ} -> (∀ {x Γ τ} -> (x , (Γ , τ)) ∈ Δ → ((Θ ⊢ Γ tctxwf) + (Θ ⊢ τ wf))) -> Θ ⊢ Δ hctxwf
 
   -- the hole name u does not appear in the term e
   data hole-name-new : (e : hexp) (u : Nat) → Set where
