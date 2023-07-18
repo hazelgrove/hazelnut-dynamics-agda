@@ -147,7 +147,7 @@ module core where
 
   -- well-formedness of hole contexts
   data _⊢_hctxwf : typctx -> hctx → Set where
-    HCtx : ∀{Θ Δ} -> (∀ {x Γ τ} -> (x , (Γ , τ)) ∈ Δ → ((Θ ⊢ Γ tctxwf) + (Θ ⊢ τ wf))) -> Θ ⊢ Δ hctxwf
+    HCtx : ∀{Θ Δ} -> (∀ {x Γ τ} -> (x , (Γ , τ)) ∈ Δ → ((Θ ⊢ Γ tctxwf) × (Θ ⊢ τ wf))) -> Θ ⊢ Δ hctxwf
 
   -- the hole name u does not appear in the term e
   data hole-name-new : (e : hexp) (u : Nat) → Set where

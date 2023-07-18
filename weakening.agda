@@ -20,6 +20,12 @@ module weakening where
   weaken-tctx-wf : ∀ {Θ Γ} → Θ ⊢ Γ tctxwf → [ Θ newtyp] ⊢ Γ tctxwf
   weaken-tctx-wf (CCtx x) = CCtx (λ x₁ → weaken-t-wf (x x₁))
 
+  weaken-hctx-wf : ∀ {Θ Δ} → Θ ⊢ Δ hctxwf → [ Θ newtyp] ⊢ Δ hctxwf
+  weaken-hctx-wf (HCtx map) = 
+    HCtx (λ key → 
+      (let (p1 , p2) = (map key) in 
+      (weaken-tctx-wf p1) , (weaken-t-wf p2)))
+
   mutual
     weaken-subst-Δ : ∀{Δ1 Δ2 Γ σ Γ' Θ} → Δ1 ## Δ2
                                      → Δ1 , Γ , Θ ⊢ σ :s: Γ'
