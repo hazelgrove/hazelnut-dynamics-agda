@@ -35,6 +35,10 @@ module Nat where
   ... | Inl p = Inl (LTS p)
   ... | Inr p = Inr (\{(LTS p') -> p p'})
 
+  lt-1+ : {x : Nat} -> x < 1+ x
+  lt-1+ {Z} = LTZ
+  lt-1+ {1+ x'} = LTS lt-1+
+
   lt-ne : {x y : Nat} -> x < y -> (x == y) → ⊥
   lt-ne LTZ = \ ()
   lt-ne (LTS {n} {m} p) = \eq -> lt-ne p ((1+inj n m eq))

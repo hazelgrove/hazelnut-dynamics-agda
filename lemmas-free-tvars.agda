@@ -7,8 +7,8 @@ module lemmas-free-tvars where
 
   open typctx
 
-  nftv-no-subst : ∀{t n y o} -> o ⊢ y wf -> ((n < typctx.n o) -> ⊥) -> y == (Typ[ t / n ] y)
-  nftv-no-subst {n = n} {y = T a} {o = o} (WFVar l) lte with natEQ n a
+  wf-no-subst : ∀{t n y o} -> o ⊢ y wf -> ((n < typctx.n o) -> ⊥) -> y == (Typ[ t / n ] y)
+  wf-no-subst {n = n} {y = T a} {o = o} (WFVar l) lte with natEQ n a
   ... | Inl refl = abort (lte l) 
   ... | Inr neq with natLT n a
   ... | Inl (LTZ) = abort (lte (let p1 , p2 = lt-gtz {typctx.n o} l in foo p2))
@@ -17,22 +17,27 @@ module lemmas-free-tvars where
       foo p rewrite p = LTZ
   ... | Inl (LTS p) = let temp = lt-trans (LTS p) l in abort (lte temp)
   ... | Inr _ = refl
-  nftv-no-subst WFBase _ = refl
-  nftv-no-subst WFHole _ = refl
-  nftv-no-subst (WFArr {gamma} {dom} {cod} xwf ywf) p = foo (nftv-no-subst xwf p) (nftv-no-subst ywf p)
+  wf-no-subst WFBase _ = refl
+  wf-no-subst WFHole _ = refl
+  wf-no-subst (WFArr {gamma} {dom} {cod} xwf ywf) p = foo (wf-no-subst xwf p) (wf-no-subst ywf p)
     where
       foo : ∀{A B C D} -> A == C -> B == D -> (A ==> B) == (C ==> D)
       foo A==C B==D rewrite A==C rewrite B==D = refl
-  nftv-no-subst {n = n} (WFForall p) pf = foo (nftv-no-subst p (\{(LTS pf') -> pf pf'}))
+  wf-no-subst {n = n} (WFForall p) pf = foo (wf-no-subst p (\{(LTS pf') -> pf pf'}))
     where
       foo : ∀{A B} -> A == B -> ·∀ A == ·∀ B
       foo eq rewrite eq = refl
-  
-  wf-no-subst : ∀{t n y} -> ~∅ ⊢ y wf -> y == (Typ[ t / n ] y)
-  wf-no-subst {n = n} p = nftv-no-subst p (\ ()) 
 
-  empty-tctx-closed : ∀{o} -> o ⊢ ∅ tctxwf
-  empty-tctx-closed = CCtx (λ ())
+
+  wf-tctx-no-subst : ∀ {o g t n} -> o ⊢ g tctxwf -> ((n < typctx.n o) -> ⊥) -> g == (Tctx[ t / n ] g)
+  wf-tctx-no-subst {o} {g} {t} {n} (CCtx x) nbound = funext (\y -> helper y)
+    where
+      helper : (y : Nat) -> g y == (Tctx[ t / n ] g) y
+      helper y with ctxindirect g y | ctxindirect (Tctx[ t / n ] g) y
+      ... | Inl (_ , ing) | Inl (_ , ing') rewrite ing rewrite ing' rewrite wf-no-subst (x ing) nbound = ing'
+      ... | Inr ning | Inr ning' = ning · ! ning'
+      ... | Inl (_ , ing) | Inr ning' rewrite ing rewrite ning' = abort (somenotnone ning')
+      ... | Inr ning | Inl (_ , ing') rewrite ning rewrite ing' = abort (somenotnone (! ing'))
 
   wf-weakening : ∀{t o} -> o ⊢ t wf -> [ o newtyp] ⊢ t wf
   wf-weakening (WFVar x) = WFVar (lt-right-incr x)

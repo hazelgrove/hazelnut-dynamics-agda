@@ -7,6 +7,9 @@ open import weakening
 
 module lemmas-well-formed where 
 
+  wf-empty-tctx : ∀{o} -> o ⊢ ∅ tctxwf
+  wf-empty-tctx = CCtx (λ ())
+
   merge-tctx-wf-helper : ∀ {Θ Γ x x' τ τ'} → Θ ⊢ Γ tctxwf → Θ ⊢ τ wf → x # Γ → (x' , τ') ∈ (Γ ,, (x , τ)) → Θ ⊢ τ' wf
   merge-tctx-wf-helper {x = x} {x' = x'} {τ = τ} {τ' = τ'} ctxwf twf apt h with (natEQ x x') 
   merge-tctx-wf-helper {Γ = Γ} {x = x} {x' = x'} {τ = τ} {τ' = τ'} ctxwf twf apt h | Inl eq rewrite (sym eq) 
