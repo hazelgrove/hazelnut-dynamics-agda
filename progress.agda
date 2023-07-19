@@ -88,12 +88,19 @@ module progress where
     -- type applications
   
   progress (TATAp wf wt eq) with progress wt 
-  ... | S (_ , Step x y z) = S (_ , (Step (FHTAp x) y (FHTAp z)))
-  ... | I x with canonical-indeterminate-forms-forall wt x 
-  ... | ind = {! ind !}
-  ... | (BV v) with canonical-boxed-forms-forall wt v 
-  ... | CBFTLam (x , y , z) rewrite y = S (_ , Step FHOuter ITTLam FHOuter)
-  ... | CBFCastForall (x , y , z , w , v) rewrite z = S (_ , Step FHOuter ITTApCast FHOuter) 
+  progress (TATAp wf wt eq) | S (_ , Step x y z) = S (_ , (Step (FHTAp x) y (FHTAp z)))
+  progress (TATAp wf wt eq) | I x with canonical-indeterminate-forms-forall wt x 
+  progress (TATAp wf wt eq) | I x | CIFFEHole (π3 , x₁) = {!   !}
+  progress (TATAp wf wt eq) | I x | CIFFNEHole x₁ = {!   !}
+  progress (TATAp wf wt eq) | I x | CIFFAp x₁ = {!   !}
+  progress (TATAp wf wt eq) | I x | CIFFTApForall x₁ = {!   !}
+  progress (TATAp wf wt eq) | I x | CIFFTApId x₁ = {!   !}
+  progress (TATAp wf wt eq) | I x | CIFFCast x₁ = {!   !}
+  progress (TATAp wf wt eq) | I x | CIFFCastHole x₁ = {!   !}
+  progress (TATAp wf wt eq) | I x | CIFFFailedCast x₁ = {!   !}
+  progress (TATAp wf wt eq) | (BV v) with canonical-boxed-forms-forall wt v 
+  progress (TATAp wf wt eq) | (BV v) | CBFTLam (x , y , z) rewrite y = S (_ , Step FHOuter ITTLam FHOuter)
+  progress (TATAp wf wt eq) | (BV _) | CBFCastForall (x , y , z , w , v) rewrite z = S (_ , Step FHOuter ITTApCast FHOuter) 
   -- progress (TATAp (TAEHole x x₁) eq) = I (ITAp (λ τ1 τ2 d' ()) IEHole)
   
 
