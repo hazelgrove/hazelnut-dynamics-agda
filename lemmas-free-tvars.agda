@@ -56,13 +56,16 @@ module lemmas-free-tvars where
   lemma-subst-outer : ∀{t y o} -> [ o newtyp] ⊢ y wf -> o ⊢ t wf -> o ⊢ (Typ[ t / Z ] y) wf
   lemma-subst-outer p q = lemma-subst-tvar p q LTZ
 
-  lemma-subst-apart : ∀{x Γ t n} -> x # Γ -> x # (Tctx[ t / n ] Γ)
-  lemma-subst-apart {x = x} {Γ = Γ} p with Γ x 
+  lemma-subst-apart : ∀{Γ x t n} -> x # Γ -> x # (Tctx[ t / n ] Γ)
+  lemma-subst-apart {Γ} {x} p with Γ x 
   ... | None = refl
   ... | Some t = abort (foo p)
     where
       foo : ∀{x} -> Some x == None -> ⊥
       foo = \ ()
+
+  lemma-subst-elem : ∀{Γ x τ t n} -> (x , τ) ∈ Γ -> (x , Typ[ t / n ] τ) ∈ (Tctx[ t / n ] Γ)
+  lemma-subst-elem {Γ} {x} {τ} {t} {n} p rewrite p = refl
 
   lemma-union-subst-comm :  ∀{Γ1 Γ2 : tctx} {t : htyp} {n : Nat} -> (Tctx[ t / n ] Γ1) ∪ (Tctx[ t / n ] Γ2) == Tctx[ t / n ] (Γ1 ∪ Γ2)
   lemma-union-subst-comm {Γ1} {Γ2} {t} {n} = funext (\x -> helper x)

@@ -60,27 +60,34 @@ module preservation where
   wt-filling (TAFailedCast x y z w) FHOuter = _ , TAFailedCast x y z w
   wt-filling (TAFailedCast x x₁ x₂ x₃) (FHFailedCast y) = wt-filling x y
 
-  lemma-tysubst : ∀{ Δ Γ Θ d τ t n } -> {nbound : n < typctx.n Θ → ⊥} {twf : Θ ⊢ t wf} -> Θ ⊢ Γ tctxwf -> Δ , [ Θ newtyp] , Γ ⊢ d :: τ -> Δ , Θ , Tctx[ t / Z ] Γ ⊢ (TTyp[ t / Z ] d) :: Typ[ t / Z ] τ
-  lemma-tysubst _ TAConst = TAConst
-  lemma-tysubst {Γ = Γ} {d = X var} {n = n} {nbound} (CCtx cwf) (TAVar x) = let x' = foo {var} {Γ} (nftv-no-subst (cwf x) nbound) x {- (wf-no-subst {! (cwf x) !}) x -} in TAVar {!x'!} -- TAVar ((foo {!x!} {!(wf-no-subst (nfv x))!}))
+  lemma-tysubst : ∀{ Δ Γ Θ d τ t n } -> (n < typctx.n Θ → ⊥) -> Θ ⊢ t wf {- -> Θ ⊢ Γ tctxwf -} -> Δ , [ Θ newtyp] , Γ ⊢ d :: τ -> Δ , Θ , Tctx[ t / Z ] Γ ⊢ (TTyp[ t / Z ] d) :: Typ[ t / Z ] τ
+  lemma-tysubst _ _ TAConst = TAConst
+  lemma-tysubst {Γ = Γ} {d = X var} {t = t} {n = n} nbound twf (TAVar x) = TAVar (lemma-subst-elem {Γ} {var} x)
+{-  ...  | None rewrite x = {!!}
+  ...  | Some a = {!!} -}
+  
+  -- let x' = foo {var} {Γ} (nftv-no-subst (cwf x) nbound) x {- (wf-no-subst {! (cwf x) !}) x -} in TAVar {!x'!} -- TAVar ((foo {!x!} {!(wf-no-subst (nfv x))!}))
     where
       foo : ∀{x Γ} {t1 t2 : htyp} -> t1 == t2 -> (x , t1) ∈ Γ -> (x , t2) ∈ Γ
       foo eq p rewrite eq = p
-  lemma-tysubst {Δ} {Γ} {Θ} {d = ·λ _ [ _ ] d} {t = t} {twf = twf} tcwf (TALam {x = x} {τ1 = τ1} {τ2 = τ2} ap wf y) -- (lemma-extend-subst-comm {Γ} {x} {τ1} {t} {Z})
-    = TALam (lemma-subst-apart ap) (wf-sub twf wf LTZ) (foo (lemma-tysubst {!!} y))
+  lemma-tysubst {Δ} {Γ} {Θ} {d = ·λ _ [ _ ] d} {t = t} nbound twf (TALam {x = x} {τ1 = τ1} {τ2 = τ2} ap wf y) -- (lemma-extend-subst-comm {Γ} {x} {τ1} {t} {Z})
+    = TALam (lemma-subst-apart {Γ} ap) (wf-sub twf wf LTZ) (foo (lemma-tysubst nbound twf y))
     where
       foo : Δ , Θ , Tctx[ t / Z ] (Γ ,, (x , τ1)) ⊢ TTyp[ t / Z ] d :: (Typ[ t / Z ] τ2) -> 
         Δ , Θ , (Tctx[ t / Z ] Γ) ,, (x , Typ[ t / Z ] τ1) ⊢ TTyp[ t / Z ] d :: (Typ[ t / Z ] τ2)
       foo p rewrite lemma-extend-subst-comm {Γ} {x} {τ1} {t} {Z} = p
   -- TALam x (wf-sub twf wf LTZ) (lemma-tysubst {τ = Typ[ t / Z ] τ2} (merge-tctx-wf tcwf (wf-sub twf wf LTZ) x) {!  !}) -- TALam (lemma-tysubst x) (lemma-tysubst y) 
   -- TALam x (wf-sub twf wf LTZ) {!   !}
-  lemma-tysubst _ (TATLam x) = {!!}
-  lemma-tysubst _ (TAAp x cong) = {!!}
-  lemma-tysubst _ (TATAp wf x eq) = {!!}
-  lemma-tysubst _ (TAEHole x x₁) = {!!}
-  lemma-tysubst _ (TANEHole x x₁ x₂) = {!!}
-  lemma-tysubst _ (TACast x wf x₁) = {!!}
-  lemma-tysubst _ (TAFailedCast x x₁ x₂ x₃) = {!!}
+  lemma-tysubst _ _ _ = {!!}
+{-
+  lemma-tysubst (TATLam x) = {!!}
+  lemma-tysubst (TAAp x cong) = {!!}
+  lemma-tysubst (TATAp wf x eq) = {!!}
+  lemma-tysubst (TAEHole x x₁) = {!!}
+  lemma-tysubst (TANEHole x x₁ x₂) = {!!}
+  lemma-tysubst (TACast x wf x₁) = {!!}
+  lemma-tysubst (TAFailedCast x x₁ x₂ x₃) = {!!}
+-}
 
   -- instruction transitions preserve type
   preserve-trans : ∀{ Δ Γ Θ d τ d' } →
