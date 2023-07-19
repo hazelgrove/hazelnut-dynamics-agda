@@ -30,7 +30,7 @@ module core where
   -- the type of type contexts, i.e. Γs in the judegments below
   tctx : Set
   tctx = htyp ctx
-
+  
   mutual
     -- identity substitution, substitition environments
     data env : Set where
@@ -212,6 +212,14 @@ module core where
 
   -- Type substitution binds tighter than consistency (20)
   infixl 21 Typ[_/_]_
+  
+  
+  -- Extended to type contexts
+  Tctx[_/_]_ : htyp -> Nat -> tctx -> tctx
+  (Tctx[ τ / a ] Γ) n with Γ n
+  ... | None = None
+  ... | Some t = Some (Typ[ τ / a ] t)
+
   
   -- bidirectional type checking judgements for hexp
   mutual
@@ -460,7 +468,7 @@ module core where
   TTyp[_/_]_ : htyp → Nat → ihexp → ihexp
   TTyp[ t / a ] c = c
   TTyp[ t / a ] X x = X x
-  TTyp[ t / a ] (·λ x [ τ ] d') = (·λ x [ (Typ[ t / a ] τ) ] d')
+  TTyp[ t / a ] (·λ x [ τ ] d') = (·λ x [ (Typ[ t / a ] τ) ] (TTyp[ t / a ] d'))
   TTyp[ t / a ] (·Λ d) = ·Λ (TTyp[ t / (1+ a) ] d)
   -- TODO: May need to add into hole substitutions?
   TTyp[ t / a ] ⦇-⦈⟨ u , σ ⟩ = ⦇-⦈⟨ u , σ ⟩

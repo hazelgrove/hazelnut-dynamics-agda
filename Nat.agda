@@ -50,13 +50,21 @@ module Nat where
       foo : {x y : Nat} -> x == y -> 1+ x == 1+ y
       foo eq rewrite eq = refl
 
-  lt-trans : {x y z : Nat} -> x < y -> y < z -> x < z
-  lt-trans LTZ (LTS _) = LTZ
-  lt-trans (LTS p) (LTS p') = LTS (lt-trans p p')
+  lt-1+-inj : {x y : Nat} -> 1+ x < 1+ y -> x < y
+  lt-1+-inj (LTS p) = p
+  
+  lt-trans-1+ : {x y z : Nat} -> x < y -> y < z -> 1+ x < z
+  lt-trans-1+ LTZ (LTS LTZ) = LTS LTZ
+  lt-trans-1+ LTZ (LTS (LTS p)) = LTS LTZ
+  lt-trans-1+ (LTS p) (LTS p') = LTS (lt-trans-1+ p p')
 
   lt-right-incr : {x y : Nat} -> x < y -> x < 1+ y
   lt-right-incr LTZ = LTZ
   lt-right-incr (LTS p) = LTS (lt-right-incr p)
+      
+  lt-trans : {x y z : Nat} -> x < y -> y < z -> x < z
+  lt-trans LTZ (LTS p) = LTZ
+  lt-trans (LTS p) (LTS p') = lt-right-incr (lt-trans-1+ p p')
 
   lt-right-incr-neq : {x y : Nat} -> x < 1+ y -> ((x == y) -> ⊥) -> x < y
   lt-right-incr-neq {y = 0} LTZ d = abort (d refl)
