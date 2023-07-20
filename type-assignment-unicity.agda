@@ -4,7 +4,6 @@ open import core
 open import contexts
 
 module type-assignment-unicity where
-  open typctx
 
   -- type assignment only assigns one type
   type-assignment-unicity : {Γ : tctx} {d : ihexp} {τ' τ : htyp} {Δ : hctx} {Θ : typctx} →
@@ -16,7 +15,7 @@ module type-assignment-unicity where
   type-assignment-unicity (TALam _ _ d1) (TALam _ _ d2)
     with type-assignment-unicity d1 d2
   ... | refl = refl
-  type-assignment-unicity (TATLam d1) (TATLam d2)
+  type-assignment-unicity (TATLam _ d1) (TATLam _ d2)
     with type-assignment-unicity d1 d2
   ... | refl = refl
   type-assignment-unicity (TAAp x x₁) (TAAp y y₁)
