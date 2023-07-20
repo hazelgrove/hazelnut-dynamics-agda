@@ -201,8 +201,6 @@ module core where
     with natEQ a a'
   Typ[ τ / a ] T a' | Inl refl = τ
   Typ[ τ / a ] T a' | Inr neq with natLT a a'
-  -- Technically only necessary with alpha renaming or free variables, which we don't have,
-  -- But better to have this logic here than not.
   ... | Inl (LTZ {n}) = T n
   ... | Inl (LTS {n} {m} p) = T m
   ... | Inr _ = T a'
@@ -213,12 +211,16 @@ module core where
   -- Type substitution binds tighter than consistency (20)
   infixl 21 Typ[_/_]_
   
+  incrtyp : htyp -> htyp
+  incrtyp (T a) = T (1+ a)
+  incrtyp t = t
+  
+  incrtctx : tctx -> tctx
+  incrtctx = map incrtyp
   
   -- Extended to type contexts
   Tctx[_/_]_ : htyp -> Nat -> tctx -> tctx
-  (Tctx[ τ / a ] Γ) n with Γ n
-  ... | None = None
-  ... | Some t = Some (Typ[ τ / a ] t)
+  Tctx[ τ / a ] Γ = map (Typ[_/_]_ τ a ) Γ
 
   
   -- bidirectional type checking judgements for hexp
@@ -413,7 +415,7 @@ module core where
               Δ , Θ , (Γ ,, (x , τ1)) ⊢ d :: τ2 →
               Δ , Θ , Γ ⊢ ·λ x [ τ1 ] d :: (τ1 ==> τ2)
       TATLam : ∀{ Δ Θ Γ d τ} →
-              Δ , [ Θ newtyp] , Γ ⊢ d :: τ →
+              Δ , [ Θ newtyp] , incrtctx Γ ⊢ d :: τ →
               Δ , Θ , Γ ⊢ ·Λ d :: (·∀ τ)
       TAAp : ∀{Δ Θ Γ d1 d2 τ1 τ} →
              Δ , Θ , Γ ⊢ d1 :: τ1 ==> τ →
@@ -421,9 +423,9 @@ module core where
              Δ , Θ , Γ ⊢ d1 ∘ d2 :: τ
       TATAp : ∀ {Δ Θ Γ d τ1 τ2 τ3} → 
                 Θ ⊢ τ1 wf →
-                Δ , Θ , Γ ⊢ d :: (·∀ τ2) →
+                Δ , Θ , Tctx[ τ1 / Z ] Γ ⊢ d :: (·∀ τ2) →
                 Typ[ τ1 / Z ] τ2 == τ3 → 
-                Δ , {- CTyp [ ] -} Θ , Γ ⊢ (d < τ1 >) :: τ3
+                Δ , Θ , Γ ⊢ (d < τ1 >) :: τ3
       TAEHole : ∀{Δ Θ Γ σ u Γ' τ} →
                 (u , (Γ' , τ)) ∈ Δ →
                 Δ , Θ , Γ ⊢ σ :s: Γ' →

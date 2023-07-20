@@ -100,6 +100,3 @@ module Prelude where
     -- equality is symmetric
   sym : {A : Set} {x y : A} → (x == y) → (y == x)
   sym refl = refl
-
-  case_of_ : ∀{a b} {A : Set a} {B : Set b} -> A -> (A -> B) -> B
-  case x of f = f x
