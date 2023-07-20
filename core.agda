@@ -157,26 +157,20 @@ module core where
 
 
   -- substitution in types
-  -- TODO needs fixing
   Typ[_/_]_ : htyp → Nat → htyp → htyp 
   Typ[ τ / a ] b = b
   Typ[ τ / a ] T a'
     with natEQ a a'
   Typ[ τ / a ] T a' | Inl refl = τ
-  Typ[ τ / a ] T a' | Inr neq with natLT a a'
-  ... | Inl (LTZ {n}) = T n
-  ... | Inl (LTS {n} {m} p) = T m
-  ... | Inr _ = T a'
+  Typ[ τ / a ] T a' | Inr neq = T a'
   Typ[ τ / a ] ⦇-⦈ = ⦇-⦈
   Typ[ τ / a ] (τ1 ==> τ2) = ((Typ[ τ / a ] τ1) ==> (Typ[ τ / a ] τ2))
-  Typ[ τ / a ] (·∀ t τ') = ·∀ t (Typ[ τ / (1+ a) ] τ')
+  Typ[ τ / a ] (·∀ t τ') with natEQ a t
+  ...  | Inl refl = (·∀ t τ')
+  ...  | Inr _ = ·∀ t (Typ[ τ / a ] τ')
 
   -- Type substitution binds tighter than consistency (20)
   infixl 21 Typ[_/_]_
-  
-  -- Extended to type contexts
-  Tctx[_/_]_ : htyp -> Nat -> tctx -> tctx
-  Tctx[ τ / a ] Γ = map (Typ[_/_]_ τ a ) Γ
 
   
   -- bidirectional type checking judgements for hexp
@@ -431,7 +425,9 @@ module core where
   TTyp[ t / a ] c = c
   TTyp[ t / a ] X x = X x
   TTyp[ t / a ] (·λ x [ τ ] d') = (·λ x [ (Typ[ t / a ] τ) ] (TTyp[ t / a ] d'))
-  TTyp[ t / a ] (·Λ tn d) = ·Λ tn (TTyp[ t / (1+ a) ] d) --TODO: Fix this
+  TTyp[ t / a ] (·Λ tn d) with natEQ a tn
+  ... | Inl refl = (·Λ tn d)
+  ... | Inr _ = ·Λ tn (TTyp[ t / a ] d) --TODO: Fix this
   -- TODO: May need to add into hole substitutions?
   TTyp[ t / a ] ⦇-⦈⟨ u , σ ⟩ = ⦇-⦈⟨ u , σ ⟩
   TTyp[ t / a ] ⦇⌜ d ⌟⦈⟨ u , σ  ⟩ =  ⦇⌜ TTyp[ t / a ] d ⌟⦈⟨ u , σ ⟩
@@ -474,7 +470,7 @@ module core where
                        d1 indet →
                        d2 final →
                        (d1 ∘ d2) indet
-      ITAp : ∀{d t τ} → ((τ1 τ2 : htyp) (d' : ihexp) →
+      ITAp : ∀{d τ} → ((t : Nat) (τ1 τ2 : htyp) (d' : ihexp) →
                        d ≠ (d' ⟨(·∀ t τ1) ⇒ (·∀ t τ2)⟩)) →
                        d indet →
                        (d < τ >) indet

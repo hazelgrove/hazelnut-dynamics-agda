@@ -5,8 +5,6 @@ open import contexts
 
 module lemmas-free-tvars where
 
-  open typctx
-
   wf-no-subst : ∀{t n y o} -> o ⊢ y wf -> ((n < typctx.n o) -> ⊥) -> y == (Typ[ t / n ] y)
   wf-no-subst {n = n} {y = T a} {o = o} (WFVar l) lte with natEQ n a
   ... | Inl refl = abort (lte l) 
