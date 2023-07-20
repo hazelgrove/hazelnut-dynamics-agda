@@ -213,6 +213,8 @@ module core where
   
   incrtyp : htyp -> htyp
   incrtyp (T a) = T (1+ a)
+  incrtyp (t1 ==> t2) = incrtyp t1 ==> incrtyp t2
+  incrtyp (·∀ t) = ·∀ (incrtyp t)
   incrtyp t = t
   
   incrtctx : tctx -> tctx
@@ -423,7 +425,7 @@ module core where
              Δ , Θ , Γ ⊢ d1 ∘ d2 :: τ
       TATAp : ∀ {Δ Θ Γ d τ1 τ2 τ3} → 
                 Θ ⊢ τ1 wf →
-                Δ , Θ , Tctx[ τ1 / Z ] Γ ⊢ d :: (·∀ τ2) →
+                Δ , Θ , Γ ⊢ d :: (·∀ τ2) →
                 Typ[ τ1 / Z ] τ2 == τ3 → 
                 Δ , Θ , Γ ⊢ (d < τ1 >) :: τ3
       TAEHole : ∀{Δ Θ Γ σ u Γ' τ} →

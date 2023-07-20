@@ -61,13 +61,8 @@ module lemmas-free-tvars where
   lemma-subst-outer : ∀{t y o} -> [ o newtyp] ⊢ y wf -> o ⊢ t wf -> o ⊢ (Typ[ t / Z ] y) wf
   lemma-subst-outer p q = lemma-subst-tvar p q LTZ
 
-  lemma-subst-apart : ∀{Γ x t n} -> x # Γ -> x # (Tctx[ t / n ] Γ)
-  lemma-subst-apart {Γ} {x} p with Γ x 
-  ... | None = refl
-  ... | Some t = abort (foo p)
-    where
-      foo : ∀{x} -> Some x == None -> ⊥
-      foo = \ ()
+  rewrite-gamma : ∀{Δ Θ Γ Γ' d t} → Γ == Γ' → Δ , Θ , Γ ⊢ d :: t → Δ , Θ , Γ' ⊢ d :: t
+  rewrite-gamma eq ta rewrite eq = ta
 
-  lemma-subst-elem : ∀{Γ x τ t n} -> (x , τ) ∈ Γ -> (x , Typ[ t / n ] τ) ∈ (Tctx[ t / n ] Γ)
-  lemma-subst-elem {Γ} {x} {τ} {t} {n} p rewrite p = refl
+  rewrite-typ : ∀{Δ Θ Γ d t t'} → t == t' → Δ , Θ , Γ ⊢ d :: t → Δ , Θ , Γ ⊢ d :: t'
+  rewrite-typ eq ta rewrite eq = ta

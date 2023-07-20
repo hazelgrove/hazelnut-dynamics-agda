@@ -335,3 +335,15 @@ module contexts where
   
   lem-map-extend-dist : {A B : Set} {Γ : A ctx} {f : A → B} {x : Nat} {y : A} → map f (Γ ,, (x , y)) == (map f Γ) ,, (x , f y)
   lem-map-extend-dist {A} {B} {Γ} {f} {x} {y} rewrite map-extend-singleton {A} {B} {Γ} {f} {x} {y} = lem-map-union-dist {A} {B} {Γ} {(■ (x , y))}
+
+  lem-map-preserve-none : {A B : Set} {Γ : A ctx} {f : A → B} {n : Nat} → Γ n == None → map f Γ n == None
+  lem-map-preserve-none {Γ = Γ} {n = n} eq with Γ n
+  ... | None = refl
+
+  lem-map-preserve-apart : {A B : Set} {Γ : A ctx} {f : A → B} {x : Nat} → x # Γ -> x # (map f Γ)
+  lem-map-preserve-apart {Γ = Γ} {x = x} p with Γ x 
+  ... | None = refl
+  ... | Some t = abort (somenotnone p)
+  
+  lem-map-preserve-elem : {A B : Set} {Γ : A ctx} {f : A → B} {x : Nat} {y : A} → (x , y) ∈ Γ -> (x , f y) ∈ (map f Γ)
+  lem-map-preserve-elem p rewrite p = refl
