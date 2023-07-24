@@ -7,7 +7,7 @@ open import lemmas-consistency
 open import type-assignment-unicity
 open import binders-disjoint-checks
 
--- open import lemmas-subst-ta
+open import lemmas-subst-ta
 
 -- open import lemmas-free-tvars
 -- open import lemmas-well-formed
@@ -58,44 +58,20 @@ module preservation where
   wt-filling (TACast ta wf x) (FHCast eps) = wt-filling ta eps
   wt-filling (TAFailedCast x y z w) FHOuter = _ , TAFailedCast x y z w
   wt-filling (TAFailedCast x x₁ x₂ x₃) (FHFailedCast y) = wt-filling x y
-
+{-
   lemma-tysubst : ∀{ Δ Γ Θ d τ t n } -> (n == typctx.n Θ) -> Θ ⊢ t wf -> [ Θ newtyp] ⊢ Γ tctxwf -> Δ , [ Θ newtyp] , Γ ⊢ d :: τ -> Δ , Θ , Tctx[ t / n ] Γ ⊢ (TTyp[ t / n ] d) :: Typ[ t / n ] τ
   lemma-tysubst _ _ _ TAConst = TAConst
   lemma-tysubst {Γ = Γ} {d = X var} {t = t} {n = n} nbound twf tcwf (TAVar x) = TAVar (lemma-subst-elem {Γ} {var} x)
-{-  ...  | None rewrite x = {!!}
-  ...  | Some a = {!!} -}
-  
-  -- let x' = foo {var} {Γ} (wf-no-subst (cwf x) nbound) x {- (wf-no-subst {! (cwf x) !}) x -} in TAVar {!x'!} -- TAVar ((foo {!x!} {!(wf-no-subst (nfv x))!}))
-    where
-      foo : ∀{x Γ} {t1 t2 : htyp} -> t1 == t2 -> (x , t1) ∈ Γ -> (x , t2) ∈ Γ
-      foo eq p rewrite eq = p
-  lemma-tysubst {Δ} {Γ} {Θ} {d = ·λ _ [ _ ] d} {t = t} {n = n} nbound twf tcwf (TALam {x = x} {τ1 = τ1} {τ2 = τ2} ap wf y) rewrite nbound -- (lemma-extend-subst-comm {Γ} {x} {τ1} {t} {Z})
-    = TALam (lemma-subst-apart {Γ} ap) (wf-sub twf wf lt-1+) (foo (lemma-tysubst refl twf (merge-tctx-wf tcwf wf ap) y))
-    where
-      foo : ∀{t n} -> Δ , Θ , Tctx[ t / n ] (Γ ,, (x , τ1)) ⊢ TTyp[ t / n ] d :: (Typ[ t / n ] τ2) -> 
-        Δ , Θ , (Tctx[ t / n ] Γ) ,, (x , Typ[ t / n ] τ1) ⊢ TTyp[ t / n ] d :: (Typ[ t / n ] τ2)
-      foo {t} {n} p rewrite lemma-extend-subst-comm {Γ} {x} {τ1} {t} {n} = p
-  -- TALam x (wf-sub twf wf LTZ) (lemma-tysubst {τ = Typ[ t / Z ] τ2} (merge-tctx-wf tcwf (wf-sub twf wf LTZ) x) {!  !}) -- TALam (lemma-tysubst x) (lemma-tysubst y) 
-  -- TALam x (wf-sub twf wf LTZ) {!   !}
-  lemma-tysubst {d = d} _ twf tcwf (TATLam x) = TATLam {! lemma-tysubst  !}
-  lemma-tysubst _ _ _ _ = {!!}
-{-
-  lemma-tysubst (TAAp x cong) = {!!}
-  lemma-tysubst (TATAp wf x eq) = {!!}
-  lemma-tysubst (TAEHole x x₁) = {!!}
-  lemma-tysubst (TANEHole x x₁ x₂) = {!!}
-  lemma-tysubst (TACast x wf x₁) = {!!}
-  lemma-tysubst (TAFailedCast x x₁ x₂ x₃) = {!!}
--}
+  -}
 
   -- instruction transitions preserve type
   preserve-trans : ∀{ Δ Γ d τ d' } →
             binders-unique d →
-            ~∅ ⊢ Γ tctxwf →
-            ~∅ ⊢ Δ hctxwf →
-            Δ , ~∅ , Γ ⊢ d :: τ →
+            ∅ ⊢ Γ tctxwf →
+            ∅ ⊢ Δ hctxwf →
+            Δ , ∅ , Γ ⊢ d :: τ →
             d →> d' →
-            Δ , ~∅ , Γ ⊢ d' :: τ
+            Δ , ∅ , Γ ⊢ d' :: τ
   preserve-trans _ _ _ TAConst ()
   preserve-trans _ _ _ (TAVar x₁) ()
   preserve-trans _ _ _ (TALam _ _ ta) ()

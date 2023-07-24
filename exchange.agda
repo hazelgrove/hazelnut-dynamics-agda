@@ -71,11 +71,11 @@ module exchange where
   exchange-ta-Γ {Γ = Γ} {d = d} {τ = τ} {Δ = Δ} {Θ = Θ} neq =
     tr (λ qq → Δ , Θ , qq ⊢ d :: τ) (swap Γ neq)
 
-  exchange-ta-Θ : ∀{Γ x y d τ Δ Θ } →
+  exchange-ta-Θ-weak : ∀{Γ x y d τ Δ Θ } →
                 x ≠ y →
                 Δ , (Θ ,, (x , <>) ,, (y , <>)) , Γ ⊢ d :: τ →
                 Δ , (Θ ,, (y , <>) ,, (x , <>)) , Γ ⊢ d :: τ
-  exchange-ta-Θ {Γ = Γ} {d = d} {τ = τ} {Δ = Δ} {Θ = Θ} neq =
+  exchange-ta-Θ-weak {Γ = Γ} {d = d} {τ = τ} {Δ = Δ} {Θ = Θ} neq =
     tr (λ qq → Δ , qq , Γ ⊢ d :: τ) (swap Θ neq)
 
   exchange-wf-weak : ∀{x y τ Θ } →
@@ -109,6 +109,11 @@ module exchange where
             rewrite foo-assoc2 neq
             rewrite ! (foo-lemma {Θ} {y} {x})
             =  refl
+
+  exchange-ta-Θ : ∀{Γ x y d τ Δ Θ } →
+                Δ , (Θ ,, (x , <>) ,, (y , <>)) , Γ ⊢ d :: τ →
+                Δ , (Θ ,, (y , <>) ,, (x , <>)) , Γ ⊢ d :: τ
+  exchange-ta-Θ {x = x} {y = y} {Θ = Θ} p rewrite exchange-Θ {y} {x} {Θ} = p
 
   exchange-wf : ∀{x y τ Θ } →
                 (Θ ,, (x , <>) ,, (y , <>)) ⊢ τ wf →

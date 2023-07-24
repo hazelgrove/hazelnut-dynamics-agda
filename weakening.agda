@@ -50,7 +50,7 @@ module weakening where
     weaken-ta-Δ1 disj TAConst = TAConst
     weaken-ta-Δ1 disj (TAVar x₁) = TAVar x₁
     weaken-ta-Δ1 disj (TALam x₁ wf wt) = TALam x₁ wf (weaken-ta-Δ1 disj wt)
-    weaken-ta-Δ1 disj (TATLam ap wt) = TATLam ap (weaken-ta-Δ1 disj wt)
+    weaken-ta-Δ1 disj (TATLam wt) = TATLam (weaken-ta-Δ1 disj wt)
     weaken-ta-Δ1 disj (TAAp wt wt₁) = TAAp (weaken-ta-Δ1 disj wt) (weaken-ta-Δ1 disj wt₁)
     weaken-ta-Δ1 disj (TATAp wf wt eq) = TATAp wf (weaken-ta-Δ1 disj wt) eq
     weaken-ta-Δ1 {Δ1} {Δ2} {Γ} disj (TAEHole {u = u} {Γ' = Γ'} x x₁) = TAEHole (x∈∪l Δ1 Δ2 u _ x ) (weaken-subst-Δ disj x₁)
@@ -116,7 +116,7 @@ module weakening where
     weaken-ta {x = x} frsh (TALam {x = y} apt wf wt) with natEQ x y
     weaken-ta (FLam x₁ x₂) (TALam apt wf wt) | Inl refl = abort (x₁ refl)
     weaken-ta {Γ = Γ} {τ' = τ'} (FLam x₁ x₃) (TALam {x = y} x₄ wf wt) | Inr x₂ = TALam (apart-extend1 Γ (flip x₁) x₄) wf (exchange-ta-Γ {Γ = Γ} (flip x₁) (weaken-ta x₃ wt))
-    weaken-ta {x} {Γ} {τ' = τ'} (FTLam frsh) (TATLam ap x₁) = TATLam ap (weaken-ta frsh x₁)
+    weaken-ta {x} {Γ} {τ' = τ'} (FTLam frsh) (TATLam x₁) = TATLam (weaken-ta frsh x₁)
     weaken-ta (FAp frsh frsh₁) (TAAp wt wt₁) = TAAp (weaken-ta frsh wt) (weaken-ta frsh₁ wt₁)
     weaken-ta (FTAp frsh) (TATAp wf x₁ eq) = TATAp wf (weaken-ta frsh x₁) eq
     weaken-ta (FHole x₁) (TAEHole x₂ x₃) = TAEHole x₂ (weaken-subst-Γ x₁ x₃)
@@ -126,14 +126,13 @@ module weakening where
 
   mutual 
     weaken-subst-Θ : ∀{Γ Θ Δ σ Γ' x} →
-                     envtfresh x σ ->
                      Δ , Θ , Γ ⊢ σ :s: Γ' →
                      Δ , (Θ ,, (x , <>)) , Γ ⊢ σ :s: Γ'
-    weaken-subst-Θ _ (STAId x) = STAId x
-    weaken-subst-Θ {Γ = Γ} {Θ = Θ} {x = x} (ETFSubst tf etf ne) (STASubst {y = y} {τ = τ'} ih x₁) = STASubst (weaken-subst-Θ etf ih) (weaken-ta-typ tf x₁)
+    weaken-subst-Θ (STAId x) = STAId x
+    weaken-subst-Θ {Γ = Γ} {Θ = Θ} {x = x} (STASubst {y = y} {τ = τ'} ih x₁) = STASubst (weaken-subst-Θ ih) (weaken-ta-typ x₁)
       -- STASubst (weaken-subst-Θ {Γ = Γ ,, (y , τ')} efrsh ih) {! (weaken-ta-typ f1 x₁) !}
     
-
+{-
     weaken-ta-typ : ∀{Γ Δ Θ x d τ} →
                     tfresh x d ->
                     Δ , Θ , Γ ⊢ d :: τ →
@@ -148,4 +147,18 @@ module weakening where
     weaken-ta-typ (TFNEHole envtf f) (TANEHole x x₁ x₂) = TANEHole x (weaken-ta-typ f x₁) (weaken-subst-Θ envtf x₂)
     weaken-ta-typ (TFCast f) (TACast x wf x₁) = TACast (weaken-ta-typ f x) (weaken-t-wf wf) x₁
     weaken-ta-typ (TFFailedCast f) (TAFailedCast x x₁ x₂ x₃) = TAFailedCast ((weaken-ta-typ f x)) x₁ x₂ x₃
+-}
+    weaken-ta-typ : ∀{Γ Δ Θ x d τ} →
+                    Δ , Θ , Γ ⊢ d :: τ →
+                    Δ , (Θ ,, (x , <>)) , Γ ⊢ d :: τ
+    weaken-ta-typ TAConst = TAConst
+    weaken-ta-typ (TAVar x) = TAVar x
+    weaken-ta-typ (TALam x x₁ ta) = TALam x (weaken-t-wf x₁) (weaken-ta-typ ta)
+    weaken-ta-typ {Θ = Θ} (TATLam ta) = TATLam (exchange-ta-Θ {Θ = Θ} (weaken-ta-typ ta))
+    weaken-ta-typ (TAAp ta ta₁) = TAAp (weaken-ta-typ ta) (weaken-ta-typ ta₁)
+    weaken-ta-typ (TATAp x ta x₁) = TATAp (weaken-t-wf x) (weaken-ta-typ ta) x₁
+    weaken-ta-typ (TAEHole x x₁) = TAEHole x (weaken-subst-Θ x₁)
+    weaken-ta-typ (TANEHole x ta x₁) = TANEHole x (weaken-ta-typ ta) (weaken-subst-Θ x₁)
+    weaken-ta-typ (TACast ta x x₁) = TACast (weaken-ta-typ ta) (weaken-t-wf x) x₁
+    weaken-ta-typ (TAFailedCast ta x x₁ x₂) = TAFailedCast (weaken-ta-typ ta) x x₁ x₂
   

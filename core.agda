@@ -1,3 +1,4 @@
+
 open import Nat
 open import Prelude
 open import contexts
@@ -368,7 +369,7 @@ module core where
               Δ , Θ , (Γ ,, (x , τ1)) ⊢ d :: τ2 →
               Δ , Θ , Γ ⊢ ·λ x [ τ1 ] d :: (τ1 ==> τ2)
       TATLam : ∀{ Δ Θ Γ t d τ} →
-              t # Θ →
+              -- t # Θ → -- TODO: I think this isn't a necessary condition
               Δ , Θ ,, (t , <>) , Γ ⊢ d :: τ →
               Δ , Θ , Γ ⊢ ·Λ t d :: (·∀ t τ)
       TAAp : ∀{Δ Θ Γ d1 d2 τ1 τ} →
@@ -640,14 +641,18 @@ module core where
                            → envfresh x σ
                            → x ≠ y
                            → envfresh x (Subst d y σ)
-                           
+    
+{-
+    data unboundt-in-Γ : Nat -> tctx -> Set where
+      UBTΓ : ∀{x Γ} -> ((x' : Nat) (y : htyp) -> ((x' , y) ∈ Γ) -> tfresht x y) -> unboundt-in-Γ x Γ
+    
     data envtfresh : Nat → env → Set where
-      ETFId : ∀{x Γ} → envtfresh x (Id Γ) --TODO: x is apart from every y val in gamma?
+      ETFId : ∀{x Γ} → unboundt-in-Γ x Γ -> envtfresh x (Id Γ)
       ETFSubst : ∀{x d σ y} → tfresh x d
                            → envtfresh x σ
                            → x ≠ y
                            → envtfresh x (Subst d y σ)
-
+-}
     -- ... for internal expressions
     data fresh : Nat → ihexp → Set where
       FConst : ∀{x} → fresh x c
@@ -660,7 +665,7 @@ module core where
       FTAp    : ∀{x τ d} → fresh x d → fresh x (d < τ >)
       FCast   : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒ τ2 ⟩)
       FFailedCast : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
-
+{-
   -- In reference to type variables
     data tfresht : Nat -> htyp -> Set where
      TFBase   : ∀{x} -> tfresht x b
@@ -680,7 +685,7 @@ module core where
       TFTAp    : ∀{x τ d} → tfresht x τ → tfresh x d → tfresh x (d < τ >)
       TFCast   : ∀{x d τ1 τ2} → tfresh x d → tfresh x (d ⟨ τ1 ⇒ τ2 ⟩)
       TFFailedCast : ∀{x d τ1 τ2} → tfresh x d → tfresh x (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
-   
+-}
   
   -- ... for external expressions
   data freshh : Nat → hexp → Set where
@@ -697,6 +702,7 @@ module core where
 
   -- x is not used in a binding site in d
   mutual
+  
     data unbound-in-σ : Nat → env → Set where
       UBσId : ∀{x Γ} → unbound-in-σ x (Id Γ)
       UBσSubst : ∀{x d y σ} → unbound-in x d
@@ -792,7 +798,7 @@ module core where
       BUFailedCast : ∀{d τ1 τ2} → binders-unique d
                                  → binders-unique (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
 
-
+{-
   -- All of the above but for type variables
   data tfreshh : Nat → hexp → Set where
     TFRHConst : ∀{x} → tfreshh x c
@@ -805,7 +811,7 @@ module core where
     TFRHNEHole : ∀{x u e} → tfreshh x e → tfreshh x (⦇⌜ e ⌟⦈[ u ])
     TFRHAp : ∀{x e1 e2} → tfreshh x e1 → tfreshh x e2 → tfreshh x (e1 ∘ e2)
     TFRHTAp    : ∀{x τ e} → tfreshh x e → tfreshh x (e < τ >)
-
+-}
 {-
   -- x is not used in a binding site in d
   mutual
