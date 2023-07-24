@@ -79,7 +79,7 @@ module core where
     WFBase : ∀{Γ} -> Γ ⊢ b wf
     WFHole : ∀{Γ} -> Γ ⊢ ⦇-⦈ wf
     WFArr : ∀{Γ t1 t2} -> Γ ⊢ t1 wf -> Γ ⊢  t2 wf -> Γ ⊢ t1 ==> t2 wf
-    WFForall : ∀{Γ n t} -> n # Γ -> (Γ ,, (n , <>)) ⊢ t wf -> Γ ⊢ ·∀ n t wf
+    WFForall : ∀{Γ n t} -> (Γ ,, (n , <>)) ⊢ t wf -> Γ ⊢ ·∀ n t wf
 
   -- well-formedness of contexts
   data _⊢_tctxwf : typctx -> tctx → Set where
@@ -640,13 +640,20 @@ module core where
                            → envfresh x σ
                            → x ≠ y
                            → envfresh x (Subst d y σ)
+                           
+    data envtfresh : Nat → env → Set where
+      ETFId : ∀{x Γ} → envtfresh x (Id Γ) --TODO: x is apart from every y val in gamma?
+      ETFSubst : ∀{x d σ y} → tfresh x d
+                           → envtfresh x σ
+                           → x ≠ y
+                           → envtfresh x (Subst d y σ)
 
     -- ... for internal expressions
     data fresh : Nat → ihexp → Set where
       FConst : ∀{x} → fresh x c
       FVar   : ∀{x y} → x ≠ y → fresh x (X y)
       FLam   : ∀{x y τ d} → x ≠ y → fresh x d → fresh x (·λ y [ τ ] d)
-      FTLam  : ∀{x t d} → x ≠ t → fresh x d → fresh x (·Λ t d) -- TODO: Piggybacking here but could also probs make own predicate
+      FTLam  : ∀{x t d} → fresh x d → fresh x (·Λ t d)
       FHole  : ∀{x u σ} → envfresh x σ → fresh x (⦇-⦈⟨ u , σ ⟩)
       FNEHole : ∀{x d u σ} → envfresh x σ → fresh x d → fresh x (⦇⌜ d ⌟⦈⟨ u , σ ⟩)
       FAp     : ∀{x d1 d2} → fresh x d1 → fresh x d2 → fresh x (d1 ∘ d2)
@@ -654,6 +661,27 @@ module core where
       FCast   : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒ τ2 ⟩)
       FFailedCast : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
 
+  -- In reference to type variables
+    data tfresht : Nat -> htyp -> Set where
+     TFBase   : ∀{x} -> tfresht x b
+     TFTVar    : ∀{x t} -> tfresht x (T t)
+     TFHole   : ∀{x} -> tfresht x ⦇-⦈
+     TFArr    : ∀{x t1 t2} -> tfresht x t1 -> tfresht x t2 -> tfresht x (t1 ==> t2)
+     TFForall : ∀{x t t'} -> x ≠ t -> tfresht x t' -> tfresht x (·∀ t t')
+     
+    data tfresh : Nat → ihexp → Set where
+      TFConst : ∀{x} → tfresh x c
+      TFVar   : ∀{x y} → tfresh x (X y)
+      TFLam   : ∀{x y τ d} → tfresht x τ → tfresh x d →  tfresh x (·λ y [ τ ] d)
+      TFTLam  : ∀{x t d} → x ≠ t → tfresh x d → tfresh x (·Λ t d)
+      TFHole  : ∀{x u σ} → envtfresh x σ → tfresh x (⦇-⦈⟨ u , σ ⟩)
+      TFNEHole : ∀{x d u σ} → envtfresh x σ → tfresh x d → tfresh x (⦇⌜ d ⌟⦈⟨ u , σ ⟩)
+      TFAp     : ∀{x d1 d2} → tfresh x d1 → tfresh x d2 → tfresh x (d1 ∘ d2)
+      TFTAp    : ∀{x τ d} → tfresht x τ → tfresh x d → tfresh x (d < τ >)
+      TFCast   : ∀{x d τ1 τ2} → tfresh x d → tfresh x (d ⟨ τ1 ⇒ τ2 ⟩)
+      TFFailedCast : ∀{x d τ1 τ2} → tfresh x d → tfresh x (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
+   
+  
   -- ... for external expressions
   data freshh : Nat → hexp → Set where
     FRHConst : ∀{x} → freshh x c
@@ -763,3 +791,116 @@ module core where
                            → binders-unique (d ⟨ τ1 ⇒ τ2 ⟩)
       BUFailedCast : ∀{d τ1 τ2} → binders-unique d
                                  → binders-unique (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
+
+
+  -- All of the above but for type variables
+  data tfreshh : Nat → hexp → Set where
+    TFRHConst : ∀{x} → tfreshh x c
+    TFRHAsc   : ∀{x e τ} → tfreshh x e → tfreshh x (e ·: τ)
+    TFRHVar   : ∀{x y} → tfreshh x (X y)
+    TFRHLam1  : ∀{x y e} → tfreshh x e → tfreshh x (·λ y e)
+    TFRHLam2  : ∀{x τ e y} → tfresht x τ → tfreshh x e → tfreshh x (·λ y [ τ ] e)
+    TFRHTLam  : ∀{x t e} → x ≠ t → tfreshh x e → tfreshh x (·Λ t e)
+    TFRHEHole : ∀{x u} → tfreshh x (⦇-⦈[ u ])
+    TFRHNEHole : ∀{x u e} → tfreshh x e → tfreshh x (⦇⌜ e ⌟⦈[ u ])
+    TFRHAp : ∀{x e1 e2} → tfreshh x e1 → tfreshh x e2 → tfreshh x (e1 ∘ e2)
+    TFRHTAp    : ∀{x τ e} → tfreshh x e → tfreshh x (e < τ >)
+
+{-
+  -- x is not used in a binding site in d
+  mutual
+    data unbound-in-σ : Nat → env → Set where
+      UBσId : ∀{x Γ} → unbound-in-σ x (Id Γ)
+      UBσSubst : ∀{x d y σ} → unbound-in x d
+                            → unbound-in-σ x σ
+                            → x ≠ y
+                            → unbound-in-σ x (Subst d y σ)
+
+    data unbound-in : (x : Nat) (d : ihexp) → Set where
+      UBConst : ∀{x} → unbound-in x c
+      UBVar : ∀{x y} → unbound-in x (X y)
+      UBLam2 : ∀{x d y τ} → x ≠ y
+                           → unbound-in x d
+                           → unbound-in x (·λ_[_]_ y τ d)
+      UBTLam : ∀{x t d} → x ≠ t -> unbound-in x d → unbound-in x (·Λ t d) --TODO: Same as above
+      UBHole : ∀{x u σ} → unbound-in-σ x σ
+                         → unbound-in x (⦇-⦈⟨ u , σ ⟩)
+      UBNEHole : ∀{x u σ d }
+                  → unbound-in-σ x σ
+                  → unbound-in x d
+                  → unbound-in x (⦇⌜ d ⌟⦈⟨ u , σ ⟩)
+      UBAp : ∀{ x d1 d2 } →
+            unbound-in x d1 →
+            unbound-in x d2 →
+            unbound-in x (d1 ∘ d2)
+      UBTAp : ∀{x τ d} → unbound-in x d → unbound-in x (d < τ >)
+      UBCast : ∀{x d τ1 τ2} → unbound-in x d → unbound-in x (d ⟨ τ1 ⇒ τ2 ⟩)
+      UBFailedCast : ∀{x d τ1 τ2} → unbound-in x d → unbound-in x (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
+
+
+  mutual
+    data binders-disjoint-σ : env → ihexp → Set where
+      BDσId : ∀{Γ d} → binders-disjoint-σ (Id Γ) d
+      BDσSubst : ∀{d1 d2 y σ} → binders-disjoint d1 d2
+                              → binders-disjoint-σ σ d2
+                              → binders-disjoint-σ (Subst d1 y σ) d2
+
+    -- two terms that do not share any binders
+    data binders-disjoint : (d1 : ihexp) → (d2 : ihexp) → Set where
+      BDConst : ∀{d} → binders-disjoint c d
+      BDVar : ∀{x d} → binders-disjoint (X x) d
+      BDLam : ∀{x τ d1 d2} → binders-disjoint d1 d2
+                            → unbound-in x d2
+                            → binders-disjoint (·λ_[_]_ x τ d1) d2
+      BDTLam :  ∀{t d1 d2} → binders-disjoint d1 d2
+                          → unbound-in t d2 --TODO: Same as above
+                          → binders-disjoint (·Λ t d1) d2
+      BDHole : ∀{u σ d2} → binders-disjoint-σ σ d2
+                         → binders-disjoint (⦇-⦈⟨ u , σ ⟩) d2
+      BDNEHole : ∀{u σ d1 d2} → binders-disjoint-σ σ d2
+                              → binders-disjoint d1 d2
+                              → binders-disjoint (⦇⌜ d1 ⌟⦈⟨ u , σ ⟩) d2
+      BDAp :  ∀{d1 d2 d3} → binders-disjoint d1 d3
+                          → binders-disjoint d2 d3
+                          → binders-disjoint (d1 ∘ d2) d3
+      BDTAp : ∀{d1 d2 τ} → binders-disjoint d1 d2
+                          → binders-disjoint (d1 < τ >) d2
+      BDCast : ∀{d1 d2 τ1 τ2} → binders-disjoint d1 d2 → binders-disjoint (d1 ⟨ τ1 ⇒ τ2 ⟩) d2
+      BDFailedCast : ∀{d1 d2 τ1 τ2} → binders-disjoint d1 d2 → binders-disjoint (d1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) d2
+
+  mutual
+  -- each term has to be binders unique, and they have to be pairwise
+  -- disjoint with the collection of bound vars
+    data binders-unique-σ : env → Set where
+      BUσId : ∀{Γ} → binders-unique-σ (Id Γ)
+      BUσSubst : ∀{d y σ} → binders-unique d
+                          → binders-unique-σ σ
+                          → binders-disjoint-σ σ d
+                          → binders-unique-σ (Subst d y σ)
+
+    -- all the variable names in the term are unique
+    data binders-unique : ihexp → Set where
+      BUHole : binders-unique c
+      BUVar : ∀{x} → binders-unique (X x)
+      BULam : {x : Nat} {τ : htyp} {d : ihexp} → binders-unique d
+                                                → unbound-in x d
+                                                → binders-unique (·λ_[_]_ x τ d)
+      BUTLam : ∀{t d} → binders-unique d
+                      -> unbound-in t d --TODO: Same
+                       → binders-unique (·Λ t d)
+      BUEHole : ∀{u σ} → binders-unique-σ σ
+                        → binders-unique (⦇-⦈⟨ u , σ ⟩)
+      BUNEHole : ∀{u σ d} → binders-unique d
+                           → binders-unique-σ σ
+                           → binders-unique (⦇⌜ d ⌟⦈⟨ u , σ ⟩)
+      BUAp : ∀{d1 d2} → binders-unique d1
+                       → binders-unique d2
+                       → binders-disjoint d1 d2
+                       → binders-unique (d1 ∘ d2)
+      BUTAp : ∀{d τ} → binders-unique d
+                       → binders-unique (d < τ >)
+      BUCast : ∀{d τ1 τ2} → binders-unique d
+                           → binders-unique (d ⟨ τ1 ⇒ τ2 ⟩)
+      BUFailedCast : ∀{d τ1 τ2} → binders-unique d
+                                 → binders-unique (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
+-}

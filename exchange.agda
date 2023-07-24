@@ -70,3 +70,49 @@ module exchange where
                 Δ , Θ , (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ d :: τ
   exchange-ta-Γ {Γ = Γ} {d = d} {τ = τ} {Δ = Δ} {Θ = Θ} neq =
     tr (λ qq → Δ , Θ , qq ⊢ d :: τ) (swap Γ neq)
+
+  exchange-ta-Θ : ∀{Γ x y d τ Δ Θ } →
+                x ≠ y →
+                Δ , (Θ ,, (x , <>) ,, (y , <>)) , Γ ⊢ d :: τ →
+                Δ , (Θ ,, (y , <>) ,, (x , <>)) , Γ ⊢ d :: τ
+  exchange-ta-Θ {Γ = Γ} {d = d} {τ = τ} {Δ = Δ} {Θ = Θ} neq =
+    tr (λ qq → Δ , qq , Γ ⊢ d :: τ) (swap Θ neq)
+
+  exchange-wf-weak : ∀{x y τ Θ } →
+                x ≠ y →
+                (Θ ,, (x , <>) ,, (y , <>)) ⊢ τ wf →
+                (Θ ,, (y , <>) ,, (x , <>)) ⊢ τ wf
+  exchange-wf-weak {τ = τ} {Θ = Θ} neq =
+    tr (λ qq → qq ⊢ τ wf) (swap Θ neq)
+
+  -- In fact, we can make a stronger claim because the codomain is all Top
+  exchange-Θ : ∀{x y Θ} → (Θ ,, (x , <>) ,, (y , <>)) == (Θ ,, (y , <>) ,, (x , <>))
+  exchange-Θ {x} {y} {Θ = Θ} = foo
+    where
+      -- foo2 : (qq : Nat) -> (Θ ∪ ((■ (x , <>)) ∪ (■ (y , <>)))) qq == (Θ ∪ ((■ (y , <>)) ∪ (■ (x , <>)))) qq -> (Θ ,, (x , <>) ,, (y , <>)) qq == (Θ ,, (y , <>) ,, (x , <>)) qq
+      -- foo2 qq = {!!}
+      foo-assoc1 : x ≠ y -> ((Θ ∪ (■ (x , <>))) ∪ (■ (y , <>))) == (Θ ∪ ((■ (x , <>)) ∪ ■ (y , <>)))
+      foo-assoc1 neq = ∪assoc Θ (■ (x , <>)) (■ (y , <>)) ((lem-apart-sing-disj (lem-singleton-apart neq)))
+      foo-comm : x ≠ y -> (Θ ∪ ((■ (x , <>)) ∪ ■ (y , <>))) == (Θ ∪ ((■ (y , <>)) ∪ ■ (x , <>))) 
+      foo-comm neq rewrite ∪comm ((■ (y , <>))) (■ (x , <>)) (lem-apart-sing-disj (lem-singleton-apart (flip neq))) = refl
+      foo-assoc2 : x ≠ y -> (Θ ∪ ((■ (y , <>)) ∪ (■ (x , <>)))) == ((Θ ∪ (■ (y , <>))) ∪ ■ (x , <>)) 
+      foo-assoc2 neq rewrite ∪assoc Θ (■ (y , <>)) (■ (x , <>)) ((lem-apart-sing-disj (lem-singleton-apart (flip neq)))) = refl
+      foo-lemma : ∀{Θ x y} -> (Θ ,, (x , <>) ,, (y , <>)) == ((Θ ∪ (■ (x , <>))) ∪ (■ (y , <>)))
+      foo-lemma {Θ} {x} {y} = refl
+      foo : (Θ ,, (x , <>) ,, (y , <>)) == (Θ ,, (y , <>) ,, (x , <>))
+      foo with natEQ x y 
+      ... | Inl refl = refl
+      ... | Inr neq 
+            rewrite foo-lemma {Θ} {x} {y}
+            rewrite foo-assoc1 neq
+            rewrite foo-comm neq
+            rewrite foo-assoc2 neq
+            rewrite ! (foo-lemma {Θ} {y} {x})
+            =  refl
+
+  exchange-wf : ∀{x y τ Θ } →
+                (Θ ,, (x , <>) ,, (y , <>)) ⊢ τ wf →
+                (Θ ,, (y , <>) ,, (x , <>)) ⊢ τ wf
+  exchange-wf {x} {y} {Θ = Θ} pf with natEQ x y
+  ... | Inl refl = pf
+  ... | Inr neq = exchange-wf-weak {x} {y} {Θ = Θ} neq pf

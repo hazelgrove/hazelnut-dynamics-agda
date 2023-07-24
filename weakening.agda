@@ -2,31 +2,41 @@ open import Nat
 open import Prelude
 open import core
 open import contexts
-open typctx
 open import lemmas-disjointness
 open import exchange
-open import lemmas-free-tvars
+open import rewrite-util
 
 -- this module contains all the proofs of different weakening structural
 -- properties that we use for the hypothetical judgements
 module weakening where
-
-  weaken-t-wf : ∀ {Θ τ} → Θ ⊢ τ wf → [ Θ newtyp] ⊢ τ wf
+  weaken-t-wf : ∀ {Θ x τ} → Θ ⊢ τ wf → (Θ ,, (x , <>)) ⊢ τ wf
+  weaken-t-wf {Θ} (WFVar x) = WFVar (x∈∪l Θ _ _ <> x)
+  weaken-t-wf WFBase = WFBase
+  weaken-t-wf WFHole = WFHole
+  weaken-t-wf (WFArr wf wf₁) = WFArr (weaken-t-wf wf) (weaken-t-wf wf₁)
+  weaken-t-wf {Θ} (WFForall wf) = WFForall (exchange-wf {Θ = Θ} (weaken-t-wf wf))
+  
+  {-with natEQ x y
+  ... | Inl refl = WFForall (abort (ne refl)) 
+  ... | Inr neq = WFForall (exchange-wf {y} {x} {t} {Θ} (flip neq) {! wf  !})
+  -}
+{-
+  weaken-t-wf : ∀ {Θ1 Θ2 τ} → Θ1 ## Θ2 → Θ1 ⊢ τ wf → (Θ1 ∪ Θ2) ⊢ τ wf
   weaken-t-wf (WFVar x) = WFVar (lt-right-incr x)
   weaken-t-wf WFBase = WFBase
   weaken-t-wf WFHole = WFHole
   weaken-t-wf (WFArr wf wf₁) = WFArr (weaken-t-wf wf) (weaken-t-wf wf₁)
   weaken-t-wf (WFForall wf) = WFForall (weaken-t-wf wf)
 
-  weaken-tctx-wf : ∀ {Θ Γ} → Θ ⊢ Γ tctxwf → [ Θ newtyp] ⊢ Γ tctxwf
+  weaken-tctx-wf : ∀ {Θ1 Θ2 Γ} → Θ1 ## Θ2 → Θ1 ⊢ Γ tctxwf → (Θ1 ∪ Θ2) ⊢ Γ tctxwf
   weaken-tctx-wf (CCtx x) = CCtx (λ x₁ → weaken-t-wf (x x₁))
 
-  weaken-hctx-wf : ∀ {Θ Δ} → Θ ⊢ Δ hctxwf → [ Θ newtyp] ⊢ Δ hctxwf
+  weaken-hctx-wf : ∀ {Θ1 Θ2 Δ} → Θ1 ## Θ2 → Θ1 ⊢ Δ hctxwf → (Θ1 ∪ Θ2) ⊢ Δ hctxwf
   weaken-hctx-wf (HCtx map) = 
     HCtx (λ key → 
       (let (p1 , p2) = (map key) in 
       (weaken-tctx-wf p1) , (weaken-t-wf p2)))
-
+-}
   mutual
     weaken-subst-Δ : ∀{Δ1 Δ2 Γ σ Γ' Θ} → Δ1 ## Δ2
                                      → Δ1 , Γ , Θ ⊢ σ :s: Γ'
@@ -40,7 +50,7 @@ module weakening where
     weaken-ta-Δ1 disj TAConst = TAConst
     weaken-ta-Δ1 disj (TAVar x₁) = TAVar x₁
     weaken-ta-Δ1 disj (TALam x₁ wf wt) = TALam x₁ wf (weaken-ta-Δ1 disj wt)
-    weaken-ta-Δ1 disj (TATLam wt) = TATLam (weaken-ta-Δ1 disj wt)
+    weaken-ta-Δ1 disj (TATLam ap wt) = TATLam ap (weaken-ta-Δ1 disj wt)
     weaken-ta-Δ1 disj (TAAp wt wt₁) = TAAp (weaken-ta-Δ1 disj wt) (weaken-ta-Δ1 disj wt₁)
     weaken-ta-Δ1 disj (TATAp wf wt eq) = TATAp wf (weaken-ta-Δ1 disj wt) eq
     weaken-ta-Δ1 {Δ1} {Δ2} {Γ} disj (TAEHole {u = u} {Γ' = Γ'} x x₁) = TAEHole (x∈∪l Δ1 Δ2 u _ x ) (weaken-subst-Δ disj x₁)
@@ -71,11 +81,11 @@ module weakening where
     weaken-synth {Γ = Γ} (FRHLam2 x₁ frsh) (SLam x₂ wf wt) =
                     SLam (apart-extend1 Γ (flip x₁) x₂) wf
                          (exchange-synth {Γ = Γ} (flip x₁) ((weaken-synth frsh wt)))
-    weaken-synth (FRHTLam x₁) (STLam x₂) = STLam (weaken-synth x₁ x₂)
+    weaken-synth (FRHTLam ne x) (STLam ap x₂) = STLam ap (weaken-synth x x₂)
     weaken-synth FRHEHole SEHole = SEHole
     weaken-synth (FRHNEHole frsh) (SNEHole x₁ wt) = SNEHole x₁ (weaken-synth frsh wt)
     weaken-synth (FRHAp frsh frsh₁) (SAp x₁ wt x₂ x₃) = SAp x₁ (weaken-synth frsh wt) x₂ (weaken-ana frsh₁ x₃)
-    weaken-synth (FRHTAp x₁) (STAp wf x₂ x₃ eq) = STAp wf (weaken-synth x₁ x₂) x₃ eq
+    weaken-synth (FRHTAp x₁) (STAp ap wf x₂ x₃ eq) = STAp ap wf (weaken-synth x₁ x₂) x₃ eq
 
     weaken-ana : ∀{x Γ e τ τ' Θ} → freshh x e
                                → Θ , Γ ⊢ e <= τ
@@ -106,7 +116,7 @@ module weakening where
     weaken-ta {x = x} frsh (TALam {x = y} apt wf wt) with natEQ x y
     weaken-ta (FLam x₁ x₂) (TALam apt wf wt) | Inl refl = abort (x₁ refl)
     weaken-ta {Γ = Γ} {τ' = τ'} (FLam x₁ x₃) (TALam {x = y} x₄ wf wt) | Inr x₂ = TALam (apart-extend1 Γ (flip x₁) x₄) wf (exchange-ta-Γ {Γ = Γ} (flip x₁) (weaken-ta x₃ wt))
-    weaken-ta {x} {Γ} {τ' = τ'} (FTLam frsh) (TATLam x₁) = TATLam (rewrite-gamma (! (lem-map-extend-dist {Γ = Γ} {f = incrtyp})) ((weaken-ta frsh x₁)))
+    weaken-ta {x} {Γ} {τ' = τ'} (FTLam frsh) (TATLam ap x₁) = TATLam ap (weaken-ta frsh x₁)
     weaken-ta (FAp frsh frsh₁) (TAAp wt wt₁) = TAAp (weaken-ta frsh wt) (weaken-ta frsh₁ wt₁)
     weaken-ta (FTAp frsh) (TATAp wf x₁ eq) = TATAp wf (weaken-ta frsh x₁) eq
     weaken-ta (FHole x₁) (TAEHole x₂ x₃) = TAEHole x₂ (weaken-subst-Γ x₁ x₃)
@@ -115,22 +125,27 @@ module weakening where
     weaken-ta (FFailedCast frsh) (TAFailedCast wt x₁ x₂ x₃) = TAFailedCast (weaken-ta frsh wt) x₁ x₂ x₃
 
   mutual 
-    weaken-subst-Θ : ∀{Γ Δ σ Γ' Θ} →
+    weaken-subst-Θ : ∀{Γ Θ Δ σ Γ' x} →
+                     envtfresh x σ ->
                      Δ , Θ , Γ ⊢ σ :s: Γ' →
-                     Δ , typctx.[ Θ newtyp] , Γ ⊢ σ :s: Γ'
-    weaken-subst-Θ (STAId x) = STAId x
-    weaken-subst-Θ (STASubst x x₁) = STASubst (weaken-subst-Θ x) (weaken-ta-typ x₁)
+                     Δ , (Θ ,, (x , <>)) , Γ ⊢ σ :s: Γ'
+    weaken-subst-Θ _ (STAId x) = STAId x
+    weaken-subst-Θ {Γ = Γ} {Θ = Θ} {x = x} (ETFSubst tf etf ne) (STASubst {y = y} {τ = τ'} ih x₁) = STASubst (weaken-subst-Θ etf ih) (weaken-ta-typ tf x₁)
+      -- STASubst (weaken-subst-Θ {Γ = Γ ,, (y , τ')} efrsh ih) {! (weaken-ta-typ f1 x₁) !}
     
-    weaken-ta-typ : ∀{Γ Δ Θ d τ} →
+
+    weaken-ta-typ : ∀{Γ Δ Θ x d τ} →
+                    tfresh x d ->
                     Δ , Θ , Γ ⊢ d :: τ →
-                    Δ , typctx.[ Θ newtyp] , Γ ⊢ d :: τ
-    weaken-ta-typ TAConst = TAConst
-    weaken-ta-typ (TAVar x) = TAVar x
-    weaken-ta-typ (TALam x x₁ x₂) = TALam x (weaken-t-wf x₁) (weaken-ta-typ x₂)
-    weaken-ta-typ (TATLam x) = TATLam (weaken-ta-typ x)
-    weaken-ta-typ (TAAp x x₁) = TAAp (weaken-ta-typ x) (weaken-ta-typ x₁)
-    weaken-ta-typ (TATAp wf x eq) = TATAp (weaken-t-wf wf) (weaken-ta-typ x) eq
-    weaken-ta-typ (TAEHole x x₁) = TAEHole x (weaken-subst-Θ x₁)
-    weaken-ta-typ (TANEHole x x₁ x₂) = TANEHole x (weaken-ta-typ x₁) (weaken-subst-Θ x₂)
-    weaken-ta-typ (TACast x wf x₁) = TACast (weaken-ta-typ x) (weaken-t-wf wf) x₁
-    weaken-ta-typ (TAFailedCast x x₁ x₂ x₃) = TAFailedCast (weaken-ta-typ x) x₁ x₂ x₃
+                    Δ , (Θ ,, (x , <>)) , Γ ⊢ d :: τ
+    weaken-ta-typ _ TAConst = TAConst
+    weaken-ta-typ _ (TAVar x) = TAVar x
+    weaken-ta-typ {x = x} (TFLam ne f) (TALam {x = y} ap x₁ x₂) = TALam ap (weaken-t-wf x₁) (weaken-ta-typ f x₂)
+    weaken-ta-typ {Θ = Θ} (TFTLam ne f) (TATLam ap x) = TATLam (apart-extend1 Θ (flip ne) ap) (exchange-ta-Θ {Θ = Θ} (flip ne) (weaken-ta-typ f x)) -- (weaken-ta-typ _ x) !}
+    weaken-ta-typ (TFAp ff fa) (TAAp x x₁) = TAAp (weaken-ta-typ ff x) (weaken-ta-typ fa x₁)
+    weaken-ta-typ (TFTAp ft f) (TATAp wf x eq) = TATAp (weaken-t-wf wf) (weaken-ta-typ f x) eq
+    weaken-ta-typ (TFHole envtf) (TAEHole x x₁) = TAEHole x (weaken-subst-Θ envtf x₁) -- {! TAEHole x (weaken-subst-Θ ef x₁) !}
+    weaken-ta-typ (TFNEHole envtf f) (TANEHole x x₁ x₂) = TANEHole x (weaken-ta-typ f x₁) (weaken-subst-Θ envtf x₂)
+    weaken-ta-typ (TFCast f) (TACast x wf x₁) = TACast (weaken-ta-typ f x) (weaken-t-wf wf) x₁
+    weaken-ta-typ (TFFailedCast f) (TAFailedCast x x₁ x₂ x₃) = TAFailedCast ((weaken-ta-typ f x)) x₁ x₂ x₃
+  

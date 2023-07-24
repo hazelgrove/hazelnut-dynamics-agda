@@ -37,10 +37,12 @@ module lemmas-consistency where
   ~Typ[] TCHole1 = TCHole1
   ~Typ[] TCHole2 = TCHole2
   ~Typ[] {n = a} (TCVar {a = a'}) with natEQ a a'
-  ... | Inl Refl = ~refl
-  ... | Inr ne = ~refl
+  ... | Inl refl = ~refl
+  ... | Inr neq = ~refl
   ~Typ[] (TCArr x x') = TCArr (~Typ[] x) (~Typ[] x')
-  ~Typ[] (TCForall x) = TCForall (~Typ[] x)
+  ~Typ[] {n = a} (TCForall {t = a'} x) with natEQ a a'
+  ... | Inl refl = TCForall x
+  ... | Inr neq = TCForall (~Typ[] x) 
   
   -- type consistency isn't transitive
   not-trans : ((t1 t2 t3 : htyp) → t1 ~ t2 → t2 ~ t3 → t1 ~ t3) → ⊥

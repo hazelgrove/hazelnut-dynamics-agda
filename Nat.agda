@@ -22,7 +22,7 @@ module Nat where
   natEQ (1+ x) (1+ y) with natEQ x y
   natEQ (1+ x) (1+ .x) | Inl refl = Inl refl
   ... | Inr b = Inr (λ x₁ → b (1+inj x y x₁))
-  
+
   data _<_ : Nat → Nat → Set where
     LTZ : ∀{n} -> Z < 1+ n
     LTS : ∀{n m} -> n < m -> 1+ n < 1+ m

@@ -7,13 +7,12 @@ open import lemmas-consistency
 open import type-assignment-unicity
 open import binders-disjoint-checks
 
-open import lemmas-subst-ta
+-- open import lemmas-subst-ta
 
-open import lemmas-free-tvars
-open import lemmas-well-formed
+-- open import lemmas-free-tvars
+-- open import lemmas-well-formed
 
 module preservation where
-  open typctx
 
   -- if d and d' both result from filling the hole in ε with terms of the
   -- same type, they too have the same type.

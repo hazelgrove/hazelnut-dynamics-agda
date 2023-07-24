@@ -5,8 +5,11 @@ open import contexts
 
 module lemmas-free-tvars where
 
-  wf-no-subst : ∀{t n y o} -> o ⊢ y wf -> ((n < typctx.n o) -> ⊥) -> y == (Typ[ t / n ] y)
-  wf-no-subst {n = n} {y = T a} {o = o} (WFVar l) lte with natEQ n a
+  wf-no-subst : ∀{t n y o} -> n # o -> o ⊢ y wf -> y == (Typ[ t / n ] y)
+  wf-no-subst 
+  
+  {- 
+  {n = n} {y = T a} {o = o} (WFVar l) lte with natEQ n a
   ... | Inl refl = abort (lte l) 
   ... | Inr neq with natLT n a
   ... | Inl (LTZ) = abort (lte (let p1 , p2 = lt-gtz {typctx.n o} l in foo p2))
@@ -25,10 +28,11 @@ module lemmas-free-tvars where
     where
       foo : ∀{A B} -> A == B -> ·∀ A == ·∀ B
       foo eq rewrite eq = refl
-
-
-  wf-tctx-no-subst : ∀ {o g t n} -> o ⊢ g tctxwf -> ((n < typctx.n o) -> ⊥) -> g == (Tctx[ t / n ] g)
-  wf-tctx-no-subst {o} {g} {t} {n} (CCtx x) nbound = funext (\y -> helper y)
+  -}
+{-
+  wf-tctx-no-subst : ∀ {o g t n} -> n # o -> o ⊢ g tctxwf -> g == (Tctx[ t / n ] g)
+  wf-tctx-no-subst = {!!}
+  {- {o} {g} {t} {n} (CCtx x) nbound = funext (\y -> helper y)
     where
       helper : (y : Nat) -> g y == (Tctx[ t / n ] g) y
       helper y with ctxindirect g y | ctxindirect (Tctx[ t / n ] g) y
@@ -36,14 +40,16 @@ module lemmas-free-tvars where
       ... | Inr ning | Inr ning' = ning · ! ning'
       ... | Inl (_ , ing) | Inr ning' rewrite ing rewrite ning' = abort (somenotnone ning')
       ... | Inr ning | Inl (_ , ing') rewrite ning rewrite ing' = abort (somenotnone (! ing'))
-
+  -}
+-}
+{-
   wf-weakening : ∀{t o} -> o ⊢ t wf -> [ o newtyp] ⊢ t wf
   wf-weakening (WFVar x) = WFVar (lt-right-incr x)
   wf-weakening WFBase = WFBase
   wf-weakening WFHole = WFHole
   wf-weakening (WFArr wf1 wf2) = WFArr (wf-weakening wf1) (wf-weakening wf2)
   wf-weakening (WFForall twf) = WFForall (wf-weakening twf)
-
+-}
   lemma-subst-tvar : ∀{t y n o} -> [ o newtyp] ⊢ y wf -> o ⊢ t wf -> n < 1+ (typctx.n o) -> o ⊢ (Typ[ t / n ] y) wf
   lemma-subst-tvar {y = b} _ _ _ = WFBase
   lemma-subst-tvar {y = T y} {n = n} (WFVar ywf) twf bnd with natEQ n y
@@ -59,8 +65,3 @@ module lemmas-free-tvars where
   lemma-subst-outer : ∀{t y o} -> [ o newtyp] ⊢ y wf -> o ⊢ t wf -> o ⊢ (Typ[ t / Z ] y) wf
   lemma-subst-outer p q = lemma-subst-tvar p q LTZ
 
-  rewrite-gamma : ∀{Δ Θ Γ Γ' d t} → Γ == Γ' → Δ , Θ , Γ ⊢ d :: t → Δ , Θ , Γ' ⊢ d :: t
-  rewrite-gamma eq ta rewrite eq = ta
-
-  rewrite-typ : ∀{Δ Θ Γ d t t'} → t == t' → Δ , Θ , Γ ⊢ d :: t → Δ , Θ , Γ ⊢ d :: t'
-  rewrite-typ eq ta rewrite eq = ta
