@@ -272,10 +272,10 @@ module core where
                  τ ▸arr τ1 ==> τ2 →
                  Θ , (Γ ,, (x , τ1)) ⊢ e <= τ2 →
                  Θ , Γ ⊢ (·λ x e) <= τ
-      -- ATLam : {Θ : typctx} {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} → 
-      --           τ1 ▸forall (·∀ τ2) → 
-      --           Γ , [ Θ newtyp] ⊢ e <= τ2 → 
-      --           Θ , Γ ⊢ (·Λ e) <= τ1
+      ATLam : {Θ : typctx} {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} → 
+                τ1 ▸forall (·∀ τ2) → 
+                [ Θ newtyp] , Γ ⊢ e <= τ2 → 
+                Θ , Γ ⊢ (·Λ e) <= τ1
 
   -- those types without holes
   data _tcomplete : htyp → Set where
@@ -370,10 +370,10 @@ module core where
               τ ▸arr τ1 ==> τ2 →
               Θ , (Γ ,, (x , τ1)) ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
               Θ , Γ ⊢ ·λ x e ⇐ τ ~> ·λ x [ τ1 ] d :: τ1 ==> τ2' ⊣ Δ
-      -- EATLam : ∀{Θ Γ e τ1 τ2 τ2' d Δ} → 
-      --           τ1 ▸forall (·∀ τ2) → 
-      --           Γ , [ Θ newtyp] ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
-      --           Θ , Γ ⊢ (·Λ e) ⇐ τ1 ~> (·Λ d) :: (·∀ τ2') ⊣ Δ
+      EATLam : ∀{Θ Γ e τ1 τ2 τ2' d Δ} → 
+                τ1 ▸forall (·∀ τ2) → 
+                [ Θ newtyp] , Γ ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
+                Θ , Γ ⊢ (·Λ e) ⇐ τ1 ~> (·Λ d) :: (·∀ τ2') ⊣ Δ
       EASubsume : ∀{e Θ Γ τ' d Δ τ} →
                   ((u : Nat) → e ≠ ⦇-⦈[ u ]) →
                   ((e' : hexp) (u : Nat) → e ≠ ⦇⌜ e' ⌟⦈[ u ]) →
