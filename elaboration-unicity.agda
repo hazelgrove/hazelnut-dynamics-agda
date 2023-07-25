@@ -1,7 +1,6 @@
 open import Nat
 open import Prelude
 open import core
-open typctx
 open import contexts
 open import synth-unicity
 open import lemmas-matching
@@ -84,28 +83,3 @@ module elaboration-unicity where
     elaboration-unicity-ana (EANEHole _ x) (EANEHole _ x₁)
       with elaboration-unicity-synth x x₁
     ... | refl , refl , refl = refl , refl , refl
- 
-  -- e : hexp 
-  -- e = {!   !}
-  -- τ : htyp 
-  -- τ = {!   !}
-  -- d1 : ihexp
-  -- d1 = {!   !}
-  -- d2 : ihexp
-  -- d2 = {!   !}
-  -- τ1 : htyp
-  -- τ1 = {!   !}
-  -- τ2 : htyp 
-  -- τ2 = {!   !}
-  -- Δ1 : hctx
-  -- Δ1 = {!   !}
-  -- Δ2 : hctx
-  -- Δ2 = {!   !}
-
-  -- a1 : typctx.~∅ , ∅ ⊢ e ⇐ τ ~> d1 :: τ1 ⊣ Δ1
-  -- a1 = {!   !}
-  -- a2 : typctx.~∅ , ∅ ⊢ e ⇐ τ ~> d2 :: τ2 ⊣ Δ2
-  -- a2 = {!   !}
-
-  -- conjecture : τ1 == τ2
-  -- conjecture = {!   !}
