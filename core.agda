@@ -139,15 +139,15 @@ module core where
 
   -- the type of hole contexts, i.e. Δs in the judgements
   hctx : Set
-  hctx = (htyp ctx × htyp) ctx
+  hctx = (typctx × htyp ctx × htyp) ctx
 
   -- notation for a triple to match the CMTT syntax
-  _::_[_] : Nat → htyp → tctx → (Nat × (tctx × htyp))
-  u :: τ [ Γ ] = u , (Γ , τ)
+  _::_[_,_] : Nat → htyp → typctx → tctx → (Nat × (typctx × tctx × htyp))
+  u :: τ [ Θ , Γ ] = u , (Θ , Γ , τ)
 
   -- well-formedness of hole contexts
-  data _⊢_hctxwf : typctx -> hctx → Set where
-    HCtx : ∀{Θ Δ} -> (∀ {x Γ τ} -> (x , (Γ , τ)) ∈ Δ → ((Θ ⊢ Γ tctxwf) × (Θ ⊢ τ wf))) -> Θ ⊢ Δ hctxwf
+  data _hctxwf : hctx → Set where
+    HCtx : ∀{Δ} -> (∀ {x Θ Γ τ} -> (x , (Θ , Γ , τ)) ∈ Δ → ((Θ ⊢ Γ tctxwf) × (Θ ⊢ τ wf))) -> Δ hctxwf
 
   -- the hole name u does not appear in the term e
   data hole-name-new : (e : hexp) (u : Nat) → Set where
@@ -355,11 +355,11 @@ module core where
                 Typ[ τ1 / Z ] τ3 == τ4 →
                 Θ , Γ ⊢ (e < τ1 >) ⇒ τ4 ~> (d ⟨ τ2' ⇒ (·∀ τ3)⟩) < τ1 > ⊣ Δ
       ESEHole : ∀{Θ Γ u} →
-                Θ , Γ ⊢ ⦇-⦈[ u ] ⇒ ⦇-⦈ ~> ⦇-⦈⟨ u , Id Γ ⟩ ⊣  ■ (u :: ⦇-⦈ [ Γ ])
+                Θ , Γ ⊢ ⦇-⦈[ u ] ⇒ ⦇-⦈ ~> ⦇-⦈⟨ u , Id Γ ⟩ ⊣  ■ (u :: ⦇-⦈ [ Θ , Γ ])
       ESNEHole : ∀{Θ Γ e τ d u Δ} →
-                 Δ ## (■ (u , Γ , ⦇-⦈)) →
+                 Δ ## (■ (u , Θ , Γ , ⦇-⦈)) →
                  Θ , Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
-                 Θ , Γ ⊢ ⦇⌜ e ⌟⦈[ u ] ⇒ ⦇-⦈ ~> ⦇⌜ d ⌟⦈⟨ u , Id Γ  ⟩ ⊣ (Δ ,, u :: ⦇-⦈ [ Γ ])
+                 Θ , Γ ⊢ ⦇⌜ e ⌟⦈[ u ] ⇒ ⦇-⦈ ~> ⦇⌜ d ⌟⦈⟨ u , Id Γ  ⟩ ⊣ (Δ ,, u :: ⦇-⦈ [ Θ , Γ ])
       ESAsc : ∀ {Θ Γ e τ d τ' Δ} →
                  Θ ⊢ τ wf →
                  Θ , Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
@@ -385,11 +385,11 @@ module core where
                   τ ~ τ' →
                   Θ , Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
       EAEHole : ∀{Θ Γ u τ} →
-                Θ , Γ ⊢ ⦇-⦈[ u ] ⇐ τ ~> ⦇-⦈⟨ u , Id Γ  ⟩ :: τ ⊣ ■ (u :: τ [ Γ ])
+                Θ , Γ ⊢ ⦇-⦈[ u ] ⇐ τ ~> ⦇-⦈⟨ u , Id Γ  ⟩ :: τ ⊣ ■ (u :: τ [ Θ , Γ ])
       EANEHole : ∀{Θ Γ e u τ d τ' Δ} →
-                 Δ ## (■ (u , Γ , τ)) →
+                 Δ ## (■ (u , Θ , Γ , τ)) →
                  Θ , Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
-                 Θ , Γ ⊢ ⦇⌜ e ⌟⦈[ u ] ⇐ τ ~> ⦇⌜ d ⌟⦈⟨ u , Id Γ  ⟩ :: τ ⊣ (Δ ,, u :: τ [ Γ ])
+                 Θ , Γ ⊢ ⦇⌜ e ⌟⦈[ u ] ⇐ τ ~> ⦇⌜ d ⌟⦈⟨ u , Id Γ  ⟩ :: τ ⊣ (Δ ,, u :: τ [ Θ , Γ ])
 
   -- ground types
   data _ground : (τ : htyp) → Set where
@@ -430,12 +430,12 @@ module core where
                 Δ , Θ , Γ ⊢ d :: (·∀ τ2) →
                 Typ[ τ1 / Z ] τ2 == τ3 → 
                 Δ , Θ , Γ ⊢ (d < τ1 >) :: τ3
-      TAEHole : ∀{Δ Θ Γ σ u Γ' τ} →
-                (u , (Γ' , τ)) ∈ Δ →
+      TAEHole : ∀{Δ Θ Γ σ u Θ' Γ' τ} →
+                (u , (Θ' , Γ' , τ)) ∈ Δ →
                 Δ , Θ , Γ ⊢ σ :s: Γ' →
                 Δ , Θ , Γ ⊢ ⦇-⦈⟨ u , σ ⟩ :: τ
-      TANEHole : ∀ {Δ Θ Γ d τ' Γ' u σ τ } →
-                 (u , (Γ' , τ)) ∈ Δ →
+      TANEHole : ∀ {Δ Θ Γ d τ' Θ' Γ' u σ τ } →
+                 (u , (Θ' , Γ' , τ)) ∈ Δ →
                  Δ , Θ , Γ ⊢ d :: τ' →
                  Δ , Θ , Γ ⊢ σ :s: Γ' →
                  Δ , Θ , Γ ⊢ ⦇⌜ d ⌟⦈⟨ u , σ ⟩ :: τ
