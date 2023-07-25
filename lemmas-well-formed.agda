@@ -25,6 +25,19 @@ module lemmas-well-formed where
                   Θ ⊢ (Γ ,, (x , τ)) tctxwf
   merge-tctx-wf ctxwf wf apt = CCtx (merge-tctx-wf-helper ctxwf wf apt)
 
+  incr-typ-wf : ∀ {Θ t} → Θ ⊢ t wf → [ Θ newtyp] ⊢ incrtyp t wf
+  incr-typ-wf = {!   !}
+
+  incr-include : ∀ {Γ x t} → (x , t) ∈ incrtctx Γ → Σ[ t' ∈ htyp ] (((x , t') ∈ Γ) × t == incrtyp t')
+  incr-include elem = {!   !} , {!   !} , {!   !}
+  
+  wf-incr-helper : ∀ {Θ Γ x t} → (∀ {x' t'} → (x' , t') ∈ Γ → Θ ⊢ t' wf) → (x , t) ∈ incrtctx Γ → [ Θ newtyp] ⊢ t wf
+  wf-incr-helper {Θ = Θ} {Γ = Γ} map elem with incr-include {Γ = Γ} elem 
+  ... | (a , elem2 , eq) rewrite eq = incr-typ-wf (map elem2) 
+
+  wf-incr : ∀ {Θ Γ} → Θ ⊢ Γ tctxwf → [ Θ newtyp] ⊢ incrtctx Γ tctxwf
+  wf-incr {Θ = Θ} {Γ = Γ} (CCtx x) = CCtx (wf-incr-helper {Θ = Θ} {Γ = Γ} x)
+
   wf-sub : ∀ {Θ m τ1 τ2} → Θ ⊢ τ1 wf → [ Θ newtyp] ⊢ τ2 wf → m < (1+ (typctx.n Θ)) → Θ ⊢ Typ[ τ1 / m ] τ2 wf
   wf-sub {τ1 = τ1} {τ2 = b} wf1 wf2 leq = WFBase
   wf-sub {m = m} {τ1 = τ1} {τ2 = T v} wf1 wf2 leq with natEQ m v 
@@ -101,21 +114,21 @@ module lemmas-well-formed where
 
   wf-ta : ∀{Θ Γ d τ Δ} → 
           Θ ⊢ Γ tctxwf → 
-          Θ ⊢ Δ hctxwf → 
+          Δ hctxwf → 
           Δ , Θ , Γ ⊢ d :: τ → 
           Θ ⊢ τ wf 
   wf-ta ctxwf hctxwf TAConst = WFBase
   wf-ta (CCtx x₁) hctxwf (TAVar x) = x₁ x
   wf-ta ctxwf hctxwf (TALam x x₁ wt) = WFArr x₁ (wf-ta (merge-tctx-wf ctxwf x₁ x) hctxwf wt)
-  wf-ta ctxwf hctxwf (TATLam wt) = WFForall (wf-ta (weaken-tctx-wf ctxwf) (weaken-hctx-wf hctxwf) wt)
+  wf-ta ctxwf hctxwf (TATLam wt) = WFForall (wf-ta {!   !} hctxwf wt) -- weaken-tctx-wf ctxwf
   wf-ta ctxwf hctxwf (TAAp wt wt₁) with (wf-ta ctxwf hctxwf wt)
   ... | WFArr wf1 wf2 = wf2
   wf-ta ctxwf hctxwf (TATAp x wt eq) with (wf-ta ctxwf hctxwf wt)
   ... | WFForall wf' rewrite (sym eq) = wf-sub x wf' LTZ
   wf-ta ctxwf (HCtx map) (TAEHole x x₁) with map x 
-  ... | (_ , wf) = wf
+  ... | (_ , wf) = {!   !}
   wf-ta ctxwf (HCtx map) (TANEHole x wt x₁) with map x 
-  ... | (_ , wf) = wf
+  ... | (_ , wf) = {!   !}
   wf-ta ctxwf hctxwf (TACast wt x x₁) = x
   wf-ta ctxwf hctxwf (TAFailedCast wt x x₁ x₂) = ground-wf x₁
   
@@ -148,88 +161,6 @@ module lemmas-well-formed where
     elab-wf-ana ctxwf wf1 (EALam apt MAHole wt) = WFArr WFHole (elab-wf-ana (merge-tctx-wf ctxwf WFHole apt) wf1 wt)
     elab-wf-ana ctxwf (WFArr wf1 wf2) (EALam apt MAArr wt) = WFArr wf1 (elab-wf-ana (merge-tctx-wf ctxwf wf1 apt) wf2 wt)
     elab-wf-ana ctxwf wf1 (EASubsume x x₁ wt x₃) = elab-wf-synth ctxwf wt
+    elab-wf-ana ctxwf wf1 (EATLam x₂ x₃ x₄ x₅) = {!   !}
     elab-wf-ana ctxwf wf1 EAEHole = wf1
     elab-wf-ana ctxwf wf1 (EANEHole x x₁) = wf1
-
-  -- mutual 
-  --   no-tvar-elab-synth : ∀{e τ n d Δ} → 
-  --                     ~∅ , ∅ ⊢ e ⇒ (T n) ~> d ⊣ Δ → 
-  --                     ⊥
-  --   no-tvar-elab-synth (ESAp x x₁ x₂ x₃ x₄ x₅) = {!   !}
-  --   no-tvar-elab-synth (ESTAp {τ2 = τ2} x x₁ x₂ x₃ x₄) with τ2 
-  --   no-tvar-elab-synth (ESTAp {τ2 = τ2} x x₁ x₂ x₃ ()) | b
-  --   no-tvar-elab-synth (ESTAp {τ2 = τ2} x x₁ x₂ x₃ ()) | ⦇-⦈
-  --   no-tvar-elab-synth (ESTAp {τ2 = τ2} x x₁ x₂ x₃ ()) | a ==> b
-  --   no-tvar-elab-synth (ESTAp {τ2 = τ2} x x₁ x₂ x₃ ()) | ·∀ a
-  --   no-tvar-elab-synth (ESTAp {τ2 = τ2} (WFVar ()) x₁ x₂ x₃ x₄) | T Z
-  --   no-tvar-elab-synth (ESAsc (WFVar ()) x₁)
-
-  --   no-tvar-elab-ana : ∀{e τ n d Δ} → 
-  --                       ~∅ , ∅ ⊢ e ⇐ τ ~> d :: (T n) ⊣ Δ → 
-  --                       ⊥
-  --   no-tvar-elab-ana (EASubsume x x₁ x₂ x₃) = {!   !}
-  --   no-tvar-elab-ana EAEHole = {!   !}
-  --   no-tvar-elab-ana (EANEHole x x₁) = {!   !}
-
-
-  -- mutual 
-  --   no-tvar-cast-elab-synth : ∀{e τ d Δ} → 
-  --                        ~∅ , ∅ ⊢ e ⇒ τ ~> d ⊣ Δ → 
-  --                        is-tvar-cast d → 
-  --                        ⊥
-  --   no-tvar-cast-elab-synth (ESAsc x x₁) TVCast1 = no-tvar-elab-ana x₁
-  --   no-tvar-cast-elab-synth (ESAsc (WFVar ()) x₁) TVCast2
-                        
-  --   no-tvar-cast-elab-ana : ∀{e τ1 τ2 d Δ} → 
-  --                      ~∅ , ∅ ⊢ e ⇐ τ1 ~> d :: τ2 ⊣ Δ → 
-  --                      is-tvar-cast d → 
-  --                      ⊥
-  --   no-tvar-cast-elab-ana (EASubsume x x₁ x₂ x₃) cast = no-tvar-cast-elab-synth x₂ cast
-
-  -- mutual 
-  --   no-tvar-cast-synth : ∀{e τ d d' Δ} → 
-  --                        ~∅ , ∅ ⊢ e ⇒ τ ~> d' ⊣ Δ → 
-  --                        d' ↦* d → 
-  --                        is-tvar-cast d → 
-  --                        ⊥
-  --   no-tvar-cast-synth wt steps cast = {!  !}
-                        
-  --   no-tvar-cast-ana : ∀{e τ1 τ2 d d' Δ} → 
-  --                      ~∅ , ∅ ⊢ e ⇐ τ1 ~> d' :: τ2 ⊣ Δ → 
-  --                      d' ↦* d → 
-  --                      is-tvar-cast d → 
-  --                      ⊥
-  --   no-tvar-cast-ana wt steps cast = {!   !}
-
-
-  -- The following is false:
-  -- mutual 
-  --   no-tvar-cast-elab-synth : ∀{Γ e τ d Δ} → 
-  --                             Γ , ~∅ ⊢ e ⇒ τ ~> d ⊣ Δ → 
-  --                             contains-tvar-cast d → 
-  --                             ⊥
-  --   no-tvar-cast-elab-synth (ESLam x wt) (TVCastLam cast) = no-tvar-cast-elab-synth wt cast
-  --   no-tvar-cast-elab-synth (ESTLam wt) (TVCastTLam cast) = no-tvar-cast-elab-synth wt cast
-  --   no-tvar-cast-elab-synth (ESAp {τ1' = (T n)} x x₁ x₂ x₃ x₄ x₅) (TVCastAp1 TVCast1) = {!   !}
-  --   no-tvar-cast-elab-synth (ESAp x x₁ x₂ x₃ x₄ x₅) (TVCastAp1 (TVCastCast cast)) = no-tvar-cast-elab-ana x₄ cast
-  --   no-tvar-cast-elab-synth (ESAp x x₁ x₂ x₃ x₄ x₅) (TVCastAp2 TVCast1) = {!   !}
-  --   no-tvar-cast-elab-synth (ESAp x x₁ x₂ x₃ x₄ x₅) (TVCastAp2 TVCast2) = {!   !}
-  --   no-tvar-cast-elab-synth (ESAp x x₁ x₂ x₃ x₄ x₅) (TVCastAp2 (TVCastCast cast)) = no-tvar-cast-elab-ana x₅ cast
-  --   no-tvar-cast-elab-synth (ESTAp x x₁ x₂) (TVCastTAp TVCast1) = {!   !}
-  --   no-tvar-cast-elab-synth (ESTAp x x₁ x₂) (TVCastTAp (TVCastCast cast)) = no-tvar-cast-elab-ana x₂ cast
-  --   no-tvar-cast-elab-synth (ESAsc (EASubsume x x₁ x₂ x₃)) TVCast1 = {!   !}
-  --   no-tvar-cast-elab-synth (ESAsc EAEHole) TVCast1 = {!   !}
-  --   no-tvar-cast-elab-synth (ESAsc (EANEHole x x₁)) TVCast1 = {!   !}
-  --   no-tvar-cast-elab-synth (ESAsc (EASubsume x x₁ x₂ x₃)) TVCast2 = {!   !}
-  --   no-tvar-cast-elab-synth (ESAsc EAEHole) TVCast2 = {!   !}
-  --   no-tvar-cast-elab-synth (ESAsc (EANEHole x x₁)) TVCast2 = {!   !}
-  --   no-tvar-cast-elab-synth (ESAsc x) (TVCastCast cast) = no-tvar-cast-elab-ana x cast
-
-  --   no-tvar-cast-elab-ana : ∀{Γ e τ1 τ2 d Δ} → 
-  --                           Γ , ~∅ ⊢ e ⇐ τ1 ~> d :: τ2 ⊣ Δ → 
-  --                           contains-tvar-cast d → 
-  --                           ⊥
-  --   no-tvar-cast-elab-ana (EALam x x₁ wt) (TVCastLam cast) = no-tvar-cast-elab-ana wt cast
-  --   no-tvar-cast-elab-ana (EASubsume x x₁ x₂ x₃) cast = no-tvar-cast-elab-synth x₂ cast             
-  
-  
