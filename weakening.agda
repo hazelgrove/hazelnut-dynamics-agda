@@ -5,6 +5,7 @@ open import contexts
 open typctx
 open import lemmas-disjointness
 open import exchange
+open import lemmas-free-tvars
 
 -- this module contains all the proofs of different weakening structural
 -- properties that we use for the hypothetical judgements
@@ -105,7 +106,7 @@ module weakening where
     weaken-ta {x = x} frsh (TALam {x = y} apt wf wt) with natEQ x y
     weaken-ta (FLam x₁ x₂) (TALam apt wf wt) | Inl refl = abort (x₁ refl)
     weaken-ta {Γ = Γ} {τ' = τ'} (FLam x₁ x₃) (TALam {x = y} x₄ wf wt) | Inr x₂ = TALam (apart-extend1 Γ (flip x₁) x₄) wf (exchange-ta-Γ {Γ = Γ} (flip x₁) (weaken-ta x₃ wt))
-    weaken-ta (FTLam frsh) (TATLam x₁) = TATLam (weaken-ta frsh x₁)
+    weaken-ta {x} {Γ} {τ' = τ'} (FTLam frsh) (TATLam x₁) = TATLam (rewrite-gamma (! (lem-map-extend-dist {Γ = Γ} {f = incrtyp})) ((weaken-ta frsh x₁)))
     weaken-ta (FAp frsh frsh₁) (TAAp wt wt₁) = TAAp (weaken-ta frsh wt) (weaken-ta frsh₁ wt₁)
     weaken-ta (FTAp frsh) (TATAp wf x₁ eq) = TATAp wf (weaken-ta frsh x₁) eq
     weaken-ta (FHole x₁) (TAEHole x₂ x₃) = TAEHole x₂ (weaken-subst-Γ x₁ x₃)

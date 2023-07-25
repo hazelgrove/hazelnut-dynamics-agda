@@ -102,8 +102,8 @@ module preservation where
   preserve-trans _ _ _ (TALam _ _ ta) ()
   preserve-trans (BUAp (BULam bd x₁) bd₁ (BDLam x₂ x₃)) _ _ (TAAp (TALam apt wf ta) ta₁) ITLam = lem-subst apt x₂ bd₁ ta ta₁
   preserve-trans _ _ _ (TATLam ta) ()
-  preserve-trans _ tcwf hcwf(TAAp (TACast ta (WFArr wf1 wf2) (TCArr x x₁)) ta₁) ITApCast with wf-ta tcwf hcwf ta
-  ... | WFArr wf1' _ = TACast (TAAp ta (TACast ta₁ wf1' (~sym x))) wf2 x₁
+  preserve-trans _ tcwf hcwf(TAAp (TACast ta (WFArr wf1 wf2) (TCArr x x₁)) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ {! hctxwf  !} (~sym x))) wf2 x₁ {- with wf-ta tcwf hcwf ta
+  ... | WFArr wf1' _ = TACast (TAAp ta (TACast ta₁ wf1' (~sym x))) wf2 x₁ -}
   preserve-trans {d = ·Λ d < τ >} _ tcwf hcwf (TATAp wf (TATLam x) eq) ITTLam with eq 
   ... | refl rewrite (wf-tctx-no-subst tcwf λ ()) = lemma-tysubst refl wf {!tcwf!} x -- lemma-tysubst {!!} {!!} x
   preserve-trans _ _ _ (TATAp wf (TACast ta (WFForall wf2) (TCForall x)) eq) ITTApCast with eq
