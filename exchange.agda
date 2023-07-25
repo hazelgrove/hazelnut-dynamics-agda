@@ -134,4 +134,6 @@ module exchange where
       ...   | Inl refl | Inr neq with natEQ x qq
       ...     | Inr neq = refl
       ...     | Inl refl = abort (neq refl)
- 
+
+  wf-contraction : ∀{Θ x τ} -> (Θ ,, (x , <>) ,, (x , <>)) ⊢ τ wf -> (Θ ,, (x , <>)) ⊢ τ wf
+  wf-contraction {Θ} {x} {τ} p rewrite typctx-contraction {Θ} {x} = p
