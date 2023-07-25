@@ -109,18 +109,16 @@ module lemmas-well-formed where
                       Θ ⊢ Γ tctxwf → 
                       Θ , Γ ⊢ e => (·∀ t τ) → 
                       (Θ ,, (t , <>)) ⊢ τ wf 
-    wf-synth-forall ctxwf ta = {!!}
-{-
     wf-synth-forall ctxwf (SAsc (WFForall x) x₁) = x
     wf-synth-forall (CCtx wfs) (SVar x) with (wfs x)
     ... | WFForall wf = wf
     wf-synth-forall ctxwf (SAp x wt MAArr x₂) with wf-synth-arr ctxwf wt 
     ... | WFForall wf = wf
     wf-synth-forall ctxwf (STLam wt) = wf-synth (weaken-tctx-wf ctxwf) wt
-    wf-synth-forall ctxwf (STAp wf wt MFForall eq) with wf-sub wf (wf-synth-forall ctxwf wt) LTZ
+    wf-synth-forall ctxwf (STAp wf wt MFForall eq) with wf-sub wf (wf-synth-forall ctxwf wt) refl
     ... | wf rewrite eq with wf
     ... | WFForall wf = wf
--}
+
   wf-ta : ∀{Θ Γ d τ Δ} → 
           Θ ⊢ Γ tctxwf → 
           Θ ⊢ Δ hctxwf → 
@@ -157,7 +155,7 @@ module lemmas-well-formed where
     elab-wf-synth ctxwf (ESAp _ _ _ MAHole _ _) = WFHole
     elab-wf-synth ctxwf (ESAp _ _ wt MAArr _ _) = wf-synth-arr ctxwf wt
     elab-wf-synth ctxwf (ESTAp wf wt MFHole wt2 eq) rewrite (sym eq) = WFHole
-    elab-wf-synth ctxwf (ESTAp wf wt MFForall wt2 eq) rewrite (sym eq) = wf-sub {!!} {!!} {!!}
+    elab-wf-synth ctxwf (ESTAp wf wt MFForall wt2 eq) rewrite (sym eq) = wf-sub wf (wf-synth-forall ctxwf wt) refl
     elab-wf-synth _ ESEHole = WFHole
     elab-wf-synth _ (ESNEHole _ _) = WFHole
     elab-wf-synth _ (ESAsc wf _) = wf
