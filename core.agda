@@ -203,15 +203,15 @@ module core where
                  Θ , (Γ ,, (x , τ1)) ⊢ e => τ2 →
                  Θ , Γ ⊢ ·λ x [ τ1 ] e => τ1 ==> τ2
       STLam   : {Θ : typctx} {Γ : tctx} {e : hexp} {t : Nat} {τ : htyp} → 
-                t # Θ →
+                -- t # Θ → -- See note in TATLam
                 (Θ ,, (t , <>)) , Γ ⊢ e => τ → 
                 Θ , Γ ⊢ (·Λ t e) => (·∀ t τ)
       STAp    : {Θ : typctx} {Γ : tctx} {e : hexp} {τ1 τ2 τ3 τ4 : htyp} {t : Nat} → 
-                t # Θ →
+                -- t # Θ →
                 Θ ⊢ τ1 wf →
                 Θ , Γ ⊢ e => τ2 →
                 τ2 ▸forall (·∀ t τ3) →
-                Typ[ τ1 / Z ] τ3 == τ4 →
+                Typ[ τ1 / t ] τ3 == τ4 →
                 Θ , Γ ⊢ (e < τ1 >) => τ4
 
     -- analysis
@@ -288,7 +288,7 @@ module core where
                      Θ , (Γ ,, (x , τ1)) ⊢ e ⇒ τ2 ~> d ⊣ Δ →
                     Θ , Γ ⊢ ·λ x [ τ1 ] e ⇒ (τ1 ==> τ2) ~> ·λ x [ τ1 ] d ⊣ Δ
       ESTLam  : ∀{Θ Γ t e τ d Δ} → 
-                t # Θ →
+                -- t # Θ →
                 (Θ ,, (t , <>)) , Γ ⊢ e ⇒ τ ~> d ⊣ Δ → 
                 Θ , Γ ⊢ (·Λ t e) ⇒ (·∀ t τ) ~> (·Λ t d) ⊣ Δ
       ESAp : ∀{Θ Γ e1 τ τ1 τ1' τ2 τ2' d1 Δ1 e2 d2 Δ2} →
@@ -304,7 +304,7 @@ module core where
                 Θ , Γ ⊢ e => τ2 →
                 τ2 ▸forall (·∀ t τ3) →
                 Θ , Γ ⊢ e ⇐ (·∀ t τ3) ~> d :: τ2' ⊣ Δ →
-                Typ[ τ1 / Z ] τ3 == τ4 →
+                Typ[ τ1 / t ] τ3 == τ4 →
                 Θ , Γ ⊢ (e < τ1 >) ⇒ τ4 ~> (d ⟨ τ2' ⇒ (·∀ t τ3)⟩) < τ1 > ⊣ Δ
       ESEHole : ∀{Θ Γ u} →
                 Θ , Γ ⊢ ⦇-⦈[ u ] ⇒ ⦇-⦈ ~> ⦇-⦈⟨ u , Id Γ ⟩ ⊣  ■ (u :: ⦇-⦈ [ Γ ])
@@ -379,7 +379,7 @@ module core where
       TATAp : ∀ {Δ Θ Γ d t τ1 τ2 τ3} → 
                 Θ ⊢ τ1 wf →
                 Δ , Θ , Γ ⊢ d :: (·∀ t τ2) →
-                Typ[ τ1 / Z ] τ2 == τ3 → 
+                Typ[ τ1 / t ] τ2 == τ3 → 
                 Δ , Θ , Γ ⊢ (d < τ1 >) :: τ3
       TAEHole : ∀{Δ Θ Γ σ u Γ' τ} →
                 (u , (Γ' , τ)) ∈ Δ →
@@ -585,7 +585,7 @@ module core where
             -- d2 final → -- red brackets
             ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1)
     ITTLam : ∀{ d t ty } →
-              ((·Λ t d) < ty >) →> (TTyp[ ty / Z ] d)
+              ((·Λ t d) < ty >) →> (TTyp[ ty / t ] d)
     ITCastID : ∀{d τ } →
                -- d final → -- red brackets
                (d ⟨ τ ⇒ τ ⟩) →> d

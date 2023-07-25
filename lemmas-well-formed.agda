@@ -1,9 +1,9 @@
 open import Nat
 open import Prelude
 open import core
-open typctx
 open import contexts
 open import weakening
+open import exchange
 
 module lemmas-well-formed where 
 
@@ -25,7 +25,27 @@ module lemmas-well-formed where
                   Θ ⊢ (Γ ,, (x , τ)) tctxwf
   merge-tctx-wf ctxwf wf apt = CCtx (merge-tctx-wf-helper ctxwf wf apt)
 
-  wf-sub : ∀ {Θ m τ1 τ2} → Θ ⊢ τ1 wf → [ Θ newtyp] ⊢ τ2 wf → m < (1+ (typctx.n Θ)) → Θ ⊢ Typ[ τ1 / m ] τ2 wf
+  -- TODO: Move this
+  forall-inj1 : ∀{t t' τ τ'} -> ·∀ t τ == ·∀ t' τ' -> t == t'
+  forall-inj1 refl = refl
+  forall-inj2 : ∀{t t' τ τ'} -> ·∀ t τ == ·∀ t' τ' -> τ == τ'
+  forall-inj2 refl = refl
+  typvar-inj : ∀{t t'} -> T t == T t' -> t == t'
+  typvar-inj refl = refl
+
+  wf-sub : ∀ {Θ t τ1 τ2 τ3} → Θ ⊢ τ1 wf → (Θ ,, (t , <>)) ⊢ τ3 wf → τ2 == ·∀ t τ3 → Θ ⊢ Typ[ τ1 / t ] τ3 wf
+  wf-sub {τ3 = b} wf1 wf2 eq = WFBase
+  wf-sub {Θ} {t = t} {τ3 = T x} wf1 (WFVar {a = a} p) eq with natEQ t x
+  ... | Inl refl = wf1
+  ... | Inr neq with ctxindirect Θ x
+  ...   | Inl (<> , inctx) = WFVar inctx
+  ...   | Inr ninctx rewrite ninctx rewrite natEQneq neq rewrite natEQneq neq = WFVar (abort (somenotnone (! p)))
+  wf-sub {τ3 = ⦇-⦈} wf1 wf2 eq = WFHole
+  wf-sub {τ3 = τ4 ==> τ5} wf1 (WFArr wf2 wf3) eq rewrite eq = WFArr (wf-sub wf1 wf2 refl) (wf-sub wf1 wf3 refl)
+  wf-sub {t = t} wf1 (WFForall {n = n} wf2) eq with natEQ t n
+  ... | Inl refl = WFForall (weaken-t-wf (weaken-t-wf {! wf2  !}))
+  ... | Inr neq rewrite natEQneq (flip neq) = WFForall (wf-sub (weaken-t-wf wf1) {! !} refl)
+{-
   wf-sub {τ1 = τ1} {τ2 = b} wf1 wf2 leq = WFBase
   wf-sub {m = m} {τ1 = τ1} {τ2 = T v} wf1 wf2 leq with natEQ m v 
   ... | Inl refl = wf1
@@ -38,13 +58,13 @@ module lemmas-well-formed where
   wf-sub {τ1 = τ1} {τ2 = ⦇-⦈} wf1 wf2 leq = WFHole 
   wf-sub {τ1 = τ1} {τ2 = τ2 ==> τ3} wf1 (WFArr wf2 wf3) leq = WFArr (wf-sub wf1 wf2 leq) (wf-sub wf1 wf3 leq)
   wf-sub {τ1 = τ1} {τ2 = ·∀ τ2} wf1 (WFForall wf2) leq = WFForall (wf-sub (weaken-t-wf wf1) wf2 (LTS leq))
-
+-}
 
   match-arr-wf : ∀ {Θ τ τ1 τ2} → Θ ⊢ τ wf → τ ▸arr (τ1 ==> τ2) → Θ ⊢ (τ1 ==> τ2) wf
   match-arr-wf wf MAHole = WFArr WFHole WFHole
   match-arr-wf wf MAArr = wf
 
-  match-forall-wf : ∀ {Θ τ τ1} → Θ ⊢ τ wf → τ ▸forall (·∀ τ1) → Θ ⊢ (·∀ τ1) wf
+  match-forall-wf : ∀ {Θ τ t τ1} → Θ ⊢ τ wf → τ ▸forall (·∀ t τ1) → Θ ⊢ (·∀ t τ1) wf
   match-forall-wf wf MFHole = WFForall WFHole 
   match-forall-wf wf MFForall = wf
 
@@ -67,9 +87,9 @@ module lemmas-well-formed where
     wf-synth ctxwf SEHole = WFHole
     wf-synth ctxwf (SNEHole x wt) = WFHole
     wf-synth ctxwf (SLam apt x₁ wt) = WFArr x₁ (wf-synth (merge-tctx-wf ctxwf x₁ apt) wt)
-    wf-synth ctxwf (STLam wt) = WFForall (wf-synth (weaken-tctx-wf ctxwf) wt)
+    wf-synth ctxwf (STLam wt) = WFForall (wf-synth {!!} wt)
     wf-synth ctxwf (STAp x wt MFHole eq) rewrite (sym eq) = WFHole
-    wf-synth ctxwf (STAp x wt MFForall eq) rewrite (sym eq) = wf-sub x (wf-synth-forall ctxwf wt) LTZ
+    wf-synth ctxwf (STAp x wt MFForall eq) rewrite (sym eq) = wf-sub x {!   !} {!   !} -- wf-sub x (wf-synth-forall ctxwf wt)
     
     wf-synth-arr : ∀{Θ Γ e τ τ'} → 
                     Θ ⊢ Γ tctxwf → 
@@ -81,14 +101,16 @@ module lemmas-well-formed where
     wf-synth-arr ctxwf (SAp _ wf MAArr _) with wf-synth-arr ctxwf wf 
     ... | WFArr _ wf = wf
     wf-synth-arr ctxwf (SLam apt wf wt) = wf-synth (merge-tctx-wf ctxwf wf apt) wt
-    wf-synth-arr ctxwf (STAp wf wt MFForall eq) with wf-sub wf (wf-synth-forall ctxwf wt) LTZ 
+    wf-synth-arr ctxwf (STAp wf wt MFForall eq) = {!!} {- with wf-sub wf (wf-synth-forall ctxwf wt) LTZ 
     ... | wf rewrite eq with wf 
-    ... | WFArr _ wf  = wf
+    ... | WFArr _ wf  = wf -}
 
-    wf-synth-forall : ∀{Θ Γ e τ} → 
+    wf-synth-forall : ∀{Θ Γ e t τ} → 
                       Θ ⊢ Γ tctxwf → 
-                      Θ , Γ ⊢ e => (·∀ τ) → 
-                      [ Θ newtyp] ⊢ τ wf 
+                      Θ , Γ ⊢ e => (·∀ t τ) → 
+                      (Θ ,, (t , <>)) ⊢ τ wf 
+    wf-synth-forall ctxwf ta = {!!}
+{-
     wf-synth-forall ctxwf (SAsc (WFForall x) x₁) = x
     wf-synth-forall (CCtx wfs) (SVar x) with (wfs x)
     ... | WFForall wf = wf
@@ -98,7 +120,7 @@ module lemmas-well-formed where
     wf-synth-forall ctxwf (STAp wf wt MFForall eq) with wf-sub wf (wf-synth-forall ctxwf wt) LTZ
     ... | wf rewrite eq with wf
     ... | WFForall wf = wf
-
+-}
   wf-ta : ∀{Θ Γ d τ Δ} → 
           Θ ⊢ Γ tctxwf → 
           Θ ⊢ Δ hctxwf → 
@@ -110,8 +132,8 @@ module lemmas-well-formed where
   wf-ta ctxwf hctxwf (TATLam wt) = WFForall (wf-ta (weaken-tctx-wf ctxwf) (weaken-hctx-wf hctxwf) wt)
   wf-ta ctxwf hctxwf (TAAp wt wt₁) with (wf-ta ctxwf hctxwf wt)
   ... | WFArr wf1 wf2 = wf2
-  wf-ta ctxwf hctxwf (TATAp x wt eq) with (wf-ta ctxwf hctxwf wt)
-  ... | WFForall wf' rewrite (sym eq) = wf-sub x wf' LTZ
+  wf-ta {Θ} {Γ} {d} {τ} {Δ} ctxwf hctxwf (TATAp {t = t} {τ1 = τ1} {τ2 = τ2} {τ3 = τ3} x wt eq)  with (wf-ta ctxwf hctxwf wt)
+  ... | WFForall wf' rewrite (sym eq) = wf-sub {Θ} {t} {τ1} {τ3 = τ2} x wf' refl
   wf-ta ctxwf (HCtx map) (TAEHole x x₁) with map x 
   ... | (_ , wf) = wf
   wf-ta ctxwf (HCtx map) (TANEHole x wt x₁) with map x 
@@ -131,11 +153,11 @@ module lemmas-well-formed where
     elab-wf-synth _ ESConst = WFBase
     elab-wf-synth (CCtx wts) (ESVar x) = wts x
     elab-wf-synth ctxwf (ESLam apt x₂ elab) = WFArr x₂ (elab-wf-synth (merge-tctx-wf ctxwf x₂ apt) elab)
-    elab-wf-synth ctxwf (ESTLam elab) = WFForall (elab-wf-synth (weaken-tctx-wf ctxwf) elab)
+    elab-wf-synth ctxwf (ESTLam elab) = WFForall (elab-wf-synth {!!} elab)
     elab-wf-synth ctxwf (ESAp _ _ _ MAHole _ _) = WFHole
     elab-wf-synth ctxwf (ESAp _ _ wt MAArr _ _) = wf-synth-arr ctxwf wt
     elab-wf-synth ctxwf (ESTAp wf wt MFHole wt2 eq) rewrite (sym eq) = WFHole
-    elab-wf-synth ctxwf (ESTAp wf wt MFForall wt2 eq) rewrite (sym eq) = wf-sub wf (wf-synth-forall ctxwf wt) LTZ
+    elab-wf-synth ctxwf (ESTAp wf wt MFForall wt2 eq) rewrite (sym eq) = wf-sub {!!} {!!} {!!}
     elab-wf-synth _ ESEHole = WFHole
     elab-wf-synth _ (ESNEHole _ _) = WFHole
     elab-wf-synth _ (ESAsc wf _) = wf

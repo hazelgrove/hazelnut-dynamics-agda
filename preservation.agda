@@ -10,7 +10,7 @@ open import binders-disjoint-checks
 open import lemmas-subst-ta
 
 -- open import lemmas-free-tvars
--- open import lemmas-well-formed
+open import lemmas-well-formed
 
 module preservation where
 
@@ -80,7 +80,7 @@ module preservation where
   preserve-trans _ tcwf hcwf(TAAp (TACast ta (WFArr wf1 wf2) (TCArr x x₁)) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ {! hctxwf  !} (~sym x))) wf2 x₁ {- with wf-ta tcwf hcwf ta
   ... | WFArr wf1' _ = TACast (TAAp ta (TACast ta₁ wf1' (~sym x))) wf2 x₁ -}
   preserve-trans {d = ·Λ d < τ >} _ tcwf hcwf (TATAp wf (TATLam x) eq) ITTLam with eq 
-  ... | refl rewrite (wf-tctx-no-subst tcwf λ ()) = lemma-tysubst refl wf {!tcwf!} x -- lemma-tysubst {!!} {!!} x
+  ... | refl = {!!}
   preserve-trans _ _ _ (TATAp wf (TACast ta (WFForall wf2) (TCForall x)) eq) ITTApCast with eq
   ... | refl = TACast (TATAp wf ta refl) (wf-sub wf wf2 LTZ) (~Typ[] x)
   preserve-trans _ _ _ (TACast ta wf x) (ITCastID) = ta

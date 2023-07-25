@@ -20,23 +20,16 @@ module weakening where
   ... | Inl refl = WFForall (abort (ne refl)) 
   ... | Inr neq = WFForall (exchange-wf {y} {x} {t} {Θ} (flip neq) {! wf  !})
   -}
-{-
-  weaken-t-wf : ∀ {Θ1 Θ2 τ} → Θ1 ## Θ2 → Θ1 ⊢ τ wf → (Θ1 ∪ Θ2) ⊢ τ wf
-  weaken-t-wf (WFVar x) = WFVar (lt-right-incr x)
-  weaken-t-wf WFBase = WFBase
-  weaken-t-wf WFHole = WFHole
-  weaken-t-wf (WFArr wf wf₁) = WFArr (weaken-t-wf wf) (weaken-t-wf wf₁)
-  weaken-t-wf (WFForall wf) = WFForall (weaken-t-wf wf)
 
-  weaken-tctx-wf : ∀ {Θ1 Θ2 Γ} → Θ1 ## Θ2 → Θ1 ⊢ Γ tctxwf → (Θ1 ∪ Θ2) ⊢ Γ tctxwf
+  weaken-tctx-wf : ∀ {Θ Γ x} → Θ ⊢ Γ tctxwf → (Θ ,, (x , <>)) ⊢ Γ tctxwf
   weaken-tctx-wf (CCtx x) = CCtx (λ x₁ → weaken-t-wf (x x₁))
 
-  weaken-hctx-wf : ∀ {Θ1 Θ2 Δ} → Θ1 ## Θ2 → Θ1 ⊢ Δ hctxwf → (Θ1 ∪ Θ2) ⊢ Δ hctxwf
+  weaken-hctx-wf : ∀ {Θ Δ x} → Θ ⊢ Δ hctxwf → (Θ ,, (x , <>)) ⊢ Δ hctxwf
   weaken-hctx-wf (HCtx map) = 
     HCtx (λ key → 
       (let (p1 , p2) = (map key) in 
       (weaken-tctx-wf p1) , (weaken-t-wf p2)))
--}
+      
   mutual
     weaken-subst-Δ : ∀{Δ1 Δ2 Γ σ Γ' Θ} → Δ1 ## Δ2
                                      → Δ1 , Γ , Θ ⊢ σ :s: Γ'
@@ -81,11 +74,11 @@ module weakening where
     weaken-synth {Γ = Γ} (FRHLam2 x₁ frsh) (SLam x₂ wf wt) =
                     SLam (apart-extend1 Γ (flip x₁) x₂) wf
                          (exchange-synth {Γ = Γ} (flip x₁) ((weaken-synth frsh wt)))
-    weaken-synth (FRHTLam ne x) (STLam ap x₂) = STLam ap (weaken-synth x x₂)
+    weaken-synth (FRHTLam ne x) (STLam x₂) = STLam (weaken-synth x x₂)
     weaken-synth FRHEHole SEHole = SEHole
     weaken-synth (FRHNEHole frsh) (SNEHole x₁ wt) = SNEHole x₁ (weaken-synth frsh wt)
     weaken-synth (FRHAp frsh frsh₁) (SAp x₁ wt x₂ x₃) = SAp x₁ (weaken-synth frsh wt) x₂ (weaken-ana frsh₁ x₃)
-    weaken-synth (FRHTAp x₁) (STAp ap wf x₂ x₃ eq) = STAp ap wf (weaken-synth x₁ x₂) x₃ eq
+    weaken-synth (FRHTAp x₁) (STAp wf x₂ x₃ eq) = STAp wf (weaken-synth x₁ x₂) x₃ eq
 
     weaken-ana : ∀{x Γ e τ τ' Θ} → freshh x e
                                → Θ , Γ ⊢ e <= τ

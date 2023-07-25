@@ -121,3 +121,17 @@ module exchange where
   exchange-wf {x} {y} {Θ = Θ} pf with natEQ x y
   ... | Inl refl = pf
   ... | Inr neq = exchange-wf-weak {x} {y} {Θ = Θ} neq pf
+
+  typctx-contraction : ∀{Θ x} -> Θ ,, (x , <>) ,, (x , <>) == Θ ,, (x , <>)
+  typctx-contraction {Θ} {x} = funext \qq -> foo {Θ} {x} qq 
+    where
+      foo : ∀{Θ x} -> (qq : Nat) -> (Θ ,, (x , <>) ,, (x , <>)) qq == (Θ ,, (x , <>)) qq
+      foo {Θ} {x} qq with ctxindirect Θ qq
+      ... | Inl (_ , int) rewrite int = refl
+      ... | Inr nint rewrite nint with natEQ qq qq | natEQ x qq 
+      ...   | Inr neq | _ = abort (neq refl)
+      ...   | Inl refl | Inl refl = refl
+      ...   | Inl refl | Inr neq with natEQ x qq
+      ...     | Inr neq = refl
+      ...     | Inl refl = abort (neq refl)
+ 
