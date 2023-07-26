@@ -25,18 +25,23 @@ module lemmas-well-formed where
                   Θ ⊢ (Γ ,, (x , τ)) tctxwf
   merge-tctx-wf ctxwf wf apt = CCtx (merge-tctx-wf-helper ctxwf wf apt)
 
-  incr-typ-wf : ∀ {Θ t} → Θ ⊢ t wf → [ Θ newtyp] ⊢ incrtyp t wf
-  incr-typ-wf = {!   !}
+  wf-incr-typ : ∀ {Θ t} → Θ ⊢ t wf → [ Θ newtyp] ⊢ incrtyp t wf
+  wf-incr-typ (WFVar x) = WFVar (LTS x)
+  wf-incr-typ WFBase = WFBase
+  wf-incr-typ WFHole = WFHole
+  wf-incr-typ (WFArr wf wf₁) = WFArr (wf-incr-typ wf) (wf-incr-typ wf₁)
+  wf-incr-typ (WFForall wf) = WFForall (wf-incr-typ wf)
 
-  incr-include : ∀ {Γ x t} → (x , t) ∈ incrtctx Γ → Σ[ t' ∈ htyp ] (((x , t') ∈ Γ) × t == incrtyp t')
-  incr-include elem = {!   !} , {!   !} , {!   !}
+  incr-include : ∀ {Γ x t} → ((incrtctx Γ) x) == Some t → Σ[ t' ∈ htyp ] (((x , t') ∈ Γ) × t == incrtyp t')
+  incr-include {Γ = Γ} {x = x} elem with Γ x in eq | elem
+  ... | Some t' | refl = t' , refl , refl
   
-  wf-incr-helper : ∀ {Θ Γ x t} → (∀ {x' t'} → (x' , t') ∈ Γ → Θ ⊢ t' wf) → (x , t) ∈ incrtctx Γ → [ Θ newtyp] ⊢ t wf
-  wf-incr-helper {Θ = Θ} {Γ = Γ} map elem with incr-include {Γ = Γ} elem 
-  ... | (a , elem2 , eq) rewrite eq = incr-typ-wf (map elem2) 
+  wf-incr-ctx-helper : ∀ {Θ Γ x t} → (∀ {x' t'} → (x' , t') ∈ Γ → Θ ⊢ t' wf) → (x , t) ∈ incrtctx Γ → [ Θ newtyp] ⊢ t wf
+  wf-incr-ctx-helper {Θ = Θ} {Γ = Γ} map elem with incr-include {Γ = Γ} elem 
+  ... | (a , elem2 , eq) rewrite eq = wf-incr-typ (map elem2) 
 
-  wf-incr : ∀ {Θ Γ} → Θ ⊢ Γ tctxwf → [ Θ newtyp] ⊢ incrtctx Γ tctxwf
-  wf-incr {Θ = Θ} {Γ = Γ} (CCtx x) = CCtx (wf-incr-helper {Θ = Θ} {Γ = Γ} x)
+  wf-incr-ctx : ∀ {Θ Γ} → Θ ⊢ Γ tctxwf → [ Θ newtyp] ⊢ incrtctx Γ tctxwf
+  wf-incr-ctx {Θ = Θ} {Γ = Γ} (CCtx x) = CCtx (wf-incr-ctx-helper {Θ = Θ} {Γ = Γ} x)
 
   wf-sub : ∀ {Θ m τ1 τ2} → Θ ⊢ τ1 wf → [ Θ newtyp] ⊢ τ2 wf → m < (1+ (typctx.n Θ)) → Θ ⊢ Typ[ τ1 / m ] τ2 wf
   wf-sub {τ1 = τ1} {τ2 = b} wf1 wf2 leq = WFBase
@@ -120,7 +125,7 @@ module lemmas-well-formed where
   wf-ta ctxwf hctxwf TAConst = WFBase
   wf-ta (CCtx x₁) hctxwf (TAVar x) = x₁ x
   wf-ta ctxwf hctxwf (TALam x x₁ wt) = WFArr x₁ (wf-ta (merge-tctx-wf ctxwf x₁ x) hctxwf wt)
-  wf-ta ctxwf hctxwf (TATLam wt) = WFForall (wf-ta {!   !} hctxwf wt) -- weaken-tctx-wf ctxwf
+  wf-ta ctxwf hctxwf (TATLam wt) = WFForall (wf-ta (wf-incr-ctx ctxwf) hctxwf wt)
   wf-ta ctxwf hctxwf (TAAp wt wt₁) with (wf-ta ctxwf hctxwf wt)
   ... | WFArr wf1 wf2 = wf2
   wf-ta ctxwf hctxwf (TATAp x wt eq) with (wf-ta ctxwf hctxwf wt)
