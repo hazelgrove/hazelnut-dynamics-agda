@@ -196,7 +196,7 @@ module progress where
     with ground-decidable τ
   progress (TACast wt wf TCHole1) | BV x₁ | Inl g = BV (BVHoleCast g x₁)
   progress (TACast wt wf (TCHole1 {b})) | BV x₁ | Inr x = abort (x GBase)
-  progress (TACast wt wf (TCHole1 {T n})) | BV x₁ | Inr x = {!   !}
+  progress (TACast wt wf (TCHole1 {T n})) | BV x₁ | Inr x = {!  !}
   progress (TACast wt wf (TCHole1 {⦇-⦈})) | BV x₁ | Inr x = S (_ , Step FHOuter ITCastID FHOuter)
   progress (TACast wt wf (TCHole1 {τ1 ==> τ2})) | BV x₁ | Inr x
     with (htype-dec  (τ1 ==> τ2) (⦇-⦈ ==> ⦇-⦈))
