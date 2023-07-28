@@ -253,3 +253,20 @@ module lemmas-well-formed where
   --   no-tvar-cast-elab-ana (EASubsume x x₁ x₂ x₃) cast = no-tvar-cast-elab-synth x₂ cast             
   
   
+
+  unbound-no-subst : ∀{t τ τ'} -> tfresht t τ -> Typ[ τ' / t ] τ == τ
+  unbound-no-subst TFBase = refl
+  unbound-no-subst {t} {τ = T t'} (TFTVar neq) with natEQ t t'
+  ... | Inl refl = abort (neq refl)
+  ... | Inr neq' = refl
+  unbound-no-subst TFHole = refl
+  unbound-no-subst (TFArr tft tft') = foo (unbound-no-subst tft) (unbound-no-subst tft')
+    where
+      foo : ∀{A B C D} -> A == C -> B == D -> (A ==> B) == (C ==> D)
+      foo A==C B==D rewrite A==C rewrite B==D = refl
+  unbound-no-subst {t} (TFForall {t = t'} x tft) with natEQ t t'
+  ... | Inl refl = refl
+  ... | Inr neq = foo (unbound-no-subst tft)
+    where
+      foo : ∀{A B t} -> A == B -> ·∀ t A == ·∀ t B
+      foo eq rewrite eq = refl

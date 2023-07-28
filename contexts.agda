@@ -359,3 +359,13 @@ module contexts where
   lem-singleton-apart {A} {x} {y} neq with natEQ y x
   ... | Inl refl = abort (neq refl)
   ... | Inr neq' = refl
+
+  lem-union-lunit : {A : Set} {Γ : A ctx} → ∅ ∪ Γ == Γ
+  lem-union-lunit {A} {Γ = Γ} = funext (λ x → foo x)
+    where
+      foo : (x : Nat) -> (∅ ∪ Γ) x == Γ x
+      foo x with ctxindirect {A} ∅ x
+      ... | Inl (_ , inctx) = refl
+      ... | Inr ninctx = refl
+  lem-extend-lunit : {A : Set} {x : Nat} {y : A} → ∅ ,, (x , y) == (■ (x , y))
+  lem-extend-lunit = lem-union-lunit

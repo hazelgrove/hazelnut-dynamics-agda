@@ -172,7 +172,44 @@ module core where
 
   -- Type substitution binds tighter than consistency (20)
   infixl 21 Typ[_/_]_
+  
 
+  Tctx[_/_]_ : htyp -> Nat -> tctx -> tctx
+  Tctx[ tau / t ] gamma = map (Typ[_/_]_ tau t) gamma
+  
+  Hctx[_/_]_ : htyp -> Nat -> hctx -> hctx
+  Hctx[ tau / t ] sigma = map (\(gamma , tau') -> ((Tctx[ tau / t ] gamma) , (Typ[ tau / t ] tau'))) sigma
+
+  {-
+      c         : ihexp
+      X         : Nat → ihexp
+      ·λ_[_]_   : Nat → htyp → ihexp → ihexp
+      ·Λ        : Nat → ihexp → ihexp
+      ⦇-⦈⟨_⟩     : (Nat × env) → ihexp
+      ⦇⌜_⌟⦈⟨_⟩    : ihexp → (Nat × env) → ihexp
+      _∘_       : ihexp → ihexp → ihexp
+      _<_>      : ihexp → htyp → ihexp
+      _⟨_⇒_⟩    : ihexp → htyp → htyp → ihexp
+      _⟨_⇒⦇-⦈⇏_⟩ : ihexp → htyp → htyp → ihexp
+  -}
+  mutual
+    Ihexp[_/_]_ : htyp -> Nat -> ihexp -> ihexp
+    Ihexp[ τ / t ] c = c
+    Ihexp[ τ / t ] (X x) = X x
+    Ihexp[ τ / t ] (·λ x [ τx ] d) = ·λ x [ Typ[ τ / t ] τx ] (Ihexp[ τ / t ] d)
+    Ihexp[ τ / t ] (·Λ t' d) with natEQ t t'
+    ... | Inl refl = (·Λ t' d)
+    ... | Inr neq = (·Λ t' (Ihexp[ τ / t ] d))
+    Ihexp[ τ / t ] (⦇-⦈⟨ u , σ ⟩) = ⦇-⦈⟨ u , Sub[ τ / t ] σ ⟩
+    Ihexp[ τ / t ] (⦇⌜ d ⌟⦈⟨ u , σ ⟩) = ⦇⌜ (Ihexp[ τ / t ] d) ⌟⦈⟨ u , Sub[  τ / t ] σ ⟩
+    Ihexp[ τ / t ] (d1 ∘ d2) = ((Ihexp[ τ / t ] d1) ∘ (Ihexp[ τ / t ] d2))
+    Ihexp[ τ / t ] (d < τ' >) = (Ihexp[ τ / t ] d) < Typ[ τ / t ] τ' >
+    Ihexp[ τ / t ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (Ihexp[ τ / t ] d) ⟨ (Typ[ τ / t ] τ1) ⇒ (Typ[ τ / t ] τ2) ⟩
+    Ihexp[ τ / t ] (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = (Ihexp[ τ / t ] d) ⟨ (Typ[ τ / t ] τ1) ⇒⦇-⦈⇏ (Typ[ τ / t ] τ2) ⟩
+    
+    Sub[_/_]_ : htyp -> Nat -> env -> env
+    Sub[ tau / t ] (Id gamma) = Id (Tctx[ tau / t ] gamma)
+    Sub[ tau / t ] (Subst d y sigma) = Subst (Ihexp[ tau / t ] d) y (Sub[ tau / t ] sigma)
   
   -- bidirectional type checking judgements for hexp
   mutual
@@ -358,7 +395,7 @@ module core where
                Δ , Θ , (Γ ,, (y , τ)) ⊢ σ :s: Γ' →
                Δ , Θ , Γ ⊢ d :: τ →
                Δ , Θ , Γ ⊢ Subst d y σ :s: Γ'
-
+               
     -- type assignment
     data _,_,_⊢_::_ : (Δ : hctx) (Θ : typctx) (Γ : tctx) (d : ihexp) (τ : htyp) → Set where
       TAConst : ∀{Δ Θ Γ} → Δ , Θ , Γ ⊢ c :: b
@@ -420,22 +457,6 @@ module core where
   [ d / y ] (d' < τ >) = ([ d / y ] d') < τ >
   [ d / y ] (d' ⟨ τ1 ⇒ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒ τ2 ⟩
   [ d / y ] (d' ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩
-
-  -- terms' type substitution
-  TTyp[_/_]_ : htyp → Nat → ihexp → ihexp
-  TTyp[ t / a ] c = c
-  TTyp[ t / a ] X x = X x
-  TTyp[ t / a ] (·λ x [ τ ] d') = (·λ x [ (Typ[ t / a ] τ) ] (TTyp[ t / a ] d'))
-  TTyp[ t / a ] (·Λ tn d) with natEQ a tn
-  ... | Inl refl = (·Λ tn d)
-  ... | Inr _ = ·Λ tn (TTyp[ t / a ] d) --TODO: Fix this
-  -- TODO: May need to add into hole substitutions?
-  TTyp[ t / a ] ⦇-⦈⟨ u , σ ⟩ = ⦇-⦈⟨ u , σ ⟩
-  TTyp[ t / a ] ⦇⌜ d ⌟⦈⟨ u , σ  ⟩ =  ⦇⌜ TTyp[ t / a ] d ⌟⦈⟨ u , σ ⟩
-  TTyp[ t / a ] (d1 ∘ d2) = (TTyp[ t / a ] d1) ∘ (TTyp[ t / a ] d2)
-  TTyp[ t / a ] (d < τ >) = (TTyp[ t / a ] d) < Typ[ t / a ] τ >
-  TTyp[ t / a ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (TTyp[ t / a ] d) ⟨ (Typ[ t / a ] τ1) ⇒ (Typ[ t / a ] τ2) ⟩
-  TTyp[ t / a ] (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = (TTyp[ t / a ] d) ⟨ (Typ[ t / a ] τ1) ⇒⦇-⦈⇏ (Typ[ t / a ] τ2) ⟩
 
   -- applying an environment to an expression
   apply-env : env → ihexp → ihexp
@@ -585,7 +606,7 @@ module core where
             -- d2 final → -- red brackets
             ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1)
     ITTLam : ∀{ d t ty } →
-              ((·Λ t d) < ty >) →> (TTyp[ ty / t ] d)
+              ((·Λ t d) < ty >) →> (Ihexp[ ty / t ] d)
     ITCastID : ∀{d τ } →
                -- d final → -- red brackets
                (d ⟨ τ ⇒ τ ⟩) →> d
@@ -642,7 +663,7 @@ module core where
                            → x ≠ y
                            → envfresh x (Subst d y σ)
     
-{-
+
     data unboundt-in-Γ : Nat -> tctx -> Set where
       UBTΓ : ∀{x Γ} -> ((x' : Nat) (y : htyp) -> ((x' , y) ∈ Γ) -> tfresht x y) -> unboundt-in-Γ x Γ
     
@@ -652,7 +673,7 @@ module core where
                            → envtfresh x σ
                            → x ≠ y
                            → envtfresh x (Subst d y σ)
--}
+
     -- ... for internal expressions
     data fresh : Nat → ihexp → Set where
       FConst : ∀{x} → fresh x c
@@ -665,11 +686,11 @@ module core where
       FTAp    : ∀{x τ d} → fresh x d → fresh x (d < τ >)
       FCast   : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒ τ2 ⟩)
       FFailedCast : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
-{-
+
   -- In reference to type variables
     data tfresht : Nat -> htyp -> Set where
      TFBase   : ∀{x} -> tfresht x b
-     TFTVar    : ∀{x t} -> tfresht x (T t)
+     TFTVar    : ∀{x t} -> x ≠ t → tfresht x (T t)
      TFHole   : ∀{x} -> tfresht x ⦇-⦈
      TFArr    : ∀{x t1 t2} -> tfresht x t1 -> tfresht x t2 -> tfresht x (t1 ==> t2)
      TFForall : ∀{x t t'} -> x ≠ t -> tfresht x t' -> tfresht x (·∀ t t')
@@ -685,7 +706,7 @@ module core where
       TFTAp    : ∀{x τ d} → tfresht x τ → tfresh x d → tfresh x (d < τ >)
       TFCast   : ∀{x d τ1 τ2} → tfresh x d → tfresh x (d ⟨ τ1 ⇒ τ2 ⟩)
       TFFailedCast : ∀{x d τ1 τ2} → tfresh x d → tfresh x (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
--}
+
   
   -- ... for external expressions
   data freshh : Nat → hexp → Set where
