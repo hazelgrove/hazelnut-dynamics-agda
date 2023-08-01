@@ -30,30 +30,8 @@ module core where
   -- the type of type contexts, i.e. Γs in the judegments below
   tctx : Set
   tctx = htyp ctx
+
   
-  mutual
-    -- identity substitution, substitition environments
-    data env : Set where
-      Id : (Γ : tctx) → env
-      Subst : (d : ihexp) → (y : Nat) → env → env
-
-    -- internal expressions
-    data ihexp : Set where
-      c         : ihexp
-      X         : Nat → ihexp
-      ·λ_[_]_   : Nat → htyp → ihexp → ihexp
-      ·Λ        : ihexp → ihexp
-      ⦇-⦈⟨_⟩     : (Nat × env) → ihexp
-      ⦇⌜_⌟⦈⟨_⟩    : ihexp → (Nat × env) → ihexp
-      _∘_       : ihexp → ihexp → ihexp
-      _<_>      : ihexp → htyp → ihexp
-      _⟨_⇒_⟩    : ihexp → htyp → htyp → ihexp
-      _⟨_⇒⦇-⦈⇏_⟩ : ihexp → htyp → htyp → ihexp
-
-  -- convenient notation for chaining together two agreeable casts
-  _⟨_⇒_⇒_⟩ : ihexp → htyp → htyp → htyp → ihexp
-  d ⟨ t1 ⇒ t2 ⇒ t3 ⟩ = d ⟨ t1 ⇒ t2 ⟩ ⟨ t2 ⇒ t3 ⟩
-
   -- definition of type context, represented as a list of naturals indexing type variables
   module typctx where
 
@@ -71,6 +49,33 @@ module core where
     [ Θ newtyp] = record { n = 1+ (typctx.n Θ) }
 
   open typctx
+  
+  mutual
+    -- identity substitution, substitition environments
+    data env : Set where
+      Id : (Γ : tctx) → env
+      Subst : (d : ihexp) → (y : Nat) → env → env
+
+    data typenv : Set where
+      TypId : (Γ : typctx) → typenv
+      TypSubst : (d : htyp) → (y : Nat) → typenv → typenv
+
+    -- internal expressions
+    data ihexp : Set where
+      c         : ihexp
+      X         : Nat → ihexp
+      ·λ_[_]_   : Nat → htyp → ihexp → ihexp
+      ·Λ        : ihexp → ihexp
+      ⦇-⦈⟨_⟩     : (Nat × typenv × env) → ihexp
+      ⦇⌜_⌟⦈⟨_⟩    : ihexp → (Nat × typenv × env) → ihexp
+      _∘_       : ihexp → ihexp → ihexp
+      _<_>      : ihexp → htyp → ihexp
+      _⟨_⇒_⟩    : ihexp → htyp → htyp → ihexp
+      _⟨_⇒⦇-⦈⇏_⟩ : ihexp → htyp → htyp → ihexp
+
+  -- convenient notation for chaining together two agreeable casts
+  _⟨_⇒_⇒_⟩ : ihexp → htyp → htyp → htyp → ihexp
+  d ⟨ t1 ⇒ t2 ⇒ t3 ⟩ = d ⟨ t1 ⇒ t2 ⟩ ⟨ t2 ⇒ t3 ⟩
   
   -- -- type consistency in a context of type variables (represented by the number of binders passed)
   -- data _⊢_~_ : typctx → htyp → htyp → Set where 
@@ -355,11 +360,11 @@ module core where
                 Typ[ τ1 / Z ] τ3 == τ4 →
                 Θ , Γ ⊢ (e < τ1 >) ⇒ τ4 ~> (d ⟨ τ2' ⇒ (·∀ τ3)⟩) < τ1 > ⊣ Δ
       ESEHole : ∀{Θ Γ u} →
-                Θ , Γ ⊢ ⦇-⦈[ u ] ⇒ ⦇-⦈ ~> ⦇-⦈⟨ u , Id Γ ⟩ ⊣  ■ (u :: ⦇-⦈ [ Θ , Γ ])
+                Θ , Γ ⊢ ⦇-⦈[ u ] ⇒ ⦇-⦈ ~> ⦇-⦈⟨ u , TypId Θ , Id Γ ⟩ ⊣  ■ (u :: ⦇-⦈ [ Θ , Γ ])
       ESNEHole : ∀{Θ Γ e τ d u Δ} →
                  Δ ## (■ (u , Θ , Γ , ⦇-⦈)) →
                  Θ , Γ ⊢ e ⇒ τ ~> d ⊣ Δ →
-                 Θ , Γ ⊢ ⦇⌜ e ⌟⦈[ u ] ⇒ ⦇-⦈ ~> ⦇⌜ d ⌟⦈⟨ u , Id Γ  ⟩ ⊣ (Δ ,, u :: ⦇-⦈ [ Θ , Γ ])
+                 Θ , Γ ⊢ ⦇⌜ e ⌟⦈[ u ] ⇒ ⦇-⦈ ~> ⦇⌜ d ⌟⦈⟨ u , TypId Θ , Id Γ ⟩ ⊣ (Δ ,, u :: ⦇-⦈ [ Θ , Γ ])
       ESAsc : ∀ {Θ Γ e τ d τ' Δ} →
                  Θ ⊢ τ wf →
                  Θ , Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
@@ -385,11 +390,11 @@ module core where
                   τ ~ τ' →
                   Θ , Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ
       EAEHole : ∀{Θ Γ u τ} →
-                Θ , Γ ⊢ ⦇-⦈[ u ] ⇐ τ ~> ⦇-⦈⟨ u , Id Γ  ⟩ :: τ ⊣ ■ (u :: τ [ Θ , Γ ])
+                Θ , Γ ⊢ ⦇-⦈[ u ] ⇐ τ ~> ⦇-⦈⟨ u , TypId Θ , Id Γ ⟩ :: τ ⊣ ■ (u :: τ [ Θ , Γ ])
       EANEHole : ∀{Θ Γ e u τ d τ' Δ} →
                  Δ ## (■ (u , Θ , Γ , τ)) →
                  Θ , Γ ⊢ e ⇒ τ' ~> d ⊣ Δ →
-                 Θ , Γ ⊢ ⦇⌜ e ⌟⦈[ u ] ⇐ τ ~> ⦇⌜ d ⌟⦈⟨ u , Id Γ  ⟩ :: τ ⊣ (Δ ,, u :: τ [ Θ , Γ ])
+                 Θ , Γ ⊢ ⦇⌜ e ⌟⦈[ u ] ⇐ τ ~> ⦇⌜ d ⌟⦈⟨ u , TypId Θ , Id Γ ⟩ :: τ ⊣ (Δ ,, u :: τ [ Θ , Γ ])
 
   -- ground types
   data _ground : (τ : htyp) → Set where
@@ -430,15 +435,15 @@ module core where
                 Δ , Θ , Γ ⊢ d :: (·∀ τ2) →
                 Typ[ τ1 / Z ] τ2 == τ3 → 
                 Δ , Θ , Γ ⊢ (d < τ1 >) :: τ3
-      TAEHole : ∀{Δ Θ Γ σ u Θ' Γ' τ} →
+      TAEHole : ∀{Δ Θ Γ θ σ u Θ' Γ' τ} →
                 (u , (Θ' , Γ' , τ)) ∈ Δ →
                 Δ , Θ , Γ ⊢ σ :s: Γ' →
-                Δ , Θ , Γ ⊢ ⦇-⦈⟨ u , σ ⟩ :: τ
-      TANEHole : ∀ {Δ Θ Γ d τ' Θ' Γ' u σ τ } →
+                Δ , Θ , Γ ⊢ ⦇-⦈⟨ u , θ , σ ⟩ :: τ
+      TANEHole : ∀ {Δ Θ Γ d τ' Θ' Γ' u θ σ τ } →
                  (u , (Θ' , Γ' , τ)) ∈ Δ →
                  Δ , Θ , Γ ⊢ d :: τ' →
                  Δ , Θ , Γ ⊢ σ :s: Γ' →
-                 Δ , Θ , Γ ⊢ ⦇⌜ d ⌟⦈⟨ u , σ ⟩ :: τ
+                 Δ , Θ , Γ ⊢ ⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩ :: τ
       TACast : ∀{Δ Θ Γ d τ1 τ2} →
              Δ , Θ , Γ ⊢ d :: τ1 →
              Θ ⊢ τ2 wf →
@@ -463,8 +468,8 @@ module core where
   [ d / y ] (·λ .y [ τ ] d') | Inl refl = ·λ y [ τ ] d'
   [ d / y ] (·λ x [ τ ] d')  | Inr x₁ = ·λ x [ τ ] ( [ d / y ] d')
   [ d / y ] ·Λ d' = ·Λ ([ d / y ] d')
-  [ d / y ] ⦇-⦈⟨ u , σ ⟩ = ⦇-⦈⟨ u , Subst d y σ ⟩
-  [ d / y ] ⦇⌜ d' ⌟⦈⟨ u , σ  ⟩ =  ⦇⌜ [ d / y ] d' ⌟⦈⟨ u , Subst d y σ ⟩
+  [ d / y ] ⦇-⦈⟨ u , θ , σ ⟩ = ⦇-⦈⟨ u , θ , Subst d y σ ⟩
+  [ d / y ] ⦇⌜ d' ⌟⦈⟨ u , θ , σ  ⟩ =  ⦇⌜ [ d / y ] d' ⌟⦈⟨ u , θ , Subst d y σ ⟩
   [ d / y ] (d1 ∘ d2) = ([ d / y ] d1) ∘ ([ d / y ] d2)
   [ d / y ] (d' < τ >) = ([ d / y ] d') < τ >
   [ d / y ] (d' ⟨ τ1 ⇒ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒ τ2 ⟩
@@ -477,8 +482,8 @@ module core where
   TTyp[ t / a ] (·λ x [ τ ] d') = (·λ x [ (Typ[ t / a ] τ) ] (TTyp[ t / a ] d'))
   TTyp[ t / a ] (·Λ d) = ·Λ (TTyp[ t / (1+ a) ] d)
   -- TODO: May need to add into hole substitutions?
-  TTyp[ t / a ] ⦇-⦈⟨ u , σ ⟩ = ⦇-⦈⟨ u , σ ⟩
-  TTyp[ t / a ] ⦇⌜ d ⌟⦈⟨ u , σ  ⟩ =  ⦇⌜ TTyp[ t / a ] d ⌟⦈⟨ u , σ ⟩
+  TTyp[ t / a ] ⦇-⦈⟨ u , θ , σ ⟩ = ⦇-⦈⟨ u , θ , σ ⟩
+  TTyp[ t / a ] ⦇⌜ d ⌟⦈⟨ u , θ , σ  ⟩ =  ⦇⌜ TTyp[ t / a ] d ⌟⦈⟨ u , θ , σ ⟩
   TTyp[ t / a ] (d1 ∘ d2) = (TTyp[ t / a ] d1) ∘ (TTyp[ t / a ] d2)
   TTyp[ t / a ] (d < τ >) = (TTyp[ t / a ] d) < Typ[ t / a ] τ >
   TTyp[ t / a ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (TTyp[ t / a ] d) ⟨ (Typ[ t / a ] τ1) ⇒ (Typ[ t / a ] τ2) ⟩
@@ -511,8 +516,8 @@ module core where
   mutual
     -- indeterminate forms
     data _indet : (d : ihexp) → Set where
-      IEHole : ∀{u σ} → ⦇-⦈⟨ u , σ ⟩ indet
-      INEHole : ∀{d u σ} → d final → ⦇⌜ d ⌟⦈⟨ u , σ ⟩ indet
+      IEHole : ∀{u θ σ} → ⦇-⦈⟨ u , θ , σ ⟩ indet
+      INEHole : ∀{d u θ σ} → d final → ⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩ indet
       IAp : ∀{d1 d2} → ((τ1 τ2 τ3 τ4 : htyp) (d1' : ihexp) →
                        d1 ≠ (d1' ⟨(τ1 ==> τ2) ⇒ (τ3 ==> τ4)⟩)) →
                        d1 indet →
@@ -560,7 +565,7 @@ module core where
     _∘₁_ : ectx → ihexp → ectx
     _∘₂_ : ihexp → ectx → ectx
     _<_> : ectx → htyp → ectx
-    ⦇⌜_⌟⦈⟨_⟩ : ectx → (Nat × env ) → ectx
+    ⦇⌜_⌟⦈⟨_⟩ : ectx → (Nat × typenv × env ) → ectx
     _⟨_⇒_⟩ : ectx → htyp → htyp → ectx
     _⟨_⇒⦇-⦈⇏_⟩ : ectx → htyp → htyp → ectx
 
@@ -584,9 +589,9 @@ module core where
     ECTAp : ∀{ε t} →
             ε evalctx →
             (ε < t >) evalctx
-    ECNEHole : ∀{ε u σ} →
+    ECNEHole : ∀{ε u θ σ} →
                ε evalctx →
-               ⦇⌜ ε ⌟⦈⟨ u , σ ⟩ evalctx
+               ⦇⌜ ε ⌟⦈⟨ u , θ , σ ⟩ evalctx
     ECCast : ∀{ ε τ1 τ2} →
              ε evalctx →
              (ε ⟨ τ1 ⇒ τ2 ⟩) evalctx
@@ -607,9 +612,9 @@ module core where
     FHTAp : ∀{d d' t ε} →
            d == ε ⟦ d' ⟧ →
            (d < t >) == (ε < t >) ⟦ d' ⟧
-    FHNEHole : ∀{ d d' ε u σ} →
+    FHNEHole : ∀{ d d' ε u θ σ} →
               d == ε ⟦ d' ⟧ →
-              ⦇⌜ d ⌟⦈⟨ (u , σ ) ⟩ ==  ⦇⌜ ε ⌟⦈⟨ (u , σ ) ⟩ ⟦ d' ⟧
+              ⦇⌜ d ⌟⦈⟨ (u , θ , σ ) ⟩ ==  ⦇⌜ ε ⌟⦈⟨ (u , θ , σ ) ⟩ ⟦ d' ⟧
     FHCast : ∀{ d d' ε τ1 τ2 } →
             d == ε ⟦ d' ⟧ →
             d ⟨ τ1 ⇒ τ2 ⟩ == ε ⟨ τ1 ⇒ τ2 ⟩ ⟦ d' ⟧
@@ -695,8 +700,8 @@ module core where
       FVar   : ∀{x y} → x ≠ y → fresh x (X y)
       FLam   : ∀{x y τ d} → x ≠ y → fresh x d → fresh x (·λ y [ τ ] d)
       FTLam  : ∀{x d} → fresh x d → fresh x (·Λ d)
-      FHole  : ∀{x u σ} → envfresh x σ → fresh x (⦇-⦈⟨ u , σ ⟩)
-      FNEHole : ∀{x d u σ} → envfresh x σ → fresh x d → fresh x (⦇⌜ d ⌟⦈⟨ u , σ ⟩)
+      FHole  : ∀{x u θ σ} → envfresh x σ → fresh x (⦇-⦈⟨ u , θ , σ ⟩)
+      FNEHole : ∀{x d u θ σ} → envfresh x σ → fresh x d → fresh x (⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩)
       FAp     : ∀{x d1 d2} → fresh x d1 → fresh x d2 → fresh x (d1 ∘ d2)
       FTAp    : ∀{x τ d} → fresh x d → fresh x (d < τ >)
       FCast   : ∀{x d τ1 τ2} → fresh x d → fresh x (d ⟨ τ1 ⇒ τ2 ⟩)
@@ -731,12 +736,12 @@ module core where
                            → unbound-in x d
                            → unbound-in x (·λ_[_]_ y τ d)
       UBTLam : ∀{x d} → unbound-in x d → unbound-in x (·Λ d)
-      UBHole : ∀{x u σ} → unbound-in-σ x σ
-                         → unbound-in x (⦇-⦈⟨ u , σ ⟩)
-      UBNEHole : ∀{x u σ d }
+      UBHole : ∀{x u θ σ} → unbound-in-σ x σ
+                         → unbound-in x (⦇-⦈⟨ u , θ , σ ⟩)
+      UBNEHole : ∀{x u θ σ d }
                   → unbound-in-σ x σ
                   → unbound-in x d
-                  → unbound-in x (⦇⌜ d ⌟⦈⟨ u , σ ⟩)
+                  → unbound-in x (⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩)
       UBAp : ∀{ x d1 d2 } →
             unbound-in x d1 →
             unbound-in x d2 →
@@ -762,11 +767,11 @@ module core where
                             → binders-disjoint (·λ_[_]_ x τ d1) d2
       BDTLam :  ∀{d1 d2} → binders-disjoint d1 d2
                           → binders-disjoint (·Λ d1) d2
-      BDHole : ∀{u σ d2} → binders-disjoint-σ σ d2
-                         → binders-disjoint (⦇-⦈⟨ u , σ ⟩) d2
-      BDNEHole : ∀{u σ d1 d2} → binders-disjoint-σ σ d2
+      BDHole : ∀{u θ σ d2} → binders-disjoint-σ σ d2
+                         → binders-disjoint (⦇-⦈⟨ u , θ , σ ⟩) d2
+      BDNEHole : ∀{u θ σ d1 d2} → binders-disjoint-σ σ d2
                               → binders-disjoint d1 d2
-                              → binders-disjoint (⦇⌜ d1 ⌟⦈⟨ u , σ ⟩) d2
+                              → binders-disjoint (⦇⌜ d1 ⌟⦈⟨ u , θ , σ ⟩) d2
       BDAp :  ∀{d1 d2 d3} → binders-disjoint d1 d3
                           → binders-disjoint d2 d3
                           → binders-disjoint (d1 ∘ d2) d3
@@ -794,11 +799,11 @@ module core where
                                                 → binders-unique (·λ_[_]_ x τ d)
       BUTLam : ∀{d} → binders-unique d
                        → binders-unique (·Λ d)
-      BUEHole : ∀{u σ} → binders-unique-σ σ
-                        → binders-unique (⦇-⦈⟨ u , σ ⟩)
-      BUNEHole : ∀{u σ d} → binders-unique d
+      BUEHole : ∀{u θ σ} → binders-unique-σ σ
+                        → binders-unique (⦇-⦈⟨ u , θ , σ ⟩)
+      BUNEHole : ∀{u θ σ d} → binders-unique d
                            → binders-unique-σ σ
-                           → binders-unique (⦇⌜ d ⌟⦈⟨ u , σ ⟩)
+                           → binders-unique (⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩)
       BUAp : ∀{d1 d2} → binders-unique d1
                        → binders-unique d2
                        → binders-disjoint d1 d2

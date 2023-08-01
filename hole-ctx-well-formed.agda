@@ -34,6 +34,9 @@ module hole-ctx-well-formed where
     HCtxWfStrictCast : ∀{ Θ τ1 τ2 d Δ} → Θ ⊢ d ⊣ Δ strict → Θ ⊢ d ⟨ τ1 ⇒ τ2 ⟩ ⊣ Δ strict
     HCtxWfStrictFailedCast : ∀{ Θ τ1 τ2 d Δ} → Θ ⊢ d ⊣ Δ strict → Θ ⊢ d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ⊣ Δ strict
      
+  apt-sym : {A : Set} → (C1 C2 : A ctx) → C1 ## C2 → C2 ## C1
+  apt-sym C1 C2 (map1 , map2) = (map2 , map1)
+
   singleton-lookup : ∀{ Θ Γ u Θ' Γ' τ τ'} → (u , Θ' , Γ' , τ') ∈ (■ (u :: τ [ Θ , Γ ])) → (τ == τ')
   singleton-lookup {u = u} {τ = τ} p with natEQ u u 
   singleton-lookup {u = u} {τ = τ} refl | Inl refl = refl
@@ -57,24 +60,45 @@ module hole-ctx-well-formed where
 
   helper4 : ∀ {Θ Γ u Θ' Γ' τ τ' Δ} → Δ ## (■ (u , Θ , Γ , τ)) → (u , Θ' , Γ' , τ') ∈ (Δ ,, (u :: τ [ Θ , Γ ])) → Θ ⊢ τ wf → Θ ⊢ τ' wf
   helper4 {Θ = Θ} {Γ = Γ} {u = u} {τ = τ} {Δ = Δ} (map1 , map2) p wf with map2 u (dom-singleton u (Θ , Γ , τ)) 
-  ... | thing with (Δ u) 
+  ... | _ with (Δ u) 
   ... | None rewrite singleton-lookup p = wf
 
-  apt-sym : {A : Set} → (C1 C2 : A ctx) → C1 ## C2 → C2 ## C1
-  apt-sym C1 C2 (map1 , map2) = (map2 , map1)
+  helper5 : ∀ {Θ Γ u Θ' Γ' τ τ' Δ} → (■ (u , Θ , Γ , τ)) ## Δ → (u , Θ' , Γ' , τ') ∈ ((■ (u :: τ [ Θ , Γ ])) ∪ Δ) → Θ ⊢ τ wf → Θ ⊢ τ' wf
+  helper5 {Θ = Θ} {Γ = Γ} {u = u} {τ = τ} {Δ = Δ} (map1 , map2) p wf with natEQ u u
+  helper5 {Θ = Θ} {Γ = Γ} {u = u} {τ = τ} (map1 , map2) refl wf | Inl refl = wf
+  ... | Inr absurd = abort (absurd refl)
 
-  hctx-wf-with-disjoint : ∀{ Θ d Δ1 Δ2} → Δ1 ## Δ2 → Θ ⊢ d ⊣ Δ1 strict → Θ ⊢ d ⊣ (Δ1 ∪ Δ2)
-  hctx-wf-with-disjoint apt HCtxWfStrictConst = HCtxWfConst
-  hctx-wf-with-disjoint apt HCtxWfStrictVar = HCtxWfVar
-  hctx-wf-with-disjoint apt (HCtxWfStrictLam wf) = HCtxWfLam (hctx-wf-with-disjoint apt wf)
-  hctx-wf-with-disjoint apt (HCtxWfStrictTLam wf) = HCtxWfTLam (hctx-wf-with-disjoint apt wf)
-  hctx-wf-with-disjoint apt (HCtxWfStrictAp x wf wf₁) =  HCtxWfAp {! hctx-wf-with-disjoint ? ?  !} {! hctx-wf-with-disjoint ? ?  !}
-  hctx-wf-with-disjoint apt (HCtxWfStrictTAp wf) = HCtxWfTAp (hctx-wf-with-disjoint apt wf)
-  hctx-wf-with-disjoint apt (HCtxWfStrictEHole x) = {!   !}
-  hctx-wf-with-disjoint apt (HCtxWfStrictNEHole apt2 wf x) = {!   !}
-  hctx-wf-with-disjoint apt (HCtxWfStrictCast wf) = HCtxWfCast (hctx-wf-with-disjoint apt wf)
-  hctx-wf-with-disjoint apt (HCtxWfStrictFailedCast wf) = HCtxWfFailedCast (hctx-wf-with-disjoint apt wf)
-  
+  union-apt1 : {A : Set} → ( Δ1 Δ2 Δ3 : A ctx) → (Δ1 ∪ Δ2) ## Δ3 → Δ1 ## Δ3
+  union-apt1 = {!   !}
+
+  union-apt2 : {A : Set} → ( Δ1 Δ2 Δ3 : A ctx) → (Δ1 ∪ Δ2) ## Δ3 → Δ2 ## Δ3
+  union-apt2 = {!   !}
+
+  apt-union : {A : Set} → ( Δ1 Δ2 Δ3 : A ctx) → Δ1 ## Δ2 → Δ1 ## Δ3 → Δ1 ## (Δ2 ∪ Δ3)
+  apt-union = {!   !}
+
+  mutual 
+
+    helper6 : ∀{ Θ d Δ1 Δ2 Δ3} → Θ ⊢ d ⊣ Δ1 strict → Δ1 ## Δ2 → (Δ1 ∪ Δ2) ## Δ3 → Θ ⊢ d ⊣ ((Δ1 ∪ Δ2) ∪ Δ3)
+    helper6 {Δ1 = Δ1} {Δ2 = Δ2} {Δ3 = Δ3} wf apt1 apt2 
+      rewrite (∪assoc Δ1 Δ2 Δ3 (union-apt2 Δ1 Δ2 Δ3 apt2)) = 
+      hctx-wf-with-disjoint {Δ1 = Δ1} {Δ2 = Δ2 ∪ Δ3} (apt-union Δ1 Δ2 Δ3 apt1 (union-apt1 Δ1 Δ2 Δ3 apt2)) wf
+
+    helper7 : ∀{ Θ d Δ1 Δ2 Δ3} → Θ ⊢ d ⊣ Δ2 strict → Δ1 ## Δ2 → (Δ1 ∪ Δ2) ## Δ3 → Θ ⊢ d ⊣ ((Δ1 ∪ Δ2) ∪ Δ3)
+    helper7 {Δ1 = Δ1} {Δ2 = Δ2} {Δ3 = Δ3} wf apt1 apt2 =  {!  !}
+
+    hctx-wf-with-disjoint : ∀{ Θ d Δ1 Δ2} → Δ1 ## Δ2 → Θ ⊢ d ⊣ Δ1 strict → Θ ⊢ d ⊣ (Δ1 ∪ Δ2)
+    hctx-wf-with-disjoint apt HCtxWfStrictConst = HCtxWfConst
+    hctx-wf-with-disjoint apt HCtxWfStrictVar = HCtxWfVar
+    hctx-wf-with-disjoint apt (HCtxWfStrictLam wf) = HCtxWfLam (hctx-wf-with-disjoint apt wf)
+    hctx-wf-with-disjoint apt (HCtxWfStrictTLam wf) = HCtxWfTLam (hctx-wf-with-disjoint apt wf)
+    hctx-wf-with-disjoint apt (HCtxWfStrictAp x wf wf₁) =  HCtxWfAp (helper6 wf x apt) (helper7 wf₁ x apt)
+    hctx-wf-with-disjoint apt (HCtxWfStrictTAp wf) = HCtxWfTAp (hctx-wf-with-disjoint apt wf)
+    hctx-wf-with-disjoint apt (HCtxWfStrictEHole x) = HCtxWfEHole (λ x₁ → helper5 apt x₁ x)
+    hctx-wf-with-disjoint apt (HCtxWfStrictNEHole apt2 wf x) = HCtxWfNEHole (helper6 wf apt2 apt) (λ x₁ → {!  !})
+    hctx-wf-with-disjoint apt (HCtxWfStrictCast wf) = HCtxWfCast (hctx-wf-with-disjoint apt wf)
+    hctx-wf-with-disjoint apt (HCtxWfStrictFailedCast wf) = HCtxWfFailedCast (hctx-wf-with-disjoint apt wf)
+    
   hctx-wf-with-disjoint-flip : ∀{ Θ d Δ1 Δ2} → Δ1 ## Δ2 → Θ ⊢ d ⊣ Δ2 strict → Θ ⊢ d ⊣ (Δ1 ∪ Δ2)
   hctx-wf-with-disjoint-flip {Δ1 = Δ1} {Δ2 = Δ2} apt wf rewrite (∪comm Δ1 Δ2 apt) = hctx-wf-with-disjoint (apt-sym Δ1 Δ2 apt) wf
 
@@ -136,4 +160,4 @@ module hole-ctx-well-formed where
 
   no-tvar-casts : ∀{ Γ n τ d Δ} → ~∅ ⊢ Γ tctxwf → ~∅ ⊢ d ⟨ T n ⇒ ⦇-⦈ ⟩ ⊣ Δ → Δ , ~∅ , Γ ⊢ d ⟨ T n ⇒ ⦇-⦈ ⟩ :: τ → ⊥
   no-tvar-casts ctxwf (HCtxWfCast hctxwf) (TACast wt x x₁) with wf-ta ctxwf hctxwf wt 
-  ... | WFVar ()
+  ... | WFVar () 
