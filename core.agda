@@ -405,14 +405,18 @@ module core where
 
   mutual
     -- substitution typing
-    data _,_,_⊢_:s:_ : hctx → typctx → tctx → env → tctx → Set where
-      STAId : ∀{Γ Γ' Δ Θ} →
+    data _,_,_⊢_,_:s:_,_ : hctx → typctx → tctx → typenv → env → typctx → tctx → Set where
+      STAIdId : ∀{Γ Γ' Δ Θ Θ'} →
                   ((x : Nat) (τ : htyp) → (x , τ) ∈ Γ' → (x , τ) ∈ Γ) →
-                  Δ , Θ , Γ ⊢ Id Γ' :s: Γ'
-      STASubst : ∀{Θ Γ Δ σ y Γ' d τ } →
-               Δ , Θ , (Γ ,, (y , τ)) ⊢ σ :s: Γ' →
-               Δ , Θ , Γ ⊢ d :: τ →
-               Δ , Θ , Γ ⊢ Subst d y σ :s: Γ'
+                  Δ , Θ , Γ ⊢ TypId Θ' , Id Γ' :s: Θ' , Γ'
+      STAIdSubst : ∀{Γ Γ' y τ d σ Δ Θ Θ'} →
+                  Δ , Θ , (Γ ,, (y , τ)) ⊢ TypId Θ' , σ :s: Θ' , Γ' →
+                  Δ , Θ , Γ ⊢ d :: τ →
+                  Δ , Θ , Γ ⊢ TypId Θ' , Subst d y σ :s: Θ' , Γ'
+      STASubst : ∀{Θ Θ' Γ Δ θ σ y Γ' τ } →
+               Δ , [ Θ newtyp] , Γ ⊢ θ , σ :s: Θ' , Γ' →
+               Θ ⊢ τ wf →
+               Δ , Θ , Γ ⊢ TypSubst τ y θ , σ :s: Θ' , Γ'
 
     -- type assignment
     data _,_,_⊢_::_ : (Δ : hctx) (Θ : typctx) (Γ : tctx) (d : ihexp) (τ : htyp) → Set where
@@ -437,12 +441,12 @@ module core where
                 Δ , Θ , Γ ⊢ (d < τ1 >) :: τ3
       TAEHole : ∀{Δ Θ Γ θ σ u Θ' Γ' τ} →
                 (u , (Θ' , Γ' , τ)) ∈ Δ →
-                Δ , Θ , Γ ⊢ σ :s: Γ' →
+                Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' →
                 Δ , Θ , Γ ⊢ ⦇-⦈⟨ u , θ , σ ⟩ :: τ
       TANEHole : ∀ {Δ Θ Γ d τ' Θ' Γ' u θ σ τ } →
                  (u , (Θ' , Γ' , τ)) ∈ Δ →
                  Δ , Θ , Γ ⊢ d :: τ' →
-                 Δ , Θ , Γ ⊢ σ :s: Γ' →
+                 Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' →
                  Δ , Θ , Γ ⊢ ⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩ :: τ
       TACast : ∀{Δ Θ Γ d τ1 τ2} →
              Δ , Θ , Γ ⊢ d :: τ1 →
