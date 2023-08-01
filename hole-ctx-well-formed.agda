@@ -50,11 +50,18 @@ module hole-ctx-well-formed where
   helper3 : ∀ {Θ Γ u Θ' Γ' τ τ'} → (u , Θ' , Γ' , τ) ∈ (■ (u :: τ' [ Θ , Γ ])) → Θ ⊢ τ' wf → Θ ⊢ τ wf
   helper3 p wf rewrite (singleton-lookup p) = wf
 
-  helper4 : ∀ {Θ Γ u Θ' Γ' τ τ' Δ} → Δ ## (■ (u , Θ , Γ , τ)) → (u , Θ' , Γ' , τ') ∈ (Δ ,, (u :: τ [ Θ , Γ ])) → Θ ⊢ τ wf → Θ ⊢ τ' wf
-  helper4 apt p wf = {!   !}
+  dom-singleton : {A : Set} → (u : Nat) → (item : A) → dom (■ (u , item)) u
+  dom-singleton u item  with natEQ u u 
+  ... | Inl refl = ( item , refl )
+  ... | Inr absurd = abort (absurd refl)
 
-  -- apt-comm : ∀{Δ1 Δ2} → Δ1 ## Δ2 → Δ2 ## Δ1
-  -- apt-comm = {!   !}
+  helper4 : ∀ {Θ Γ u Θ' Γ' τ τ' Δ} → Δ ## (■ (u , Θ , Γ , τ)) → (u , Θ' , Γ' , τ') ∈ (Δ ,, (u :: τ [ Θ , Γ ])) → Θ ⊢ τ wf → Θ ⊢ τ' wf
+  helper4 {Θ = Θ} {Γ = Γ} {u = u} {τ = τ} {Δ = Δ} (map1 , map2) p wf with map2 u (dom-singleton u (Θ , Γ , τ)) 
+  ... | thing with (Δ u) 
+  ... | None rewrite singleton-lookup p = wf
+
+  apt-sym : {A : Set} → (C1 C2 : A ctx) → C1 ## C2 → C2 ## C1
+  apt-sym C1 C2 (map1 , map2) = (map2 , map1)
 
   hctx-wf-with-disjoint : ∀{ Θ d Δ1 Δ2} → Δ1 ## Δ2 → Θ ⊢ d ⊣ Δ1 strict → Θ ⊢ d ⊣ (Δ1 ∪ Δ2)
   hctx-wf-with-disjoint apt HCtxWfStrictConst = HCtxWfConst
@@ -69,7 +76,7 @@ module hole-ctx-well-formed where
   hctx-wf-with-disjoint apt (HCtxWfStrictFailedCast wf) = HCtxWfFailedCast (hctx-wf-with-disjoint apt wf)
   
   hctx-wf-with-disjoint-flip : ∀{ Θ d Δ1 Δ2} → Δ1 ## Δ2 → Θ ⊢ d ⊣ Δ2 strict → Θ ⊢ d ⊣ (Δ1 ∪ Δ2)
-  hctx-wf-with-disjoint-flip = {!   !}
+  hctx-wf-with-disjoint-flip {Δ1 = Δ1} {Δ2 = Δ2} apt wf rewrite (∪comm Δ1 Δ2 apt) = hctx-wf-with-disjoint (apt-sym Δ1 Δ2 apt) wf
 
   hctx-wf-strict-implies-plain : ∀{ Θ d Δ} →  Θ ⊢ d ⊣ Δ strict → Θ ⊢ d ⊣ Δ
   hctx-wf-strict-implies-plain HCtxWfStrictConst = HCtxWfConst
@@ -105,3 +112,28 @@ module hole-ctx-well-formed where
     generate-hctx-wf-ana ctxwf wft (EASubsume x x₁ x₂ x₃) = generate-hctx-wf-syn ctxwf x₂
     generate-hctx-wf-ana ctxwf wft EAEHole = HCtxWfStrictEHole wft
     generate-hctx-wf-ana ctxwf wft (EANEHole x x₁) = HCtxWfStrictNEHole x (generate-hctx-wf-syn ctxwf x₁) wft
+
+  -- hctx-wf-step : ∀{Θ Γ d d' τ Δ} → Θ ⊢ d ⊣ Δ → Δ , Θ , Γ ⊢ d :: τ → (d ↦ d') → Θ ⊢ d' ⊣ Δ
+  -- hctx-wf-step = {!   !}
+
+  wf-ta : ∀{Θ Γ d τ Δ} → 
+          Θ ⊢ Γ tctxwf → 
+          Θ ⊢ d ⊣ Δ →
+          Δ , Θ , Γ ⊢ d :: τ → 
+          Θ ⊢ τ wf 
+  wf-ta ctxwf hctxwf TAConst = WFBase
+  wf-ta (CCtx x₁) hctxwf (TAVar x) = x₁ x
+  wf-ta ctxwf (HCtxWfLam hctxwf) (TALam x x₁ wt) = WFArr x₁ (wf-ta (merge-tctx-wf ctxwf x₁ x) hctxwf wt)
+  wf-ta ctxwf (HCtxWfTLam hctxwf) (TATLam wt) = WFForall (wf-ta (wf-incr-ctx ctxwf) hctxwf wt)
+  wf-ta ctxwf (HCtxWfAp hctxwf hctxwf₁) (TAAp wt wt₁) with (wf-ta ctxwf hctxwf wt)
+  ... | WFArr wf1 wf2 = wf2
+  wf-ta ctxwf (HCtxWfTAp hctxwf) (TATAp x wt eq) with (wf-ta ctxwf hctxwf wt)
+  ... | WFForall wf' rewrite (sym eq) = wf-sub x wf' LTZ
+  wf-ta ctxwf (HCtxWfEHole map) (TAEHole x x₁) = map x
+  wf-ta ctxwf (HCtxWfNEHole hctxwf map) (TANEHole x wt x₁) = map x
+  wf-ta ctxwf hctxwf (TACast wt x x₁) = x
+  wf-ta ctxwf hctxwf (TAFailedCast wt x x₁ x₂) = ground-wf x₁
+
+  no-tvar-casts : ∀{ Γ n τ d Δ} → ~∅ ⊢ Γ tctxwf → ~∅ ⊢ d ⟨ T n ⇒ ⦇-⦈ ⟩ ⊣ Δ → Δ , ~∅ , Γ ⊢ d ⟨ T n ⇒ ⦇-⦈ ⟩ :: τ → ⊥
+  no-tvar-casts ctxwf (HCtxWfCast hctxwf) (TACast wt x x₁) with wf-ta ctxwf hctxwf wt 
+  ... | WFVar ()
