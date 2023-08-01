@@ -404,7 +404,7 @@ module core where
     GForall : ·∀ ⦇-⦈ ground
 
   mutual
-    -- substitution typing
+    -- substitution typing (TODO: fix)
     data _,_,_⊢_,_:s:_,_ : hctx → typctx → tctx → typenv → env → typctx → tctx → Set where
       STAIdId : ∀{Γ Γ' Δ Θ Θ'} →
                   ((x : Nat) (τ : htyp) → (x , τ) ∈ Γ' → (x , τ) ∈ Γ) →

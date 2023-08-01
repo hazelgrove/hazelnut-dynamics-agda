@@ -116,26 +116,6 @@ module lemmas-well-formed where
     wf-synth-forall ctxwf (STAp wf wt MFForall eq) with wf-sub wf (wf-synth-forall ctxwf wt) LTZ
     ... | wf rewrite eq with wf
     ... | WFForall wf = wf
-
-  -- wf-ta : ∀{Θ Γ d τ Δ} → 
-  --         Θ ⊢ Γ tctxwf → 
-  --         Δ hctxwf → 
-  --         Δ , Θ , Γ ⊢ d :: τ → 
-  --         Θ ⊢ τ wf 
-  -- wf-ta ctxwf hctxwf TAConst = WFBase
-  -- wf-ta (CCtx x₁) hctxwf (TAVar x) = x₁ x
-  -- wf-ta ctxwf hctxwf (TALam x x₁ wt) = WFArr x₁ (wf-ta (merge-tctx-wf ctxwf x₁ x) hctxwf wt)
-  -- wf-ta ctxwf hctxwf (TATLam wt) = WFForall (wf-ta (wf-incr-ctx ctxwf) hctxwf wt)
-  -- wf-ta ctxwf hctxwf (TAAp wt wt₁) with (wf-ta ctxwf hctxwf wt)
-  -- ... | WFArr wf1 wf2 = wf2
-  -- wf-ta ctxwf hctxwf (TATAp x wt eq) with (wf-ta ctxwf hctxwf wt)
-  -- ... | WFForall wf' rewrite (sym eq) = wf-sub x wf' LTZ
-  -- wf-ta ctxwf (HCtx map) (TAEHole x x₁) with map x 
-  -- ... | (_ , wf) = {!   !}
-  -- wf-ta ctxwf (HCtx map) (TANEHole x wt x₁) with map x 
-  -- ... | (_ , wf) = {!   !}
-  -- wf-ta ctxwf hctxwf (TACast wt x x₁) = x
-  -- wf-ta ctxwf hctxwf (TAFailedCast wt x x₁ x₂) = ground-wf x₁
   
   mutual 
 
@@ -170,3 +150,22 @@ module lemmas-well-formed where
     ... | WFForall wf3 = WFForall (elab-wf-ana (weaken-tctx-wf ctxwf) wf3 wf2)
     elab-wf-ana ctxwf wf1 EAEHole = wf1
     elab-wf-ana ctxwf wf1 (EANEHole x x₁) = wf1
+
+  wf-ta : ∀{Θ Γ d τ Δ} → 
+          Θ ⊢ Γ tctxwf → 
+          Δ hctxwf →
+          Δ , Θ , Γ ⊢ d :: τ → 
+          Θ ⊢ τ wf 
+  wf-ta ctxwf hctwwf TAConst = WFBase
+  wf-ta (CCtx x₁) hctwwf (TAVar x) = x₁ x
+  wf-ta ctxwf hctwwf (TALam x x₁ wt) = WFArr x₁ (wf-ta (merge-tctx-wf ctxwf x₁ x) hctwwf wt)
+  wf-ta ctxwf hctwwf (TATLam wt) = WFForall (wf-ta (wf-incr-ctx ctxwf) hctwwf wt)
+  wf-ta ctxwf hctwwf (TAAp wt wt₁) with (wf-ta ctxwf hctwwf wt)
+  ... | WFArr wf1 wf2 = wf2
+  wf-ta ctxwf hctwwf (TATAp x wt eq) with (wf-ta ctxwf hctwwf wt)
+  ... | WFForall wf' rewrite (sym eq) = wf-sub x wf' LTZ
+  wf-ta ctxwf (HCtx map) (TAEHole x x₁) with map x 
+  ... | (thing1 , thing2) = {!   !}
+  wf-ta ctxwf hctwwf (TANEHole x wt x₁) = {!   !}
+  wf-ta ctxwf hctwwf (TACast wt x x₁) = x
+  wf-ta ctxwf hctwwf (TAFailedCast wt x x₁ x₂) = ground-wf x₁
