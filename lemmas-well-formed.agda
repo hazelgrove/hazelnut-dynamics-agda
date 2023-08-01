@@ -27,13 +27,6 @@ module lemmas-well-formed where
                   Θ ⊢ (Γ ,, (x , τ)) tctxwf
   merge-tctx-wf ctxwf wf apt = CCtx (merge-tctx-wf-helper ctxwf wf apt)
 
-  -- TODO: Move this
-  forall-inj1 : ∀{t t' τ τ'} -> ·∀ t τ == ·∀ t' τ' -> t == t'
-  forall-inj1 refl = refl
-  forall-inj2 : ∀{t t' τ τ'} -> ·∀ t τ == ·∀ t' τ' -> τ == τ'
-  forall-inj2 refl = refl
-  typvar-inj : ∀{t t'} -> T t == T t' -> t == t'
-  typvar-inj refl = refl
 
   wf-sub : ∀ {Θ t τ1 τ2 τ3} → Θ ⊢ τ1 wf → (Θ ,, (t , <>)) ⊢ τ3 wf → τ2 == ·∀ t τ3 → Θ ⊢ Typ[ τ1 / t ] τ3 wf
   wf-sub {τ3 = b} wf1 wf2 eq = WFBase

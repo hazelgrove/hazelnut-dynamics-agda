@@ -40,7 +40,7 @@ module canonical-value-forms where
                                 ((d == (·Λ t d')) ×
                                  (Δ , (∅ ,, (t , <>)) , ∅ ⊢ d' :: τ))
   canonical-value-forms-typfun (TAVar x₁) ()
-  canonical-value-forms-typfun (TATLam ap p) VTLam = _ , refl , p
+  canonical-value-forms-typfun (TATLam p) VTLam = _ , refl , p
   canonical-value-forms-typfun (TAAp wt wt₁) ()
   canonical-value-forms-typfun (TAEHole x x₁) ()
   canonical-value-forms-typfun (TANEHole x wt x₁) ()
@@ -62,7 +62,7 @@ module canonical-value-forms where
   canonical-value-forms-coverage1 TAConst VConst = λ z _ _ → z refl
   canonical-value-forms-coverage1 (TAVar x₁) ()
   canonical-value-forms-coverage1 (TALam _ _ wt) VLam = λ _ z _ → z _ _ refl
-  canonical-value-forms-coverage1 (TATLam ap wt) VTLam = λ _ _ z → z _ _ refl
+  canonical-value-forms-coverage1 (TATLam wt) VTLam = λ _ _ z → z _ _ refl
   canonical-value-forms-coverage1 (TAAp wt wt₁) ()
   canonical-value-forms-coverage1 (TAEHole x x₁) ()
   canonical-value-forms-coverage1 (TANEHole x wt x₁) ()

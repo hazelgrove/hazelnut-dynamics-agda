@@ -1,7 +1,6 @@
 open import Nat
 open import Prelude
 open import core
-open typctx
 open import contexts
 open import lemmas-consistency
 open import lemmas-ground

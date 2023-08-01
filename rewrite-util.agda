@@ -13,3 +13,11 @@ module rewrite-util where
 
   rewrite-typ : ∀{Δ Θ Γ d t t'} → t == t' → Δ , Θ , Γ ⊢ d :: t → Δ , Θ , Γ ⊢ d :: t'
   rewrite-typ eq ta rewrite eq = ta
+
+  -- TODO: Move this
+  forall-inj1 : ∀{t t' τ τ'} -> ·∀ t τ == ·∀ t' τ' -> t == t'
+  forall-inj1 refl = refl
+  forall-inj2 : ∀{t t' τ τ'} -> ·∀ t τ == ·∀ t' τ' -> τ == τ'
+  forall-inj2 refl = refl
+  typvar-inj : ∀{t t'} -> T t == T t' -> t == t'
+  typvar-inj refl = refl

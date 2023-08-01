@@ -53,7 +53,7 @@ module progress-checks where
     indet-not-step (IAp x (ICastArr x₁ ind) x₂) (_ , Step FHOuter (ITApCast) FHOuter) = x _ _ _ _ _  refl
     indet-not-step (IAp x ind _) (_ , Step (FHAp1 x₂) x₃ (FHAp1 x₄)) = indet-not-step ind (_ , Step x₂ x₃ x₄)
     indet-not-step (IAp x ind f) (_ , Step (FHAp2 x₃) x₄ (FHAp2 x₆)) = final-not-step f (_ , Step x₃ x₄ x₆)
-    indet-not-step (ITAp x ind) (_ , Step FHOuter (ITTApCast) FHOuter) = x _ _ _  refl
+    indet-not-step (ITAp x ind) (_ , Step FHOuter (ITTApCast) FHOuter) = x _ _ _ _ refl
     indet-not-step (ITAp x ind) (_ , Step (FHTAp x₂) x₃ (FHTAp x₄)) = indet-not-step ind (_ , Step x₂ x₃ x₄)
     indet-not-step (ICastArr x ind) (d0' , Step FHOuter (ITCastID) FHOuter) = x refl
     indet-not-step (ICastArr x ind) (_ , Step (FHCast x₁) x₂ (FHCast x₃)) = indet-not-step ind (_ , Step x₁ x₂ x₃)
