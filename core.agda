@@ -486,8 +486,8 @@ module core where
   TTyp[ t / a ] (·λ x [ τ ] d') = (·λ x [ (Typ[ t / a ] τ) ] (TTyp[ t / a ] d'))
   TTyp[ t / a ] (·Λ d) = ·Λ (TTyp[ t / (1+ a) ] d)
   -- TODO: May need to add into hole substitutions?
-  TTyp[ t / a ] ⦇-⦈⟨ u , θ , σ ⟩ = ⦇-⦈⟨ u , θ , σ ⟩
-  TTyp[ t / a ] ⦇⌜ d ⌟⦈⟨ u , θ , σ  ⟩ =  ⦇⌜ TTyp[ t / a ] d ⌟⦈⟨ u , θ , σ ⟩
+  TTyp[ t / a ] ⦇-⦈⟨ u , θ , σ ⟩ = ⦇-⦈⟨ u , TypSubst t a θ , σ ⟩
+  TTyp[ t / a ] ⦇⌜ d ⌟⦈⟨ u , θ , σ  ⟩ =  ⦇⌜ TTyp[ t / a ] d ⌟⦈⟨ u , TypSubst t a θ , σ ⟩
   TTyp[ t / a ] (d1 ∘ d2) = (TTyp[ t / a ] d1) ∘ (TTyp[ t / a ] d2)
   TTyp[ t / a ] (d < τ >) = (TTyp[ t / a ] d) < Typ[ t / a ] τ >
   TTyp[ t / a ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (TTyp[ t / a ] d) ⟨ (Typ[ t / a ] τ1) ⇒ (Typ[ t / a ] τ2) ⟩
