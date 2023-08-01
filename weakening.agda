@@ -24,12 +24,14 @@ module weakening where
   weaken-tctx-wf : ∀ {Θ Γ x} → Θ ⊢ Γ tctxwf → (Θ ,, (x , <>)) ⊢ Γ tctxwf
   weaken-tctx-wf (CCtx x) = CCtx (λ x₁ → weaken-t-wf (x x₁))
 
+{-
   weaken-hctx-wf : ∀ {Θ Δ x} → Θ ⊢ Δ hctxwf → (Θ ,, (x , <>)) ⊢ Δ hctxwf
   weaken-hctx-wf (HCtx map) = 
     HCtx (λ key → 
       (let (p1 , p2) = (map key) in 
       (weaken-tctx-wf p1) , (weaken-t-wf p2)))
-      
+-}
+
   mutual
     weaken-subst-Δ : ∀{Δ1 Δ2 Γ σ Γ' Θ} → Δ1 ## Δ2
                                      → Δ1 , Θ , Γ ⊢ σ :s: Γ'
@@ -74,7 +76,7 @@ module weakening where
     weaken-synth {Γ = Γ} (FRHLam2 x₁ frsh) (SLam x₂ wf wt) =
                     SLam (apart-extend1 Γ (flip x₁) x₂) wf
                          (exchange-synth {Γ = Γ} (flip x₁) ((weaken-synth frsh wt)))
-    weaken-synth (FRHTLam ne x) (STLam x₂) = STLam (weaken-synth x x₂)
+    weaken-synth (FRHTLam x) (STLam x₂) = STLam (weaken-synth x x₂)
     weaken-synth FRHEHole SEHole = SEHole
     weaken-synth (FRHNEHole frsh) (SNEHole x₁ wt) = SNEHole x₁ (weaken-synth frsh wt)
     weaken-synth (FRHAp frsh frsh₁) (SAp x₁ wt x₂ x₃) = SAp x₁ (weaken-synth frsh wt) x₂ (weaken-ana frsh₁ x₃)

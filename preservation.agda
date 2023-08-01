@@ -99,7 +99,7 @@ module preservation where
   preserve-trans : ∀{ Δ Γ d τ d' } →
             binders-unique d →
             ∅ ⊢ Γ tctxwf →
-            ∅ ⊢ Δ hctxwf →
+            Δ hctxwf →
             Δ , ∅ , Γ ⊢ d :: τ →
             d →> d' →
             Δ , ∅ , Γ ⊢ d' :: τ
@@ -136,7 +136,7 @@ module preservation where
   preservation : {Δ : hctx} {d d' : ihexp} {τ : htyp} {Γ : tctx} →
              binders-unique d →
              ∅ ⊢ Γ tctxwf →
-             ∅ ⊢ Δ hctxwf →
+             Δ hctxwf →
              Δ , ∅ , Γ ⊢ d :: τ →
              d ↦ d' →
              Δ , ∅ , Γ ⊢ d' :: τ
@@ -149,7 +149,7 @@ module preservation where
   -- of the slightly more general statement above.
   preservation' : {Δ : hctx} {d d' : ihexp} {τ : htyp} →
              binders-unique d →
-             ∅ ⊢ Δ hctxwf →
+             Δ hctxwf →
              Δ , ∅ , ∅ ⊢ d :: τ →
              d ↦ d' →
              Δ , ∅ , ∅ ⊢ d' :: τ

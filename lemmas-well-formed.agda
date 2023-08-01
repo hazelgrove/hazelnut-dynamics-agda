@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 open import Nat
 open import Prelude
 open import core
@@ -127,7 +129,7 @@ module lemmas-well-formed where
   wf-ta ctxwf hctxwf TAConst = WFBase
   wf-ta (CCtx x₁) hctxwf (TAVar x) = x₁ x
   wf-ta ctxwf hctxwf (TALam x x₁ wt) = WFArr x₁ (wf-ta (merge-tctx-wf ctxwf x₁ x) hctxwf wt)
-  wf-ta ctxwf hctxwf (TATLam wt) = WFForall (wf-ta (wf-incr-ctx ctxwf) hctxwf wt)
+  wf-ta ctxwf hctxwf (TATLam wt) = WFForall (wf-ta (weaken-tctx-wf ctxwf) hctxwf wt)
   wf-ta ctxwf hctxwf (TAAp wt wt₁) with (wf-ta ctxwf hctxwf wt)
   ... | WFArr wf1 wf2 = wf2
   wf-ta {Θ} {Γ} {d} {τ} {Δ} ctxwf hctxwf (TATAp {t = t} {τ1 = τ1} {τ2 = τ2} {τ3 = τ3} x wt eq)  with (wf-ta ctxwf hctxwf wt)

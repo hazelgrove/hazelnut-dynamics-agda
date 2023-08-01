@@ -178,7 +178,7 @@ module core where
   Tctx[ tau / t ] gamma = map (Typ[_/_]_ tau t) gamma
   
   Hctx[_/_]_ : htyp -> Nat -> hctx -> hctx
-  Hctx[ tau / t ] sigma = map (\(gamma , tau') -> ((Tctx[ tau / t ] gamma) , (Typ[ tau / t ] tau'))) sigma
+  Hctx[ tau / t ] sigma = map (\(theta , gamma , tau') -> (theta , (Tctx[ tau / t ] gamma) , (Typ[ tau / t ] tau'))) sigma
 
   {-
       c         : ihexp
@@ -262,10 +262,10 @@ module core where
                  τ ▸arr τ1 ==> τ2 →
                  Θ , (Γ ,, (x , τ1)) ⊢ e <= τ2 →
                  Θ , Γ ⊢ (·λ x e) <= τ
-      ATLam : {Θ : typctx} {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} → 
-                τ1 ▸forall (·∀ τ2) → 
-                [ Θ newtyp] , Γ ⊢ e <= τ2 → 
-                Θ , Γ ⊢ (·Λ e) <= τ1
+      ATLam : {Θ : typctx} {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} {t : Nat} → 
+                τ1 ▸forall (·∀ t τ2) → 
+                (Θ ,, (t , <>)) , Γ ⊢ e <= τ2 → 
+                Θ , Γ ⊢ (·Λ t e) <= τ1
 
   -- those types without holes
   data _tcomplete : htyp → Set where
@@ -361,12 +361,12 @@ module core where
               τ ▸arr τ1 ==> τ2 →
               Θ , (Γ ,, (x , τ1)) ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
               Θ , Γ ⊢ ·λ x e ⇐ τ ~> ·λ x [ τ1 ] d :: τ1 ==> τ2' ⊣ Δ
-      EATLam : ∀{Θ Γ e τ1 τ2 τ2' d Δ} → 
+      EATLam : ∀{Θ Γ e t τ1 τ2 τ2' d Δ} → 
                 ((u : Nat) → e ≠ ⦇-⦈[ u ]) →
                 ((e' : hexp) (u : Nat) → e ≠ ⦇⌜ e' ⌟⦈[ u ]) →
-                τ1 ▸forall (·∀ τ2) → 
-                [ Θ newtyp] , Γ ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
-                Θ , Γ ⊢ (·Λ e) ⇐ τ1 ~> (·Λ d) :: (·∀ τ2') ⊣ Δ
+                τ1 ▸forall (·∀ t τ2) → 
+                (Θ ,, (t , <>)) , Γ ⊢ e ⇐ τ2 ~> d :: τ2' ⊣ Δ →
+                Θ , Γ ⊢ (·Λ t e) ⇐ τ1 ~> (·Λ t d) :: (·∀ t τ2') ⊣ Δ
       EASubsume : ∀{e Θ Γ τ' d Δ τ} →
                   ((u : Nat) → e ≠ ⦇-⦈[ u ]) →
                   ((e' : hexp) (u : Nat) → e ≠ ⦇⌜ e' ⌟⦈[ u ]) →
@@ -717,7 +717,7 @@ module core where
     FRHVar   : ∀{x y} → x ≠ y → freshh x (X y)
     FRHLam1  : ∀{x y e} → x ≠ y → freshh x e → freshh x (·λ y e)
     FRHLam2  : ∀{x τ e y} → x ≠ y → freshh x e → freshh x (·λ y [ τ ] e)
-    FRHTLam  : ∀{x t e} → x ≠ t → freshh x e → freshh x (·Λ t e)
+    FRHTLam  : ∀{x t e} → freshh x e → freshh x (·Λ t e)
     FRHEHole : ∀{x u} → freshh x (⦇-⦈[ u ])
     FRHNEHole : ∀{x u e} → freshh x e → freshh x (⦇⌜ e ⌟⦈[ u ])
     FRHAp : ∀{x e1 e2} → freshh x e1 → freshh x e2 → freshh x (e1 ∘ e2)
