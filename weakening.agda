@@ -32,14 +32,14 @@ module weakening where
       
   mutual
     weaken-subst-Δ : ∀{Δ1 Δ2 Γ σ Γ' Θ} → Δ1 ## Δ2
-                                     → Δ1 , Γ , Θ ⊢ σ :s: Γ'
-                                     → (Δ1 ∪ Δ2) , Γ , Θ ⊢ σ :s: Γ'
+                                     → Δ1 , Θ , Γ ⊢ σ :s: Γ'
+                                     → (Δ1 ∪ Δ2) , Θ , Γ ⊢ σ :s: Γ'
     weaken-subst-Δ disj (STAId x) = STAId x
     weaken-subst-Δ disj (STASubst subst x) = STASubst (weaken-subst-Δ disj subst) (weaken-ta-Δ1 disj x)
 
     weaken-ta-Δ1 : ∀{Δ1 Δ2 Γ d τ Θ} → Δ1 ## Δ2
-                                  → Δ1 , Γ , Θ ⊢ d :: τ
-                                  → (Δ1 ∪ Δ2) , Γ , Θ ⊢ d :: τ
+                                  → Δ1 , Θ , Γ ⊢ d :: τ
+                                  → (Δ1 ∪ Δ2) , Θ , Γ ⊢ d :: τ
     weaken-ta-Δ1 disj TAConst = TAConst
     weaken-ta-Δ1 disj (TAVar x₁) = TAVar x₁
     weaken-ta-Δ1 disj (TALam x₁ wf wt) = TALam x₁ wf (weaken-ta-Δ1 disj wt)
@@ -55,9 +55,9 @@ module weakening where
   -- disjoint contexts, and we need that premise anyway in both positions,
   -- there's no real reason to repeat the inductive argument above
   weaken-ta-Δ2 : ∀{Δ1 Δ2 Γ d τ Θ} → Δ1 ## Δ2
-                                → Δ2 , Γ , Θ ⊢ d :: τ
-                                → (Δ1 ∪ Δ2) , Γ , Θ ⊢ d :: τ
-  weaken-ta-Δ2 {Δ1} {Δ2} {Γ} {d} {τ} {Θ} disj D = tr (λ q → q , Γ , Θ ⊢ d :: τ) (∪comm Δ2 Δ1 (##-comm disj)) (weaken-ta-Δ1 (##-comm disj) D)
+                                → Δ2 , Θ , Γ ⊢ d :: τ
+                                → (Δ1 ∪ Δ2) , Θ , Γ ⊢ d :: τ
+  weaken-ta-Δ2 {Δ1} {Δ2} {Γ} {d} {τ} {Θ} disj D = tr (λ q → q , Θ , Γ ⊢ d :: τ) (∪comm Δ2 Δ1 (##-comm disj)) (weaken-ta-Δ1 (##-comm disj) D)
 
 
   -- note that these statements are somewhat stronger than usual. this is
@@ -88,7 +88,7 @@ module weakening where
                      ALam (apart-extend1 Γ (flip neq) x₂)
                           x₃
                           (exchange-ana {Γ = Γ} (flip neq) (weaken-ana frsh wt))
-    -- weaken-ana (FRHTLam x₁) (ATLam x₂ x₃) = ATLam x₂ (weaken-ana x₁ x₃)
+    weaken-ana (FRHTLam x₁) (ATLam x₂ x₃) = ATLam x₂ (weaken-ana x₁ x₃)
 
   mutual
     weaken-subst-Γ : ∀{ x Γ Δ σ Γ' τ Θ} →
@@ -110,6 +110,7 @@ module weakening where
     weaken-ta (FLam x₁ x₂) (TALam apt wf wt) | Inl refl = abort (x₁ refl)
     weaken-ta {Γ = Γ} {τ' = τ'} (FLam x₁ x₃) (TALam {x = y} x₄ wf wt) | Inr x₂ = TALam (apart-extend1 Γ (flip x₁) x₄) wf (exchange-ta-Γ {Γ = Γ} (flip x₁) (weaken-ta x₃ wt))
     weaken-ta {x} {Γ} {τ' = τ'} (FTLam frsh) (TATLam x₁) = TATLam (weaken-ta frsh x₁)
+    -- weaken-ta {x} {Γ} {τ' = τ'} (FTLam frsh) (TATLam x₁) = TATLam (rewrite-gamma (! (lem-map-extend-dist {Γ = Γ} {f = incrtyp})) ((weaken-ta frsh x₁)))
     weaken-ta (FAp frsh frsh₁) (TAAp wt wt₁) = TAAp (weaken-ta frsh wt) (weaken-ta frsh₁ wt₁)
     weaken-ta (FTAp frsh) (TATAp wf x₁ eq) = TATAp wf (weaken-ta frsh x₁) eq
     weaken-ta (FHole x₁) (TAEHole x₂ x₃) = TAEHole x₂ (weaken-subst-Γ x₁ x₃)

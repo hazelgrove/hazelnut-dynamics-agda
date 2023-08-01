@@ -121,21 +121,21 @@ module lemmas-well-formed where
 
   wf-ta : ∀{Θ Γ d τ Δ} → 
           Θ ⊢ Γ tctxwf → 
-          Θ ⊢ Δ hctxwf → 
+          Δ hctxwf → 
           Δ , Θ , Γ ⊢ d :: τ → 
           Θ ⊢ τ wf 
   wf-ta ctxwf hctxwf TAConst = WFBase
   wf-ta (CCtx x₁) hctxwf (TAVar x) = x₁ x
   wf-ta ctxwf hctxwf (TALam x x₁ wt) = WFArr x₁ (wf-ta (merge-tctx-wf ctxwf x₁ x) hctxwf wt)
-  wf-ta ctxwf hctxwf (TATLam wt) = WFForall (wf-ta (weaken-tctx-wf ctxwf) (weaken-hctx-wf hctxwf) wt)
+  wf-ta ctxwf hctxwf (TATLam wt) = WFForall (wf-ta (wf-incr-ctx ctxwf) hctxwf wt)
   wf-ta ctxwf hctxwf (TAAp wt wt₁) with (wf-ta ctxwf hctxwf wt)
   ... | WFArr wf1 wf2 = wf2
   wf-ta {Θ} {Γ} {d} {τ} {Δ} ctxwf hctxwf (TATAp {t = t} {τ1 = τ1} {τ2 = τ2} {τ3 = τ3} x wt eq)  with (wf-ta ctxwf hctxwf wt)
   ... | WFForall wf' rewrite (sym eq) = wf-sub {Θ} {t} {τ1} {τ3 = τ2} x wf' refl
   wf-ta ctxwf (HCtx map) (TAEHole x x₁) with map x 
-  ... | (_ , wf) = wf
+  ... | (_ , wf) = {!   !}
   wf-ta ctxwf (HCtx map) (TANEHole x wt x₁) with map x 
-  ... | (_ , wf) = wf
+  ... | (_ , wf) = {!   !}
   wf-ta ctxwf hctxwf (TACast wt x x₁) = x
   wf-ta ctxwf hctxwf (TAFailedCast wt x x₁ x₂) = ground-wf x₁
   
@@ -168,6 +168,8 @@ module lemmas-well-formed where
     elab-wf-ana ctxwf wf1 (EALam apt MAHole wt) = WFArr WFHole (elab-wf-ana (merge-tctx-wf ctxwf WFHole apt) wf1 wt)
     elab-wf-ana ctxwf (WFArr wf1 wf2) (EALam apt MAArr wt) = WFArr wf1 (elab-wf-ana (merge-tctx-wf ctxwf wf1 apt) wf2 wt)
     elab-wf-ana ctxwf wf1 (EASubsume x x₁ wt x₃) = elab-wf-synth ctxwf wt
+    elab-wf-ana ctxwf wf1 (EATLam x₂ x₃ m wf2) with match-forall-wf wf1 m
+    ... | WFForall wf3 = WFForall (elab-wf-ana (weaken-tctx-wf ctxwf) wf3 wf2)
     elab-wf-ana ctxwf wf1 EAEHole = wf1
     elab-wf-ana ctxwf wf1 (EANEHole x x₁) = wf1
 
@@ -253,20 +255,3 @@ module lemmas-well-formed where
   --   no-tvar-cast-elab-ana (EASubsume x x₁ x₂ x₃) cast = no-tvar-cast-elab-synth x₂ cast             
   
   
-
-  unbound-no-subst : ∀{t τ τ'} -> tfresht t τ -> Typ[ τ' / t ] τ == τ
-  unbound-no-subst TFBase = refl
-  unbound-no-subst {t} {τ = T t'} (TFTVar neq) with natEQ t t'
-  ... | Inl refl = abort (neq refl)
-  ... | Inr neq' = refl
-  unbound-no-subst TFHole = refl
-  unbound-no-subst (TFArr tft tft') = foo (unbound-no-subst tft) (unbound-no-subst tft')
-    where
-      foo : ∀{A B C D} -> A == C -> B == D -> (A ==> B) == (C ==> D)
-      foo A==C B==D rewrite A==C rewrite B==D = refl
-  unbound-no-subst {t} (TFForall {t = t'} x tft) with natEQ t t'
-  ... | Inl refl = refl
-  ... | Inr neq = foo (unbound-no-subst tft)
-    where
-      foo : ∀{A B t} -> A == B -> ·∀ t A == ·∀ t B
-      foo eq rewrite eq = refl

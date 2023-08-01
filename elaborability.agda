@@ -9,33 +9,33 @@ open import disjointness
 module elaborability where
   mutual
     elaborability-synth : ∀{Γ e τ Θ} →
-                          Γ , Θ ⊢ e => τ →
+                          Θ , Γ ⊢ e => τ →
                           Σ[ d ∈ ihexp ] Σ[ Δ ∈ hctx ]
-                            (Γ , Θ ⊢ e ⇒ τ ~> d ⊣ Δ)
+                            (Θ , Γ ⊢ e ⇒ τ ~> d ⊣ Δ)
     elaborability-synth SConst = _ , _ , ESConst
-    elaborability-synth (SAsc {τ = τ} wt)
+    elaborability-synth (SAsc {τ = τ} wf wt)
       with elaborability-ana wt
-    ... | _ , _ , τ' , D  = _ , _ , ESAsc D
+    ... | _ , _ , τ' , D  = _ , _ , ESAsc wf D
     elaborability-synth (SVar x) = _ , _ , ESVar x
     elaborability-synth (SAp dis wt1 m wt2)
       with elaborability-ana (ASubsume wt1 (match-consist m)) | elaborability-ana wt2
     ... | _ , _ , _ , D1 | _ , _ , _ , D2 = _ , _ , ESAp dis (elab-ana-disjoint dis D1 D2) wt1 m D1 D2
-    elaborability-synth (STAp wt m) with elaborability-ana (ASubsume wt (forall-match-consist m))
-    ... | _ , _ , _ , wt' = _ , _ , ESTAp wt m wt'
+    elaborability-synth (STAp wf wt m eq) with elaborability-ana (ASubsume wt (forall-match-consist m))
+    ... | _ , _ , _ , wt' = _ , _ , ESTAp wf wt m wt' eq
     elaborability-synth SEHole = _ , _ , ESEHole
     elaborability-synth (SNEHole new wt)
       with elaborability-synth wt
     ... | d' , Δ' , wt' = _ , _ , ESNEHole (elab-new-disjoint-synth new wt') wt'
-    elaborability-synth (SLam x₁ wt)
+    elaborability-synth (SLam apt wf wt)
       with elaborability-synth wt
-    ... | d' , Δ' , wt' = _ , _ , ESLam x₁ wt'
+    ... | d' , Δ' , wt' = _ , _ , ESLam apt wf wt'
     elaborability-synth (STLam wt) with elaborability-synth wt
     ... | _ , _ , wt' = _ , _ , ESTLam wt'
 
     elaborability-ana : ∀{Γ e τ Θ} →
-                         Γ , Θ ⊢ e <= τ →
+                         Θ , Γ ⊢ e <= τ →
                           Σ[ d ∈ ihexp ] Σ[ Δ ∈ hctx ] Σ[ τ' ∈ htyp ]
-                            (Γ , Θ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ)
+                            (Θ , Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ)
     elaborability-ana {e = e} (ASubsume D x₁)
       with elaborability-synth D
     -- these cases just pass through, but we need to pattern match so we can prove things aren't holes
@@ -55,5 +55,5 @@ module elaborability where
     elaborability-ana (ALam x₁ m wt)
       with elaborability-ana wt
     ... | _ , _ , _ , D' = _ , _ , _ , EALam x₁ m D'
-    -- elaborability-ana (ATLam m wt) with elaborability-ana wt
-    -- ... | _ , _ , _ , D' = _ , _ , _ , (EASubsume (λ _ ()) (λ _ _ ()) (ESTLam {!   !}) {!   !})
+    elaborability-ana (ATLam m wt) with elaborability-ana wt
+    ... | _ , _ , _ , D' = _ , _ , _ , EATLam m D'
