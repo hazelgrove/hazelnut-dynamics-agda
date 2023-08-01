@@ -29,12 +29,12 @@ module exchange where
                         ! (∪assoc Γ (■ (y , τ2)) (■ (x , τ1)) (disjoint-singles (flip neq))))
 
   -- the above exchange principle used via transport in the judgements we needed
-  exchange-subst-Γ : ∀{Δ Γ x y τ1 τ2 σ Γ' Θ} →
+  exchange-subst-Γ : ∀{Δ Γ x y τ1 τ2 θ σ Γ' Θ Θ'} →
                    x ≠ y →
-                   Δ , Θ , (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ σ :s: Γ' →
-                   Δ , Θ , (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ σ :s: Γ'
-  exchange-subst-Γ {Δ} {Γ} {x} {y} {τ1} {τ2} {σ} {Γ'}{Θ} x≠y =
-    tr (λ qq → Δ , Θ , qq ⊢ σ :s: Γ') (swap Γ x≠y)
+                   Δ , Θ , (Γ ,, (x , τ1) ,, (y , τ2)) ⊢ θ , σ :s: Θ' , Γ' →
+                   Δ , Θ , (Γ ,, (y , τ2) ,, (x , τ1)) ⊢ θ , σ :s: Θ' , Γ'
+  exchange-subst-Γ {Δ} {Γ} {x} {y} {τ1} {τ2} {θ} {σ} {Γ'} {Θ} {Θ'} x≠y =
+    tr (λ qq → Δ , Θ , qq ⊢ θ , σ :s: Θ' , Γ') (swap Γ x≠y)
 
   exchange-synth : ∀{Γ x y τ τ1 τ2 e Θ}
                        → x ≠ y
