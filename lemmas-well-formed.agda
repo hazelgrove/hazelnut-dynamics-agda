@@ -117,25 +117,25 @@ module lemmas-well-formed where
     ... | wf rewrite eq with wf
     ... | WFForall wf = wf
 
-  wf-ta : ∀{Θ Γ d τ Δ} → 
-          Θ ⊢ Γ tctxwf → 
-          Δ hctxwf → 
-          Δ , Θ , Γ ⊢ d :: τ → 
-          Θ ⊢ τ wf 
-  wf-ta ctxwf hctxwf TAConst = WFBase
-  wf-ta (CCtx x₁) hctxwf (TAVar x) = x₁ x
-  wf-ta ctxwf hctxwf (TALam x x₁ wt) = WFArr x₁ (wf-ta (merge-tctx-wf ctxwf x₁ x) hctxwf wt)
-  wf-ta ctxwf hctxwf (TATLam wt) = WFForall (wf-ta (wf-incr-ctx ctxwf) hctxwf wt)
-  wf-ta ctxwf hctxwf (TAAp wt wt₁) with (wf-ta ctxwf hctxwf wt)
-  ... | WFArr wf1 wf2 = wf2
-  wf-ta ctxwf hctxwf (TATAp x wt eq) with (wf-ta ctxwf hctxwf wt)
-  ... | WFForall wf' rewrite (sym eq) = wf-sub x wf' LTZ
-  wf-ta ctxwf (HCtx map) (TAEHole x x₁) with map x 
-  ... | (_ , wf) = {!   !}
-  wf-ta ctxwf (HCtx map) (TANEHole x wt x₁) with map x 
-  ... | (_ , wf) = {!   !}
-  wf-ta ctxwf hctxwf (TACast wt x x₁) = x
-  wf-ta ctxwf hctxwf (TAFailedCast wt x x₁ x₂) = ground-wf x₁
+  -- wf-ta : ∀{Θ Γ d τ Δ} → 
+  --         Θ ⊢ Γ tctxwf → 
+  --         Δ hctxwf → 
+  --         Δ , Θ , Γ ⊢ d :: τ → 
+  --         Θ ⊢ τ wf 
+  -- wf-ta ctxwf hctxwf TAConst = WFBase
+  -- wf-ta (CCtx x₁) hctxwf (TAVar x) = x₁ x
+  -- wf-ta ctxwf hctxwf (TALam x x₁ wt) = WFArr x₁ (wf-ta (merge-tctx-wf ctxwf x₁ x) hctxwf wt)
+  -- wf-ta ctxwf hctxwf (TATLam wt) = WFForall (wf-ta (wf-incr-ctx ctxwf) hctxwf wt)
+  -- wf-ta ctxwf hctxwf (TAAp wt wt₁) with (wf-ta ctxwf hctxwf wt)
+  -- ... | WFArr wf1 wf2 = wf2
+  -- wf-ta ctxwf hctxwf (TATAp x wt eq) with (wf-ta ctxwf hctxwf wt)
+  -- ... | WFForall wf' rewrite (sym eq) = wf-sub x wf' LTZ
+  -- wf-ta ctxwf (HCtx map) (TAEHole x x₁) with map x 
+  -- ... | (_ , wf) = {!   !}
+  -- wf-ta ctxwf (HCtx map) (TANEHole x wt x₁) with map x 
+  -- ... | (_ , wf) = {!   !}
+  -- wf-ta ctxwf hctxwf (TACast wt x x₁) = x
+  -- wf-ta ctxwf hctxwf (TAFailedCast wt x x₁ x₂) = ground-wf x₁
   
   mutual 
 
