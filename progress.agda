@@ -29,7 +29,7 @@ module progress where
   forall-lemma e rewrite e = refl 
 
   progress : {Δ : hctx} {d : ihexp} {τ : htyp} →
-             Δ , ~∅ , ∅ ⊢ d :: τ →
+             Δ , ∅ , ∅ ⊢ d :: τ →
              ok d Δ
     -- constants
   progress TAConst = BV (BVVal VConst)
