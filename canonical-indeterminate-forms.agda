@@ -77,12 +77,12 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-base (TAVar x₁) ()
   canonical-indeterminate-forms-base (TAAp wt wt₁) (IAp x ind x₁) = CIFBAp (_ , _ , _ , refl , wt , wt₁ , ind , x₁ , x)
   canonical-indeterminate-forms-base (TATAp {τ2 = b} wf x eq) (ITAp x₃ ind) = CIFBTApBase (_ , _ , _ , refl , x , ind , x₃)
-  canonical-indeterminate-forms-base {d = d} (TATAp {t = t} {τ1 = τ1} {τ2 = T t'} wf x eq) (ITAp x₃ ind) with natEQ t t' 
-  ... | Inl refl rewrite eq = CIFBTApId (_ , τ1 , _ , refl , x , ind , x₃)
-  ... | Inr neq rewrite eq = abort {!(λ (() : (T t' == b))) eq!} -- ((\ ()) eq)
-  canonical-indeterminate-forms-base {d = d} (TATAp {t = t} {τ1 = τ1} {τ2 = ·∀ t' τ2} wf x eq) (ITAp x₃ ind) with natEQ t t' 
-  ... | Inl refl rewrite eq = abort ((\ ()) eq)
-  ... | Inr neq rewrite eq = abort ((\ ()) eq)
+  canonical-indeterminate-forms-base {d = d} (TATAp {t = t} {τ1 = τ1} {τ2 = T t'} wf x eq) (ITAp x₃ ind) with natEQ t t' | eq
+  ... | Inl refl | refl = CIFBTApId (_ , τ1 , _ , refl , x , ind , x₃)
+  ... | Inr neq | ()
+  canonical-indeterminate-forms-base {d = d} (TATAp {t = t} {τ1 = τ1} {τ2 = ·∀ t' τ2} wf x eq) (ITAp x₃ ind) with natEQ t t' | eq
+  ... | Inl refl | ()
+  ... | Inr neq | ()
   canonical-indeterminate-forms-base (TAEHole x x₁) IEHole = CIFBEHole (_ , _ , _ , _ , refl , x , x₁)
   canonical-indeterminate-forms-base (TANEHole x wt x₁) (INEHole x₂) = CIFBNEHole (_ , _ , _ , _ , _ , _ , refl , wt , x₂ , x , x₁)
   canonical-indeterminate-forms-base (TACast wt _ x) (ICastHoleGround x₁ ind x₂) = CIFBCast (_ , refl , wt , ind , x₁)
@@ -170,12 +170,12 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-arr (TALam _ _ wt) ()
   canonical-indeterminate-forms-arr (TAAp wt wt₁) (IAp x ind x₁) = CIFAAp (_ , _ , _ , _ , _ , refl , wt , wt₁ , ind , x₁ , x)
   canonical-indeterminate-forms-arr (TATAp {τ1 = τ1} {τ2 = τ3 ==> τ4} wf wt eq) (ITAp x ind) rewrite eq = CIFATApArr ( _ , τ1 , _ , τ3 , τ4 , refl , wt , ind , x)
-  canonical-indeterminate-forms-arr (TATAp {t = t} {τ2 = T t'} wf wt eq) (ITAp x ind) with natEQ t t'
-  ... | Inl refl rewrite eq = CIFATApId  ( _ , _ , _ , _ , refl , wt , ind , x )
-  ... | Inr neq = {!!}
-  canonical-indeterminate-forms-arr (TATAp {t = t} {τ2 = ·∀ t' τ2} wf wt eq) (ITAp x ind) with natEQ t t'
-  ... | Inl refl rewrite eq = {!!}
-  ... | Inr neq = {!!}
+  canonical-indeterminate-forms-arr (TATAp {t = t} {τ2 = T t'} wf wt eq) (ITAp x ind) with natEQ t t' | eq
+  ... | Inl refl | refl = CIFATApId  ( _ , _ , _ , _ , refl , wt , ind , x )
+  ... | Inr neq | ()
+  canonical-indeterminate-forms-arr (TATAp {t = t} {τ2 = ·∀ t' τ2} wf wt eq) (ITAp x ind) with natEQ t t' | eq
+  ... | Inl refl | ()
+  ... | Inr neq | ()
   canonical-indeterminate-forms-arr (TAEHole x x₁) IEHole = CIFAEHole (_ , _ , _ , _ , refl , x , x₁)
   canonical-indeterminate-forms-arr (TANEHole x wt x₁) (INEHole x₂) = CIFANEHole (_ , _ , _ , _ , _ , _ , refl , wt , x₂ , x , x₁)
   canonical-indeterminate-forms-arr (TACast wt _ x) (ICastArr x₁ ind) = CIFACast (_ , _ , _ , _ , _ , refl , wt , ind , x₁)
@@ -264,9 +264,9 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-forall (TATAp {t = t} {τ1 = τ1} {τ2 = ·∀ t' τ3} wf wt eq) (ITAp x ind) with natEQ t t'
   ... | Inl refl rewrite eq = CIFFTApForall (_ , _ , _ , _ , _ , refl , wt , ind , x)
   ... | Inr neq rewrite eq = CIFFTApForall (_ , _ , _ , _ , _ , refl , wt , ind , x)
-  canonical-indeterminate-forms-forall {t = t} (TATAp {t = t'} {τ2 = T t''} wf wt eq) (ITAp x ind) with natEQ t' t''
-  ... | Inl refl rewrite eq = CIFFTApId (_ , _ , _ , refl , wt , ind , x)
-  ... | Inr neq rewrite eq = abort ({!!})
+  canonical-indeterminate-forms-forall {t = t} (TATAp {t = t'} {τ2 = T t''} wf wt eq) (ITAp x ind) with natEQ t' t'' | eq
+  ... | Inl refl | refl = CIFFTApId (_ , _ , _ , refl , wt , ind , x)
+  ... | Inr neq | ()
   canonical-indeterminate-forms-forall (TAEHole x x₁) IEHole = CIFFEHole (_ , _ , _ , _ , refl , x , x₁)
   canonical-indeterminate-forms-forall (TANEHole x wt x₁) (INEHole x₂) = CIFFNEHole (_ , _ , _ , _ , _ , _ , refl , wt , x₂ , x , x₁)
   canonical-indeterminate-forms-forall (TACast wt _ x) (ICastForall neq ind) = CIFFCast (_ , _ , _ , _ , refl , wt , ind , λ eq → neq (forall-inj2 eq) )
@@ -335,12 +335,12 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-hole (TAVar x₁) ()
   canonical-indeterminate-forms-hole (TAAp wt wt₁) (IAp x ind x₁) = CIFHAp (_ , _ , _ , refl , wt , wt₁ , ind , x₁ , x)
   canonical-indeterminate-forms-hole (TATAp {τ2 = ⦇-⦈} wf wt wt₁) (ITAp x ind) = CIFHTApHole (_ , _ , _ , refl , wt , ind , x)
-  canonical-indeterminate-forms-hole (TATAp {t = t} {τ1 = τ1} {τ2 = T t'} wf wt eq) (ITAp x ind) with natEQ t t'
-  ... | Inl refl rewrite eq = CIFHTApId (_ , _ , τ1 , refl , wt , ind , x)
-  ... | Inr neq rewrite eq = abort ((\ ()) eq)
-  canonical-indeterminate-forms-hole (TATAp {t = t} {τ1 = τ1} {τ2 = ·∀ t' τ2} wf wt eq) (ITAp x ind) with natEQ t t'
-  ... | Inl refl rewrite eq = (\ ()) eq
-  ... | Inr neq rewrite eq = abort ((\ ()) eq)
+  canonical-indeterminate-forms-hole (TATAp {t = t} {τ1 = τ1} {τ2 = T t'} wf wt eq) (ITAp x ind) with natEQ t t' | eq
+  ... | Inl refl | refl = CIFHTApId (_ , _ , τ1 , refl , wt , ind , x)
+  ... | Inr neq | ()
+  canonical-indeterminate-forms-hole (TATAp {t = t} {τ1 = τ1} {τ2 = ·∀ t' τ2} wf wt eq) (ITAp x ind) with natEQ t t' | eq
+  ... | Inl refl | ()
+  ... | Inr neq | ()
   canonical-indeterminate-forms-hole (TAEHole x x₁) IEHole = CIFHEHole (_ , _ , _ , _ , refl , x , x₁)
   canonical-indeterminate-forms-hole (TANEHole x wt x₁) (INEHole x₂) = CIFHNEHole (_ , _ , _ , _ , _ , _ , refl , wt , x₂ , x , x₁)
   canonical-indeterminate-forms-hole (TACast wt wf x) (ICastGroundHole x₁ ind) = CIFHCast (_ , _ , refl , wt , x₁ , ind)
