@@ -5,6 +5,7 @@ open import Prelude
 open import core
 open import contexts
 open import weakening
+open import contraction
 open import exchange
 
 module lemmas-well-formed where 
@@ -41,6 +42,13 @@ module lemmas-well-formed where
                   Θ ⊢ τ wf → 
                   Θ ⊢ (Γ ,, (x , τ)) tctxwf
   merge-tctx-wf ctxwf wf = merge-wf ctxwf (singelton-wf wf)
+
+  strengthening : ∀ {A} → ∀ {Γ : A ctx} → ∀ {x τ x' τ'} → (x , τ) ∈ (Γ ,, (x' , τ')) → (x == x' → ⊥) → (x , τ) ∈ Γ
+  strengthening {Γ = Γ} {x = x} {x' = x'} elem neq with (Γ x)
+  ... | Some _ = elem
+  ... | None  with natEQ x' x 
+  ... | Inl refl = abort (neq refl)
+  ... | Inr neq = elem
 
 
   wf-sub : ∀ {Θ t τ1 τ2 τ3} → Θ ⊢ τ1 wf → (Θ ,, (t , <>)) ⊢ τ3 wf → τ2 == ·∀ t τ3 → Θ ⊢ Typ[ τ1 / t ] τ3 wf
@@ -173,15 +181,12 @@ module lemmas-well-formed where
     typsub-wf {τ = b} wf1 wf2 eq rewrite eq = WFBase
     typsub-wf {t = t} {τ = T x} wf1 wf2 eq with natEQ t x 
     ... | Inl refl rewrite eq = wf2
-    ... | Inr x₁ rewrite eq = {!   !}
+    typsub-wf {Θ = Θ} {t = t} {T x} (WFVar elem) wf2 eq | Inr neq rewrite eq = WFVar (strengthening {Γ = Θ} elem (flip neq))
     typsub-wf {τ = ⦇-⦈} wf1 wf2 eq rewrite eq = WFHole
     typsub-wf {τ = τ ==> τ₁} (WFArr wf1 wf1') wf2 eq rewrite eq = WFArr (typsub-wf wf1 wf2 refl) (typsub-wf wf1' wf2 refl)
-    typsub-wf {t = t1} {τ = ·∀ t2 τ} (WFForall wf1) wf2 eq with natEQ t1 t2
-    ... | Inl refl rewrite eq = WFForall {! wf1 !}
-    ... | Inr neq rewrite eq = {!   !} 
-    -- with natEQ t t'
-    -- ... | Inl refl = {!   !}
-    -- ... | Inr neq rewrite eq = {! WFForall (typsub-wf wf1 (weaken-t-wf wf2) refl) !}
+    typsub-wf {Θ = Θ} {t = t1} {τ = ·∀ t2 τ} (WFForall wf1) wf2 eq with natEQ t1 t2
+    ... | Inl refl rewrite eq rewrite (contract {x = t2} {τ = <>} Θ) = WFForall wf1
+    ... | Inr neq rewrite eq rewrite (swap {x = t1} {y = t2} {τ1 = <>} {τ2 = <>} Θ neq) = WFForall (typsub-wf wf1 (weaken-t-wf wf2) refl) 
 
     typenv-wf : ∀ {Δ Θ Γ θ σ Θ' Γ' τ τ'} →
       Δ hctxwf →
