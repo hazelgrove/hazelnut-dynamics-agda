@@ -24,12 +24,12 @@ module type-assignment-unicity where
   ... | refl = refl
   type-assignment-unicity (TATAp _ x eq1) (TATAp _ y eq2) with type-assignment-unicity x y
   ... | refl rewrite eq1 = eq2
-  type-assignment-unicity (TAEHole {Δ = Δ} x y) (TAEHole x₁ x₂)
+  type-assignment-unicity (TAEHole {Δ = Δ} x y eq1) (TAEHole x₁ x₂ eq2)
     with ctxunicity {Γ = Δ} x x₁
-  ... | refl = refl
-  type-assignment-unicity (TANEHole {Δ = Δ} x d1 y) (TANEHole x₁ d2 x₂)
+  ... | refl rewrite eq1 | eq2 = refl
+  type-assignment-unicity (TANEHole {Δ = Δ} x d1 y eq1) (TANEHole x₁ d2 x₂ eq2)
     with ctxunicity {Γ = Δ} x₁ x
-  ... | refl = refl
+  ... | refl rewrite eq1 | eq2 = refl
   type-assignment-unicity (TACast d1 _ x) (TACast d2 _ x₁)
     with type-assignment-unicity d1 d2
   ... | refl = refl
