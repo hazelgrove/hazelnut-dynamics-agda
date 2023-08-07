@@ -12,11 +12,11 @@ module lemmas-subst-ta where
   -- this is what makes the binders-unique assumption below good enough: it
   -- tells us that we can pick fresh variables
   mutual
-    binders-envfresh : ∀{Δ Γ Γ' y σ Θ} → Δ , Θ , Γ ⊢ σ :s: Γ' → y # Γ → unbound-in-σ y σ → binders-unique-σ σ → envfresh y σ
-    binders-envfresh {Γ' = Γ'} {y = y} (STAId x) apt unbound unique with ctxindirect Γ' y
-    binders-envfresh {Γ' = Γ'} {y = y} (STAId x₁) apt unbound unique | Inl x = abort (somenotnone (! (x₁ y (π1 x) (π2 x)) · apt))
-    binders-envfresh (STAId x₁) apt unbound unique | Inr x = EFId x
-    binders-envfresh {Γ = Γ} {y = y} (STASubst  {y = z} subst x₁) apt (UBσSubst x₂ unbound neq) (BUσSubst zz x₃ x₄) =
+    binders-envfresh : ∀{Δ Γ Γ' y θ σ Θ Θ'} → Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' → y # Γ → unbound-in-σ y σ → binders-unique-σ σ → envfresh y σ
+    binders-envfresh {Γ' = Γ'} {y = y} (STAIdId x _) apt unbound unique with ctxindirect Γ' y
+    binders-envfresh {Γ' = Γ'} {y = y} (STAIdId x₁ _) apt unbound unique | Inl x = abort (somenotnone (! (x₁ y (π1 x) (π2 x)) · apt))
+    binders-envfresh (STAIdId x₁ _) apt unbound unique | Inr x = EFId x
+    binders-envfresh {Γ = Γ} {y = y} (STAIdSubst  {y = z} subst x₁) apt (UBσSubst x₂ unbound neq) (BUσSubst zz x₃ x₄) =
                                                                                     EFSubst (binders-fresh {y = y} x₁ zz x₂ apt)
                                                                                             (binders-envfresh subst (apart-extend1 Γ neq apt) unbound x₃)
                                                                                             neq
