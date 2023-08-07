@@ -22,7 +22,20 @@ module Nat where
   natEQ (1+ x) (1+ y) with natEQ x y
   natEQ (1+ x) (1+ .x) | Inl refl = Inl refl
   ... | Inr b = Inr (λ x₁ → b (1+inj x y x₁))
-  
+
+  natEQrefl : {x : Nat} -> natEQ x x == Inl refl
+  natEQrefl {x} with natEQ x x
+  ... | Inl refl = refl
+  ... | Inr neq = abort (neq refl)
+
+  natEQneq : {x y : Nat} -> (neq : ((x == y) → ⊥)) -> natEQ x y == Inr neq
+  natEQneq {x} {y} neq with natEQ x y
+  ... | Inl refl = abort (neq refl)
+  ... | Inr neq' = inr-inj (funext (λ eq → abort (neq eq)))
+    where
+      inr-inj : ∀{a a'} -> a == a' -> Inr a == Inr a'
+      inr-inj eq rewrite eq = refl
+
   data _<_ : Nat → Nat → Set where
     LTZ : ∀{n} -> Z < 1+ n
     LTS : ∀{n m} -> n < m -> 1+ n < 1+ m

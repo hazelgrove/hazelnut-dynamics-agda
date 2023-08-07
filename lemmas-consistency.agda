@@ -4,14 +4,12 @@ open import Nat
 
 module lemmas-consistency where
 
-  open typctx
-
   ~refl : {t : htyp} → t ~ t
   ~refl {b} = TCBase
   ~refl {⦇-⦈} = TCHole1
   ~refl {(t1 ==> t2)} = TCArr ~refl ~refl
   ~refl {(T p)} = TCVar 
-  ~refl {(·∀ t1)} = TCForall ~refl
+  ~refl {(·∀ _ t1)} = TCForall ~refl
 
   -- ⊢~sym : {Γ : typctx} {t1 t2 : htyp} → Γ ⊢ t1 ~ t2 → Γ ⊢ t2 ~ t1
   -- ⊢~sym TCBase = TCBase
@@ -39,10 +37,12 @@ module lemmas-consistency where
   ~Typ[] TCHole1 = TCHole1
   ~Typ[] TCHole2 = TCHole2
   ~Typ[] {n = a} (TCVar {a = a'}) with natEQ a a'
-  ... | Inl Refl = ~refl
-  ... | Inr ne = ~refl
+  ... | Inl refl = ~refl
+  ... | Inr neq = ~refl
   ~Typ[] (TCArr x x') = TCArr (~Typ[] x) (~Typ[] x')
-  ~Typ[] (TCForall x) = TCForall (~Typ[] x)
+  ~Typ[] {n = a} (TCForall {t = a'} x) with natEQ a a'
+  ... | Inl refl = TCForall x
+  ... | Inr neq = TCForall (~Typ[] x) 
   
   -- type consistency isn't transitive
   not-trans : ((t1 t2 t3 : htyp) → t1 ~ t2 → t2 ~ t3 → t1 ~ t3) → ⊥
@@ -96,22 +96,24 @@ module lemmas-consistency where
   ~dec (T x) (T y) with natEQ x y
   ... | Inl refl = Inl TCVar 
   ... | Inr p = Inr \{(TCVar {a}) -> p refl}
-  ~dec (·∀ t1) (·∀ t2) with ~dec t1 t2
-  ... | Inl p = Inl (TCForall p)
-  ... | Inr p = Inr (\{(TCForall p') -> p p'})
+  ~dec (·∀ n1 t1) (·∀ n2 t2) with natEQ n1 n2
+  ... | Inr neq = Inr (\{(TCForall p) -> neq refl})
+  ... | Inl refl with ~dec t1 t2
+  ...   | Inl p = Inl (TCForall p)
+  ...   | Inr p = Inr (\{(TCForall p') -> p p'})
     -- cases with mismatched constructors
   ~dec b (T x) = Inr (λ ())
   ~dec b (t1 ==> t2) = Inr (λ ())
-  ~dec b (·∀ t1) = Inr (λ ())
+  ~dec b (·∀ _ t1) = Inr (λ ())
   ~dec (t1 ==> t2) b = Inr (λ ())
   ~dec (t1 ==> t2) (T x) = Inr (λ ())
-  ~dec (t1 ==> t2) (·∀ t3) = Inr (λ ())
+  ~dec (t1 ==> t2) (·∀ _ t3) = Inr (λ ())
   ~dec (T x) b = Inr (λ ())
   ~dec (T x) (t1 ==> t2) = Inr (λ ())
-  ~dec (T x) (·∀ t1) = Inr (λ ())
-  ~dec (·∀ t1) b = Inr (λ ())
-  ~dec (·∀ t1) (t2 ==> t3) = Inr (λ ())
-  ~dec (·∀ t1) (T x) = Inr (λ ())
+  ~dec (T x) (·∀ _ t1) = Inr (λ ())
+  ~dec (·∀ _ t1) b = Inr (λ ())
+  ~dec (·∀ _ t1) (t2 ==> t3) = Inr (λ ())
+  ~dec (·∀ _ t1) (T x) = Inr (λ ())
 
   -- no pair of types is both consistent and not consistent
   ~apart : {t1 t2 : htyp} → (t1 ~̸ t2) → (t1 ~ t2) → ⊥

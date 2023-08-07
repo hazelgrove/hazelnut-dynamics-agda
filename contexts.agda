@@ -80,6 +80,13 @@ module contexts where
   lem-dom-union1 {A} {C1} {C2} {x} (d1 , d2) D with C1 x
   lem-dom-union1 (d1 , d2) D | Some x₁ = refl
   lem-dom-union1 (d1 , d2) D | None = abort (somenotnone (! (π2 D)))
+  
+  lem-dom-union1-stronger : {A : Set} {C1 C2 : A ctx} {x : Nat} →
+                                    dom C1 x →
+                                    (C1 ∪ C2) x == C1 x
+  lem-dom-union1-stronger {A} {C1} {C2} {x} (witness , indom) with C1 x
+  ... | Some x1 = refl
+  ... | None = abort (somenotnone (! indom))
 
   lem-dom-union2 : {A : Set} {C1 C2 : A ctx} {x : Nat} →
                                     C1 ## C2 →
@@ -347,3 +354,18 @@ module contexts where
   
   lem-map-preserve-elem : {A B : Set} {Γ : A ctx} {f : A → B} {x : Nat} {y : A} → (x , y) ∈ Γ -> (x , f y) ∈ (map f Γ)
   lem-map-preserve-elem p rewrite p = refl
+
+  lem-singleton-apart : {A : Set} {x y : Nat} {v : A} → x ≠ y → x # (■ (y , v))
+  lem-singleton-apart {A} {x} {y} neq with natEQ y x
+  ... | Inl refl = abort (neq refl)
+  ... | Inr neq' = refl
+
+  lem-union-lunit : {A : Set} {Γ : A ctx} → ∅ ∪ Γ == Γ
+  lem-union-lunit {A} {Γ = Γ} = funext (λ x → foo x)
+    where
+      foo : (x : Nat) -> (∅ ∪ Γ) x == Γ x
+      foo x with ctxindirect {A} ∅ x
+      ... | Inl (_ , inctx) = refl
+      ... | Inr ninctx = refl
+  lem-extend-lunit : {A : Set} {x : Nat} {y : A} → ∅ ,, (x , y) == (■ (x , y))
+  lem-extend-lunit = lem-union-lunit

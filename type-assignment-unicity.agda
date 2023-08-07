@@ -4,7 +4,6 @@ open import core
 open import contexts
 
 module type-assignment-unicity where
-  open typctx
 
   -- type assignment only assigns one type
   type-assignment-unicity : {Γ : tctx} {d : ihexp} {τ' τ : htyp} {Δ : hctx} {Θ : typctx} →
