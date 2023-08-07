@@ -30,16 +30,16 @@ module contraction where
       guts .x | Inr x₃ | None | Inr x₂ | Inl refl = abort (x₃ refl)
       guts y | Inr x₃ | None | Inr x₂ | Inr x₁ = refl
 
-  contract-synth : ∀{ Γ x τ e τ'}
-                  → (Γ ,, (x , τ) ,, (x , τ)) ⊢ e => τ'
-                  → (Γ ,, (x , τ)) ⊢ e => τ'
-  contract-synth {Γ = Γ} {e = e} {τ' = τ'} =
-    tr (λ qq → qq ⊢ e => τ') (contract Γ)
+  contract-synth : ∀{Θ Γ x τ e τ'}
+                  → Θ , (Γ ,, (x , τ) ,, (x , τ)) ⊢ e => τ'
+                  → Θ , (Γ ,, (x , τ)) ⊢ e => τ'
+  contract-synth {Θ = Θ} {Γ = Γ} {e = e} {τ' = τ'} =
+    tr (λ qq → Θ , qq ⊢ e => τ') (contract Γ)
 
   -- as an aside, this also establishes the other direction which is rarely
   -- mentioned, since equality is symmetric
-  elab-synth : ∀{ Γ x τ e τ'}
-                  → (Γ ,, (x , τ)) ⊢ e => τ'
-                  → (Γ ,, (x , τ) ,, (x , τ)) ⊢ e => τ'
-  elab-synth {Γ = Γ} {e = e} {τ' = τ'} =
-    tr (λ qq → qq ⊢ e => τ') (! (contract Γ))
+  elab-synth : ∀{Θ Γ x τ e τ'}
+                  → Θ , (Γ ,, (x , τ)) ⊢ e => τ'
+                  → Θ , (Γ ,, (x , τ) ,, (x , τ)) ⊢ e => τ'
+  elab-synth {Θ = Θ} {Γ = Γ} {e = e} {τ' = τ'} =
+    tr (λ qq → Θ , qq ⊢ e => τ') (! (contract Γ))
