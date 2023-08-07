@@ -403,6 +403,59 @@ module core where
     GArr : ⦇-⦈ ==> ⦇-⦈ ground
     GForall : ·∀ ⦇-⦈ ground
 
+  -- substitution
+  [_/_]_ : ihexp → Nat → ihexp → ihexp
+  [ d / y ] c = c
+  [ d / y ] X x
+    with natEQ x y
+  [ d / y ] X .y | Inl refl = d
+  [ d / y ] X x  | Inr neq = X x
+  [ d / y ] (·λ x [ x₁ ] d')
+    with natEQ x y
+  [ d / y ] (·λ .y [ τ ] d') | Inl refl = ·λ y [ τ ] d'
+  [ d / y ] (·λ x [ τ ] d')  | Inr x₁ = ·λ x [ τ ] ( [ d / y ] d')
+  [ d / y ] ·Λ d' = ·Λ ([ d / y ] d')
+  [ d / y ] ⦇-⦈⟨ u , θ , σ ⟩ = ⦇-⦈⟨ u , θ , Subst d y σ ⟩
+  [ d / y ] ⦇⌜ d' ⌟⦈⟨ u , θ , σ  ⟩ =  ⦇⌜ [ d / y ] d' ⌟⦈⟨ u , θ , Subst d y σ ⟩
+  [ d / y ] (d1 ∘ d2) = ([ d / y ] d1) ∘ ([ d / y ] d2)
+  [ d / y ] (d' < τ >) = ([ d / y ] d') < τ >
+  [ d / y ] (d' ⟨ τ1 ⇒ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒ τ2 ⟩
+  [ d / y ] (d' ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩
+
+  -- terms' type substitution
+  TTyp[_/_]_ : htyp → Nat → ihexp → ihexp
+  TTyp[ t / a ] c = c
+  TTyp[ t / a ] X x = X x
+  TTyp[ t / a ] (·λ x [ τ ] d') = (·λ x [ (Typ[ t / a ] τ) ] (TTyp[ t / a ] d'))
+  TTyp[ t / a ] (·Λ d) = ·Λ (TTyp[ t / (1+ a) ] d)
+  -- TODO: May need to add into hole substitutions?
+  TTyp[ t / a ] ⦇-⦈⟨ u , θ , σ ⟩ = ⦇-⦈⟨ u , TypSubst t a θ , σ ⟩
+  TTyp[ t / a ] ⦇⌜ d ⌟⦈⟨ u , θ , σ  ⟩ =  ⦇⌜ TTyp[ t / a ] d ⌟⦈⟨ u , TypSubst t a θ , σ ⟩
+  TTyp[ t / a ] (d1 ∘ d2) = (TTyp[ t / a ] d1) ∘ (TTyp[ t / a ] d2)
+  TTyp[ t / a ] (d < τ >) = (TTyp[ t / a ] d) < Typ[ t / a ] τ >
+  TTyp[ t / a ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (TTyp[ t / a ] d) ⟨ (Typ[ t / a ] τ1) ⇒ (Typ[ t / a ] τ2) ⟩
+  TTyp[ t / a ] (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = (TTyp[ t / a ] d) ⟨ (Typ[ t / a ] τ1) ⇒⦇-⦈⇏ (Typ[ t / a ] τ2) ⟩
+
+  TypTyp[_/_]_ : htyp → Nat → htyp → htyp 
+  TypTyp[ τ / x ] b = b
+  TypTyp[ τ / x ] T y 
+    with natEQ x y
+  TypTyp[ τ / x ] T .x | Inl refl = τ
+  TypTyp[ τ / x ] T y | Inr neq = T y
+  TypTyp[ τ / x ] ⦇-⦈ = ⦇-⦈
+  TypTyp[ τ / x ] (τ' ==> τ'') = (TypTyp[ τ / x ] τ') ==> (TypTyp[ τ / x ] τ'')
+  TypTyp[ τ / x ] ·∀ τ' = ·∀ (TypTyp[ τ / x ] τ')
+
+  -- applying an environment to an expression
+  apply-env : env → ihexp → ihexp
+  apply-env (Id Γ) d = d
+  apply-env (Subst d y σ) d' = [ d / y ] ( apply-env σ d')
+
+  -- applying a type environment to a type
+  apply-typenv : typenv → htyp → htyp
+  apply-typenv (TypId Θ) τ = τ
+  apply-typenv (TypSubst τ y θ) τ' = TypTyp[ τ / y ] ( apply-typenv θ τ')
+
   mutual
     -- substitution typing (TODO: fix)
     data _,_,_⊢_,_:s:_,_ : hctx → typctx → tctx → typenv → env → typctx → tctx → Set where
@@ -443,10 +496,11 @@ module core where
                 (u , (Θ' , Γ' , τ)) ∈ Δ →
                 Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' →
                 Δ , Θ , Γ ⊢ ⦇-⦈⟨ u , θ , σ ⟩ :: τ
-      TANEHole : ∀ {Δ Θ Γ d τ' Θ' Γ' u θ σ τ } →
-                 (u , (Θ' , Γ' , τ)) ∈ Δ →
-                 Δ , Θ , Γ ⊢ d :: τ' →
+      TANEHole : ∀ {Δ Θ Γ d τ' τ'' Θ' Γ' u θ σ τ } →
+                 (u , (Θ' , Γ' , τ')) ∈ Δ →
+                 Δ , Θ , Γ ⊢ d :: τ'' →
                  Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' →
+                 τ == apply-typenv θ τ' →
                  Δ , Θ , Γ ⊢ ⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩ :: τ
       TACast : ∀{Δ Θ Γ d τ1 τ2} →
              Δ , Θ , Γ ⊢ d :: τ1 →
@@ -459,44 +513,6 @@ module core where
              τ2 ground →
              τ1 ≠ τ2 →
              Δ , Θ , Γ ⊢ d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ :: τ2
-
-  -- substitution
-  [_/_]_ : ihexp → Nat → ihexp → ihexp
-  [ d / y ] c = c
-  [ d / y ] X x
-    with natEQ x y
-  [ d / y ] X .y | Inl refl = d
-  [ d / y ] X x  | Inr neq = X x
-  [ d / y ] (·λ x [ x₁ ] d')
-    with natEQ x y
-  [ d / y ] (·λ .y [ τ ] d') | Inl refl = ·λ y [ τ ] d'
-  [ d / y ] (·λ x [ τ ] d')  | Inr x₁ = ·λ x [ τ ] ( [ d / y ] d')
-  [ d / y ] ·Λ d' = ·Λ ([ d / y ] d')
-  [ d / y ] ⦇-⦈⟨ u , θ , σ ⟩ = ⦇-⦈⟨ u , θ , Subst d y σ ⟩
-  [ d / y ] ⦇⌜ d' ⌟⦈⟨ u , θ , σ  ⟩ =  ⦇⌜ [ d / y ] d' ⌟⦈⟨ u , θ , Subst d y σ ⟩
-  [ d / y ] (d1 ∘ d2) = ([ d / y ] d1) ∘ ([ d / y ] d2)
-  [ d / y ] (d' < τ >) = ([ d / y ] d') < τ >
-  [ d / y ] (d' ⟨ τ1 ⇒ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒ τ2 ⟩
-  [ d / y ] (d' ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = ([ d / y ] d') ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩
-
-  -- terms' type substitution
-  TTyp[_/_]_ : htyp → Nat → ihexp → ihexp
-  TTyp[ t / a ] c = c
-  TTyp[ t / a ] X x = X x
-  TTyp[ t / a ] (·λ x [ τ ] d') = (·λ x [ (Typ[ t / a ] τ) ] (TTyp[ t / a ] d'))
-  TTyp[ t / a ] (·Λ d) = ·Λ (TTyp[ t / (1+ a) ] d)
-  -- TODO: May need to add into hole substitutions?
-  TTyp[ t / a ] ⦇-⦈⟨ u , θ , σ ⟩ = ⦇-⦈⟨ u , TypSubst t a θ , σ ⟩
-  TTyp[ t / a ] ⦇⌜ d ⌟⦈⟨ u , θ , σ  ⟩ =  ⦇⌜ TTyp[ t / a ] d ⌟⦈⟨ u , TypSubst t a θ , σ ⟩
-  TTyp[ t / a ] (d1 ∘ d2) = (TTyp[ t / a ] d1) ∘ (TTyp[ t / a ] d2)
-  TTyp[ t / a ] (d < τ >) = (TTyp[ t / a ] d) < Typ[ t / a ] τ >
-  TTyp[ t / a ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (TTyp[ t / a ] d) ⟨ (Typ[ t / a ] τ1) ⇒ (Typ[ t / a ] τ2) ⟩
-  TTyp[ t / a ] (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = (TTyp[ t / a ] d) ⟨ (Typ[ t / a ] τ1) ⇒⦇-⦈⇏ (Typ[ t / a ] τ2) ⟩
-
-  -- applying an environment to an expression
-  apply-env : env → ihexp → ihexp
-  apply-env (Id Γ) d = d
-  apply-env (Subst d y σ) d' = [ d / y ] ( apply-env σ d')
 
   -- values
   data _val : (d : ihexp) → Set where
@@ -607,7 +623,7 @@ module core where
   data _==_⟦_⟧ : (d : ihexp) (ε : ectx) (d' : ihexp) → Set where
     FHOuter : ∀{d} → d == ⊙ ⟦ d ⟧
     FHAp1 : ∀{d1 d1' d2 ε} →
-           d1 == ε ⟦ d1' ⟧ →
+           d1 == ε ⟦ d1' ⟧ →  
            (d1 ∘ d2) == (ε ∘₁ d2) ⟦ d1' ⟧
     FHAp2 : ∀{d1 d2 d2' ε} →
            -- d1 final → -- red brackets
