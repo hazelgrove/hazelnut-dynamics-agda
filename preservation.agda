@@ -68,32 +68,45 @@ module preservation where
 
   rewrite-codomain-in : ∀{t t' x Γ} -> t == t' -> (x , t) ∈ Γ -> (x , t') ∈ Γ
   rewrite-codomain-in eq p rewrite eq = p
+  
+  mutual
 
-  lemma-tysubst-subst : ∀{ Δ Γ Γ' Θ d t τ σ} -> Δ , Θ ,, (t , <>) , Γ ⊢ σ :s: Γ' ->
+    lemma-tysubst-subst : ∀{ Δ Γ Γ' Θ d t τ σ} -> 
+      Θ ⊢ τ wf -> unboundt-in-Γ t Γ -> (Θ ,, (t , <>)) ⊢ Γ tctxwf ->
+      Δ , Θ ,, (t , <>) , Γ ⊢ σ :s: Γ' ->
       (Hctx[ τ / t ] Δ) , Θ , Tctx[ τ / t ] Γ ⊢ (Sub[ τ / t ] σ) :s: (Tctx[ τ / t ] Γ')
-  lemma-tysubst-subst (STAId x) = STAId (λ x' τ' ing → lem-map-preserve-elem {!  x x' τ' ing !})
-  lemma-tysubst-subst (STASubst sta x) = {!   !}
+    lemma-tysubst-subst {Γ = Γ} {t = t} {τ = τ} _ _ _ (STAId x) = STAId (λ x' τ' ing → foo x' τ' x ing)
+      where
+        foo : ∀{Γ Γ' t τ} -> (x : Nat) (τ' : htyp) -> ((x₁ : Nat) (τ₁ : htyp) → (x₁ , τ₁) ∈ Γ' → (x₁ , τ₁) ∈ Γ) -> (x , τ') ∈ (Tctx[ τ / t ] Γ') -> (x , τ') ∈ (Tctx[ τ / t ] Γ)
+        foo {Γ} {Γ'} {t} {τ} x τ' cond insub with Γ x | Γ' x
+        ... | None | None = insub
+        ... | Some tt | None = abort (somenotnone (! insub))
+        ... | None | Some tt = let y = cond x tt in {!!}
+        ... | Some tt | Some tt' = {!!}
+    lemma-tysubst-subst {t = t} {τ = τ} twf (UBTΓ ubtg) tcwf (STASubst {τ = τ'} sta x) = STASubst {τ = Typ[ τ / t ] τ'} 
+      (rewrite-gamma-subst lem-map-extend-dist (lemma-tysubst-subst twf {!!} {!!} sta))
+      (lemma-tysubst twf (UBTΓ ubtg) tcwf x)
 
-  lemma-tysubst : ∀{ Δ Γ Θ d t τ1 τ2 } -> 
-    Θ ⊢ τ2 wf -> unboundt-in-Γ t Γ -> (Θ ,, (t , <>)) ⊢ Γ tctxwf -> Δ , (Θ ,, (t , <>)), Γ ⊢ d :: τ1 -> 
-    (Hctx[ τ2 / t ] Δ) , Θ , (Tctx[ τ2 / t ] Γ) ⊢ (Ihexp[ τ2 / t ] d) :: Typ[ τ2 / t ] τ1
-  lemma-tysubst _ _ _ TAConst = TAConst
-  lemma-tysubst {Γ = Γ} {t = t} {τ1 = τ1} {τ2 = τ2} wf (UBTΓ ubtg) ctxwf (TAVar {x = x} ing) = TAVar (lem-map-preserve-elem {Γ = Γ} {f = (Typ[_/_]_) τ2 t}  ing) --(rewrite-codomain-in {Γ = Γ} (! (unbound-no-subst (ubtg x τ1 ing))) ing)
-  lemma-tysubst wf _ ctxwf (TALam x x₁ ta) = TALam {!!} (wf-sub wf x₁ refl) (rewrite-gamma lem-map-extend-dist (lemma-tysubst wf {!  !} {!   !} ta)) -- (lemma-tysubst wf {!   !} {!   !} {!   !}) -- x (wf-sub wf x₁ refl) {!!}
-  lemma-tysubst {t = t} wf _ ctxwf (TATLam {t = t'} ta) with natEQ t t'
-  ... | Inl refl = TATLam ({!   !})
-  ... | Inr neq = TATLam {!   !}
-  lemma-tysubst wf ubig ctxwf (TAAp ta ta') = TAAp (lemma-tysubst wf ubig ctxwf ta) (lemma-tysubst wf ubig ctxwf ta')
-  lemma-tysubst wf _ ctxwf (TATAp x ta x₁) = {!   !}
-  lemma-tysubst {Δ = Δ} {t = t} {τ1 = τ1} {τ2 = tau} wf _ ctxwf (TAEHole {σ = Id Γ} x x') = TAEHole  (lem-map-preserve-elem {Γ = Δ} x) {!!}
-  lemma-tysubst wf _ ctxwf (TAEHole {σ = Subst d y σ} x x') = TAEHole {!   !} {!   !}
-  lemma-tysubst wf _ ctxwf (TANEHole x ta x₁) = TANEHole {!   !} {!   !} {!   !}
-  lemma-tysubst wf ubig ctxwf (TACast ta x x~) = TACast (lemma-tysubst wf ubig ctxwf ta) (wf-sub wf x refl) (~Typ[] x~)
-  lemma-tysubst wf ubig ctxwf (TAFailedCast ta tgnd tgnd' x) = TAFailedCast (lemma-tysubst wf ubig ctxwf ta) (ground-subst tgnd) (ground-subst tgnd') 
-    λ eq → x (foo tgnd tgnd' eq) 
-    where
-      foo : ∀{t1 t2 t3 t} -> t1 ground -> t2 ground -> Typ[ t3 / t ] t1 == Typ[ t3 / t ] t2 -> t1 == t2
-      foo {t1} {t2} {t3} {t} g1 g2 eq rewrite ground-subst-id {t} {t1} {t3} g1 rewrite ground-subst-id {t} {t2} {t3} g2 = eq
+    lemma-tysubst : ∀{ Δ Γ Θ d t τ1 τ2 } -> 
+      Θ ⊢ τ2 wf -> unboundt-in-Γ t Γ -> (Θ ,, (t , <>)) ⊢ Γ tctxwf -> Δ , (Θ ,, (t , <>)), Γ ⊢ d :: τ1 -> 
+      (Hctx[ τ2 / t ] Δ) , Θ , (Tctx[ τ2 / t ] Γ) ⊢ (Ihexp[ τ2 / t ] d) :: Typ[ τ2 / t ] τ1
+    lemma-tysubst _ _ _ TAConst = TAConst
+    lemma-tysubst {Γ = Γ} {t = t} {τ1 = τ1} {τ2 = τ2} wf (UBTΓ ubtg) ctxwf (TAVar {x = x} ing) = TAVar (lem-map-preserve-elem {Γ = Γ} {f = (Typ[_/_]_) τ2 t}  ing) --(rewrite-codomain-in {Γ = Γ} (! (unbound-no-subst (ubtg x τ1 ing))) ing)
+    lemma-tysubst wf _ ctxwf (TALam x x₁ ta) = TALam {!!} (wf-sub wf x₁ refl) (rewrite-gamma lem-map-extend-dist (lemma-tysubst wf {!  !} {!   !} ta)) -- (lemma-tysubst wf {!   !} {!   !} {!   !}) -- x (wf-sub wf x₁ refl) {!!}
+    lemma-tysubst {t = t} wf _ ctxwf (TATLam {t = t'} ta) with natEQ t t'
+    ... | Inl refl = TATLam ({!   !})
+    ... | Inr neq = TATLam {!   !}
+    lemma-tysubst wf ubig ctxwf (TAAp ta ta') = TAAp (lemma-tysubst wf ubig ctxwf ta) (lemma-tysubst wf ubig ctxwf ta')
+    lemma-tysubst wf _ ctxwf (TATAp x ta x₁) = {!   !}
+    lemma-tysubst {Δ = Δ} {t = t} {τ1 = τ1} {τ2 = tau} wf _ ctxwf (TAEHole {σ = Id Γ} x x') = TAEHole  (lem-map-preserve-elem {Γ = Δ} x) {!!}
+    lemma-tysubst wf _ ctxwf (TAEHole {σ = Subst d y σ} x x') = TAEHole {!   !} {!   !}
+    lemma-tysubst wf ubig ctxwf (TANEHole x ta ts) = TANEHole {!   !} {!   !} (lemma-tysubst-subst wf ubig ctxwf ts)
+    lemma-tysubst wf ubig ctxwf (TACast ta x x~) = TACast (lemma-tysubst wf ubig ctxwf ta) (wf-sub wf x refl) (~Typ[] x~)
+    lemma-tysubst wf ubig ctxwf (TAFailedCast ta tgnd tgnd' x) = TAFailedCast (lemma-tysubst wf ubig ctxwf ta) (ground-subst tgnd) (ground-subst tgnd') 
+      λ eq → x (foo tgnd tgnd' eq) 
+      where
+        foo : ∀{t1 t2 t3 t} -> t1 ground -> t2 ground -> Typ[ t3 / t ] t1 == Typ[ t3 / t ] t2 -> t1 == t2
+        foo {t1} {t2} {t3} {t} g1 g2 eq rewrite ground-subst-id {t} {t1} {t3} g1 rewrite ground-subst-id {t} {t2} {t3} g2 = eq
 
   -- instruction transitions preserve type
   preserve-trans : ∀{ Δ Γ d τ d' } →
