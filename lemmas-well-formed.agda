@@ -10,20 +10,35 @@ module lemmas-well-formed where
   wf-empty-tctx : ∀{o} -> o ⊢ ∅ tctxwf
   wf-empty-tctx = CCtx (λ ())
 
-  merge-tctx-wf-helper : ∀ {Θ Γ x x' τ τ'} → Θ ⊢ Γ tctxwf → Θ ⊢ τ wf → x # Γ → (x' , τ') ∈ (Γ ,, (x , τ)) → Θ ⊢ τ' wf
-  merge-tctx-wf-helper {x = x} {x' = x'} {τ = τ} {τ' = τ'} ctxwf twf apt h with (natEQ x x') 
-  merge-tctx-wf-helper {Γ = Γ} {x = x} {x' = x'} {τ = τ} {τ' = τ'} ctxwf twf apt h | Inl eq rewrite (sym eq) 
-    with ctxunicity {Γ = (Γ ,, (x , τ))} {n = x} {t = τ} {t' = τ'} (x∈∪r Γ (■ (x , τ)) x τ (x∈■ x τ) (lem-apart-sing-disj apt)) h 
-  ... | eq2 rewrite (sym eq2) = twf
-  merge-tctx-wf-helper {Γ = Γ} {τ = τ} (CCtx wfs) twf apt h | Inr n with lem-neq-union-eq {Γ = Γ} {τ = τ} (flip n) h
-  ... | map = wfs map
+  some-inj : ∀ {A : Set} (y y' : A) → Some y' == Some y → y' == y 
+  some-inj y y' refl = refl 
+  
+  merge-wf-helper : ∀ {Θ Γ1 Γ2 x y} → 
+    Θ ⊢ Γ1 tctxwf → 
+    Θ ⊢ Γ2 tctxwf → 
+    (x , y) ∈ (Γ1 ∪ Γ2) → 
+    Θ ⊢ y wf
+  merge-wf-helper {Γ1 = Γ1} {Γ2 = Γ2} {x = x} {y = y} wf1 wf2 elem with (Γ1 x) in thing
+  merge-wf-helper {Γ1 = Γ1} {Γ2 = Γ2} {x = x} {y = y} (CCtx map1) wf2 elem | Some y' rewrite (some-inj y y' elem) = map1 thing
+  merge-wf-helper {Γ1 = Γ1} {Γ2 = Γ2} {x = x} {y = y} wf1 (CCtx map2) elem | None = map2 elem
+
+  merge-wf : ∀ {Θ Γ1 Γ2} → 
+    Θ ⊢ Γ1 tctxwf → 
+    Θ ⊢ Γ2 tctxwf → 
+    Θ ⊢ (Γ1 ∪ Γ2) tctxwf
+  merge-wf wf1 wf2 = CCtx λ x → merge-wf-helper wf1 wf2 x
+
+  singelton-wf-helper : ∀ {Θ x x' y y'} → Θ ⊢ y wf → (x' , y') ∈ (■ (x , y)) → Θ ⊢ y' wf
+  singelton-wf-helper wf elem rewrite lem-insingeq elem = wf
+
+  singelton-wf : ∀ {Θ x τ} → Θ ⊢ τ wf → Θ ⊢ ■ (x , τ) tctxwf
+  singelton-wf wf = CCtx λ x → singelton-wf-helper wf x
 
   merge-tctx-wf : ∀ {Θ Γ x τ} → 
                   Θ ⊢ Γ tctxwf → 
                   Θ ⊢ τ wf → 
-                  x # Γ →  
                   Θ ⊢ (Γ ,, (x , τ)) tctxwf
-  merge-tctx-wf ctxwf wf apt = CCtx (merge-tctx-wf-helper ctxwf wf apt)
+  merge-tctx-wf ctxwf wf = merge-wf ctxwf (singelton-wf wf)
 
   wf-incr-typ : ∀ {Θ t} → Θ ⊢ t wf → [ Θ newtyp] ⊢ incrtyp t wf
   wf-incr-typ (WFVar x) = WFVar (LTS x)
@@ -84,7 +99,7 @@ module lemmas-well-formed where
     wf-synth ctxwf (SAp x wt MAArr x₂) = wf-synth-arr ctxwf wt
     wf-synth ctxwf SEHole = WFHole
     wf-synth ctxwf (SNEHole x wt) = WFHole
-    wf-synth ctxwf (SLam apt x₁ wt) = WFArr x₁ (wf-synth (merge-tctx-wf ctxwf x₁ apt) wt)
+    wf-synth ctxwf (SLam apt x₁ wt) = WFArr x₁ (wf-synth (merge-tctx-wf ctxwf x₁) wt)
     wf-synth ctxwf (STLam wt) = WFForall (wf-synth (weaken-tctx-wf ctxwf) wt)
     wf-synth ctxwf (STAp x wt MFHole eq) rewrite (sym eq) = WFHole
     wf-synth ctxwf (STAp x wt MFForall eq) rewrite (sym eq) = wf-sub x (wf-synth-forall ctxwf wt) LTZ
@@ -98,7 +113,7 @@ module lemmas-well-formed where
     ... | WFArr _ wf = wf
     wf-synth-arr ctxwf (SAp _ wf MAArr _) with wf-synth-arr ctxwf wf 
     ... | WFArr _ wf = wf
-    wf-synth-arr ctxwf (SLam apt wf wt) = wf-synth (merge-tctx-wf ctxwf wf apt) wt
+    wf-synth-arr ctxwf (SLam apt wf wt) = wf-synth (merge-tctx-wf ctxwf wf) wt
     wf-synth-arr ctxwf (STAp wf wt MFForall eq) with wf-sub wf (wf-synth-forall ctxwf wt) LTZ 
     ... | wf rewrite eq with wf 
     ... | WFArr _ wf  = wf
@@ -128,7 +143,7 @@ module lemmas-well-formed where
   -- T: this could be avoided by separating the theorems but I think these should stay together
     elab-wf-synth _ ESConst = WFBase
     elab-wf-synth (CCtx wts) (ESVar x) = wts x
-    elab-wf-synth ctxwf (ESLam apt x₂ elab) = WFArr x₂ (elab-wf-synth (merge-tctx-wf ctxwf x₂ apt) elab)
+    elab-wf-synth ctxwf (ESLam apt x₂ elab) = WFArr x₂ (elab-wf-synth (merge-tctx-wf ctxwf x₂) elab)
     elab-wf-synth ctxwf (ESTLam elab) = WFForall (elab-wf-synth (weaken-tctx-wf ctxwf) elab)
     elab-wf-synth ctxwf (ESAp _ _ _ MAHole _ _) = WFHole
     elab-wf-synth ctxwf (ESAp _ _ wt MAArr _ _) = wf-synth-arr ctxwf wt
@@ -143,29 +158,65 @@ module lemmas-well-formed where
                       Θ ⊢ τ1 wf → 
                       Θ , Γ ⊢ e ⇐ τ1 ~> d :: τ2 ⊣ Δ → 
                       Θ ⊢ τ2 wf 
-    elab-wf-ana ctxwf wf1 (EALam apt MAHole wt) = WFArr WFHole (elab-wf-ana (merge-tctx-wf ctxwf WFHole apt) wf1 wt)
-    elab-wf-ana ctxwf (WFArr wf1 wf2) (EALam apt MAArr wt) = WFArr wf1 (elab-wf-ana (merge-tctx-wf ctxwf wf1 apt) wf2 wt)
+    elab-wf-ana ctxwf wf1 (EALam apt MAHole wt) = WFArr WFHole (elab-wf-ana (merge-tctx-wf ctxwf WFHole) wf1 wt)
+    elab-wf-ana ctxwf (WFArr wf1 wf2) (EALam apt MAArr wt) = WFArr wf1 (elab-wf-ana (merge-tctx-wf ctxwf wf1) wf2 wt)
     elab-wf-ana ctxwf wf1 (EASubsume x x₁ wt x₃) = elab-wf-synth ctxwf wt
     elab-wf-ana ctxwf wf1 (EATLam x₂ x₃ m wf2) with match-forall-wf wf1 m
     ... | WFForall wf3 = WFForall (elab-wf-ana (weaken-tctx-wf ctxwf) wf3 wf2)
     elab-wf-ana ctxwf wf1 EAEHole = wf1
     elab-wf-ana ctxwf wf1 (EANEHole x x₁) = wf1
 
-  wf-ta : ∀{Θ Γ d τ Δ} → 
-          Θ ⊢ Γ tctxwf → 
-          Δ hctxwf →
-          Δ , Θ , Γ ⊢ d :: τ → 
-          Θ ⊢ τ wf 
-  wf-ta ctxwf hctwwf TAConst = WFBase
-  wf-ta (CCtx x₁) hctwwf (TAVar x) = x₁ x
-  wf-ta ctxwf hctwwf (TALam x x₁ wt) = WFArr x₁ (wf-ta (merge-tctx-wf ctxwf x₁ x) hctwwf wt)
-  wf-ta ctxwf hctwwf (TATLam wt) = WFForall (wf-ta (wf-incr-ctx ctxwf) hctwwf wt)
-  wf-ta ctxwf hctwwf (TAAp wt wt₁) with (wf-ta ctxwf hctwwf wt)
-  ... | WFArr wf1 wf2 = wf2
-  wf-ta ctxwf hctwwf (TATAp x wt eq) with (wf-ta ctxwf hctwwf wt)
-  ... | WFForall wf' rewrite (sym eq) = wf-sub x wf' LTZ
-  wf-ta ctxwf (HCtx map) (TAEHole x x₁) with map x 
-  ... | (thing1 , thing2) = {!   !}
-  wf-ta ctxwf hctwwf (TANEHole x wt x₁) = {!   !}
-  wf-ta ctxwf hctwwf (TACast wt x x₁) = x
-  wf-ta ctxwf hctwwf (TAFailedCast wt x x₁ x₂) = ground-wf x₁
+  mutual 
+
+    typsub-wf : ∀ {Θ y τ τ' τ''} →
+      [ Θ newtyp] ⊢ τ wf →
+      Θ ⊢ τ' wf →
+      τ'' == TypTyp[ τ' / y ] τ →
+      Θ ⊢ τ'' wf
+    typsub-wf {τ = b} wf1 wf2 eq rewrite eq = WFBase
+    typsub-wf {y = y} {τ = T x} wf1 wf2 eq with natEQ y x 
+    ... | Inl refl rewrite eq = wf2
+    ... | Inr x₁ rewrite eq = {!   !}
+    typsub-wf {τ = ⦇-⦈} wf1 wf2 eq rewrite eq = WFHole
+    typsub-wf {τ = τ ==> τ₁} (WFArr wf1 wf1') wf2 eq rewrite eq = WFArr (typsub-wf wf1 wf2 refl) (typsub-wf wf1' wf2 refl)
+    typsub-wf {τ = ·∀ τ} (WFForall wf1) wf2 eq rewrite eq = WFForall (typsub-wf wf1 (weaken-t-wf wf2) refl)
+
+
+    typenv-wf : ∀ {Δ Θ Γ θ σ Θ' Γ' τ τ'} →
+      Δ hctxwf →
+      Θ ⊢ Γ tctxwf →
+      Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' →
+      Θ' ⊢ Γ' tctxwf →
+      Θ' ⊢ τ wf →
+      τ' == apply-typenv θ τ →
+      Θ ⊢ τ' wf
+    
+    typenv-wf hctxwf ctxwf1 (STAIdId x₁ x₂) ctxwf2 wf eq rewrite eq = x₂ _ wf
+    typenv-wf hctxwf ctxwf1 (STAIdSubst sub x) ctxwf2 wf eq =
+      typenv-wf hctxwf ctxwf3 sub ctxwf2 wf eq 
+      where 
+      ctxwf3 = merge-tctx-wf ctxwf1 (wf-ta ctxwf1 hctxwf x)
+    typenv-wf {θ = θ} {τ = τ} hctxwf ctxwf1 (STASubst sub x) ctxwf2 wf eq = 
+      typsub-wf wf2 x eq
+      where 
+      wf2 = typenv-wf hctxwf (weaken-tctx-wf ctxwf1) sub ctxwf2 wf refl
+
+    wf-ta : ∀{Θ Γ d τ Δ} → 
+            Θ ⊢ Γ tctxwf → 
+            Δ hctxwf →
+            Δ , Θ , Γ ⊢ d :: τ → 
+            Θ ⊢ τ wf 
+    wf-ta ctxwf hctwwf TAConst = WFBase
+    wf-ta (CCtx x₁) hctwwf (TAVar x) = x₁ x
+    wf-ta ctxwf hctwwf (TALam x x₁ wt) = WFArr x₁ (wf-ta (merge-tctx-wf ctxwf x₁) hctwwf wt)
+    wf-ta ctxwf hctwwf (TATLam wt) = WFForall (wf-ta (wf-incr-ctx ctxwf) hctwwf wt)
+    wf-ta ctxwf hctwwf (TAAp wt wt₁) with (wf-ta ctxwf hctwwf wt)
+    ... | WFArr wf1 wf2 = wf2
+    wf-ta ctxwf hctwwf (TATAp x wt eq) with (wf-ta ctxwf hctwwf wt)
+    ... | WFForall wf' rewrite (sym eq) = wf-sub x wf' LTZ
+    wf-ta ctxwf (HCtx map) (TAEHole x x₁ eq) with map x 
+    ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ thing1 thing2 eq
+    wf-ta ctxwf (HCtx map) (TANEHole x wt x₁ eq) with map x 
+    ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ thing1 thing2 eq
+    wf-ta ctxwf hctwwf (TACast wt x x₁) = x
+    wf-ta ctxwf hctwwf (TAFailedCast wt x x₁ x₂) = ground-wf x₁

@@ -57,7 +57,7 @@ module core where
       Subst : (d : ihexp) → (y : Nat) → env → env
 
     data typenv : Set where
-      TypId : (Γ : typctx) → typenv
+      TypId : (Θ : typctx) → typenv
       TypSubst : (d : htyp) → (y : Nat) → typenv → typenv
 
     -- internal expressions
@@ -457,10 +457,12 @@ module core where
   apply-typenv (TypSubst τ y θ) τ' = TypTyp[ τ / y ] ( apply-typenv θ τ')
 
   mutual
-    -- substitution typing (TODO: fix)
+    -- substitution typing
+    -- variables in σ(x) appear in Γ, variables in θ(x) appear in Θ
     data _,_,_⊢_,_:s:_,_ : hctx → typctx → tctx → typenv → env → typctx → tctx → Set where
       STAIdId : ∀{Γ Γ' Δ Θ Θ'} →
                   ((x : Nat) (τ : htyp) → (x , τ) ∈ Γ' → (x , τ) ∈ Γ) →
+                  ((τ : htyp) → Θ' ⊢ τ wf → Θ ⊢ τ wf) →
                   Δ , Θ , Γ ⊢ TypId Θ' , Id Γ' :s: Θ' , Γ'
       STAIdSubst : ∀{Γ Γ' y τ d σ Δ Θ Θ'} →
                   Δ , Θ , (Γ ,, (y , τ)) ⊢ TypId Θ' , σ :s: Θ' , Γ' →
