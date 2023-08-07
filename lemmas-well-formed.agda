@@ -220,3 +220,8 @@ module lemmas-well-formed where
     ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ thing1 thing2 eq
     wf-ta ctxwf hctwwf (TACast wt x x₁) = x
     wf-ta ctxwf hctwwf (TAFailedCast wt x x₁ x₂) = ground-wf x₁
+
+  
+    no-tvar-casts : ∀{ Γ n τ d Δ} → ~∅ ⊢ Γ tctxwf → Δ hctxwf → Δ , ~∅ , Γ ⊢ d ⟨ T n ⇒ ⦇-⦈ ⟩ :: τ → ⊥
+    no-tvar-casts ctxwf hctxwf (TACast wt x x₁) with wf-ta ctxwf hctxwf wt 
+    ... | WFVar () 
