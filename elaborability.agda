@@ -44,7 +44,7 @@ module elaborability where
     elaborability-ana {e = X x} (ASubsume D x₁)                  | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁
     elaborability-ana {e = ·λ x e} (ASubsume D x₁)               | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁
     elaborability-ana {e = ·λ x [ x₁ ] e} (ASubsume D x₂)        | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₂
-    elaborability-ana {e = ·Λ e} (ASubsume D x₁)                 | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁ 
+    elaborability-ana {e = ·Λ _ e} (ASubsume D x₁)                 | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁ 
     elaborability-ana {e = e1 ∘ e2} (ASubsume D x₁)              | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁
     elaborability-ana {e = e < τ >} (ASubsume D x₁)              | _ , _ , D' = _ , _ , _ , EASubsume (λ _ ()) (λ _ _ ()) D' x₁ 
     -- the two holes are special-cased
@@ -55,5 +55,24 @@ module elaborability where
     elaborability-ana (ALam x₁ m wt)
       with elaborability-ana wt
     ... | _ , _ , _ , D' = _ , _ , _ , EALam x₁ m D'
-    elaborability-ana (ATLam m wt) with elaborability-ana wt
-    ... | _ , _ , _ , D' = _ , _ , _ , EATLam m D'
+    elaborability-ana {e = ·Λ _ c} (ATLam m wt) with elaborability-ana wt
+    ... | _ , _ , _ , D' = _ , _ , _ , EATLam (λ u ()) (λ e' u ()) m D'
+    elaborability-ana {e = ·Λ _ (e ·: x)} (ATLam m wt) with elaborability-ana wt
+    ... | _ , _ , _ , D' = _ , _ , _ , EATLam (λ u ()) (λ e' u ()) m D'
+    elaborability-ana {e = ·Λ _ (X x)} (ATLam m wt) with elaborability-ana wt
+    ... | _ , _ , _ , D' = _ , _ , _ , EATLam (λ u ()) (λ e' u ()) m D'
+    elaborability-ana {e = ·Λ _ (·λ x e)} (ATLam m wt) with elaborability-ana wt
+    ... | _ , _ , _ , D' = _ , _ , _ , EATLam (λ u ()) (λ e' u ()) m D'
+    elaborability-ana {e = ·Λ _ (·λ x [ x₁ ] e)} (ATLam m wt) with elaborability-ana wt
+    ... | _ , _ , _ , D' = _ , _ , _ , EATLam (λ u ()) (λ e' u ()) m D'
+    elaborability-ana {e = ·Λ _ (·Λ x e)} (ATLam m wt) with elaborability-ana wt
+    ... | _ , _ , _ , D' = _ , _ , _ , EATLam (λ u ()) (λ e' u ()) m D'
+    elaborability-ana {e = ·Λ _ (e ∘ e₁)} (ATLam m wt) with elaborability-ana wt
+    ... | _ , _ , _ , D' = _ , _ , _ , EATLam (λ u ()) (λ e' u ()) m D'
+    elaborability-ana {e = ·Λ _ (e < x >)} (ATLam m wt) with elaborability-ana wt
+    ... | _ , _ , _ , D' = _ , _ , _ , EATLam (λ u ()) (λ e' u ()) m D'
+    elaborability-ana {e = ·Λ _ ⦇-⦈[ x ]} (ATLam MFHole wt) = _ , _ , _ , EASubsume (λ u ()) (λ e' u ()) (ESTLam ESEHole) TCHole2
+    elaborability-ana {e = ·Λ _ ⦇-⦈[ x ]} (ATLam MFForall wt) = _ , _ , _ , EASubsume (λ u ()) (λ e' u ()) (ESTLam ESEHole) (TCForall TCHole1)
+    elaborability-ana {e = ·Λ _ ⦇⌜ e ⌟⦈[ x ]} (ATLam m (ASubsume (SNEHole x₁ wt) cons)) with elaborability-synth wt 
+    elaborability-ana {_} {·Λ _ ⦇⌜ e ⌟⦈[ x ]} (ATLam MFHole (ASubsume (SNEHole x₁ wt) cons)) | _ , _ , D' = _ , _ , _ , EASubsume (λ u ()) (λ e' u ()) (ESTLam (ESNEHole {!   !} D')) TCHole2
+    elaborability-ana {_} {·Λ _ ⦇⌜ e ⌟⦈[ x ]} (ATLam MFForall (ASubsume (SNEHole x₁ wt) cons)) | _ , _ , D' = _ , _ , _ , EASubsume (λ u ()) (λ e' u ()) (ESTLam (ESNEHole {!   !} D')) (TCForall cons)

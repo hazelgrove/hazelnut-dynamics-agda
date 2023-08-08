@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 open import Prelude
 open import core
 open import lemmas-consistency
