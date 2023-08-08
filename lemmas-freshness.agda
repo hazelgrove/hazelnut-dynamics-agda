@@ -30,7 +30,7 @@ module lemmas-freshness where
                       Θ , Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                       fresh x d
     fresh-elab-ana1 {Γ = Γ}  apt (FRHLam1 x₁ frsh) (EALam x₂ x₃ exp) = FLam x₁ (fresh-elab-ana1 (apart-extend1 Γ x₁ apt) frsh exp )
-    fresh-elab-ana1 apt (FRHTLam x₁) (EATLam _ x₂) = FTLam (fresh-elab-ana1 apt x₁ x₂)
+    fresh-elab-ana1 apt (FRHTLam x₁) (EATLam _ _ _ x₂) = FTLam (fresh-elab-ana1 apt x₁ x₂)
     fresh-elab-ana1 apt frsh (EASubsume x₁ x₂ x₃ x₄) = fresh-elab-synth1 apt frsh x₃
     fresh-elab-ana1 apt FRHEHole EAEHole = FHole (EFId apt)
     fresh-elab-ana1 apt (FRHNEHole frsh) (EANEHole x₁ x₂) = FNEHole (EFId apt) (fresh-elab-synth1 apt frsh x₂)
@@ -58,7 +58,7 @@ module lemmas-freshness where
                       Θ , Γ ⊢ e ⇐ τ ~> d :: τ' ⊣ Δ →
                       freshh x e
     fresh-elab-ana2 (FLam x₁ frsh) (EALam x₂ x₃ exp) = FRHLam1 x₁ (fresh-elab-ana2 frsh exp)
-    fresh-elab-ana2 (FTLam x) (EATLam x₁ x₂) = FRHTLam (fresh-elab-ana2 x x₂)
+    fresh-elab-ana2 (FTLam x) (EATLam _ _ _ x₂) = FRHTLam (fresh-elab-ana2 x x₂)
     fresh-elab-ana2 frsh (EASubsume x₁ x₂ x₃ x₄) = fresh-elab-synth2 frsh x₃
     fresh-elab-ana2 (FHole x₁) EAEHole = FRHEHole
     fresh-elab-ana2 (FNEHole x₁ frsh) (EANEHole x₂ x₃) = FRHNEHole (fresh-elab-synth2 frsh x₃)
