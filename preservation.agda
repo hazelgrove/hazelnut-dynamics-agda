@@ -31,7 +31,7 @@ module preservation where
   wt-different-fill (FHAp1 eps) (TAAp D1 D2) D3 D4 (FHAp1 D5) = TAAp (wt-different-fill eps D1 D3 D4 D5) D2
   wt-different-fill (FHAp2 eps) (TAAp D1 D2) D3 D4 (FHAp2 D5) = TAAp D1 (wt-different-fill eps D2 D3 D4 D5)
   wt-different-fill (FHTAp eps) (TATAp wf D1 eq) D2 D3 (FHTAp D4) = TATAp wf (wt-different-fill eps D1 D2 D3 D4) eq
-  wt-different-fill (FHNEHole eps) (TANEHole x D1 x₁) D2 D3 (FHNEHole D4) = TANEHole x (wt-different-fill eps D1 D2 D3 D4) x₁
+  wt-different-fill (FHNEHole eps) (TANEHole x D1 x₁ eq) D2 D3 (FHNEHole D4) = TANEHole x (wt-different-fill eps D1 D2 D3 D4) x₁ eq
   wt-different-fill (FHCast eps) (TACast D1 wf x) D2 D3 (FHCast D4) = TACast (wt-different-fill eps D1 D2 D3 D4) wf x
   wt-different-fill (FHFailedCast x) (TAFailedCast y x₁ x₂ x₃) D3 D4 (FHFailedCast eps) = TAFailedCast (wt-different-fill x y D3 D4 eps) x₁ x₂ x₃
 
@@ -53,9 +53,9 @@ module preservation where
   wt-filling (TATAp wf ta eq) FHOuter = _ , TATAp wf ta eq
   wt-filling (TATAp wf ta eq) (FHTAp eps) = wt-filling ta eps
 
-  wt-filling (TAEHole x x₁) FHOuter = _ , TAEHole x x₁
-  wt-filling (TANEHole x ta x₁) FHOuter = _ , TANEHole x ta x₁
-  wt-filling (TANEHole x ta x₁) (FHNEHole eps) = wt-filling ta eps
+  wt-filling (TAEHole x x₁ eq) FHOuter = _ , TAEHole x x₁ eq
+  wt-filling (TANEHole x ta x₁ eq) FHOuter = _ , TANEHole x ta x₁ eq
+  wt-filling (TANEHole x ta x₁ eq) (FHNEHole eps) = wt-filling ta eps
   wt-filling (TACast ta wf x) FHOuter = _ , TACast ta wf x
   wt-filling (TACast ta wf x) (FHCast eps) = wt-filling ta eps
   wt-filling (TAFailedCast x y z w) FHOuter = _ , TAFailedCast x y z w
@@ -71,11 +71,11 @@ module preservation where
   
   mutual
 
-    lemma-tysubst-subst : ∀{ Δ Γ Γ' Θ d t τ σ} -> 
+    lemma-tysubst-subst : ∀{ Δ Γ Γ' Θ Θ' d t τ θ σ} -> 
       Θ ⊢ τ wf -> unboundt-in-Γ t Γ -> (Θ ,, (t , <>)) ⊢ Γ tctxwf ->
-      Δ , Θ ,, (t , <>) , Γ ⊢ σ :s: Γ' ->
-      (Hctx[ τ / t ] Δ) , Θ , Tctx[ τ / t ] Γ ⊢ (Sub[ τ / t ] σ) :s: (Tctx[ τ / t ] Γ')
-    lemma-tysubst-subst {Γ = Γ} {t = t} {τ = τ} _ _ _ (STAId x) = STAId (λ x' τ' ing → foo x' τ' x ing)
+      Δ , (Θ ,, (t , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ' ->
+      (Hctx[ τ / t ] Δ) , Θ , Tctx[ τ / t ] Γ ⊢ θ , (Sub[ τ / t ] σ) :s: Θ' , (Tctx[ τ / t ] Γ')
+    lemma-tysubst-subst {Γ = Γ} {t = t} {τ = τ} _ _ _ (STAIdId x wf) = STAIdId (λ x' τ' ing → foo x' τ' x ing) {!!}
       where
         foo : ∀{Γ Γ' t τ} -> (x : Nat) (τ' : htyp) -> ((x₁ : Nat) (τ₁ : htyp) → (x₁ , τ₁) ∈ Γ' → (x₁ , τ₁) ∈ Γ) -> (x , τ') ∈ (Tctx[ τ / t ] Γ') -> (x , τ') ∈ (Tctx[ τ / t ] Γ)
         foo {Γ} {Γ'} {t} {τ} x τ' cond insub with Γ x | Γ' x
@@ -83,9 +83,16 @@ module preservation where
         ... | Some tt | None = abort (somenotnone (! insub))
         ... | None | Some tt = let y = cond x tt in {!!}
         ... | Some tt | Some tt' = {!!}
-    lemma-tysubst-subst {t = t} {τ = τ} twf (UBTΓ ubtg) tcwf (STASubst {τ = τ'} sta x) = STASubst {τ = Typ[ τ / t ] τ'} 
+    lemma-tysubst-subst {t = t} {τ = τ} twf (UBTΓ ubtg) tcwf (STASubst {τ = τ'} sta x) = {!!}
+    lemma-tysubst-subst twf (UBTΓ ubtg) tcwf (STAIdSubst subst ta) =
+      STAIdSubst (rewrite-gamma-subst lem-map-extend-dist (lemma-tysubst-subst twf (UBTΓ {!   !}) (merge-tctx-wf tcwf (wf-ta tcwf {!   !} ta)) subst))
+      (lemma-tysubst twf (UBTΓ ubtg) tcwf ta)
+    
+    {- STASubst {τ = Typ[ τ / t ] τ'} 
+      (rewrite-gamma-subst lem-map-extend-dist (lemma-tysubst-subst twf {! STASubst {τ = Typ[ τ / t ] τ'} 
       (rewrite-gamma-subst lem-map-extend-dist (lemma-tysubst-subst twf {!!} {!!} sta))
       (lemma-tysubst twf (UBTΓ ubtg) tcwf x)
+    -}
 
     lemma-tysubst : ∀{ Δ Γ Θ d t τ1 τ2 } -> 
       Θ ⊢ τ2 wf -> unboundt-in-Γ t Γ -> (Θ ,, (t , <>)) ⊢ Γ tctxwf -> Δ , (Θ ,, (t , <>)), Γ ⊢ d :: τ1 -> 
@@ -98,9 +105,9 @@ module preservation where
     ... | Inr neq = TATLam {!   !}
     lemma-tysubst wf ubig ctxwf (TAAp ta ta') = TAAp (lemma-tysubst wf ubig ctxwf ta) (lemma-tysubst wf ubig ctxwf ta')
     lemma-tysubst wf _ ctxwf (TATAp x ta x₁) = {!   !}
-    lemma-tysubst {Δ = Δ} {t = t} {τ1 = τ1} {τ2 = tau} wf _ ctxwf (TAEHole {σ = Id Γ} x x') = TAEHole  (lem-map-preserve-elem {Γ = Δ} x) {!!}
-    lemma-tysubst wf _ ctxwf (TAEHole {σ = Subst d y σ} x x') = TAEHole {!   !} {!   !}
-    lemma-tysubst wf ubig ctxwf (TANEHole x ta ts) = TANEHole {!   !} {!   !} (lemma-tysubst-subst wf ubig ctxwf ts)
+    lemma-tysubst {Δ = Δ} {t = t} {τ1 = τ1} {τ2 = tau} wf _ ctxwf (TAEHole {σ = Id Γ} x x' eq) = TAEHole (lem-map-preserve-elem {Γ = Δ} x) {!!} {!!}
+    lemma-tysubst wf _ ctxwf (TAEHole {σ = Subst d y σ} x x' eq) = TAEHole {!   !} {!   !} {!!}
+    lemma-tysubst wf ubig ctxwf (TANEHole x ta ts eq) = TANEHole {!   !} {!   !} (lemma-tysubst-subst wf ubig ctxwf ts) {!   !}
     lemma-tysubst wf ubig ctxwf (TACast ta x x~) = TACast (lemma-tysubst wf ubig ctxwf ta) (wf-sub wf x refl) (~Typ[] x~)
     lemma-tysubst wf ubig ctxwf (TAFailedCast ta tgnd tgnd' x) = TAFailedCast (lemma-tysubst wf ubig ctxwf ta) (ground-subst tgnd) (ground-subst tgnd') 
       λ eq → x (foo tgnd tgnd' eq) 
