@@ -75,7 +75,7 @@ module disjointness where
     HVar   : ∀{x} → holes (X x) ∅
     HLam1  : ∀{x e H} → holes e H → holes (·λ x e) H
     HLam2  : ∀{x e τ H} → holes e H → holes (·λ x [ τ ] e) H
-    HTLam  : ∀{e H} → holes e H → holes (·Λ e) H
+    HTLam  : ∀{e t H} → holes e H → holes (·Λ t e) H
     HEHole : ∀{u} → holes (⦇-⦈[ u ]) (■ (u , <>))
     HNEHole : ∀{e u H} → holes e H → holes (⦇⌜ e ⌟⦈[ u ]) (H ,, (u , <>))
     HAp : ∀{e1 e2 H1 H2} → holes e1 H1 → holes e2 H2 → holes (e1 ∘ e2) (H1 ∪ H2)
@@ -93,7 +93,7 @@ module disjointness where
   ... | (h , d) = h , HLam1 d
   find-holes (·λ x [ x₁ ] e) with find-holes e
   ... | (h , d) = h , HLam2 d
-  find-holes (·Λ e) with find-holes e 
+  find-holes (·Λ t e) with find-holes e 
   ... | (h , d) = h , HTLam d
   find-holes ⦇-⦈[ x ] = (■ (x , <>)) , HEHole
   find-holes ⦇⌜ e ⌟⦈[ x ] with find-holes e
