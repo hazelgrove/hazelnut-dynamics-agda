@@ -1,5 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
-
 open import Nat
 open import Prelude
 open import core
@@ -100,14 +98,13 @@ module weakening where
                      envfresh x σ →
                      Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' →
                      Δ , Θ , (Γ ,, (x , τ)) ⊢ θ , σ :s: Θ' , Γ'
-    weaken-subst-Γ {Γ = Γ} (EFId x₁) (STAIdId x₂ prem) = STAIdId (λ x τ x₃ → x∈∪l Γ _ x τ (x₂ x τ x₃) ) {!!}
+    weaken-subst-Γ {Γ = Γ} (EFId x₁) (STAIdId x₂ prem) = STAIdId (λ x τ x₃ → x∈∪l Γ _ x τ (x₂ x τ x₃) ) prem
     weaken-subst-Γ {x = x} {Γ = Γ} (EFSubst x₁ efrsh x₂) (STAIdSubst {y = y} {τ = τ'} subst x₃) =
       STAIdSubst (exchange-subst-Γ {Γ = Γ} (flip x₂) (weaken-subst-Γ {Γ = Γ ,, (y , τ')} efrsh subst))
                (weaken-ta x₁ x₃)
-    weaken-subst-Γ (EFId x) (STASubst x₁ x₂) = {!!}
+    weaken-subst-Γ (EFId x) (STASubst x₁ x₂) = STASubst (weaken-subst-Γ (EFId x) x₁) x₂
     weaken-subst-Γ {x = x} {Γ = Γ} (EFSubst x₁ efrsh x₂) (STASubst {y = y} {τ = τ'} subst x₃) =
-      STASubst {!   !} -- (exchange-subst-Γ {Γ = Γ} (flip x₂) (weaken-subst-Γ {Γ = Γ ,, (y , τ')} efrsh subst))
-               {!   !} --(weaken-ta x₁ x₃)
+      STASubst (weaken-subst-Γ (EFSubst x₁ efrsh x₂) subst) x₃ 
 
     weaken-ta : ∀{x Γ Δ d τ τ' Θ} →
                 fresh x d →
@@ -118,7 +115,7 @@ module weakening where
     weaken-ta {x = x} frsh (TALam {x = y} apt wf wt) with natEQ x y
     weaken-ta (FLam x₁ x₂) (TALam apt wf wt) | Inl refl = abort (x₁ refl)
     weaken-ta {Γ = Γ} {τ' = τ'} (FLam x₁ x₃) (TALam {x = y} x₄ wf wt) | Inr x₂ = TALam (apart-extend1 Γ (flip x₁) x₄) wf (exchange-ta-Γ {Γ = Γ} (flip x₁) (weaken-ta x₃ wt))
-    weaken-ta {x} {Γ} {τ' = τ'} (FTLam frsh) (TATLam x₁) = TATLam (rewrite-gamma {!!} ((weaken-ta frsh x₁)))
+    weaken-ta {x} {Γ} {τ' = τ'} (FTLam frsh) (TATLam x₁) = TATLam (weaken-ta frsh x₁)
     weaken-ta (FAp frsh frsh₁) (TAAp wt wt₁) = TAAp (weaken-ta frsh wt) (weaken-ta frsh₁ wt₁)
     weaken-ta (FTAp frsh) (TATAp wf x₁ eq) = TATAp wf (weaken-ta frsh x₁) eq
     weaken-ta (FHole x₁) (TAEHole x₂ x₃ eq) = TAEHole x₂ (weaken-subst-Γ x₁ x₃) eq
@@ -130,9 +127,9 @@ module weakening where
     weaken-subst-Θ : ∀{Γ Δ θ t σ Γ' Θ Θ'} →
                      Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' →
                      Δ , (Θ ,, (t , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ'
-    weaken-subst-Θ (STAIdId x p) = STAIdId x {!!}
-    weaken-subst-Θ (STAIdSubst x x₁) = {!!}
-    weaken-subst-Θ (STASubst x x₁) = STASubst {! (weaken-subst-Θ x) !} {! (weaken-ta-typ x₁) !}
+    weaken-subst-Θ (STAIdId x p) = STAIdId x λ τ x₁ → weaken-t-wf (p τ x₁)
+    weaken-subst-Θ (STAIdSubst x x₁) = STAIdSubst (weaken-subst-Θ x) (weaken-ta-typ x₁)
+    weaken-subst-Θ {Θ = Θ} (STASubst x x₁) = STASubst (rewrite-theta-subst (exchange-Θ {Θ = Θ}) (weaken-subst-Θ x)) (weaken-t-wf x₁)
     
     weaken-ta-typ : ∀{Γ Δ Θ d t τ} →
                     Δ , Θ , Γ ⊢ d :: τ →
@@ -140,7 +137,7 @@ module weakening where
     weaken-ta-typ TAConst = TAConst
     weaken-ta-typ (TAVar x) = TAVar x
     weaken-ta-typ (TALam x x₁ x₂) = TALam x (weaken-t-wf x₁) (weaken-ta-typ x₂)
-    weaken-ta-typ (TATLam x) = TATLam {! (weaken-ta-typ x) !}
+    weaken-ta-typ {Θ = Θ} (TATLam x) = TATLam (rewrite-theta (exchange-Θ {Θ = Θ}) (weaken-ta-typ x))
     weaken-ta-typ (TAAp x x₁) = TAAp (weaken-ta-typ x) (weaken-ta-typ x₁)
     weaken-ta-typ (TATAp wf x eq) = TATAp (weaken-t-wf wf) (weaken-ta-typ x) eq
     weaken-ta-typ (TAEHole x x₁ eq) = TAEHole x (weaken-subst-Θ x₁) eq

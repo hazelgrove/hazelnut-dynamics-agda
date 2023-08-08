@@ -21,5 +21,8 @@ module rewrite-util where
   typvar-inj : ∀{t t'} -> T t == T t' -> t == t'
   typvar-inj refl = refl
 
-  rewrite-gamma-subst : ∀{Δ Θ Θ' Γ Γ' Γf θ σ} → Γ == Γ' → Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γf → Δ , Θ , Γ' ⊢ θ , σ :s: Θ' , Γf
+  rewrite-gamma-subst : ∀{Δ Θ Θf Γ Γ' Γf θ σ} → Γ == Γ' → Δ , Θ , Γ ⊢ θ , σ :s: Θf , Γf → Δ , Θ , Γ' ⊢ θ , σ :s: Θf , Γf
   rewrite-gamma-subst eq sub rewrite eq = sub
+  
+  rewrite-theta-subst : ∀{Δ Θ Θ' Θf Γ Γf θ σ} → Θ == Θ' → Δ , Θ , Γ ⊢ θ , σ :s: Θf , Γf → Δ , Θ' , Γ ⊢ θ , σ :s: Θf , Γf
+  rewrite-theta-subst eq sub rewrite eq = sub
