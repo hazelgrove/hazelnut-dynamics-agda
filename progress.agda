@@ -15,6 +15,7 @@ open import ground-decidable
 open import htype-decidable
 
 open import lemmas-well-formed
+open import rewrite-util
 
 module progress where
   -- this is a little bit of syntactic sugar to avoid many layer nested Inl
@@ -87,23 +88,24 @@ module progress where
 
     -- type applications
   
-  progress hctxwf (TATAp wf wt eq) = {!   !}
+  -- progress hctxwf (TATAp wf wt eq) = {!   !}
 
-  -- progress hctxwf (TATAp wf wt eq) with progress hctxwf wt 
-  -- progress hctxwf (TATAp wf wt eq) | S (_ , Step x y z) = S (_ , (Step (FHTAp x) y (FHTAp z)))
-  -- progress hctxwf (TATAp wf wt eq) | I x with canonical-indeterminate-forms-forall wt x 
-  -- progress hctxwf (TATAp wf wt eq) | I x | CIFFEHole (_ , _ , _ , _ , _ , _ , refl , _) = ? --I (ITAp (λ τ1 τ2 d' ()) x)
-  -- progress hctxwf (TATAp wf wt eq) | I x | CIFFNEHole (_ , _ , _ , _ , _ , _ , _ , _ , refl , _) = ? --I (ITAp (λ τ1 τ2 d' ()) x)
-  -- progress hctxwf (TATAp wf wt eq) | I x | CIFFAp (_ , _ , _ , refl , _) = ? --I (ITAp (λ τ1 τ2 d' ()) x)
-  -- progress hctxwf (TATAp wf wt eq) | I x | CIFFTApForall (_ , _ , _ , _ , _ , refl , _ ) = ? --I (ITAp (λ τ1 τ2 d' ()) x)
-  -- progress hctxwf (TATAp wf wt eq) | I x | CIFFTApId (_ , _ , _ , refl , _ ) = ? --I (ITAp (λ τ1 τ2 d' ()) x)
-  -- progress hctxwf (TATAp wf wt eq) | I x | CIFFCast (a , d , e , refl , f , g , h) = S (_ , Step FHOuter ITTApCast FHOuter)
-  -- progress hctxwf (TATAp wf wt eq) | I x | CIFFCastHole (_ , refl , refl , _ ) = I (ITAp (λ τ1 τ2 d' ()) x)
-  -- progress hctxwf (TATAp wf wt eq) | I x | CIFFFailedCast (_ , _ , refl , refl , _) = I (ITAp (λ τ1 τ2 d' ()) x)
-  -- progress hctxwf (TATAp wf wt eq) | (BV v) with canonical-boxed-forms-forall wt v 
-  -- progress hctxwf (TATAp wf wt eq) | (BV v) | CBFTLam (x , y , z) rewrite y = S (_ , Step FHOuter ITTLam FHOuter)
-  -- progress hctxwf (TATAp wf wt eq) | (BV _) | CBFCastForall (x , y , z , w , v) rewrite z = S (_ , Step FHOuter ITTApCast FHOuter) 
-  -- -- progress hctxwf (TATAp (TAEHole x x₁) eq) = I (ITAp (λ τ1 τ2 d' ()) IEHole)
+  progress hctxwf (TATAp wf wt eq) with progress hctxwf wt 
+  progress hctxwf (TATAp wf wt eq) | S (_ , Step x y z) = S (_ , (Step (FHTAp x) y (FHTAp z)))
+  progress hctxwf (TATAp wf wt eq) | I x with canonical-indeterminate-forms-forall wt x 
+  progress hctxwf (TATAp wf wt eq) | I x | CIFFEHole (_ , _ , _ , _ , _ , _ , refl , _) = I (ITAp (λ t τ1 τ2 d' ()) x)
+  progress hctxwf (TATAp wf wt eq) | I x | CIFFNEHole (_ , _ , _ , _ , _ , _ , _ , _ , refl , _) = I (ITAp (λ t τ1 τ2 d' ()) x)
+  progress hctxwf (TATAp wf wt eq) | I x | CIFFAp (_ , _ , _ , refl , _) = I (ITAp (λ t τ1 τ2 d' ()) x)
+  progress hctxwf (TATAp wf wt eq) | I x | CIFFTApForall (_ , _ , _ , _ , _ , refl , _ ) = I (ITAp (λ t τ1 τ2 d' ()) x)
+  progress hctxwf (TATAp wf wt eq) | I x | CIFFTApId (_ , _ , _ , refl , _ ) = I (ITAp (λ t τ1 τ2 d' ()) x)
+  progress hctxwf (TATAp wf wt eq) | I x | CIFFCast (a , d , e , _ , refl , f , g , h) = S (_ , Step FHOuter ITTApCast FHOuter)
+  
+  progress hctxwf (TATAp wf wt eq) | I x | CIFFCastHole (_ , refl , refl , _ ) = I (ITAp (λ t τ1 τ2 d' ()) x)
+  progress hctxwf (TATAp wf wt eq) | I x | CIFFFailedCast (_ , _ , refl , refl , _) = I (ITAp (λ t τ1 τ2 d' ()) x)
+  progress hctxwf (TATAp wf wt eq) | (BV v) with canonical-boxed-forms-forall wt v 
+  progress hctxwf (TATAp wf wt eq) | (BV v) | CBFTLam (x , y , z) rewrite y = S (_ , Step FHOuter ITTLam FHOuter)
+  progress hctxwf (TATAp wf wt eq) | (BV _) | CBFCastForall (x , y , z , w , v) rewrite z = S (_ , Step FHOuter ITTApCast FHOuter) 
+  -- progress hctxwf (TATAp (TAEHole x x₁) eq) = I (ITAp (λ τ1 τ2 d' ()) IEHole)
   
 
     -- empty holes are indeterminate
@@ -178,7 +180,9 @@ module progress where
   progress hctxwf (TACast wt wf (TCHole2 {.(·∀ _ ⦇-⦈)})) | I x | Inl GForall | CIFHTApId (_ , _ , _ , refl , _ )   = I (ICastHoleGround (λ d' τ' ()) x GForall)
   progress hctxwf (TACast wt wf (TCHole2 {.(·∀ _ ⦇-⦈)})) | I x | Inl GForall | CIFHCast (_ , ._ , refl , _ , GBase , _) = S (_ , Step FHOuter (ITCastFail GBase GForall (λ ())) FHOuter )
   progress hctxwf (TACast wt wf (TCHole2 {.(·∀ _ ⦇-⦈)})) | I x | Inl GForall | CIFHCast (_ , ._ , refl , _ , GArr , _) = S (_ , Step FHOuter (ITCastFail GArr GForall (λ ())) FHOuter)
-  progress hctxwf (TACast wt wf (TCHole2 {(·∀ t ⦇-⦈)})) | I x | Inl GForall | CIFHCast (_ , ._ , refl , _ , GForall , _) = S (_ , Step FHOuter {!   !} FHOuter)
+  progress hctxwf (TACast wt wf (TCHole2 {(·∀ t ⦇-⦈)})) | I x | Inl GForall | CIFHCast (_ , ._ , refl , _ , GForall {t = t'} , _) with natEQ t t' 
+  progress hctxwf (TACast wt wf (TCHole2 {.(·∀ _ ⦇-⦈)})) | I x | Inl GForall | CIFHCast (_ , .(·∀ _ ⦇-⦈) , refl , _ , GForall {_} , _) | Inl refl = S (_ , Step FHOuter (ITCastSucceed GForall) FHOuter)
+  progress hctxwf (TACast wt wf (TCHole2 {.(·∀ _ ⦇-⦈)})) | I x | Inl GForall | CIFHCast (_ , .(·∀ _ ⦇-⦈) , refl , _ , GForall {_} , _) | Inr neq = S (_ , Step FHOuter (ITCastFail GForall GForall λ x₁ → neq (forall-inj1 (sym x₁))) FHOuter)
   progress hctxwf (TACast wt wf (TCHole2 {·∀ _ τ})) | I x₁ | Inr x = S (_ , Step FHOuter (ITExpand (MGForall (ground-forall-not-hole x))) FHOuter)
     -- if both are arrows
   progress hctxwf (TACast wt wf (TCArr {τ1} {τ2} {τ1'} {τ2'} c1 c2)) | I x
