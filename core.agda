@@ -67,7 +67,7 @@ module core where
     alpha-refl-ctx Γ reflex (T x) | None = AlphaVarFree eq eq -- AlphaVarFree refl refl
     alpha-refl-ctx _ _ ⦇-⦈ = AlphaHole
     alpha-refl-ctx Γ reflex (τ ==> τ₁) = AlphaArr (alpha-refl-ctx Γ reflex τ) (alpha-refl-ctx Γ reflex τ₁)
-    alpha-refl-ctx Γ reflex (·∀ x τ) = AlphaForall (alpha-refl-ctx (■ (x , x) ∪ Γ) {!  reflex-extend !} τ)
+    alpha-refl-ctx Γ reflex (·∀ x τ) = AlphaForall (alpha-refl-ctx (■ (x , x) ∪ Γ) reflex-extend τ)
       where 
       reflex-extend : {x' : Nat} {y : Nat} → (x' , y) ∈ (■ (x , x) ∪ Γ) → (x' , x') ∈ (■ (x , x) ∪ Γ)
       reflex-extend {x' = x'} {y = y} elem with natEQ x x' 
@@ -76,7 +76,6 @@ module core where
 
     alpha-refl : (τ : htyp) → τ =α τ
     alpha-refl τ = alpha-refl-ctx ∅ (λ ()) τ
-
 
     -- (alpha) consistency of types
     _~_ : htyp → htyp → Set 
