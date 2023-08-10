@@ -86,15 +86,15 @@ module core where
       ConsistArr : ∀ {ΓL ΓR τ1 τ2 τ3 τ4} → ΓL , ΓR ⊢ τ1 =α τ3 → ΓL , ΓR ⊢ τ2 ~ τ4 → ΓL , ΓR ⊢ τ1 ==> τ2 ~ τ3 ==> τ4
       ConsistForall : ∀ {ΓL ΓR τ1 τ2 x y} → (■ (x , y) ∪ ΓL) ,  (■ (y , x) ∪ ΓR) ⊢ τ1 ~ τ2 → ΓL , ΓR ⊢ ·∀ x τ1 ~ ·∀ y τ2
 
-    -- (alpha) consistency of types
-    _~_ : htyp → htyp → Set 
-    τ1 ~ τ2 = ∅ , ∅ ⊢ τ1 ~ τ2
-
-    -- type inconsistency
-    _~̸_ : (t1 t2 : htyp) → Set
-    _~̸_ = \(t1 t2 : htyp) → ¬(t1 ~ t2)
-
   open alpha
+
+  -- (alpha) consistency of types
+  _~_ : htyp → htyp → Set 
+  τ1 ~ τ2 = ∅ , ∅ ⊢ τ1 ~ τ2
+
+  -- type inconsistency
+  _~̸_ : (t1 t2 : htyp) → Set
+  _~̸_ = \(t1 t2 : htyp) → ¬(t1 ~ t2)
 
   --- matching for arrows
   data _▸arr_ : htyp → htyp → Set where
