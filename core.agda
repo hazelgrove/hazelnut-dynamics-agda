@@ -480,7 +480,7 @@ module core where
              Δ , Θ , Γ ⊢ d :: τ1 →
              τ1 ground →
              τ2 ground →
-             τ1 ≠ τ2 →
+             τ1 ~̸  τ2 →
              Δ , Θ , Γ ⊢ d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ :: τ2
 
   -- values
@@ -512,18 +512,18 @@ module core where
                        d1 indet →
                        d2 final →
                        (d1 ∘ d2) indet
-      ITAp : ∀{d τ} → ((t : Nat) (τ1 τ2 : htyp) (d' : ihexp) →
-                       d ≠ (d' ⟨(·∀ t τ1) ⇒ (·∀ t τ2)⟩)) →
+      ITAp : ∀{d τ} → ((t1 t2 : Nat) (τ1 τ2 : htyp) (d' : ihexp) →
+                       d ≠ (d' ⟨(·∀ t1 τ1) ⇒ (·∀ t2 τ2)⟩)) →
                        d indet →
                        (d < τ >) indet
       ICastArr : ∀{d τ1 τ2 τ3 τ4} →
-                 τ1 ==> τ2 ≠ τ3 ==> τ4 →
+                 τ1 ==> τ2 ~̸  τ3 ==> τ4 →
                  d indet →
                  d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ indet
-      ICastForall : ∀{ d t τ1 τ2 } →
-                   τ1 ≠ τ2 →
+      ICastForall : ∀{ d t1 t2 τ1 τ2 } →
+                   (·∀ t1 τ1) ~̸  (·∀ t2 τ2) →
                    d indet →
-                   d ⟨ (·∀ t τ1) ⇒ (·∀ t τ2) ⟩ indet
+                   d ⟨ (·∀ t1 τ1) ⇒ (·∀ t2 τ2) ⟩ indet
       ICastGroundHole : ∀{ τ d } →
                         τ ground →
                         d indet →
@@ -537,7 +537,7 @@ module core where
                     d final →
                     τ1 ground →
                     τ2 ground →
-                    τ1 ≠ τ2 →
+                    τ1 ~̸  τ2 →
                     d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ indet
 
     -- final expressions
@@ -627,27 +627,30 @@ module core where
             ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1)
     ITTLam : ∀{ d t ty } →
               ((·Λ t d) < ty >) →> (Ihexp[ ty / t ] d)
-    ITCastID : ∀{d τ } →
+    ITCastID : ∀{d τ1 τ2 } →
                -- d final → -- red brackets
-               (d ⟨ τ ⇒ τ ⟩) →> d
-    ITCastSucceed : ∀{d τ } →
+               τ1 ~ τ2 →
+               (d ⟨ τ1 ⇒ τ2 ⟩) →> d
+    ITCastSucceed : ∀{d τ1 τ2 } →
                     -- d final → -- red brackets
-                    τ ground →
-                    (d ⟨ τ ⇒ ⦇-⦈ ⇒ τ ⟩) →> d
+                    τ1 ground →
+                    τ2 ground →
+                    τ1 ~ τ2 →
+                    (d ⟨ τ1 ⇒ ⦇-⦈ ⇒ τ2 ⟩) →> d
     ITCastFail : ∀{ d τ1 τ2} →
                  -- d final → -- red brackets
                  τ1 ground →
                  τ2 ground →
-                 τ1 ≠ τ2 →
+                 τ1 ~̸  τ2 →
                  (d ⟨ τ1 ⇒ ⦇-⦈ ⇒ τ2 ⟩) →> (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
     ITApCast : ∀{d1 d2 τ1 τ2 τ1' τ2' } →
                -- d1 final → -- red brackets
                -- d2 final → -- red brackets
                ((d1 ⟨ (τ1 ==> τ2) ⇒ (τ1' ==> τ2')⟩) ∘ d2) →> ((d1 ∘ (d2 ⟨ τ1' ⇒ τ1 ⟩)) ⟨ τ2 ⇒ τ2' ⟩)
-    ITTApCast : ∀{d t τ τ' ty } →
+    ITTApCast : ∀{d t t' τ τ' ty } →
                -- d final → -- red brackets
                --  ·∀ τ ≠ ·∀ τ' →
-                 ((d ⟨ (·∀ t τ) ⇒ (·∀ t τ')⟩) < ty >) →> ((d < ty >)⟨ Typ[ ty / t ] τ ⇒ Typ[ ty / t ] τ' ⟩)
+                 ((d ⟨ (·∀ t τ) ⇒ (·∀ t' τ')⟩) < ty >) →> ((d < ty >)⟨ Typ[ ty / t ] τ ⇒ Typ[ ty / t' ] τ' ⟩)
     ITGround : ∀{ d τ τ'} →
                -- d final → -- red brackets
                τ ▸gnd τ' →
