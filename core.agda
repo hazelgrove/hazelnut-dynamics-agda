@@ -47,10 +47,36 @@ module core where
   u :: τ [ Θ , Γ ] = u , (Θ , Γ , τ)
 
   module alpha where 
+
+    data _,_⊢_=α_ : Nat ctx → Nat ctx → htyp → htyp → Set where 
+      AlphaBase : ∀ {ΓL ΓR} → ΓL , ΓR ⊢ b =α b
+      AlphaVarBound : ∀ {ΓL ΓR x y} → (x , y) ∈ ΓL → (y , x) ∈ ΓR → ΓL , ΓR ⊢ T x =α T y
+      AlphaVarFree : ∀ {ΓL ΓR x} → (ΓL x == None) → (ΓR x == None) → ΓL , ΓR ⊢ T x =α T x
+      AlphaHole : ∀ {ΓL ΓR} → ΓL , ΓR ⊢ ⦇-⦈ =α ⦇-⦈
+      AlphaArr : ∀ {ΓL ΓR τ1 τ2 τ3 τ4} → ΓL , ΓR ⊢ τ1 =α τ3 → ΓL , ΓR ⊢ τ2 =α τ4 → ΓL , ΓR ⊢ τ1 ==> τ2 =α τ3 ==> τ4
+      AlphaForall : ∀ {ΓL ΓR τ1 τ2 x y} → (■ (x , y) ∪ ΓL) ,  (■ (y , x) ∪ ΓR) ⊢ τ1 =α τ2 → ΓL , ΓR ⊢ ·∀ x τ1 =α ·∀ y τ2
     
     -- alpha equivalence of types
     _=α_ : htyp → htyp → Set 
-    _=α_ = {!   !}
+    τ1 =α τ2 = ∅ , ∅ ⊢ τ1 =α τ2
+
+    alpha-refl-ctx : (Γ : Nat ctx) → (∀ {x y} → (x , y) ∈ Γ → (x , x) ∈ Γ) → (τ : htyp) → Γ , Γ ⊢ τ =α τ
+    alpha-refl-ctx _ _ b = AlphaBase
+    alpha-refl-ctx Γ reflex (T x) with (Γ x) in eq
+    alpha-refl-ctx Γ reflex (T x) | Some y = AlphaVarBound (reflex eq) (reflex eq)
+    alpha-refl-ctx Γ reflex (T x) | None = AlphaVarFree eq eq -- AlphaVarFree refl refl
+    alpha-refl-ctx _ _ ⦇-⦈ = AlphaHole
+    alpha-refl-ctx Γ reflex (τ ==> τ₁) = AlphaArr (alpha-refl-ctx Γ reflex τ) (alpha-refl-ctx Γ reflex τ₁)
+    alpha-refl-ctx Γ reflex (·∀ x τ) = AlphaForall (alpha-refl-ctx (■ (x , x) ∪ Γ) {!  reflex-extend !} τ)
+      where 
+      reflex-extend : {x' : Nat} {y : Nat} → (x' , y) ∈ (■ (x , x) ∪ Γ) → (x' , x') ∈ (■ (x , x) ∪ Γ)
+      reflex-extend {x' = x'} {y = y} elem with natEQ x x' 
+      reflex-extend {x' = x'} {y = y} elem | Inl refl = refl
+      reflex-extend {x' = x'} {y = y} elem | Inr neq = reflex elem
+
+    alpha-refl : (τ : htyp) → τ =α τ
+    alpha-refl τ = alpha-refl-ctx ∅ (λ ()) τ
+
 
     -- (alpha) consistency of types
     _~_ : htyp → htyp → Set 
