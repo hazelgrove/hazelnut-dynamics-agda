@@ -41,7 +41,7 @@ module lemmas-subst-ta where
     binders-fresh {y = y} (TALam {x = x} x₁ wf wt) bu2 ub apt  with natEQ y x
     binders-fresh (TALam x₂ wf wt) bu2 (UBLam2 x₁ ub) apt | Inl refl = abort (x₁ refl)
     binders-fresh {Γ = Γ} (TALam {x = x} x₂ wf wt) (BULam bu2 x₃) (UBLam2 x₄ ub) apt | Inr x₁ =  FLam x₁ (binders-fresh wt bu2 ub (apart-extend1 Γ x₄ apt))
-    binders-fresh {Γ = Γ} (TATLam wt) (BUTLam bu) (UBTLam ne ub2) x₃ = FTLam (binders-fresh wt bu ub2 x₃)
+    binders-fresh {Γ = Γ} (TATLam wt) (BUTLam bu) (UBTLam ub2) x₃ = FTLam (binders-fresh wt bu ub2 x₃)
     binders-fresh (TAAp wt wt₁)  (BUAp bu2 bu3 x) (UBAp ub ub₁) apt = FAp (binders-fresh wt bu2 ub apt) (binders-fresh wt₁ bu3 ub₁ apt)
     binders-fresh (TATAp wf wt eq) (BUTAp x) (UBTAp x₂) x₃ = FTAp (binders-fresh wt x x₂ x₃)
     binders-fresh (TAEHole x₁ x₂ eq) (BUEHole x) (UBHole x₃) apt = FHole (binders-envfresh x₂ apt x₃ x )

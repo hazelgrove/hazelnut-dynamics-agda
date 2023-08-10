@@ -354,6 +354,11 @@ module contexts where
   
   lem-map-preserve-elem : {A B : Set} {Γ : A ctx} {f : A → B} {x : Nat} {y : A} → (x , y) ∈ Γ -> (x , f y) ∈ (map f Γ)
   lem-map-preserve-elem p rewrite p = refl
+  
+  lem-apart-extend : {A : Set} {Γ : A ctx} {x y : Nat} {v : A} → x # Γ → x ≠ y → x # (Γ ,, (y , v))
+  lem-apart-extend {Γ = Γ} {x = x} {y = y} apt neq with Γ x
+  ... | None rewrite natEQneq (flip neq) = refl
+  ... | Some t = abort (somenotnone apt)
 
   lem-singleton-apart : {A : Set} {x y : Nat} {v : A} → x ≠ y → x # (■ (y , v))
   lem-singleton-apart {A} {x} {y} neq with natEQ y x

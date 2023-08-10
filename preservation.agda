@@ -8,11 +8,7 @@ open import type-assignment-unicity
 open import binders-disjoint-checks
 
 open import lemmas-subst-ta
-open import lemmas-ground
-
--- open import lemmas-free-tvars
-open import lemmas-well-formed
-open import rewrite-util
+open import lemmas-tysubst-ta
 
 module preservation where
 
@@ -60,88 +56,35 @@ module preservation where
   wt-filling (TACast ta wf x) (FHCast eps) = wt-filling ta eps
   wt-filling (TAFailedCast x y z w) FHOuter = _ , TAFailedCast x y z w
   wt-filling (TAFailedCast x x₁ x₂ x₃) (FHFailedCast y) = wt-filling x y
-{-
-  lemma-tysubst : ∀{ Δ Γ Θ d τ t n } -> (n == typctx.n Θ) -> Θ ⊢ t wf -> [ Θ newtyp] ⊢ Γ tctxwf -> Δ , [ Θ newtyp] , Γ ⊢ d :: τ -> Δ , Θ , Tctx[ t / n ] Γ ⊢ (TTyp[ t / n ] d) :: Typ[ t / n ] τ
-  lemma-tysubst _ _ _ TAConst = TAConst
-  lemma-tysubst {Γ = Γ} {d = X var} {t = t} {n = n} nbound twf tcwf (TAVar x) = TAVar (lemma-subst-elem {Γ} {var} x)
-  -}
-
-  rewrite-codomain-in : ∀{t t' x Γ} -> t == t' -> (x , t) ∈ Γ -> (x , t') ∈ Γ
-  rewrite-codomain-in eq p rewrite eq = p
-  
-  mutual
-
-    lemma-tysubst-subst : ∀{ Δ Γ Γ' Θ Θ' d t τ θ σ} -> 
-      Θ ⊢ τ wf -> unboundt-in-Γ t Γ -> (Θ ,, (t , <>)) ⊢ Γ tctxwf ->
-      Δ , (Θ ,, (t , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ' ->
-      (Hctx[ τ / t ] Δ) , Θ , Tctx[ τ / t ] Γ ⊢ θ , (Sub[ τ / t ] σ) :s: Θ' , (Tctx[ τ / t ] Γ')
-    lemma-tysubst-subst {Γ = Γ} {t = t} {τ = τ} _ _ _ (STAIdId x wf) = STAIdId (λ x' τ' ing → foo x' τ' x ing) {!!}
-      where
-        foo : ∀{Γ Γ' t τ} -> (x : Nat) (τ' : htyp) -> ((x₁ : Nat) (τ₁ : htyp) → (x₁ , τ₁) ∈ Γ' → (x₁ , τ₁) ∈ Γ) -> (x , τ') ∈ (Tctx[ τ / t ] Γ') -> (x , τ') ∈ (Tctx[ τ / t ] Γ)
-        foo {Γ} {Γ'} {t} {τ} x τ' cond insub with Γ x | Γ' x
-        ... | None | None = insub
-        ... | Some tt | None = abort (somenotnone (! insub))
-        ... | None | Some tt = let y = cond x tt in {!!}
-        ... | Some tt | Some tt' = {!!}
-    lemma-tysubst-subst {t = t} {τ = τ} twf (UBTΓ ubtg) tcwf (STASubst {τ = τ'} sta x) = {!!}
-    lemma-tysubst-subst twf (UBTΓ ubtg) tcwf (STAIdSubst subst ta) =
-      STAIdSubst (rewrite-gamma-subst lem-map-extend-dist (lemma-tysubst-subst twf (UBTΓ {!   !}) (merge-tctx-wf tcwf (wf-ta tcwf {!   !} ta)) subst))
-      (lemma-tysubst twf (UBTΓ ubtg) tcwf ta)
-    
-    {- STASubst {τ = Typ[ τ / t ] τ'} 
-      (rewrite-gamma-subst lem-map-extend-dist (lemma-tysubst-subst twf {! STASubst {τ = Typ[ τ / t ] τ'} 
-      (rewrite-gamma-subst lem-map-extend-dist (lemma-tysubst-subst twf {!!} {!!} sta))
-      (lemma-tysubst twf (UBTΓ ubtg) tcwf x)
-    -}
-
-    lemma-tysubst : ∀{ Δ Γ Θ d t τ1 τ2 } -> 
-      Θ ⊢ τ2 wf -> unboundt-in-Γ t Γ -> (Θ ,, (t , <>)) ⊢ Γ tctxwf -> Δ , (Θ ,, (t , <>)), Γ ⊢ d :: τ1 -> 
-      (Hctx[ τ2 / t ] Δ) , Θ , (Tctx[ τ2 / t ] Γ) ⊢ (Ihexp[ τ2 / t ] d) :: Typ[ τ2 / t ] τ1
-    lemma-tysubst _ _ _ TAConst = TAConst
-    lemma-tysubst {Γ = Γ} {t = t} {τ1 = τ1} {τ2 = τ2} wf (UBTΓ ubtg) ctxwf (TAVar {x = x} ing) = TAVar (lem-map-preserve-elem {Γ = Γ} {f = (Typ[_/_]_) τ2 t}  ing) --(rewrite-codomain-in {Γ = Γ} (! (unbound-no-subst (ubtg x τ1 ing))) ing)
-    lemma-tysubst wf _ ctxwf (TALam x x₁ ta) = TALam {!!} (wf-sub wf x₁ refl) (rewrite-gamma lem-map-extend-dist (lemma-tysubst wf {!  !} {!   !} ta)) -- (lemma-tysubst wf {!   !} {!   !} {!   !}) -- x (wf-sub wf x₁ refl) {!!}
-    lemma-tysubst {t = t} wf _ ctxwf (TATLam {t = t'} ta) with natEQ t t'
-    ... | Inl refl = TATLam ({!   !})
-    ... | Inr neq = TATLam {!   !}
-    lemma-tysubst wf ubig ctxwf (TAAp ta ta') = TAAp (lemma-tysubst wf ubig ctxwf ta) (lemma-tysubst wf ubig ctxwf ta')
-    lemma-tysubst wf _ ctxwf (TATAp x ta x₁) = {!   !}
-    lemma-tysubst {Δ = Δ} {t = t} {τ1 = τ1} {τ2 = tau} wf _ ctxwf (TAEHole {σ = Id Γ} x x' eq) = TAEHole (lem-map-preserve-elem {Γ = Δ} x) {!!} {!!}
-    lemma-tysubst wf _ ctxwf (TAEHole {σ = Subst d y σ} x x' eq) = TAEHole {!   !} {!   !} {!!}
-    lemma-tysubst wf ubig ctxwf (TANEHole x ta ts eq) = TANEHole {!   !} {!   !} (lemma-tysubst-subst wf ubig ctxwf ts) {!   !}
-    lemma-tysubst wf ubig ctxwf (TACast ta x x~) = TACast (lemma-tysubst wf ubig ctxwf ta) (wf-sub wf x refl) (~Typ[] x~)
-    lemma-tysubst wf ubig ctxwf (TAFailedCast ta tgnd tgnd' x) = TAFailedCast (lemma-tysubst wf ubig ctxwf ta) (ground-subst tgnd) (ground-subst tgnd') 
-      λ eq → x (foo tgnd tgnd' eq) 
-      where
-        foo : ∀{t1 t2 t3 t} -> t1 ground -> t2 ground -> Typ[ t3 / t ] t1 == Typ[ t3 / t ] t2 -> t1 == t2
-        foo {t1} {t2} {t3} {t} g1 g2 eq rewrite ground-subst-id {t} {t1} {t3} g1 rewrite ground-subst-id {t} {t2} {t3} g2 = eq
 
   -- instruction transitions preserve type
   preserve-trans : ∀{ Δ Γ d τ d' } →
             binders-unique d →
+            tbinders-unique d ->
             ∅ ⊢ Γ tctxwf →
             Δ hctxwf →
             Δ , ∅ , Γ ⊢ d :: τ →
             d →> d' →
             Δ , ∅ , Γ ⊢ d' :: τ
-  preserve-trans _ _ _ TAConst ()
-  preserve-trans _ _ _ (TAVar x₁) ()
-  preserve-trans _ _ _ (TALam _ _ ta) ()
-  preserve-trans (BUAp (BULam bd x₁) bd₁ (BDLam x₂ x₃)) _ _ (TAAp (TALam apt wf ta) ta₁) ITLam = lem-subst apt x₂ bd₁ ta ta₁
-  preserve-trans _ _ _ (TATLam ta) ()
-  preserve-trans _ tcwf hcwf(TAAp (TACast ta (WFArr wf1 wf2) (TCArr x x₁)) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ {!   !} (~sym x))) wf2 x₁ {- with wf-ta tcwf hcwf ta
+  preserve-trans _ _ _ _ TAConst ()
+  preserve-trans _ _ _ _ (TAVar x₁) ()
+  preserve-trans _ _ _ _ (TALam _ _ ta) ()
+  preserve-trans (BUAp (BULam bd x₁) bd₁ (BDLam x₂ x₃)) _ _ _ (TAAp (TALam apt wf ta) ta₁) ITLam = lem-subst apt x₂ bd₁ ta ta₁
+  preserve-trans _ _ _ _ (TATLam ta) ()
+  preserve-trans _ _ tcwf hcwf(TAAp (TACast ta (WFArr wf1 wf2) (TCArr x x₁)) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ {!   !} (~sym x))) wf2 x₁ {- with wf-ta tcwf hcwf ta
   ... | WFArr wf1' _ = TACast (TAAp ta (TACast ta₁ wf1' (~sym x))) wf2 x₁ -}
-  preserve-trans {d = ·Λ t d < τ >} _ tcwf hcwf (TATAp wf (TATLam x) eq) ITTLam {- rewrite ! eq -}  = {!!} -- rewrite-typ eq (lemma-tysubst wf {!!} {!   !} x)
+  preserve-trans {d = ·Λ t d < τ >} _ _ tcwf hcwf (TATAp wf (TATLam x) eq) ITTLam =  rewrite-typ eq (rewrite-gamma (tctx-sub-closed tcwf) {!   !})
 --  ... | refl rewrite lem-union-lunit {Γ = (■ (t , <>))} = lemma-tysubst wf tcwf {! x  !}
-  preserve-trans _ _ _ (TATAp wf (TACast ta (WFForall wf2) (TCForall x)) eq) ITTApCast with eq
+  preserve-trans _ _ _ _ (TATAp wf (TACast ta (WFForall wf2) (TCForall x)) eq) ITTApCast with eq
   ... | refl = TACast (TATAp wf ta refl) (wf-sub wf wf2 refl) (~Typ[] x)
-  preserve-trans _ _ _ (TACast ta wf x) (ITCastID) = ta
-  preserve-trans _ _ _ (TACast (TACast ta _ x) _ x₁) (ITCastSucceed x₂) = ta
-  preserve-trans _ _ _ (TACast ta wf x) (ITGround (MGArr x₁)) = TACast (TACast ta (WFArr wf wf) (TCArr TCHole1 TCHole1)) wf TCHole1
-  preserve-trans _ _ _ (TACast ta wf x) (ITGround (MGForall x₁)) = TACast (TACast ta (WFForall WFHole) (TCForall TCHole1)) wf TCHole1
-  preserve-trans _ _ _ (TACast ta wf TCHole2) (ITExpand (MGArr x₁)) = TACast (TACast ta (WFArr WFHole WFHole) TCHole2) wf (TCArr TCHole2 TCHole2)
-  preserve-trans _ _ _ (TACast ta wf TCHole2) (ITExpand (MGForall x₁)) = TACast (TACast ta (WFForall WFHole) TCHole2) wf (TCForall TCHole2)
-  preserve-trans _ _ _ (TACast (TACast ta _ x) _ x₁) (ITCastFail w y z) = TAFailedCast ta w y z
-  preserve-trans _ _ _ (TAFailedCast x y z q) ()
+  preserve-trans _ _ _ _ (TACast ta wf x) (ITCastID) = ta
+  preserve-trans _ _ _ _ (TACast (TACast ta _ x) _ x₁) (ITCastSucceed x₂) = ta
+  preserve-trans _ _ _ _ (TACast ta wf x) (ITGround (MGArr x₁)) = TACast (TACast ta (WFArr wf wf) (TCArr TCHole1 TCHole1)) wf TCHole1
+  preserve-trans _ _ _ _ (TACast ta wf x) (ITGround (MGForall x₁)) = TACast (TACast ta (WFForall WFHole) (TCForall TCHole1)) wf TCHole1
+  preserve-trans _ _ _ _ (TACast ta wf TCHole2) (ITExpand (MGArr x₁)) = TACast (TACast ta (WFArr WFHole WFHole) TCHole2) wf (TCArr TCHole2 TCHole2)
+  preserve-trans _ _ _ _ (TACast ta wf TCHole2) (ITExpand (MGForall x₁)) = TACast (TACast ta (WFForall WFHole) TCHole2) wf (TCForall TCHole2)
+  preserve-trans _ _ _ _ (TACast (TACast ta _ x) _ x₁) (ITCastFail w y z) = TAFailedCast ta w y z
+  preserve-trans _ _ _ _ (TAFailedCast x y z q) ()
 
   lem-bd-ε1 : ∀{ d ε d0} → d == ε ⟦ d0 ⟧ → binders-unique d → binders-unique d0
   lem-bd-ε1 FHOuter bd = bd
@@ -155,23 +98,25 @@ module preservation where
   -- this is the main preservation theorem, gluing together the above
   preservation : {Δ : hctx} {d d' : ihexp} {τ : htyp} {Γ : tctx} →
              binders-unique d →
+             tbinders-unique d ->
              ∅ ⊢ Γ tctxwf →
              Δ hctxwf →
              Δ , ∅ , Γ ⊢ d :: τ →
              d ↦ d' →
              Δ , ∅ , Γ ⊢ d' :: τ
-  preservation bd tcwf hcwf D (Step x x₁ x₂)
+  preservation bd tbd tcwf hcwf D (Step x x₁ x₂)
     with wt-filling D x
-  ... | (_ , wt) = wt-different-fill x D wt (preserve-trans (lem-bd-ε1 x bd) tcwf hcwf wt x₁) x₂
+  ... | (_ , wt) = wt-different-fill x D wt (preserve-trans (lem-bd-ε1 x bd) {!!} tcwf hcwf wt x₁) x₂
 
   -- note that the exact statement of preservation in the paper, where Γ is
   -- empty indicating that the terms are closed, is an immediate corrolary
   -- of the slightly more general statement above.
   preservation' : {Δ : hctx} {d d' : ihexp} {τ : htyp} →
              binders-unique d →
+             tbinders-unique d ->
              Δ hctxwf →
              Δ , ∅ , ∅ ⊢ d :: τ →
              d ↦ d' →
              Δ , ∅ , ∅ ⊢ d' :: τ
-  preservation' bu hcwf = preservation bu wf-empty-tctx hcwf
-       
+  preservation' bu tbu hcwf = preservation bu tbu wf-empty-tctx hcwf
+         
