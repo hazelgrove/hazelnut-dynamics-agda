@@ -193,8 +193,14 @@ module core where
   Tctx[ tau / t ] gamma = map (Typ[_/_]_ tau t) gamma
   
   Hctx[_/_]_ : htyp → Nat → hctx → hctx
-  Hctx[ tau / t ] sigma = map (\(theta , gamma , tau') → (theta , (Tctx[ tau / t ] gamma) , (Typ[ tau / t ] tau'))) sigma
+  Hctx[ tau / t ] sigma = map (\(theta , gamma , tau') → (theta , (Tctx[ tau / t ] gamma) , tau')) sigma
 
+  {-
+  TypSub[_/_]_ : htyp -> Nat -> typenv -> typenv
+  TypSub[ tau / t ] (TypId theta) = (TypId theta) --TODO: Might need to change keys in theta?
+  TypSub[ tau / t ] (TypSubst tau' t' theta) = 
+  -}
+  
   mutual
     -- substitution of types in terms 
     Ihexp[_/_]_ : htyp → Nat → ihexp → ihexp
@@ -204,8 +210,8 @@ module core where
     Ihexp[ τ / t ] (·Λ t' d) with natEQ t t'
     ... | Inl refl = (·Λ t' d)
     ... | Inr neq = (·Λ t' (Ihexp[ τ / t ] d))
-    Ihexp[ τ / t ] (⦇-⦈⟨ u , θ , σ ⟩) = ⦇-⦈⟨ u , θ , Sub[ τ / t ] σ ⟩
-    Ihexp[ τ / t ] (⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩) = ⦇⌜ (Ihexp[ τ / t ] d) ⌟⦈⟨ u , θ , Sub[  τ / t ] σ ⟩
+    Ihexp[ τ / t ] (⦇-⦈⟨ u , θ , σ ⟩) = ⦇-⦈⟨ u , TypSubst τ t θ , Sub[ τ / t ] σ ⟩
+    Ihexp[ τ / t ] (⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩) = ⦇⌜ (Ihexp[ τ / t ] d) ⌟⦈⟨ u , TypSubst τ t θ , Sub[ τ / t ] σ ⟩
     Ihexp[ τ / t ] (d1 ∘ d2) = ((Ihexp[ τ / t ] d1) ∘ (Ihexp[ τ / t ] d2))
     Ihexp[ τ / t ] (d < τ' >) = (Ihexp[ τ / t ] d) < Typ[ τ / t ] τ' >
     Ihexp[ τ / t ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (Ihexp[ τ / t ] d) ⟨ (Typ[ τ / t ] τ1) ⇒ (Typ[ τ / t ] τ2) ⟩

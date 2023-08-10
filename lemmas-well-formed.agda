@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 open import Nat
 open import Prelude
 open import core
@@ -5,6 +7,7 @@ open import contexts
 open import weakening
 open import contraction
 open import exchange
+open import rewrite-util
 
 module lemmas-well-formed where 
 
@@ -61,20 +64,54 @@ module lemmas-well-formed where
   wf-sub {Θ} {t = t} {τ1} {τ2} {τ3} wf1 (WFForall {n = n} {t = τ4} wf2) eq with natEQ t n
   ... | Inl refl = WFForall (wf-contraction {Θ} {n} wf2)
   ... | Inr neq  = WFForall (wf-sub (weaken-t-wf wf1) (exchange-wf {t} {n} {τ4} {Θ} wf2) refl)
-{-
-  wf-sub {τ1 = τ1} {τ2 = b} wf1 wf2 leq = WFBase
-  wf-sub {m = m} {τ1 = τ1} {τ2 = T v} wf1 wf2 leq with natEQ m v 
-  ... | Inl refl = wf1
-  ... | Inr neq with natLT m v 
-  wf-sub {m = .Z} {τ1 = τ1} {T .(1+ n)} wf1 (WFVar (LTS x)) leq | Inr neq | Inl (LTZ {n}) = WFVar x
-  wf-sub {m = .(1+ m)} {τ1 = τ1} {T .(1+ v)} wf1 (WFVar (LTS x)) leq | Inr neq | Inl (LTS {m} {v} p) = WFVar x
-  wf-sub {m = m} {τ1 = τ1} {T v} wf1 (WFVar x) leq | Inr neq | Inr nlt with trichotomy-lemma neq nlt
-  ... | lt with lt-lte-is-lt lt leq 
-  ... | result = WFVar result
-  wf-sub {τ1 = τ1} {τ2 = ⦇-⦈} wf1 wf2 leq = WFHole 
-  wf-sub {τ1 = τ1} {τ2 = τ2 ==> τ3} wf1 (WFArr wf2 wf3) leq = WFArr (wf-sub wf1 wf2 leq) (wf-sub wf1 wf3 leq)
-  wf-sub {τ1 = τ1} {τ2 = ·∀ τ2} wf1 (WFForall wf2) leq = WFForall (wf-sub (weaken-t-wf wf1) wf2 (LTS leq))
--}
+
+
+  t-sub-id : ∀{τ τ' t} →
+    tfresht t τ →
+    Typ[ τ' / t ] τ == τ
+  t-sub-id TFBase = refl
+  t-sub-id (TFTVar x) rewrite natEQneq x = refl
+  t-sub-id TFHole = refl
+  t-sub-id (TFArr tft1 tft2) = arr-eq (t-sub-id tft1) (t-sub-id tft2)
+  t-sub-id (TFForall x tft) rewrite natEQneq x = forall-eq refl (t-sub-id tft)
+
+  tctx-sub-id : ∀{Γ t τ} →
+    tunbound-in-Γ t Γ →
+    Tctx[ τ / t ] Γ == Γ
+  tctx-sub-id {Γ} {t} {τ} (UBTΓ ubig) = funext (λ x → foo x)
+    where
+      foo : (x : Nat) -> (Tctx[ τ / t ] Γ) x == Γ x
+      foo x with ctxindirect (Tctx[ τ / t ] Γ) x | ctxindirect Γ x
+      ... | Inl (y1 , ing1) | Inl (y2 , ing2) rewrite ing2 = some-epi (t-sub-id (ubig x y2 ing2))
+      ... | Inr nig1 | Inr nig2 rewrite nig1 rewrite nig2 = refl
+      ... | Inl (y1 , ing1) | Inr nig2 rewrite ing1 rewrite nig2 = abort (somenotnone (! ing1))
+      ... | Inr nig1 | Inl (y2 , ing2) rewrite nig1 rewrite ing2 = abort (somenotnone nig1)
+
+  t-sub-unit : ∀{τ τ' t Θ} →
+    t # Θ -> Θ ⊢ τ wf → Typ[ τ' / t ] τ == τ
+  t-sub-unit apt WFBase = refl
+  t-sub-unit apt WFHole = refl
+  t-sub-unit {t = t} apt (WFVar {a = t'} mem) with natEQ t t'
+  ... | Inl refl = abort (somenotnone ((! mem) · apt))
+  ... | Inr neq = refl
+  t-sub-unit apt (WFArr wf1 wf2) = arr-eq (t-sub-unit apt wf1) (t-sub-unit apt wf2)
+  t-sub-unit {t = t} {Θ = Θ} apt (WFForall {n = t'} wf) with natEQ t t'
+  ... | Inl refl = refl
+  ... | Inr neq = forall-eq refl (t-sub-unit (lem-apart-extend {Γ = Θ} apt neq) wf)
+
+  t-sub-closed : ∀{τ τ' t} →
+    ∅ ⊢ τ wf → Typ[ τ' / t ] τ == τ
+  t-sub-closed wf = t-sub-unit refl wf
+
+  tctx-sub-closed : ∀{Γ t τ} → ∅ ⊢ Γ tctxwf → Tctx[ τ / t ] Γ == Γ
+  tctx-sub-closed {Γ} {t} {τ} (CCtx tcwf) = funext (λ x → foo x)
+    where
+      foo : (x : Nat) -> (Tctx[ τ / t ] Γ) x == Γ x
+      foo x with ctxindirect (Tctx[ τ / t ] Γ) x | ctxindirect Γ x
+      ... | Inl (y1 , ing1) | Inl (y2 , ing2) rewrite ing2 = some-epi (t-sub-closed (tcwf ing2))
+      ... | Inr nig1 | Inr nig2 rewrite nig1 rewrite nig2 = refl
+      ... | Inl (y1 , ing1) | Inr nig2 rewrite ing1 rewrite nig2 = abort (somenotnone (! ing1))
+      ... | Inr nig1 | Inl (y2 , ing2) rewrite nig1 rewrite ing2 = abort (somenotnone nig1)
 
   match-arr-wf : ∀ {Θ τ τ1 τ2} → Θ ⊢ τ wf → τ ▸arr (τ1 ==> τ2) → Θ ⊢ (τ1 ==> τ2) wf
   match-arr-wf wf MAHole = WFArr WFHole WFHole
@@ -185,6 +222,7 @@ module lemmas-well-formed where
     typsub-wf {Θ = Θ} {t = t1} {τ = ·∀ t2 τ} (WFForall wf1) wf2 eq with natEQ t1 t2
     ... | Inl refl rewrite eq rewrite (contract {x = t2} {τ = <>} Θ) = WFForall wf1
     ... | Inr neq rewrite eq rewrite (swap {x = t1} {y = t2} {τ1 = <>} {τ2 = <>} Θ neq) = WFForall (typsub-wf wf1 (weaken-t-wf wf2) refl) 
+
 
     typenv-wf : ∀ {Δ Θ Γ θ σ Θ' Γ' τ τ'} →
       Δ hctxwf →
