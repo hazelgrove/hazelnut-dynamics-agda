@@ -64,7 +64,7 @@ module core where
     alpha-refl-ctx _ _ b = AlphaBase
     alpha-refl-ctx Γ reflex (T x) with (Γ x) in eq
     alpha-refl-ctx Γ reflex (T x) | Some y = AlphaVarBound (reflex eq) (reflex eq)
-    alpha-refl-ctx Γ reflex (T x) | None = AlphaVarFree eq eq -- AlphaVarFree refl refl
+    alpha-refl-ctx Γ reflex (T x) | None = AlphaVarFree eq eq 
     alpha-refl-ctx _ _ ⦇-⦈ = AlphaHole
     alpha-refl-ctx Γ reflex (τ ==> τ₁) = AlphaArr (alpha-refl-ctx Γ reflex τ) (alpha-refl-ctx Γ reflex τ₁)
     alpha-refl-ctx Γ reflex (·∀ x τ) = AlphaForall (alpha-refl-ctx (■ (x , x) ∪ Γ) reflex-extend τ)
@@ -77,20 +77,18 @@ module core where
     alpha-refl : (τ : htyp) → τ =α τ
     alpha-refl τ = alpha-refl-ctx ∅ (λ ()) τ
 
+    data _,_⊢_~_ : Nat ctx → Nat ctx → htyp → htyp → Set where 
+      ConsistBase : ∀ {ΓL ΓR} → ΓL , ΓR ⊢ b ~ b
+      ConsistVarBound : ∀ {ΓL ΓR x y} → (x , y) ∈ ΓL → (y , x) ∈ ΓR → ΓL , ΓR ⊢ T x ~ T y
+      ConsistVarFree : ∀ {ΓL ΓR x} → (ΓL x == None) → (ΓR x == None) → ΓL , ΓR ⊢ T x ~ T x
+      ConsistHole1 : ∀ {ΓL ΓR τ} → ΓL , ΓR ⊢ τ ~ ⦇-⦈
+      ConsistHole2 : ∀ {ΓL ΓR τ} → ΓL , ΓR ⊢ ⦇-⦈ ~ τ
+      ConsistArr : ∀ {ΓL ΓR τ1 τ2 τ3 τ4} → ΓL , ΓR ⊢ τ1 =α τ3 → ΓL , ΓR ⊢ τ2 ~ τ4 → ΓL , ΓR ⊢ τ1 ==> τ2 ~ τ3 ==> τ4
+      ConsistForall : ∀ {ΓL ΓR τ1 τ2 x y} → (■ (x , y) ∪ ΓL) ,  (■ (y , x) ∪ ΓR) ⊢ τ1 ~ τ2 → ΓL , ΓR ⊢ ·∀ x τ1 ~ ·∀ y τ2
+
     -- (alpha) consistency of types
     _~_ : htyp → htyp → Set 
-    _~_ = {!   !}
-
-    -- data _~_ : htyp → htyp → Set where 
-    --   TCVar  : ∀{a} → (T a) ~ (T a)
-    --   TCBase : b ~ b
-    --   TCHole1 : ∀{τ} → τ ~ ⦇-⦈
-    --   TCHole2 : ∀{τ} → ⦇-⦈ ~ τ
-    --   TCArr   : ∀{τ1 τ2 τ1' τ2'} →
-    --             τ1 ~ τ1' →
-    --             τ2 ~ τ2' →
-    --             τ1 ==> τ2 ~ τ1' ==> τ2'
-    --   TCForall : ?
+    τ1 ~ τ2 = ∅ , ∅ ⊢ τ1 ~ τ2
 
     -- type inconsistency
     _~̸_ : (t1 t2 : htyp) → Set
