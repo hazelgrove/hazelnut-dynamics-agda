@@ -83,7 +83,7 @@ module core where
       ConsistVarFree : ∀ {ΓL ΓR x} → (ΓL x == None) → (ΓR x == None) → ΓL , ΓR ⊢ T x ~ T x
       ConsistHole1 : ∀ {ΓL ΓR τ} → ΓL , ΓR ⊢ τ ~ ⦇-⦈
       ConsistHole2 : ∀ {ΓL ΓR τ} → ΓL , ΓR ⊢ ⦇-⦈ ~ τ
-      ConsistArr : ∀ {ΓL ΓR τ1 τ2 τ3 τ4} → ΓL , ΓR ⊢ τ1 =α τ3 → ΓL , ΓR ⊢ τ2 ~ τ4 → ΓL , ΓR ⊢ τ1 ==> τ2 ~ τ3 ==> τ4
+      ConsistArr : ∀ {ΓL ΓR τ1 τ2 τ3 τ4} → ΓL , ΓR ⊢ τ1 ~ τ3 → ΓL , ΓR ⊢ τ2 ~ τ4 → ΓL , ΓR ⊢ τ1 ==> τ2 ~ τ3 ==> τ4
       ConsistForall : ∀ {ΓL ΓR τ1 τ2 x y} → (■ (x , y) ∪ ΓL) ,  (■ (y , x) ∪ ΓR) ⊢ τ1 ~ τ2 → ΓL , ΓR ⊢ ·∀ x τ1 ~ ·∀ y τ2
 
   open alpha
