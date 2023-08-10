@@ -60,6 +60,11 @@ module core where
     _=α_ : htyp → htyp → Set 
     τ1 =α τ2 = ∅ , ∅ ⊢ τ1 =α τ2
 
+    reflex-extend : {x x' y : Nat} {Γ : Nat ctx} → (∀ {x y} → (x , y) ∈ Γ → (x , x) ∈ Γ) → (x' , y) ∈ (■ (x , x) ∪ Γ) → (x' , x') ∈ (■ (x , x) ∪ Γ)
+    reflex-extend {x = x} {x' = x'} {y = y} reflex elem with natEQ x x' 
+    reflex-extend {x' = x'} {y = y} reflex elem | Inl refl = refl
+    reflex-extend {x' = x'} {y = y} reflex elem | Inr neq = reflex elem
+
     alpha-refl-ctx : (Γ : Nat ctx) → (∀ {x y} → (x , y) ∈ Γ → (x , x) ∈ Γ) → (τ : htyp) → Γ , Γ ⊢ τ =α τ
     alpha-refl-ctx _ _ b = AlphaBase
     alpha-refl-ctx Γ reflex (T x) with (Γ x) in eq
@@ -67,12 +72,7 @@ module core where
     alpha-refl-ctx Γ reflex (T x) | None = AlphaVarFree eq eq 
     alpha-refl-ctx _ _ ⦇-⦈ = AlphaHole
     alpha-refl-ctx Γ reflex (τ ==> τ₁) = AlphaArr (alpha-refl-ctx Γ reflex τ) (alpha-refl-ctx Γ reflex τ₁)
-    alpha-refl-ctx Γ reflex (·∀ x τ) = AlphaForall (alpha-refl-ctx (■ (x , x) ∪ Γ) reflex-extend τ)
-      where 
-      reflex-extend : {x' : Nat} {y : Nat} → (x' , y) ∈ (■ (x , x) ∪ Γ) → (x' , x') ∈ (■ (x , x) ∪ Γ)
-      reflex-extend {x' = x'} {y = y} elem with natEQ x x' 
-      reflex-extend {x' = x'} {y = y} elem | Inl refl = refl
-      reflex-extend {x' = x'} {y = y} elem | Inr neq = reflex elem
+    alpha-refl-ctx Γ reflex (·∀ x τ) = AlphaForall (alpha-refl-ctx (■ (x , x) ∪ Γ) (reflex-extend {x = x} {Γ = Γ} reflex) τ )
 
     alpha-refl : (τ : htyp) → τ =α τ
     alpha-refl τ = alpha-refl-ctx ∅ (λ ()) τ
