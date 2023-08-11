@@ -553,7 +553,7 @@ module core where
                     d final →
                     τ1 ground →
                     τ2 ground →
-                    τ1 ~̸  τ2 →
+                    τ1 =α̸  τ2 →
                     d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ indet
 
     -- final expressions

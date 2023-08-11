@@ -68,7 +68,7 @@ module canonical-indeterminate-forms where
         ((d == d' ⟨ τ' ⇒⦇-⦈⇏ b ⟩) ×
          (Δ , ∅ , ∅ ⊢ d' :: τ') ×
          (τ' ground) ×
-         (τ' ~̸  b)
+         (τ' =α̸  b)
         )
        → cif-base Δ d
 
@@ -143,7 +143,7 @@ module canonical-indeterminate-forms where
         ((d == d' ⟨ (τ1' ==> τ2') ⇒ (τ1 ==> τ2) ⟩) ×
           (Δ , ∅ , ∅ ⊢ d' :: τ1' ==> τ2') ×
           (d' indet) ×
-          ((τ1' ==> τ2') ~̸  (τ1 ==> τ2))
+          ((τ1' ==> τ2') =α̸  (τ1 ==> τ2))
         )
        → cif-arr Δ d τ1 τ2
     CIFACastHole : ∀{d Δ τ1 τ2} →
@@ -163,7 +163,7 @@ module canonical-indeterminate-forms where
            (τ2 == ⦇-⦈) ×
            (Δ , ∅ , ∅ ⊢ d' :: τ') ×
            (τ' ground) ×
-           (τ' ~̸  (⦇-⦈ ==> ⦇-⦈))
+           (τ' =α̸  (⦇-⦈ ==> ⦇-⦈))
            )
           → cif-arr Δ d τ1 τ2
 
@@ -239,7 +239,7 @@ module canonical-indeterminate-forms where
         ((d == d' ⟨ (·∀ t1 τ1') ⇒ (·∀ t2 τ1) ⟩) ×
           (Δ , ∅ , ∅ ⊢ d' :: ·∀ t1 τ1') ×
           (d' indet) ×
-          ((·∀ t1 τ1') ~̸  (·∀ t2 τ1))
+          ((·∀ t1 τ1') =α̸  (·∀ t2 τ1))
         )
        → cif-forall Δ d t τ
     CIFFCastHole : ∀{d Δ t τ} →
@@ -257,7 +257,7 @@ module canonical-indeterminate-forms where
            (τ == ⦇-⦈) ×
            (Δ , ∅ , ∅ ⊢ d' :: τ') ×
            (τ' ground) ×
-           (τ' ~̸  (·∀ t ⦇-⦈))
+           (τ' =α̸  (·∀ t ⦇-⦈))
            )
           → cif-forall Δ d t τ
 
