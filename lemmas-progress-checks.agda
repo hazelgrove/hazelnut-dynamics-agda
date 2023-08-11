@@ -7,14 +7,13 @@ module lemmas-progress-checks where
   boxedval-not-trans : ∀{d d'} → d boxedval → d →> d' → ⊥
   boxedval-not-trans (BVVal VConst) ()
   boxedval-not-trans (BVVal VLam) ()
-  boxedval-not-trans (BVArrCast x bv) (ITCastID) = x refl
-  boxedval-not-trans (BVForallCast x bv) (ITCastID) = x refl
-  boxedval-not-trans (BVHoleCast () bv) (ITCastID)
-  boxedval-not-trans (BVHoleCast () bv) (ITCastSucceed x₁)
+  boxedval-not-trans (BVArrCast x bv) (ITCastID eq) = x eq
+  boxedval-not-trans (BVForallCast x bv) (ITCastID eq) = x eq
+  boxedval-not-trans (BVHoleCast GBase bv) (ITCastID ())
+  boxedval-not-trans (BVHoleCast GArr bv) (ITCastID ())
+  boxedval-not-trans (BVHoleCast GForall bv) (ITCastID ())
   boxedval-not-trans (BVHoleCast GArr bv) (ITGround (MGArr x)) = x refl
   boxedval-not-trans (BVHoleCast GForall _) (ITGround (MGForall x)) = x refl
-  boxedval-not-trans (BVHoleCast x a) (ITExpand ())
-  boxedval-not-trans (BVHoleCast x x₁) (ITCastFail x₂ () x₄)
 
   -- indets don't have an instruction transition
   indet-not-trans : ∀{d d'} → d indet → d →> d' → ⊥
@@ -22,15 +21,17 @@ module lemmas-progress-checks where
   indet-not-trans (INEHole x) ()
   indet-not-trans (IAp x₁ () x₂) (ITLam)
   indet-not-trans (IAp x (ICastArr x₁ ind) x₂) (ITApCast) = x _ _ _ _ _ refl
-  indet-not-trans (ITAp x (ICastForall _ _)) (ITTApCast) = x _ _ _ _ refl
-  indet-not-trans (ICastArr x ind) (ITCastID) = x refl
-  indet-not-trans (ICastForall x ind) (ITCastID) = x refl
-  indet-not-trans (ICastGroundHole () ind) (ITCastID)
-  indet-not-trans (ICastGroundHole x ind) (ITCastSucceed ())
+  indet-not-trans (ITAp x (ICastForall _ _)) (ITTApCast) = x _ _ _ _ _ refl
+  indet-not-trans (ICastArr x ind) (ITCastID eq) = x eq
+  indet-not-trans (ICastForall x ind) (ITCastID eq) = x eq
+  indet-not-trans (ICastGroundHole GBase ind) (ITCastID ())
+  indet-not-trans (ICastGroundHole GArr ind) (ITCastID ())
+  indet-not-trans (ICastGroundHole GForall ind) (ITCastID ())
+  indet-not-trans (ICastGroundHole x ind) (ITCastSucceed g1 () eq)
   indet-not-trans (ICastGroundHole GArr ind) (ITGround (MGArr x)) = x refl
   indet-not-trans (ICastGroundHole GForall x₁) (ITGround (MGForall x₂)) = x₂ refl
-  indet-not-trans (ICastHoleGround x ind ()) (ITCastID)
-  indet-not-trans (ICastHoleGround x ind x₁) (ITCastSucceed x₂) = x _ _ refl
+  indet-not-trans (ICastHoleGround x ind g) (ITCastID eq) = {!   !}
+  indet-not-trans (ICastHoleGround x ind x₁) (ITCastSucceed g1 g2 x₂) = x _ _ refl
   indet-not-trans (ICastHoleGround x ind GArr) (ITExpand (MGArr x₂)) = x₂ refl
   indet-not-trans (ICastHoleGround x x₁ GForall) (ITExpand (MGForall x₃)) = x₃ refl
   indet-not-trans (ICastGroundHole x a) (ITExpand ())
