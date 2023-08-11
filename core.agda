@@ -645,13 +645,13 @@ module core where
               ((·Λ t d) < ty >) →> (Ihexp[ ty / t ] d)
     ITCastID : ∀{d τ1 τ2 } →
                -- d final → -- red brackets
-               τ1 =α̸  τ2 →
+               τ1 =α τ2 →
                (d ⟨ τ1 ⇒ τ2 ⟩) →> d
     ITCastSucceed : ∀{d τ1 τ2 } →
                     -- d final → -- red brackets
                     τ1 ground →
                     τ2 ground →
-                    τ1 =α̸  τ2 →
+                    τ1 =α τ2 →
                     (d ⟨ τ1 ⇒ ⦇-⦈ ⇒ τ2 ⟩) →> d
     ITCastFail : ∀{ d τ1 τ2} →
                  -- d final → -- red brackets
