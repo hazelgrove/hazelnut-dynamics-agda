@@ -3,6 +3,7 @@ open import Prelude
 open import contexts
 open import core
 open import type-assignment-unicity
+open import lemmas-consistency
 open import rewrite-util
 
 module canonical-indeterminate-forms where
@@ -43,7 +44,7 @@ module canonical-indeterminate-forms where
         ((d == d1 < τ >) ×
          (Δ , ∅ , ∅ ⊢ d1 :: ·∀ t b) ×
          (d1 indet) ×
-         ((t' : Nat) (τ1 τ1' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t' τ1) ⇒ (·∀ t' τ1')⟩))
+         ((t1 t2 : Nat) (τ1 τ1' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t1 τ1) ⇒ (·∀ t2 τ1')⟩))
         )
         → cif-base Δ d
     CIFBTApId : ∀ {Δ d} →
@@ -51,7 +52,7 @@ module canonical-indeterminate-forms where
         ((d == d1 < b >) ×
          (Δ , ∅ , ∅ ⊢ d1 :: ·∀ t (T t)) ×
          (d1 indet) ×
-         ((t' : Nat) (τ1 τ1' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t' τ1) ⇒ (·∀ t' τ1')⟩))
+         ((t1 t2 : Nat) (τ1 τ1' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t1 τ1) ⇒ (·∀ t2 τ1')⟩))
         )
         → cif-base Δ d
     CIFBCast : ∀ {Δ d} →
@@ -67,7 +68,7 @@ module canonical-indeterminate-forms where
         ((d == d' ⟨ τ' ⇒⦇-⦈⇏ b ⟩) ×
          (Δ , ∅ , ∅ ⊢ d' :: τ') ×
          (τ' ground) ×
-         (τ' ≠ b)
+         (τ' ~̸  b)
         )
        → cif-base Δ d
 
@@ -126,7 +127,7 @@ module canonical-indeterminate-forms where
         ((d == d1 < τ >) ×
          (Δ , ∅ , ∅ ⊢ d1 :: ·∀ t (τ1 ==> τ2)) ×
          (d1 indet) ×
-         ((t' : Nat) (τ3 τ3' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t' τ3) ⇒ (·∀ t' τ3')⟩))
+         ((t1 t2 : Nat) (τ3 τ3' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t1 τ3) ⇒ (·∀ t2 τ3')⟩))
         )
         → cif-arr Δ d τ1 τ2
     CIFATApId : ∀ {Δ d τ1 τ2} →
@@ -134,7 +135,7 @@ module canonical-indeterminate-forms where
         ((d == d1 < τ1 ==> τ2 >) ×
          (Δ , ∅ , ∅ ⊢ d1 :: ·∀ t (T t)) ×
          (d1 indet) ×
-         ((t' : Nat) (τ3 τ3' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t' τ3) ⇒ (·∀ t' τ3')⟩))
+         ((t1 t2 : Nat) (τ3 τ3' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t1 τ3) ⇒ (·∀ t2 τ3')⟩))
         )
         → cif-arr Δ d τ1 τ2
     CIFACast : ∀{d Δ τ1 τ2} →
@@ -142,7 +143,7 @@ module canonical-indeterminate-forms where
         ((d == d' ⟨ (τ1' ==> τ2') ⇒ (τ1 ==> τ2) ⟩) ×
           (Δ , ∅ , ∅ ⊢ d' :: τ1' ==> τ2') ×
           (d' indet) ×
-          ((τ1' ==> τ2') ≠ (τ1 ==> τ2))
+          ((τ1' ==> τ2') ~̸  (τ1 ==> τ2))
         )
        → cif-arr Δ d τ1 τ2
     CIFACastHole : ∀{d Δ τ1 τ2} →
@@ -162,7 +163,7 @@ module canonical-indeterminate-forms where
            (τ2 == ⦇-⦈) ×
            (Δ , ∅ , ∅ ⊢ d' :: τ') ×
            (τ' ground) ×
-           (τ' ≠ (⦇-⦈ ==> ⦇-⦈))
+           (τ' ~̸  (⦇-⦈ ==> ⦇-⦈))
            )
           → cif-arr Δ d τ1 τ2
 
@@ -222,7 +223,7 @@ module canonical-indeterminate-forms where
         ((d == d1 < τ >) ×
          (Δ , ∅ , ∅ ⊢ d1 :: ·∀ t (·∀ t' τ')) ×
          (d1 indet) ×
-         ((t2 : Nat) (τ2 τ2' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t2 τ2) ⇒ (·∀ t2 τ2')⟩))
+         ((t1 t2 : Nat) (τ2 τ2' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t1 τ2) ⇒ (·∀ t2 τ2')⟩))
         )
         → cif-forall Δ d t τ
     CIFFTApId : ∀ {Δ d t τ} →
@@ -230,15 +231,15 @@ module canonical-indeterminate-forms where
         ((d == d1 < ·∀ t τ1 >) ×
          (Δ , ∅ , ∅ ⊢ d1 :: ·∀ t' (T t')) ×
          (d1 indet) ×
-         ((t3 : Nat) (τ3 τ3' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t3 τ3) ⇒ (·∀ t3 τ3')⟩))
+         ((t1 t2 : Nat) (τ3 τ3' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t1 τ3) ⇒ (·∀ t2 τ3')⟩))
         )
         → cif-forall Δ d t τ
     CIFFCast : ∀{d Δ t τ} →
-      Σ[ d' ∈ ihexp ] Σ[ t' ∈ Nat ] Σ[ τ1 ∈ htyp ] Σ[ τ1' ∈ htyp ]
-        ((d == d' ⟨ (·∀ t' τ1') ⇒ (·∀ t' τ1) ⟩) ×
-          (Δ , ∅ , ∅ ⊢ d' :: ·∀ t' τ1') ×
+      Σ[ d' ∈ ihexp ] Σ[ t1 ∈ Nat ] Σ[ t2 ∈ Nat ] Σ[ τ1 ∈ htyp ] Σ[ τ1' ∈ htyp ]
+        ((d == d' ⟨ (·∀ t1 τ1') ⇒ (·∀ t2 τ1) ⟩) ×
+          (Δ , ∅ , ∅ ⊢ d' :: ·∀ t1 τ1') ×
           (d' indet) ×
-          ((·∀ t' τ1') ≠ (·∀ t' τ1))
+          ((·∀ t1 τ1') ~̸  (·∀ t2 τ1))
         )
        → cif-forall Δ d t τ
     CIFFCastHole : ∀{d Δ t τ} →
@@ -256,7 +257,7 @@ module canonical-indeterminate-forms where
            (τ == ⦇-⦈) ×
            (Δ , ∅ , ∅ ⊢ d' :: τ') ×
            (τ' ground) ×
-           (τ' ≠ (·∀ t ⦇-⦈))
+           (τ' ~̸  (·∀ t ⦇-⦈))
            )
           → cif-forall Δ d t τ
 
@@ -275,7 +276,7 @@ module canonical-indeterminate-forms where
   ... | Inr neq | ()
   canonical-indeterminate-forms-forall (TAEHole x x₁ eq) IEHole = CIFFEHole (_ , _ , _ , _ , _ , _ , refl , x , eq , x₁)
   canonical-indeterminate-forms-forall (TANEHole x wt x₁ eq) (INEHole x₂) = CIFFNEHole (_ , _ , _ , _ , _ , _ , _ , _ , refl , wt , x₂ , x , eq , x₁)
-  canonical-indeterminate-forms-forall (TACast wt _ x) (ICastForall neq ind) = CIFFCast (_ , _ , _ , _ , refl , wt , ind , λ eq → neq (forall-inj2 eq) )
+  canonical-indeterminate-forms-forall (TACast wt _ x) (ICastForall neq ind) = CIFFCast (_ , _ , _ , _ , _ , refl , wt , ind , neq )
   canonical-indeterminate-forms-forall (TACast wt _ TCHole2) (ICastHoleGround x₁ ind GForall) = CIFFCastHole (_ , refl , refl , wt , ind , x₁)
   canonical-indeterminate-forms-forall (TAFailedCast x x₁ GForall x₃) (IFailedCast x₄ x₅ GForall x₇) = CIFFFailedCast (_ , _ , refl , refl , x , x₅ , x₇)
 
@@ -316,7 +317,7 @@ module canonical-indeterminate-forms where
         ((d == d1 < τ >) ×
          (Δ , ∅ , ∅ ⊢ d1 :: ·∀ t ⦇-⦈) ×
          (d1 indet) ×
-         ((t1 : Nat) (τ1 τ1' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t1 τ1) ⇒ (·∀ t1 τ1')⟩))
+         ((t1 t2 : Nat) (τ1 τ1' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t1 τ1) ⇒ (·∀ t2 τ1')⟩))
         )
         → cif-hole Δ d
     CIFHTApId : ∀ {Δ d} →
@@ -324,7 +325,7 @@ module canonical-indeterminate-forms where
         ((d == d1 < ⦇-⦈ >) ×
          (Δ , ∅ , ∅ ⊢ d1 :: ·∀ t (T t)) ×
          (d1 indet) ×
-         ((t1 : Nat) (τ1 τ1' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t1 τ1) ⇒ (·∀ t1 τ1')⟩))
+         ((t1 t2 : Nat) (τ1 τ1' : htyp) (d1' : ihexp) → d1 ≠ (d1' ⟨(·∀ t1 τ1) ⇒ (·∀ t2 τ1')⟩))
         )
         → cif-hole Δ d
     CIFHCast : ∀ {Δ d} →
