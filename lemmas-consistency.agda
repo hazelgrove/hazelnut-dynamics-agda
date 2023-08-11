@@ -7,6 +7,23 @@ module lemmas-consistency where
 
   open alpha
 
+  reflex-extend : {x' y : Nat} {Γ : Nat ctx} → (x : Nat) → (∀ {x y} → (x , y) ∈ Γ → (x , x) ∈ Γ) → (x' , y) ∈ (■ (x , x) ∪ Γ) → (x' , x') ∈ (■ (x , x) ∪ Γ)
+  reflex-extend {x' = x'} {y = y} x reflex elem with natEQ x x' 
+  reflex-extend {x' = x'} {y = y} x reflex elem | Inl refl = refl
+  reflex-extend {x' = x'} {y = y} x reflex elem | Inr neq = reflex elem
+
+  alpha-refl-ctx : (Γ : Nat ctx) → (∀ {x y} → (x , y) ∈ Γ → (x , x) ∈ Γ) → (τ : htyp) → Γ , Γ ⊢ τ =α τ
+  alpha-refl-ctx _ _ b = AlphaBase
+  alpha-refl-ctx Γ reflex (T x) with (Γ x) in eq
+  alpha-refl-ctx Γ reflex (T x) | Some y = AlphaVarBound (reflex eq) (reflex eq)
+  alpha-refl-ctx Γ reflex (T x) | None = AlphaVarFree eq eq 
+  alpha-refl-ctx _ _ ⦇-⦈ = AlphaHole
+  alpha-refl-ctx Γ reflex (τ ==> τ₁) = AlphaArr (alpha-refl-ctx Γ reflex τ) (alpha-refl-ctx Γ reflex τ₁)
+  alpha-refl-ctx Γ reflex (·∀ x τ) = AlphaForall (alpha-refl-ctx (■ (x , x) ∪ Γ) (reflex-extend x reflex) τ )
+
+  alpha-refl : (τ : htyp) → τ =α τ
+  alpha-refl τ = alpha-refl-ctx ∅ (λ ()) τ
+
   ⊢~refl : {Γ : Nat ctx} -> {t : htyp} → (∀ {x y} → (x , y) ∈ Γ → (x , x) ∈ Γ) -> (_,_⊢_~_) Γ Γ t t
   ⊢~refl {t = b} _ = ConsistBase
   ⊢~refl {Γ} {t = T x} r with ctxindirect Γ x
@@ -14,7 +31,7 @@ module lemmas-consistency where
   ... | Inl (y , ing) rewrite ing = ConsistVarBound (r ing) (r ing)
   ⊢~refl {t = ⦇-⦈} _ = ConsistHole1
   ⊢~refl {t = t1 ==> t2} r = ConsistArr (⊢~refl r) (⊢~refl r)
-  ⊢~refl {Γ = Γ} {t = ·∀ x t} r = ConsistForall (⊢~refl λ x' → reflex-extend {x = x} {Γ = Γ} r x')
+  ⊢~refl {Γ = Γ} {t = ·∀ x t} r = ConsistForall (⊢~refl λ x' → reflex-extend x r x')
 
   ~refl : {t : htyp} -> t ~ t
   ~refl = ⊢~refl (λ ())
@@ -32,54 +49,30 @@ module lemmas-consistency where
   ~sym = ⊢~sym
 
   -- type substitution preserves consistency
+  -- I think we need something stronger, like apartness of free variables in t1, t2 and t or something.
   {-
-  ⊢~Typ[] : {ΓL ΓR : Nat ctx} {t1 t2 t : htyp} {n : Nat} → ΓL , ΓR ⊢ t1 ~ t2 → ΓL , ΓR ⊢ Typ[ t / n ] t1 ~ Typ[ t / n ] t2
-  ⊢~Typ[] ConsistBase = ConsistBase
-  ⊢~Typ[] {n = n} (ConsistVarFree {x = x} l r) with natEQ n x
-  ... | Inl refl = {!!}
-  ... | Inr neq = {!~refl!}
-  ⊢~Typ[] ConsistHole1 = ConsistHole1
-  ⊢~Typ[] ConsistHole2 = ConsistHole2
-  ⊢~Typ[] (ConsistArr p p₁) = ConsistArr (⊢~Typ[] p) (⊢~Typ[] p₁)
-  ⊢~Typ[] (ConsistForall {x = x} {y = y} p) = {!   !}
+  ⊢~Typ[] : {ΓL ΓR : Nat ctx} {t1 t2 t : htyp} {n : Nat} → tbinderstt-disjoint t1 t -> tbinderstt-disjoint t2 t -> ΓL , ΓR ⊢ t ~ t -> ΓL , ΓR ⊢ t1 ~ t2 → ΓL , ΓR ⊢ Typ[ t / n ] t1 ~ Typ[ t / n ] t2
+  ⊢~Typ[] _ _ _ ConsistBase = ConsistBase
+  ⊢~Typ[] {n = n} bdl bdr ~t (ConsistVarFree {x = x} l r) with natEQ n x
+  ... | Inl refl = ~t
+  ... | Inr neq = ConsistVarFree l r
+  ⊢~Typ[] {n = n} bdl bdr ~t (ConsistVarBound {x = x} {y = y} l r) with natEQ n x | natEQ n y 
+  ... | Inl refl | Inl refl = ~t
+  ⊢~Typ[] {n = n} BDTTVar BDTTVar ~t (ConsistVarBound {x = _} {_} l r) | Inr neq | Inl refl = {!   !}
+  ... | Inr neq | Inr neq' = {!!}
+  ⊢~Typ[] _ _ _ ConsistHole1 = ConsistHole1
+  ⊢~Typ[] _ _ _ ConsistHole2 = ConsistHole2
+  ⊢~Typ[] (BDTArr bdl1 bdl2) (BDTArr bdr1 bdr2) ~t (ConsistArr p p₁) = ConsistArr {!   !}  {!   !} -- ConsistArr {! (⊢~Typ[] p) (⊢~Typ[] p₁) !}
+  ⊢~Typ[] {n = n} bdl bdr ~t (ConsistForall {x = x} {y = y} p) with natEQ n x | natEQ n y 
+  ... | Inl refl | Inl refl = ConsistForall {!   !}
+  ... | Inl refl | Inr neq = {! !}
+  ... | Inr neq | Inr neq' = {!!}
   -}
+
   -- type consistency isn't transitive
   not-trans : ((t1 t2 t3 : htyp) → t1 ~ t2 → t2 ~ t3 → t1 ~ t3) → ⊥
   not-trans t with t (b ==> b) ⦇-⦈ b ConsistHole1 ConsistHole2
   ... | ()
-  
-  -- --  every pair of types is either consistent or not consistent
-  -- ~dec : {Γ : typctx} (t1 t2 : htyp) → ((Γ ⊢ t1 ~ t2) + (Γ ⊢ t1 ~̸ t2))
-  --   -- this takes care of all hole cases, so we don't consider them below
-  -- ~dec _ ⦇-⦈ = Inl TCHole1
-  -- ~dec ⦇-⦈ _ = Inl TCHole2
-  --   -- num cases
-  -- ~dec b b = Inl TCBase
-  -- ~dec (t1 ==> t2) (t3 ==> t4) with ~dec t1 t3 | ~dec t2 t4
-  -- ... | Inl x | Inl y = Inl (TCArr x y)
-  -- ... | Inl _ | Inr y = Inr (\{(TCArr l r) -> y r})
-  -- ... | Inr x | _     = Inr (\{(TCArr l r) -> x l})
-  -- ~dec {Γ} (T x) (T y) with natEQ x y
-  -- ... | Inl refl with natLT x (typctx.n Γ) 
-  -- ...   | Inl p = Inl (TCVar p)
-  -- ...   | Inr p = Inr (\{(TCVar p') -> p p'})
-  -- ~dec {Γ} (T x) (T y) | Inr neq = Inr (\{(TCVar _) -> neq refl})
-  -- ~dec {Γ} (·∀ t1) (·∀ t2) with ~dec {[ Γ newtyp]} t1 t2
-  -- ... | Inl p = Inl (TCForall p)
-  -- ... | Inr p = Inr (\{(TCForall p') -> p p'})
-  --   -- cases with mismatched constructors
-  -- ~dec b (T x) = Inr (λ ())
-  -- ~dec b (t1 ==> t2) = Inr (λ ())
-  -- ~dec b (·∀ t1) = Inr (λ ())
-  -- ~dec (t1 ==> t2) b = Inr (λ ())
-  -- ~dec (t1 ==> t2) (T x) = Inr (λ ())
-  -- ~dec (t1 ==> t2) (·∀ t3) = Inr (λ ())
-  -- ~dec (T x) b = Inr (λ ())
-  -- ~dec (T x) (t1 ==> t2) = Inr (λ ())
-  -- ~dec (T x) (·∀ t1) = Inr (λ ())
-  -- ~dec (·∀ t1) b = Inr (λ ())
-  -- ~dec (·∀ t1) (t2 ==> t3) = Inr (λ ())
-  -- ~dec (·∀ t1) (T x) = Inr (λ ())
 
   --  every pair of types is either consistent or not consistent
   ⊢~dec : {ΓL ΓR : Nat ctx} -> (t1 t2 : htyp) → ((ΓL , ΓR ⊢ t1 ~ t2) + ¬(ΓL , ΓR ⊢ t1 ~ t2))
@@ -119,6 +112,9 @@ module lemmas-consistency where
   ⊢~dec (·∀ _ t1) b = Inr (λ ())
   ⊢~dec (·∀ _ t1) (t2 ==> t3) = Inr (λ ())
   ⊢~dec (·∀ _ t1) (T x) = Inr (λ ())
+
+  ~dec : (t1 t2 : htyp) → ((t1 ~ t2) + ¬(t1 ~ t2))
+  ~dec = ⊢~dec
 
   -- no pair of types is both consistent and not consistent
   ~apart : {t1 t2 : htyp} → (t1 ~̸ t2) → (t1 ~ t2) → ⊥

@@ -65,6 +65,16 @@ module lemmas-well-formed where
   ... | Inl refl = WFForall (wf-contraction {Θ} {n} wf2)
   ... | Inr neq  = WFForall (wf-sub (weaken-t-wf wf1) (exchange-wf {t} {n} {τ4} {Θ} wf2) refl)
 
+  wf-tfresht : ∀{Θ t τ} -> tfresht t τ -> (Θ ,, (t , <>)) ⊢ τ wf -> Θ ⊢ τ wf
+  wf-tfresht {Θ} {t'} (TFTVar {t = t} ne) (WFVar x) with ctxindirect Θ t
+  ... | Inl (<> , int) = WFVar int
+  ... | Inr nint rewrite nint with natEQ t' t
+  ...   | Inl refl = abort (ne refl)
+  ...   | Inr neq = abort (somenotnone (! x))
+  wf-tfresht tf WFBase = WFBase
+  wf-tfresht tf WFHole = WFHole
+  wf-tfresht (TFArr tf1 tf2) (WFArr wf1 wf2) = WFArr (wf-tfresht tf1 wf1) (wf-tfresht tf2 wf2)
+  wf-tfresht {Θ} (TFForall x tf) (WFForall wf) = WFForall (wf-tfresht tf (rewrite-t-wf (exchange-Θ {Θ = Θ}) wf))
 
   t-sub-id : ∀{τ τ' t} →
     tfresht t τ →

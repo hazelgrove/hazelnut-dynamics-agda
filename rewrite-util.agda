@@ -46,3 +46,6 @@ module rewrite-util where
   forall-sub-eq {t} {t'} eq with natEQ t t'
   ... | Inl refl = refl
   ... | Inr neq = abort (neq eq)
+
+  rewrite-t-wf : ∀{Θ Θ' τ} -> Θ == Θ' -> Θ ⊢ τ wf -> Θ' ⊢ τ wf
+  rewrite-t-wf eq p rewrite eq = p
