@@ -55,10 +55,6 @@ module core where
       AlphaHole : ∀ {ΓL ΓR} → ΓL , ΓR ⊢ ⦇-⦈ =α ⦇-⦈
       AlphaArr : ∀ {ΓL ΓR τ1 τ2 τ3 τ4} → ΓL , ΓR ⊢ τ1 =α τ3 → ΓL , ΓR ⊢ τ2 =α τ4 → ΓL , ΓR ⊢ τ1 ==> τ2 =α τ3 ==> τ4
       AlphaForall : ∀ {ΓL ΓR τ1 τ2 x y} → (■ (x , y) ∪ ΓL) ,  (■ (y , x) ∪ ΓR) ⊢ τ1 =α τ2 → ΓL , ΓR ⊢ ·∀ x τ1 =α ·∀ y τ2
-    
-    -- alpha equivalence of types
-    _=α_ : htyp → htyp → Set 
-    τ1 =α τ2 = ∅ , ∅ ⊢ τ1 =α τ2
 
     data _,_⊢_~_ : Nat ctx → Nat ctx → htyp → htyp → Set where 
       ConsistBase : ∀ {ΓL ΓR} → ΓL , ΓR ⊢ b ~ b
@@ -70,6 +66,14 @@ module core where
       ConsistForall : ∀ {ΓL ΓR τ1 τ2 x y} → (■ (x , y) ∪ ΓL) ,  (■ (y , x) ∪ ΓR) ⊢ τ1 ~ τ2 → ΓL , ΓR ⊢ ·∀ x τ1 ~ ·∀ y τ2
 
   open alpha
+
+  -- alpha equivalence of types
+  _=α_ : htyp → htyp → Set 
+  τ1 =α τ2 = ∅ , ∅ ⊢ τ1 =α τ2
+
+  -- alpha inequivalence
+  _=α̸_ : (t1 t2 : htyp) → Set
+  _=α̸_ = \(t1 t2 : htyp) → ¬(t1 =α t2)
 
   -- (alpha) consistency of types
   _~_ : htyp → htyp → Set 
@@ -505,13 +509,13 @@ module core where
   data _boxedval : (d : ihexp) → Set where
     BVVal : ∀{d} → d val → d boxedval
     BVArrCast : ∀{ d τ1 τ2 τ3 τ4 } →
-                τ1 ==> τ2 ≠ τ3 ==> τ4 →
+                τ1 ==> τ2 =α̸  τ3 ==> τ4 →
                 d boxedval →
                 d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ boxedval
-    BVForallCast : ∀{ d t τ1 τ2 } →
-                   τ1 ≠ τ2 →
+    BVForallCast : ∀{ d t1 t2 τ1 τ2 } →
+                   (·∀ t1 τ1) =α̸  (·∀ t2 τ2) →
                    d boxedval →
-                   d ⟨ (·∀ t τ1) ⇒ (·∀ t τ2) ⟩ boxedval --TODO: Check that we don't need different binders
+                   d ⟨ (·∀ t1 τ1) ⇒ (·∀ t2 τ2) ⟩ boxedval
     BVHoleCast : ∀{ τ d } → τ ground → d boxedval → d ⟨ τ ⇒ ⦇-⦈ ⟩ boxedval
 
   mutual
@@ -529,11 +533,11 @@ module core where
                        d indet →
                        (d < τ >) indet
       ICastArr : ∀{d τ1 τ2 τ3 τ4} →
-                 τ1 ==> τ2 ~̸  τ3 ==> τ4 →
+                 τ1 ==> τ2 =α̸  τ3 ==> τ4 →
                  d indet →
                  d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ indet
       ICastForall : ∀{ d t1 t2 τ1 τ2 } →
-                   (·∀ t1 τ1) ~̸  (·∀ t2 τ2) →
+                   (·∀ t1 τ1) =α̸  (·∀ t2 τ2) →
                    d indet →
                    d ⟨ (·∀ t1 τ1) ⇒ (·∀ t2 τ2) ⟩ indet
       ICastGroundHole : ∀{ τ d } →
@@ -641,13 +645,13 @@ module core where
               ((·Λ t d) < ty >) →> (Ihexp[ ty / t ] d)
     ITCastID : ∀{d τ1 τ2 } →
                -- d final → -- red brackets
-               τ1 ~ τ2 →
+               τ1 =α̸  τ2 →
                (d ⟨ τ1 ⇒ τ2 ⟩) →> d
     ITCastSucceed : ∀{d τ1 τ2 } →
                     -- d final → -- red brackets
                     τ1 ground →
                     τ2 ground →
-                    τ1 ~ τ2 →
+                    τ1 =α̸  τ2 →
                     (d ⟨ τ1 ⇒ ⦇-⦈ ⇒ τ2 ⟩) →> d
     ITCastFail : ∀{ d τ1 τ2} →
                  -- d final → -- red brackets
