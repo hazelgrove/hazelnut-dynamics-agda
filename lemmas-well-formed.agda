@@ -250,7 +250,7 @@ module lemmas-well-formed where
     typenv-wf {Θ = Θ} {θ = θ} {τ = τ} hctxwf ctxwf1 (STASubst {y = y} sub x) ctxwf2 wf eq =
       typsub-wf wf2 x eq
       where 
-      wf2 = typenv-wf hctxwf (weaken-tctx-wf ctxwf1) sub ctxwf2 wf refl
+      wf2 = typenv-wf hctxwf (weaken-tctx-wf ctxwf1) sub {! ctxwf2 !} wf refl
 
     wf-ta : ∀{Θ Γ d τ Δ} → 
             Θ ⊢ Γ tctxwf → 

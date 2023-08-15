@@ -220,8 +220,8 @@ module core where
     Ihexp[ τ / t ] (·Λ t' d) with natEQ t t'
     ... | Inl refl = (·Λ t' d)
     ... | Inr neq = (·Λ t' (Ihexp[ τ / t ] d))
-    Ihexp[ τ / t ] (⦇-⦈⟨ u , θ , σ ⟩) = ⦇-⦈⟨ u , TypSubst τ t θ , Sub[ τ / t ] σ ⟩
-    Ihexp[ τ / t ] (⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩) = ⦇⌜ (Ihexp[ τ / t ] d) ⌟⦈⟨ u , TypSubst τ t θ , Sub[ τ / t ] σ ⟩
+    Ihexp[ τ / t ] (⦇-⦈⟨ u , θ , σ ⟩) = ⦇-⦈⟨ u , TypSubst τ t θ , σ ⟩
+    Ihexp[ τ / t ] (⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩) = ⦇⌜ (Ihexp[ τ / t ] d) ⌟⦈⟨ u , TypSubst τ t θ , σ ⟩
     Ihexp[ τ / t ] (d1 ∘ d2) = ((Ihexp[ τ / t ] d1) ∘ (Ihexp[ τ / t ] d2))
     Ihexp[ τ / t ] (d < τ' >) = (Ihexp[ τ / t ] d) < Typ[ τ / t ] τ' >
     Ihexp[ τ / t ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (Ihexp[ τ / t ] d) ⟨ (Typ[ τ / t ] τ1) ⇒ (Typ[ τ / t ] τ2) ⟩
@@ -450,7 +450,7 @@ module core where
                   Δ , Θ , Γ ⊢ d :: τ →
                   Δ , Θ , Γ ⊢ TypId Θ' , Subst d y σ :s: Θ' , Γ'
       STASubst : ∀{Θ Θ' Γ Δ θ σ y Γ' τ } →
-               Δ , (Θ ,, (y , <>)) , Γ ⊢ θ , σ :s: Θ' , (Tctx[ τ / y ] Γ') →
+               Δ , (Θ ,, (y , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ' →
                Θ ⊢ τ wf →
                Δ , Θ , Γ ⊢ TypSubst τ y θ , σ :s: Θ' , Γ'
 
