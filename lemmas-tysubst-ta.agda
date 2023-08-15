@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 open import Nat
 open import Prelude
 open import core
@@ -52,13 +54,13 @@ module lemmas-tysubst-ta where
   mutual
 
     lemma-tysubst-subst : ∀{ Δ Γ Γ' Θ Θ' t τ θ σ} -> 
-      Θ ⊢ τ wf -> tunbound-in-Γ t Γ -> tunbound-in-θ t θ ->(Θ ,, (t , <>)) ⊢ Γ tctxwf -> 
+      Θ ⊢ τ wf -> tunbound-in-Γ t Γ -> tunbound-in-θ t θ -> Θ ⊢ Γ tctxwf -> 
       Δ , (Θ ,, (t , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ' ->
       (Hctx[ τ / t ] Δ) , Θ , Tctx[ τ / t ] Γ ⊢ TypSubst τ t θ , (Sub[ τ / t ] σ) :s: Θ' , (Tctx[ τ / t ] Γ')
     lemma-tysubst-subst twf ubig ubtt tcwf (STAIdId gammasub thetasub) = STASubst (STAIdId (gamma-sub-pres gammasub) thetasub) twf
     lemma-tysubst-subst {Γ = Γ} twf ubig ubtt tcwf (STAIdSubst ts ta) = lemma-typsubst-subst-comm
-        (rewrite-gamma-subst (lem-map-extend-dist {Γ = Γ}) (lemma-tysubst-subst twf {!   !} ubtt (merge-tctx-wf tcwf (wf-ta tcwf {!   !} ta)) ts)) 
-        (lemma-tysubst twf ubig tcwf {!   !} {!   !} ta)
+        (rewrite-gamma-subst (lem-map-extend-dist {Γ = Γ}) (lemma-tysubst-subst twf {!   !} ubtt (merge-tctx-wf tcwf (wf-ta tcwf {!   !} {! ta !})) ts)) 
+        (lemma-tysubst twf ubig {! tcwf !} {!   !} {!   !} ta)
     lemma-tysubst-subst twf ubig ubtt tcwf (STASubst x x₁) = {!   !}
     {-
     lemma-tysubst-subst {Γ = Γ} {t = t} {τ = τ} twf _ _ _ (STAIdId x wf) = STAIdId (λ x' τ' ing → foo x' τ' x ing) λ τ' wf' → wf-tfresht {!   !} (wf τ' wf')
@@ -81,7 +83,7 @@ module lemmas-tysubst-ta where
     -}
 
     lemma-tysubst : ∀{ Δ Γ Θ d t τ1 τ2 } -> 
-      Θ ⊢ τ2 wf -> tunbound-in-Γ t Γ -> (Θ ,, (t , <>)) ⊢ Γ tctxwf -> 
+      Θ ⊢ τ2 wf -> tunbound-in-Γ t Γ -> Θ ⊢ Γ tctxwf -> 
       tbinderst-disjoint τ2 d -> tbinderst-unique τ2 ->
       Δ , (Θ ,, (t , <>)), Γ ⊢ d :: τ1 -> 
       (Hctx[ τ2 / t ] Δ) , Θ , (Tctx[ τ2 / t ] Γ) ⊢ (Ihexp[ τ2 / t ] d) :: Typ[ τ2 / t ] τ1
@@ -105,7 +107,7 @@ module lemmas-tysubst-ta where
     lemma-tysubst {Δ = Δ} {Θ = Θ} wf ubig ctxwf tbd tbu (TANEHole x ta ts eq) rewrite eq =
       TANEHole (lem-map-preserve-elem {Γ = Δ} x) 
         (lemma-tysubst {!   !} {!   !} {!   !} {!   !} {!   !} ta)
-        (lemma-tysubst-subst wf ubig {!!} ctxwf ts) refl -- (STASubst (rewrite-theta-subst (! (typctx-contraction {Θ = Θ})) ts) (weaken-t-wf wf))) refl
+        (lemma-tysubst-subst wf ubig {!!} {! ctxwf !} ts) refl -- (STASubst (rewrite-theta-subst (! (typctx-contraction {Θ = Θ})) ts) (weaken-t-wf wf))) refl
     lemma-tysubst wf ubig ctxwf tbd tbu (TACast ta x x~) = TACast (lemma-tysubst wf ubig ctxwf {!   !} {!   !} ta) (wf-sub wf x refl) {! (~Typ[] x~) !}
     lemma-tysubst wf ubig ctxwf tbd tbu (TAFailedCast ta tgnd tgnd' x) = TAFailedCast (lemma-tysubst wf ubig ctxwf {!   !} tbu ta) (ground-subst tgnd) (ground-subst tgnd') 
       λ eq → x {! (foo tgnd tgnd' eq) !}

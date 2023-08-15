@@ -1,6 +1,7 @@
 open import Nat
 open import Prelude
 open import core
+open alpha
 open import contexts
 
 open import lemmas-consistency
@@ -9,6 +10,9 @@ open import binders-disjoint-checks
 
 open import lemmas-subst-ta
 open import lemmas-tysubst-ta
+open import lemmas-well-formed
+
+open import rewrite-util
 
 module preservation where
 
@@ -71,18 +75,18 @@ module preservation where
   preserve-trans _ _ _ _ (TALam _ _ ta) ()
   preserve-trans (BUAp (BULam bd x₁) bd₁ (BDLam x₂ x₃)) _ _ _ (TAAp (TALam apt wf ta) ta₁) ITLam = lem-subst apt x₂ bd₁ ta ta₁
   preserve-trans _ _ _ _ (TATLam ta) ()
-  preserve-trans _ _ tcwf hcwf(TAAp (TACast ta (WFArr wf1 wf2) (TCArr x x₁)) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ {!   !} (~sym x))) wf2 x₁ {- with wf-ta tcwf hcwf ta
+  preserve-trans _ _ tcwf hcwf (TAAp (TACast ta (WFArr wf1 wf2) (ConsistArr x x₁)) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ {!   !} (~sym x))) wf2 x₁ {- with wf-ta tcwf hcwf ta
   ... | WFArr wf1' _ = TACast (TAAp ta (TACast ta₁ wf1' (~sym x))) wf2 x₁ -}
   preserve-trans {d = ·Λ t d < τ >} _ _ tcwf hcwf (TATAp wf (TATLam x) eq) ITTLam =  rewrite-typ eq (rewrite-gamma (tctx-sub-closed tcwf) {!   !})
 --  ... | refl rewrite lem-union-lunit {Γ = (■ (t , <>))} = lemma-tysubst wf tcwf {! x  !}
-  preserve-trans _ _ _ _ (TATAp wf (TACast ta (WFForall wf2) (TCForall x)) eq) ITTApCast with eq
-  ... | refl = TACast (TATAp wf ta refl) (wf-sub wf wf2 refl) (~Typ[] x)
-  preserve-trans _ _ _ _ (TACast ta wf x) (ITCastID) = ta
-  preserve-trans _ _ _ _ (TACast (TACast ta _ x) _ x₁) (ITCastSucceed x₂) = ta
-  preserve-trans _ _ _ _ (TACast ta wf x) (ITGround (MGArr x₁)) = TACast (TACast ta (WFArr wf wf) (TCArr TCHole1 TCHole1)) wf TCHole1
-  preserve-trans _ _ _ _ (TACast ta wf x) (ITGround (MGForall x₁)) = TACast (TACast ta (WFForall WFHole) (TCForall TCHole1)) wf TCHole1
-  preserve-trans _ _ _ _ (TACast ta wf TCHole2) (ITExpand (MGArr x₁)) = TACast (TACast ta (WFArr WFHole WFHole) TCHole2) wf (TCArr TCHole2 TCHole2)
-  preserve-trans _ _ _ _ (TACast ta wf TCHole2) (ITExpand (MGForall x₁)) = TACast (TACast ta (WFForall WFHole) TCHole2) wf (TCForall TCHole2)
+  preserve-trans _ _ _ _ (TATAp wf (TACast ta (WFForall wf2) (ConsistForall x)) eq) ITTApCast with eq
+  ... | refl = TACast (TATAp wf ta refl) (wf-sub wf wf2 refl) {! (~Typ[] x) !}
+  preserve-trans _ _ _ _ (TACast ta wf x) (ITCastID alphaeq) = {! ta !}
+  preserve-trans _ _ _ _ (TACast (TACast ta _ x) _ x₁) (ITCastSucceed g1 g2 alpha) = {! ta !}
+  preserve-trans _ _ _ _ (TACast ta wf x) (ITGround (MGArr x₁)) = TACast (TACast ta (WFArr wf wf) {! (TCArr TCHole1 TCHole1)!} ) wf {! TCHole1 !}
+  preserve-trans _ _ _ _ (TACast ta wf x) (ITGround (MGForall x₁)) = TACast (TACast ta (WFForall WFHole) {! (TCForall TCHole1) !}) wf {! TCHole1 !}
+  preserve-trans _ _ _ _ (TACast ta wf TCHole2) (ITExpand (MGArr x₁)) = TACast (TACast ta (WFArr WFHole WFHole) {! TCHole2 !}) wf {! (TCArr TCHole2 TCHole2) !}
+  preserve-trans _ _ _ _ (TACast ta wf TCHole2) (ITExpand (MGForall x₁)) = TACast (TACast ta (WFForall WFHole) {! TCHole2 !}) wf {! (TCForall TCHole2) !}
   preserve-trans _ _ _ _ (TACast (TACast ta _ x) _ x₁) (ITCastFail w y z) = TAFailedCast ta w y z
   preserve-trans _ _ _ _ (TAFailedCast x y z q) ()
 
@@ -119,4 +123,4 @@ module preservation where
              d ↦ d' →
              Δ , ∅ , ∅ ⊢ d' :: τ
   preservation' bu tbu hcwf = preservation bu tbu wf-empty-tctx hcwf
-         
+          
