@@ -445,10 +445,10 @@ module core where
                   ((x : Nat) (τ : htyp) → (x , τ) ∈ Γ' → (x , τ) ∈ Γ) →
                   ((τ : htyp) → Θ' ⊢ τ wf → Θ ⊢ τ wf) →
                   Δ , Θ , Γ ⊢ TypId Θ' , Id Γ' :s: Θ' , Γ'
-      STAIdSubst : ∀{Γ Γ' y τ d σ Δ θ Θ Θ'} →
-                  Δ , Θ , (Γ ,, (y , τ)) ⊢ θ , σ :s: Θ' , Γ' →
+      STAIdSubst : ∀{Γ Γ' y τ d σ Δ Θ Θ'} →
+                  Δ , Θ , (Γ ,, (y , τ)) ⊢ TypId Θ' , σ :s: Θ' , Γ' →
                   Δ , Θ , Γ ⊢ d :: τ →
-                  Δ , Θ , Γ ⊢ θ , Subst d y σ :s: Θ' , Γ'
+                  Δ , Θ , Γ ⊢ TypId Θ' , Subst d y σ :s: Θ' , Γ'
       STASubst : ∀{Θ Θ' Γ Δ θ σ y Γ' τ } →
                Δ , (Θ ,, (y , <>)) , Γ ⊢ θ , σ :s: Θ' , (Tctx[ τ / y ] Γ') →
                Θ ⊢ τ wf →

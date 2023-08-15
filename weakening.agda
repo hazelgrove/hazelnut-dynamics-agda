@@ -144,3 +144,4 @@ module weakening where
     weaken-ta-typ (TANEHole x x₁ x₂ eq) = TANEHole x (weaken-ta-typ x₁) (weaken-subst-Θ x₂) eq
     weaken-ta-typ (TACast x wf x₁) = TACast (weaken-ta-typ x) (weaken-t-wf wf) x₁
     weaken-ta-typ (TAFailedCast x x₁ x₂ x₃) = TAFailedCast (weaken-ta-typ x) x₁ x₂ x₃
+ 
