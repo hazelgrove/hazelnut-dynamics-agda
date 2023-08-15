@@ -24,7 +24,7 @@ module canonical-boxed-forms where
     CBFCastArr : ∀{Δ d τ1 τ2} →
       (Σ[ d' ∈ ihexp ] Σ[ τ1' ∈ htyp ] Σ[ τ2' ∈ htyp ]
          (d == (d' ⟨ τ1' ==> τ2' ⇒ τ1 ==> τ2 ⟩) ×
-         (τ1' ==> τ2' ≠ τ1 ==> τ2) ×
+         (τ1' ==> τ2' =α̸  τ1 ==> τ2) ×
          (Δ , ∅ , ∅ ⊢ d' :: τ1' ==> τ2')))
       → cbf-arr Δ d τ1 τ2
 
@@ -42,28 +42,28 @@ module canonical-boxed-forms where
   canonical-boxed-forms-arr (TAFailedCast x x₁ x₂ x₃) (BVVal ())
   
   -- Similar to the arr case, give the two possible forms of a forall type.
-  data cbf-forall : (Δ : hctx) (d : ihexp) (τ : htyp) → Set where
+  data cbf-forall : (Δ : hctx) (d : ihexp) (t : Nat) (τ : htyp) → Set where
     -- the value case
     CBFTLam : ∀{Δ d t τ} → 
       (Σ[ d' ∈ ihexp ] 
         ((d == (·Λ t d')) ×
         (Δ , (∅ ,, (t , <>)) , ∅ ⊢ d' :: τ)))
-      → cbf-forall Δ d τ
+      → cbf-forall Δ d t τ
     -- the cast case
-    CBFCastForall : ∀{Δ d t τ} →
-      (Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ]
-        (d == (d' ⟨ ·∀ t τ' ⇒ ·∀ t τ ⟩) ×
-         (τ' ≠ τ) × 
-         (Δ , ∅ , ∅ ⊢ d' :: ·∀ t τ')))
-      → cbf-forall Δ d τ
+    CBFCastForall : ∀{Δ d t1 τ1} →
+      (Σ[ d' ∈ ihexp ] Σ[ t2 ∈ Nat ] Σ[ τ2 ∈ htyp ]
+        (d == (d' ⟨ ·∀ t1 τ1 ⇒ ·∀ t2 τ2 ⟩) ×
+         (·∀ t1 τ1) =α̸  (·∀ t2 τ2) × 
+         (Δ , ∅ , ∅ ⊢ d' :: ·∀ t1 τ1)))
+      → cbf-forall Δ d t1 τ1
   
   canonical-boxed-forms-forall : ∀{Δ d t τ } →
                             Δ , ∅ , ∅ ⊢ d :: (·∀ t τ)  →
                             d boxedval →
-                            cbf-forall Δ d τ
+                            cbf-forall Δ d t τ
   canonical-boxed-forms-forall (TATLam wt) (BVVal v) = CBFTLam (canonical-value-forms-typfun (TATLam wt) v)
   canonical-boxed-forms-forall (TACast wt _ x) (BVVal ())
-  canonical-boxed-forms-forall (TACast wt _ _) (BVForallCast x bv) = CBFCastForall (_ , _ , refl , x , wt )
+  canonical-boxed-forms-forall {t = t} {τ = τ} (TACast wt _ consist) (BVForallCast neq bv) = CBFCastForall (_ , _ , _ , {!   !} , (λ x₁ → neq {! ~sym ?  !}) , {!   !} )
 
   canonical-boxed-forms-hole : ∀{Δ d} →
                                Δ , ∅ , ∅ ⊢ d :: ⦇-⦈ →
