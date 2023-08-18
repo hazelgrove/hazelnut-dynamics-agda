@@ -50,12 +50,12 @@ module canonical-boxed-forms where
         (Δ , (∅ ,, (t , <>)) , ∅ ⊢ d' :: τ)))
       → cbf-forall Δ d t τ
     -- the cast case
-    CBFCastForall : ∀{Δ d t1 τ1} →
-      (Σ[ d' ∈ ihexp ] Σ[ t2 ∈ Nat ] Σ[ τ2 ∈ htyp ]
+    CBFCastForall : ∀{Δ d t2 τ2} →
+      (Σ[ d' ∈ ihexp ] Σ[ t1 ∈ Nat ] Σ[ τ1 ∈ htyp ]
         (d == (d' ⟨ ·∀ t1 τ1 ⇒ ·∀ t2 τ2 ⟩) ×
          (·∀ t1 τ1) =α̸  (·∀ t2 τ2) × 
          (Δ , ∅ , ∅ ⊢ d' :: ·∀ t1 τ1)))
-      → cbf-forall Δ d t1 τ1
+      → cbf-forall Δ d t2 τ2
   
   canonical-boxed-forms-forall : ∀{Δ d t τ } →
                             Δ , ∅ , ∅ ⊢ d :: (·∀ t τ)  →
@@ -63,7 +63,7 @@ module canonical-boxed-forms where
                             cbf-forall Δ d t τ
   canonical-boxed-forms-forall (TATLam wt) (BVVal v) = CBFTLam (canonical-value-forms-typfun (TATLam wt) v)
   canonical-boxed-forms-forall (TACast wt _ x) (BVVal ())
-  canonical-boxed-forms-forall {t = t} {τ = τ} (TACast wt _ consist) (BVForallCast neq bv) = CBFCastForall (_ , _ , _ , {!   !} , (λ x₁ → neq {! ~sym ?  !}) , {!   !} )
+  canonical-boxed-forms-forall {t = t} {τ = τ} (TACast wt _ consist) (BVForallCast neq bv) = CBFCastForall ( _ , _ , _ , refl , neq , wt)
 
   canonical-boxed-forms-hole : ∀{Δ d} →
                                Δ , ∅ , ∅ ⊢ d :: ⦇-⦈ →
