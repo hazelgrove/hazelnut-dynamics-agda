@@ -37,8 +37,8 @@ module lemmas-consistency where
   alpha-sym-ctx ΓL ΓR (·∀ x τ1) (·∀ y τ2) (AlphaForall eq) = 
     AlphaForall (alpha-sym-ctx ((■ (x , y)) ∪ ΓL) ((■ (y , x)) ∪ ΓR) τ1 τ2 eq)
 
-  alpha-sym : (τ1 τ2 : htyp) → τ1 =α τ2 → τ2 =α τ1
-  alpha-sym τ1 τ2 = alpha-sym-ctx ∅ ∅ τ1 τ2
+  alpha-sym : {τ1 τ2 : htyp} → τ1 =α τ2 → τ2 =α τ1
+  alpha-sym {τ1} {τ2} = alpha-sym-ctx ∅ ∅ τ1 τ2
 
   alpha-hole : (τ : htyp) → (τ =α ⦇-⦈) → τ == ⦇-⦈
   alpha-hole .⦇-⦈ AlphaHole = refl
@@ -115,6 +115,11 @@ module lemmas-consistency where
 
   alpha-dec : (t1 t2 : htyp) → ((t1 =α t2) + ¬(t1 =α t2))
   alpha-dec = ⊢alpha-dec
+
+  ground-alpha-ground : ∀ {t1 t2} → (t1 ground) → (t1 =α t2) → (t2 ground)
+  ground-alpha-ground GBase AlphaBase = GBase
+  ground-alpha-ground GArr (AlphaArr AlphaHole AlphaHole) = GArr
+  ground-alpha-ground GForall (AlphaForall AlphaHole) = GForall
 
   -- type substitution preserves consistency
   -- I think we need something stronger, like apartness of free variables in t1, t2 and t or something.
@@ -200,7 +205,7 @@ module lemmas-consistency where
   alpha-~ : ∀ {t1 t2} → (t1 =α t2) → (t1 ~ t2)
   alpha-~ eq = alpha-~-ctx eq
 
-  -- ground-eq-~ : ∀ {t1 t2} → (t1 ground) → (t2 ground) → (t1 ~ t2) → (t1 == t2)
-  -- ground-eq-~ GBase GBase con = refl
-  -- ground-eq-~ GArr GArr con = refl
-  -- ground-eq-~ GForall GForall con = refl
+  ground-eq-~ : ∀ {t1 t2} → (t1 ground) → (t2 ground) → (t1 ~ t2) → (t1 =α t2)
+  ground-eq-~ GBase GBase con = AlphaBase
+  ground-eq-~ GArr GArr con = AlphaArr AlphaHole AlphaHole
+  ground-eq-~ GForall GForall con = AlphaForall AlphaHole
