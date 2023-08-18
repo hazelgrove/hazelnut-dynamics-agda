@@ -27,16 +27,18 @@ module lemmas-progress-checks where
   indet-not-trans (ICastGroundHole GBase ind) (ITCastID ())
   indet-not-trans (ICastGroundHole GArr ind) (ITCastID ())
   indet-not-trans (ICastGroundHole GForall ind) (ITCastID ())
-  indet-not-trans (ICastGroundHole x ind) (ITCastSucceed g1 () eq)
+  -- indet-not-trans (ICastGroundHole x ind) (ITCastSucceed g1 () eq)
   indet-not-trans (ICastGroundHole GArr ind) (ITGround (MGArr x)) = x refl
   indet-not-trans (ICastGroundHole GForall x₁) (ITGround (MGForall x₂)) = x₂ refl
-  indet-not-trans (ICastHoleGround x ind g) (ITCastID eq) = {!   !}
+  indet-not-trans (ICastHoleGround x ind GBase) (ITCastID ())
+  indet-not-trans (ICastHoleGround x ind GArr) (ITCastID ())
+  indet-not-trans (ICastHoleGround x ind GForall) (ITCastID ())
   indet-not-trans (ICastHoleGround x ind x₁) (ITCastSucceed g1 g2 x₂) = x _ _ refl
   indet-not-trans (ICastHoleGround x ind GArr) (ITExpand (MGArr x₂)) = x₂ refl
   indet-not-trans (ICastHoleGround x x₁ GForall) (ITExpand (MGForall x₃)) = x₃ refl
-  indet-not-trans (ICastGroundHole x a) (ITExpand ())
-  indet-not-trans (ICastHoleGround x a x₁) (ITGround ())
-  indet-not-trans (ICastGroundHole x x₁) (ITCastFail x₂ () x₄)
+  -- indet-not-trans (ICastGroundHole x a) (ITExpand ())
+  -- indet-not-trans (ICastHoleGround x a x₁) (ITGround ())
+  -- indet-not-trans (ICastGroundHole x x₁) (ITCastFail x₂ () x₄)
   indet-not-trans (ICastHoleGround x x₁ x₂) (ITCastFail x₃ x₄ x₅) = x _ _ refl
   indet-not-trans (IFailedCast x x₁ x₂ x₃) ()
 
@@ -75,3 +77,4 @@ module lemmas-progress-checks where
 
   final-sub-not-trans : ∀{d d' d'' ε} →  d final → d == ε ⟦ d' ⟧ → d' →> d'' → ⊥
   final-sub-not-trans f sub step = final-not-trans (final-sub-final f sub) step
+ 

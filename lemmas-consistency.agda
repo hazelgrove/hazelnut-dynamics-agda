@@ -24,6 +24,9 @@ module lemmas-consistency where
   alpha-refl : (τ : htyp) → τ =α τ
   alpha-refl τ = alpha-refl-ctx ∅ (λ ()) τ
 
+  alpha-hole : (τ : htyp) → (τ =α ⦇-⦈) → τ == ⦇-⦈
+  alpha-hole .⦇-⦈ AlphaHole = refl
+
   ⊢~refl : {Γ : Nat ctx} -> {t : htyp} → (∀ {x y} → (x , y) ∈ Γ → (x , x) ∈ Γ) -> (_,_⊢_~_) Γ Γ t t
   ⊢~refl {t = b} _ = ConsistBase
   ⊢~refl {Γ} {t = T x} r with ctxindirect Γ x
