@@ -70,6 +70,12 @@ module contexts where
   _,,_ : {A : Set} → A ctx → (Nat × A) → A ctx
   (Γ ,, (x , t)) = Γ ∪ (■ (x , t))
 
+  -- context removal
+  _/_ : {A : Set} → A ctx → Nat → A ctx
+  (Γ / x) y with natEQ x y 
+  (Γ / x) .x | Inl refl = None 
+  ... | Inr _ = Γ y
+
   infixl 10 _,,_
 
   -- used below in proof of ∪ commutativity and associativity
