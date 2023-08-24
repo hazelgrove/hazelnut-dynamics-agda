@@ -220,8 +220,8 @@ module core where
     Ihexp[ τ / t ] (·Λ t' d) with natEQ t t'
     ... | Inl refl = (·Λ t' d)
     ... | Inr neq = (·Λ t' (Ihexp[ τ / t ] d))
-    Ihexp[ τ / t ] (⦇-⦈⟨ u , θ , σ ⟩) = ⦇-⦈⟨ u , TypSubst τ t θ , σ ⟩
-    Ihexp[ τ / t ] (⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩) = ⦇⌜ (Ihexp[ τ / t ] d) ⌟⦈⟨ u , TypSubst τ t θ , σ ⟩
+    Ihexp[ τ / t ] (⦇-⦈⟨ u , θ , σ ⟩) = ⦇-⦈⟨ u , TypSubst τ t θ , Sub[ τ / t ] σ ⟩
+    Ihexp[ τ / t ] (⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩) = ⦇⌜ (Ihexp[ τ / t ] d) ⌟⦈⟨ u , TypSubst τ t θ , Sub[ τ / t ] σ ⟩
     Ihexp[ τ / t ] (d1 ∘ d2) = ((Ihexp[ τ / t ] d1) ∘ (Ihexp[ τ / t ] d2))
     Ihexp[ τ / t ] (d < τ' >) = (Ihexp[ τ / t ] d) < Typ[ τ / t ] τ' >
     Ihexp[ τ / t ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (Ihexp[ τ / t ] d) ⟨ (Typ[ τ / t ] τ1) ⇒ (Typ[ τ / t ] τ2) ⟩
@@ -260,6 +260,11 @@ module core where
   apply-typenv : typenv → htyp → htyp
   apply-typenv (TypId Θ) τ = τ
   apply-typenv (TypSubst τ y θ) τ' = Typ[ τ / y ] ( apply-typenv θ τ')
+  
+  -- applying a type environment to a tctx
+  apply-typenv-env : typenv → tctx → tctx
+  apply-typenv-env (TypId Θ) Γ = Γ
+  apply-typenv-env (TypSubst τ y θ) Γ = Tctx[ τ / y ] ( apply-typenv-env θ Γ)
 
   -- bidirectional type checking judgements for hexp
   mutual
@@ -476,16 +481,18 @@ module core where
                 Δ , Θ , Γ ⊢ d :: (·∀ t τ2) →
                 Typ[ τ1 / t ] τ2 == τ3 → 
                 Δ , Θ , Γ ⊢ (d < τ1 >) :: τ3
-      TAEHole : ∀{Δ Θ Γ θ σ u Θ' Γ' τ τ'} →
+      TAEHole : ∀{Δ Θ Γ θ σ u Θ' Γ' Γ'' τ τ'} →
                 (u , (Θ' , Γ' , τ')) ∈ Δ →
-                Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' →
+                Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ'' →
                 τ == apply-typenv θ τ' →
+                Γ'' == apply-typenv-env θ Γ' →
                 Δ , Θ , Γ ⊢ ⦇-⦈⟨ u , θ , σ ⟩ :: τ
-      TANEHole : ∀ {Δ Θ Γ d τ' τ'' Θ' Γ' u θ σ τ } →
+      TANEHole : ∀ {Δ Θ Γ d τ' τ'' Θ' Γ' Γ'' u θ σ τ } →
                  (u , (Θ' , Γ' , τ')) ∈ Δ →
                  Δ , Θ , Γ ⊢ d :: τ'' →
-                 Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' →
+                 Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ'' →
                  τ == apply-typenv θ τ' →
+                Γ'' == apply-typenv-env θ Γ' →
                  Δ , Θ , Γ ⊢ ⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩ :: τ
       TACast : ∀{Δ Θ Γ d τ1 τ2} →
              Δ , Θ , Γ ⊢ d :: τ1 →
@@ -713,6 +720,13 @@ module core where
                            → x ≠ y
                            → envtfresh x (Subst d y σ)
 
+    data tenvtfresh : Nat → typenv → Set where
+      TETFId : ∀{t θ} → t # θ → tenvtfresh t (TypId θ)
+      TETFSubst : ∀{t τ θ t'} → tfresht t τ
+                           → tenvtfresh t θ
+                           → t ≠ t'
+                           → tenvtfresh t (TypSubst τ t' θ)
+
     -- ... for internal expressions
     data fresh : Nat → ihexp → Set where
       FConst : ∀{x} → fresh x c
@@ -870,15 +884,26 @@ module core where
                → tbinderst-disjoint-θ (TypSubst τ t θ) τ'
                
     data tbinderst-disjoint : htyp → ihexp → Set where
-      BDTBase : ∀{d} → tbinderst-disjoint b d
-      BDTTVar : ∀{d t} → tbinderst-disjoint (T t) d
-      BDTHole :  ∀{d} → tbinderst-disjoint ⦇-⦈ d
-      BDTArr : ∀{τ1 τ2 d} → tbinderst-disjoint τ1 d
-                         → tbinderst-disjoint τ2 d
-                         → tbinderst-disjoint (τ1 ==> τ2) d
-      BDTForall : ∀{t τ d} → tbinderst-disjoint τ d
-                           → tunbound-in t d
-                           → tbinderst-disjoint (·∀ t τ) d
+      TBDTConst : ∀{τ} → tbinderst-disjoint τ c
+      TBDTVar : ∀{x τ} → tbinderst-disjoint τ (X x)
+      TBDTLam : ∀{x τ τ' d} → tbinderstt-disjoint τ τ'
+                            → tbinderst-disjoint τ (·λ_[_]_ x τ' d)
+      TBDTTLam :  ∀{t τ d} → tbinderst-disjoint τ d
+                            → tunboundt-in t τ
+                            → tbinderst-disjoint τ (·Λ t d)
+      TBDTHole : ∀{u τ θ σ} → tbinderst-disjoint-θ θ τ
+                            → tbinderst-disjoint τ (⦇-⦈⟨ u , θ , σ ⟩)
+      TBDTNEHole : ∀{u τ σ θ d} → tbinderst-disjoint-θ θ τ
+                                → tbinderst-disjoint τ d
+                                → tbinderst-disjoint τ (⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩)
+      TBDTAp :  ∀{τ d1 d2} → tbinderst-disjoint τ d1
+                          → tbinderst-disjoint τ d2
+                          → tbinderst-disjoint τ (d1 ∘ d2)
+      TBDTTAp : ∀{τ τ' d} → tbinderst-disjoint τ d
+                          -> tbinderstt-disjoint τ τ'
+                          → tbinderst-disjoint τ (d < τ' >)
+      TBDTCast : ∀{τ d τ1 τ2} → tbinderst-disjoint τ d → tbinderstt-disjoint τ τ1 -> tbinderstt-disjoint τ τ2 -> tbinderst-disjoint τ (d ⟨ τ1 ⇒ τ2 ⟩)
+      TBDTFailedCast : ∀{τ d τ1 τ2} → tbinderst-disjoint τ d → tbinderstt-disjoint τ τ1 -> tbinderstt-disjoint τ τ2 -> tbinderst-disjoint τ (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
                
     data tbinderstt-disjoint : htyp → htyp → Set where
       BDTBase : ∀{τ} → tbinderstt-disjoint b τ

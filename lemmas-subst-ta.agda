@@ -23,13 +23,6 @@ module lemmas-subst-ta where
                                                                                             (binders-envfresh subst (apart-extend1 Γ neq apt) unbound x₃)
                                                                                             neq
     binders-envfresh {Γ = Γ} {y = y} (STASubst subst wf) apt ub bu = binders-envfresh subst apt ub bu
-    {-
-    binders-envtfresh : ∀{Δ Γ Γ' y σ Θ} → Δ , Θ , Γ ⊢ σ :s: Γ' → y # Θ → unbound-in-σ y σ → binders-unique-σ σ → unboundt-in-Γ y Γ -> envtfresh y σ
-    binders-envtfresh {Γ' = Γ'} {y = y} {Θ = Θ} (STAId x) apt ub bu (UBTΓ ubtg) = ETFId (UBTΓ \k v inc ->  ubtg k v (x k v inc))
-    binders-envtfresh (STASubst ta x) apt (UBσSubst x₁ ub x₂) (BUσSubst x₃ bu x₄) (UBTΓ ubtg) = 
-      let y-tfresh = (binders-tfresh x x₃ x₁ apt) in
-      ETFSubst y-tfresh
-               (binders-envtfresh ta apt ub bu {!   !}) x₂ -}
 
     binders-fresh : ∀{ Δ Γ d2 τ y Θ} → Δ , Θ , Γ ⊢ d2 :: τ
                                       → binders-unique d2
@@ -46,8 +39,8 @@ module lemmas-subst-ta where
     binders-fresh {Γ = Γ} (TATLam wt) (BUTLam bu) (UBTLam ub2) x₃ = FTLam (binders-fresh wt bu ub2 x₃)
     binders-fresh (TAAp wt wt₁)  (BUAp bu2 bu3 x) (UBAp ub ub₁) apt = FAp (binders-fresh wt bu2 ub apt) (binders-fresh wt₁ bu3 ub₁ apt)
     binders-fresh (TATAp wf wt eq) (BUTAp x) (UBTAp x₂) x₃ = FTAp (binders-fresh wt x x₂ x₃)
-    binders-fresh (TAEHole x₁ x₂ eq) (BUEHole x) (UBHole x₃) apt = FHole (binders-envfresh x₂ apt x₃ x )
-    binders-fresh (TANEHole x₁ wt x₂ eq) (BUNEHole bu2 x) (UBNEHole x₃ ub) apt = FNEHole (binders-envfresh x₂ apt x₃ x) (binders-fresh wt bu2  ub apt)
+    binders-fresh (TAEHole x₁ x₂ eq eq') (BUEHole x) (UBHole x₃) apt = FHole (binders-envfresh x₂ apt x₃ x )
+    binders-fresh (TANEHole x₁ wt x₂ eq eq') (BUNEHole bu2 x) (UBNEHole x₃ ub) apt = FNEHole (binders-envfresh x₂ apt x₃ x) (binders-fresh wt bu2  ub apt)
     binders-fresh (TACast wt wf x₁) (BUCast bu2) (UBCast ub) apt = FCast (binders-fresh wt  bu2  ub apt)
     binders-fresh (TAFailedCast wt x x₁ x₂) (BUFailedCast bu2) (UBFailedCast ub) apt = FFailedCast (binders-fresh wt  bu2  ub apt)
 {-
@@ -89,8 +82,8 @@ module lemmas-subst-ta where
   lem-subst {Γ = Γ} {Θ = Θ} apt (BDTLam bd) bu (TATLam wt1) wt2 = TATLam (lem-subst apt bd bu wt1 (weaken-ta-typ wt2))
   lem-subst apt (BDAp bd bd₁) bu3 (TAAp wt1 wt2) wt3 = TAAp (lem-subst apt bd bu3 wt1 wt3) (lem-subst apt bd₁ bu3 wt2 wt3)
   lem-subst apt (BDTAp bd) bu (TATAp wf wt1 eq) wt2 = TATAp wf (lem-subst apt bd bu wt1 wt2) eq
-  lem-subst apt bd bu2 (TAEHole inΔ sub eq) wt2 = TAEHole inΔ {! (STAIdSubst sub wt2) !} eq
-  lem-subst apt (BDNEHole x₁ bd) bu2 (TANEHole x₃ wt1 x₄ eq) wt2 = TANEHole x₃ (lem-subst apt bd bu2 wt1 wt2) {! (STAIdSubst x₄ wt2) !} eq
+  lem-subst apt bd bu2 (TAEHole inΔ sub eq eq') wt2 = TAEHole inΔ {! (STAIdSubst sub wt2) !} eq eq'
+  lem-subst apt (BDNEHole x₁ bd) bu2 (TANEHole x₃ wt1 x₄ eq eq') wt2 = TANEHole x₃ (lem-subst apt bd bu2 wt1 wt2) {! (STAIdSubst x₄ wt2) !} eq eq'
   lem-subst apt (BDCast bd) bu2 (TACast wt1 wf x₁) wt2 = TACast (lem-subst apt bd bu2 wt1 wt2) wf x₁
   lem-subst apt (BDFailedCast bd) bu2 (TAFailedCast wt1 x₁ x₂ x₃) wt2 = TAFailedCast (lem-subst apt bd bu2 wt1 wt2) x₁ x₂ x₃
   

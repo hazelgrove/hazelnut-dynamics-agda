@@ -250,7 +250,7 @@ module lemmas-well-formed where
     typenv-wf {Θ = Θ} {θ = θ} {τ = τ} hctxwf ctxwf1 (STASubst {y = y} sub x) ctxwf2 wf eq =
       typsub-wf wf2 x eq
       where 
-      wf2 = typenv-wf hctxwf (weaken-tctx-wf ctxwf1) sub {! ctxwf2 !} wf refl
+      wf2 = typenv-wf hctxwf (weaken-tctx-wf ctxwf1) {! sub !} {! ctxwf2 !} wf refl
 
     wf-ta : ∀{Θ Γ d τ Δ} → 
             Θ ⊢ Γ tctxwf → 
@@ -265,10 +265,10 @@ module lemmas-well-formed where
     ... | WFArr wf1 wf2 = wf2
     wf-ta ctxwf hctwwf (TATAp x wt eq) with (wf-ta ctxwf hctwwf wt)
     ... | WFForall wf' rewrite (sym eq) = wf-sub x wf' refl
-    wf-ta ctxwf (HCtx map) (TAEHole x x₁ eq) with map x 
-    ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ thing1 thing2 eq
-    wf-ta ctxwf (HCtx map) (TANEHole x wt x₁ eq) with map x 
-    ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ thing1 thing2 eq
+    wf-ta ctxwf (HCtx map) (TAEHole x x₁ eq eq') with map x 
+    ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ {! thing1 !} thing2 eq
+    wf-ta ctxwf (HCtx map) (TANEHole x wt x₁ eq eq') with map x 
+    ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ {! thing1 !} thing2 eq
     wf-ta ctxwf hctwwf (TACast wt x x₁) = x
     wf-ta ctxwf hctwwf (TAFailedCast wt x x₁ x₂) = ground-wf x₁
 

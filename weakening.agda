@@ -49,8 +49,8 @@ module weakening where
     weaken-ta-Δ1 disj (TATLam wt) = TATLam (weaken-ta-Δ1 disj wt)
     weaken-ta-Δ1 disj (TAAp wt wt₁) = TAAp (weaken-ta-Δ1 disj wt) (weaken-ta-Δ1 disj wt₁)
     weaken-ta-Δ1 disj (TATAp wf wt eq) = TATAp wf (weaken-ta-Δ1 disj wt) eq
-    weaken-ta-Δ1 {Δ1} {Δ2} {Γ} disj (TAEHole {u = u} {Γ' = Γ'} x x₁ eq) = TAEHole (x∈∪l Δ1 Δ2 u _ x ) (weaken-subst-Δ disj x₁) eq
-    weaken-ta-Δ1 {Δ1} {Δ2} {Γ} disj (TANEHole {Γ' = Γ'} {u = u} x wt x₁ eq) = TANEHole (x∈∪l Δ1 Δ2 u _ x) (weaken-ta-Δ1 disj wt) (weaken-subst-Δ disj x₁) eq
+    weaken-ta-Δ1 {Δ1} {Δ2} {Γ} disj (TAEHole {u = u} {Γ' = Γ'} x x₁ eq eq') = TAEHole (x∈∪l Δ1 Δ2 u _ x ) (weaken-subst-Δ disj x₁) eq eq'
+    weaken-ta-Δ1 {Δ1} {Δ2} {Γ} disj (TANEHole {Γ' = Γ'} {u = u} x wt x₁ eq eq') = TANEHole (x∈∪l Δ1 Δ2 u _ x) (weaken-ta-Δ1 disj wt) (weaken-subst-Δ disj x₁) eq eq'
     weaken-ta-Δ1 disj (TACast wt wf x) = TACast (weaken-ta-Δ1 disj wt) wf x
     weaken-ta-Δ1 disj (TAFailedCast wt x x₁ x₂) = TAFailedCast (weaken-ta-Δ1 disj wt) x x₁ x₂
 
@@ -118,8 +118,8 @@ module weakening where
     weaken-ta {x} {Γ} {τ' = τ'} (FTLam frsh) (TATLam x₁) = TATLam (weaken-ta frsh x₁)
     weaken-ta (FAp frsh frsh₁) (TAAp wt wt₁) = TAAp (weaken-ta frsh wt) (weaken-ta frsh₁ wt₁)
     weaken-ta (FTAp frsh) (TATAp wf x₁ eq) = TATAp wf (weaken-ta frsh x₁) eq
-    weaken-ta (FHole x₁) (TAEHole x₂ x₃ eq) = TAEHole x₂ (weaken-subst-Γ x₁ x₃) eq
-    weaken-ta (FNEHole x₁ frsh) (TANEHole x₂ wt x₃ eq) = TANEHole x₂ (weaken-ta frsh wt) (weaken-subst-Γ x₁ x₃) eq
+    weaken-ta (FHole x₁) (TAEHole x₂ x₃ eq eq') = TAEHole x₂ (weaken-subst-Γ x₁ x₃) eq eq'
+    weaken-ta (FNEHole x₁ frsh) (TANEHole x₂ wt x₃ eq eq') = TANEHole x₂ (weaken-ta frsh wt) (weaken-subst-Γ x₁ x₃) eq eq'
     weaken-ta (FCast frsh) (TACast wt wf x₁) = TACast (weaken-ta frsh wt) wf x₁
     weaken-ta (FFailedCast frsh) (TAFailedCast wt x₁ x₂ x₃) = TAFailedCast (weaken-ta frsh wt) x₁ x₂ x₃
 
@@ -140,8 +140,8 @@ module weakening where
     weaken-ta-typ {Θ = Θ} (TATLam x) = TATLam (rewrite-theta (exchange-Θ {Θ = Θ}) (weaken-ta-typ x))
     weaken-ta-typ (TAAp x x₁) = TAAp (weaken-ta-typ x) (weaken-ta-typ x₁)
     weaken-ta-typ (TATAp wf x eq) = TATAp (weaken-t-wf wf) (weaken-ta-typ x) eq
-    weaken-ta-typ (TAEHole x x₁ eq) = TAEHole x (weaken-subst-Θ x₁) eq
-    weaken-ta-typ (TANEHole x x₁ x₂ eq) = TANEHole x (weaken-ta-typ x₁) (weaken-subst-Θ x₂) eq
+    weaken-ta-typ (TAEHole x x₁ eq eq') = TAEHole x (weaken-subst-Θ x₁) eq eq'
+    weaken-ta-typ (TANEHole x x₁ x₂ eq eq') = TANEHole x (weaken-ta-typ x₁) (weaken-subst-Θ x₂) eq eq'
     weaken-ta-typ (TACast x wf x₁) = TACast (weaken-ta-typ x) (weaken-t-wf wf) x₁
     weaken-ta-typ (TAFailedCast x x₁ x₂ x₃) = TAFailedCast (weaken-ta-typ x) x₁ x₂ x₃
  
