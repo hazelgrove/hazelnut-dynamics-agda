@@ -33,6 +33,9 @@ module rewrite-util where
   rewrite-theta-subst : ∀{Δ Θ Θ' Θf Γ Γf θ σ} → Θ == Θ' → Δ , Θ , Γ ⊢ θ , σ :s: Θf , Γf → Δ , Θ' , Γ ⊢ θ , σ :s: Θf , Γf
   rewrite-theta-subst eq sub rewrite eq = sub
 
+  rewrite-sigma-subst : ∀{Δ Θ Θf Γ Γf θ σ σ'} → σ == σ' → Δ , Θ , Γ ⊢ θ , σ :s: Θf , Γf → Δ , Θ , Γ ⊢ θ , σ' :s: Θf , Γf
+  rewrite-sigma-subst eq sub rewrite eq = sub
+
   some-epi : {A : Set} -> {x y : A} ->
     x == y -> Some x == Some y
   some-epi eq rewrite eq = refl
@@ -49,3 +52,9 @@ module rewrite-util where
 
   rewrite-t-wf : ∀{Θ Θ' τ} -> Θ == Θ' -> Θ ⊢ τ wf -> Θ' ⊢ τ wf
   rewrite-t-wf eq p rewrite eq = p
+
+  subst-eq : ∀{d d' y y' σ σ'} → d == d' → y == y' → σ == σ' → Subst d y σ == Subst d' y' σ'
+  subst-eq eq1 eq2 eq3 rewrite eq1 rewrite eq2 rewrite eq3 = refl
+
+  id-eq : ∀{Γ Γ'} → Γ == Γ' → Id Γ == Id Γ'
+  id-eq eq rewrite eq = refl

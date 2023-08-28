@@ -455,8 +455,8 @@ module core where
                   Δ , Θ ∪ Θ' , Γ ⊢ d :: τ →
                   Δ , Θ , Γ ⊢ TypId Θ' , Subst d y σ :s: Θ' , Γ'
       STASubst : ∀{Θ Θ' Γ Δ θ σ y Γ' τ } →
-               Δ , Θ , Γ ⊢ θ , (Sub[ τ / y ] σ) :s: Θ' , (Tctx[ τ / y ]  Γ') →
-               Θ ⊢ τ wf →
+               Δ , (Θ ,, (y , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ' →
+               ∅ ⊢ τ wf →
                Δ , Θ , Γ ⊢ TypSubst τ y θ , σ :s: Θ' , Γ'
 
     -- type assignment

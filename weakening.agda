@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 open import Nat
 open import Prelude
 open import core
@@ -102,9 +104,9 @@ module weakening where
     weaken-subst-Γ {x = x} {Γ = Γ} (EFSubst x₁ efrsh x₂) (STAIdSubst {y = y} {τ = τ'} subst x₃) =
       STAIdSubst (exchange-subst-Γ {Γ = Γ} (flip x₂) (weaken-subst-Γ {Γ = Γ ,, (y , τ')} efrsh subst))
                (weaken-ta x₁ x₃)
-    weaken-subst-Γ (EFId x) (STASubst x₁ x₂) = STASubst (weaken-subst-Γ (EFId x) x₁) x₂
+    weaken-subst-Γ (EFId x) (STASubst x₁ x₂) = STASubst {!   !} {!   !} -- {! STASubst (weaken-subst-Γ (EFId x) x₁) x₂ !}
     weaken-subst-Γ {x = x} {Γ = Γ} (EFSubst x₁ efrsh x₂) (STASubst {y = y} {τ = τ'} subst x₃) =
-      STASubst (weaken-subst-Γ (EFSubst x₁ efrsh x₂) subst) x₃ 
+      STASubst (weaken-subst-Γ {! (EFSubst x₁ efrsh x₂) !} subst) x₃ 
 
     weaken-ta : ∀{x Γ Δ d τ τ' Θ} →
                 fresh x d →
@@ -129,7 +131,7 @@ module weakening where
                      Δ , (Θ ,, (t , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ'
     weaken-subst-Θ (STAIdId x p) = STAIdId x λ τ x₁ → weaken-t-wf (p τ x₁)
     weaken-subst-Θ (STAIdSubst x x₁) = STAIdSubst (weaken-subst-Θ x) (weaken-ta-typ x₁)
-    weaken-subst-Θ {Θ = Θ} (STASubst x x₁) = STASubst (rewrite-theta-subst (exchange-Θ {Θ = Θ}) (weaken-subst-Θ x)) (weaken-t-wf x₁)
+    weaken-subst-Θ {Θ = Θ} (STASubst x x₁) = STASubst {! (weaken-subst-Θ x) !} x₁
     
     weaken-ta-typ : ∀{Γ Δ Θ d t τ} →
                     Δ , Θ , Γ ⊢ d :: τ →
