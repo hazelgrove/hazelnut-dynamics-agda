@@ -452,7 +452,7 @@ module core where
                   Δ , Θ , Γ ⊢ TypId Θ' , Id Γ' :s: Θ' , Γ'
       STAIdSubst : ∀{Γ Γ' y τ d σ Δ Θ Θ'} →
                   Δ , Θ , (Γ ,, (y , τ)) ⊢ TypId Θ' , σ :s: Θ' , Γ' →
-                  Δ , Θ ∪ Θ' , Γ ⊢ d :: τ →
+                  Δ , Θ , Γ ⊢ d :: τ →
                   Δ , Θ , Γ ⊢ TypId Θ' , Subst d y σ :s: Θ' , Γ'
       STASubst : ∀{Θ Θ' Γ Δ θ σ y Γ' τ } →
                Δ , (Θ ,, (y , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ' →
@@ -487,7 +487,7 @@ module core where
                 τ == apply-typenv θ τ' →
                 Γ'' == apply-typenv-env θ Γ' →
                 Δ , Θ , Γ ⊢ ⦇-⦈⟨ u , θ , σ ⟩ :: τ
-      TANEHole : ∀ {Δ Θ Γ d τ' τ'' Θ' Γ' Γ'' u θ σ τ } →
+      TANEHole : ∀ {Δ Θ Γ d τ'' u Θ' Γ' Γ'' θ σ τ τ'} →
                  (u , (Θ' , Γ' , τ')) ∈ Δ →
                  Δ , Θ , Γ ⊢ d :: τ'' →
                  Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ'' →
@@ -790,6 +790,13 @@ module core where
     data tunbound-in-Γ : Nat → tctx → Set where
       UBΓ : ∀{t Γ} → ((x : Nat) (y : htyp) → ((x , y) ∈ Γ) → tunboundt-in t y) → tunbound-in-Γ t Γ
   
+    data tunbound-in-σ : Nat → env → Set where
+      TUBσId : ∀{x Γ} → tunbound-in-σ x (Id Γ)
+      TUBσSubst : ∀{x d y σ} → tunbound-in x d
+                            → tunbound-in-σ x σ
+                            → x ≠ y
+                            → tunbound-in-σ x (Subst d y σ)
+    
     data tunbound-in-θ : Nat → typenv → Set where
       UBθId : ∀{t Γ} → tunbound-in-θ t (TypId Γ)
       UBθSubst : ∀{t τ y θ} → tunboundt-in t τ
@@ -826,9 +833,11 @@ module core where
                            → tunbound-in t (·λ_[_]_ y τ d)
       TUBTLam : ∀{t t' τ} → t ≠ t' → tunbound-in t τ → tunbound-in t (·Λ t' τ)
       TUBHole : ∀{t u θ σ} → tunbound-in-θ t θ
+                         → tunbound-in-σ t σ
                          → tunbound-in t (⦇-⦈⟨ u , θ , σ ⟩)
       TUBNEHole : ∀{t u θ σ d }
                   → tunbound-in-θ t θ
+                  → tunbound-in-σ t σ
                   → tunbound-in t d
                   → tunbound-in t (⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩)
       TUBAp : ∀{ t d1 d2 } →
