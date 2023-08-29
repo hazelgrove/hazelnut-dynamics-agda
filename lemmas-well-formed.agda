@@ -88,9 +88,9 @@ module lemmas-well-formed where
   t-sub-id (TFForall x tft) rewrite natEQneq x = forall-eq refl (t-sub-id tft)
 
   tctx-sub-id : ∀{Γ t τ} →
-    tunbound-in-Γ t Γ →
+    tfresh-in-Γ t Γ →
     Tctx[ τ / t ] Γ == Γ
-  tctx-sub-id {Γ} {t} {τ} (UBTΓ ubig) = funext (λ x → foo x)
+  tctx-sub-id {Γ} {t} {τ} (TFΓ ubig) = funext (λ x → foo x)
     where
       foo : (x : Nat) -> (Tctx[ τ / t ] Γ) x == Γ x
       foo x with ctxindirect (Tctx[ τ / t ] Γ) x | ctxindirect Γ x
@@ -289,7 +289,7 @@ module lemmas-well-formed where
     typenv-wf hctxwf ctxwf1 (STAIdSubst sub x) ctxwf2 wf eq =
       typenv-wf hctxwf ctxwf3 sub ctxwf2 wf eq 
       where 
-      ctxwf3 = merge-tctx-wf ctxwf1 (wf-ta ctxwf1 hctxwf x)
+      ctxwf3 = merge-tctx-wf ctxwf1 (wf-ta ctxwf1 hctxwf {! x !})
     typenv-wf {Θ = Θ} {θ = θ} {τ = τ} hctxwf ctxwf1 (STASubst {y = y} sub x) ctxwf2 wf eq =
       {! typsub-wf wf2 x eq !}
       where 
@@ -303,7 +303,7 @@ module lemmas-well-formed where
     wf-ta ctxwf hctwwf TAConst = WFBase
     wf-ta (CCtx x₁) hctwwf (TAVar x) = x₁ x
     wf-ta ctxwf hctwwf (TALam x x₁ wt) = WFArr x₁ (wf-ta (merge-tctx-wf ctxwf x₁) hctwwf wt)
-    wf-ta ctxwf hctwwf (TATLam wt) = WFForall (wf-ta (weaken-tctx-wf ctxwf) hctwwf wt)
+    wf-ta ctxwf hctwwf (TATLam apt wt) = WFForall (wf-ta (weaken-tctx-wf ctxwf) hctwwf wt)
     wf-ta ctxwf hctwwf (TAAp wt wt₁) with (wf-ta ctxwf hctwwf wt)
     ... | WFArr wf1 wf2 = wf2
     wf-ta ctxwf hctwwf (TATAp x wt eq) with (wf-ta ctxwf hctwwf wt)
