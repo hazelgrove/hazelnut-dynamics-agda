@@ -18,19 +18,30 @@ module lemmas-tysubst-ta where
   rewrite-codomain-in : ∀{t t' x Γ} -> t == t' -> (x , t) ∈ Γ -> (x , t') ∈ Γ
   rewrite-codomain-in eq p rewrite eq = p
 
-  tunbound-ta-tunboundt : ∀{Δ Θ Γ d t τ} → tunbound-in t d → tunbound-in-Γ t Γ → Δ , Θ , Γ ⊢ d :: τ → tunboundt-in t τ
-  tunbound-ta-tunboundt ub ubig TAConst = UBBase
-  tunbound-ta-tunboundt {τ = τ} TUBVar (UBΓ ubg) (TAVar {x = y} x) = ubg y τ x
-  tunbound-ta-tunboundt (TUBLam2 ub ubt) ubg (TALam x x₁ ta) = UBArr ubt (tunbound-ta-tunboundt ub {!   !} ta)
-  tunbound-ta-tunboundt (TUBTLam x₁ ub) ubg (TATLam x ta) = UBForall x₁ (tunbound-ta-tunboundt ub ubg ta)
-  tunbound-ta-tunboundt (TUBAp ub1 ub2) ubg (TAAp ta ta₁) with tunbound-ta-tunboundt ub1 ubg ta
+  lem-sub-ub : ∀{t t' τ τ''} → (τ' : htyp) → tunboundt-in t τ' → tunboundt-in t τ'' → Typ[ τ'' / t' ] τ' == τ → tunboundt-in t τ
+  lem-sub-ub b ub1 ub2 eq rewrite ! eq = ub1
+  lem-sub-ub {t' = t'} (T x) ub1 ub2 eq with natEQ t' x
+  ... | Inl refl rewrite eq = ub2
+  ... | Inr neq rewrite ! eq = ub1
+  lem-sub-ub ⦇-⦈ ub1 ub2 eq rewrite ! eq = ub1
+  lem-sub-ub (τ' ==> τ'') (UBArr ub1 ub3) ub2 eq rewrite ! eq = UBArr (lem-sub-ub τ' ub1 ub2 refl) (lem-sub-ub τ'' ub3 ub2 refl)
+  lem-sub-ub {t' = t'} (·∀ x τ') (UBForall ne ub1) ub2 eq with natEQ t' x
+  ... | Inl refl rewrite ! eq = UBForall ne ub1
+  ... | Inr neq rewrite ! eq = UBForall ne (lem-sub-ub τ' ub1 ub2 refl)
+
+  tunbound-ta-tunboundt : ∀{Δ Θ Γ d t τ} → tunbound-in t d → tunbound-in-Δ t Δ → tunbound-in-Γ t Γ → Δ , Θ , Γ ⊢ d :: τ → tunboundt-in t τ
+  tunbound-ta-tunboundt ub ubd ubg TAConst = UBBase
+  tunbound-ta-tunboundt {τ = τ} TUBVar ubd (UBΓ ubg) (TAVar {x = y} x) = ubg y τ x
+  tunbound-ta-tunboundt (TUBLam2 ub ubt) ubd ubg (TALam x x₁ ta) = UBArr ubt (tunbound-ta-tunboundt ub ubd {!   !} ta)
+  tunbound-ta-tunboundt (TUBTLam x₁ ub) ubd ubg (TATLam x ta) = UBForall x₁ (tunbound-ta-tunboundt ub ubd ubg ta)
+  tunbound-ta-tunboundt (TUBAp ub1 ub2) ubd ubg (TAAp ta ta₁) with tunbound-ta-tunboundt ub1 ubd ubg ta
   ... | UBArr _ ubt2 = ubt2
-  tunbound-ta-tunboundt (TUBTAp ub ubt) ubg (TATAp x ta x₁) with tunbound-ta-tunboundt ub ubg ta
-  ... | UBForall ub' ubt' = {!   !}
-  tunbound-ta-tunboundt (TUBHole ubt) ubg (TAEHole x x₁ x₂ x₃) = {!   !}
-  tunbound-ta-tunboundt (TUBNEHole x₄ ub) ubg (TANEHole x ta x₁ x₂ x₃) = {!   !}
-  tunbound-ta-tunboundt (TUBCast ub) ubg (TACast ta x x₁) = {!   !}
-  tunbound-ta-tunboundt (TUBFailedCast ub) ubg (TAFailedCast ta x x₁ x₂) = {!   !}
+  tunbound-ta-tunboundt (TUBTAp ub ubt) ubd ubg (TATAp x ta eq) with tunbound-ta-tunboundt ub ubd ubg ta
+  ... | UBForall ub' ubt' = lem-sub-ub _ ubt' ubt eq
+  tunbound-ta-tunboundt (TUBHole ubt) (UBΔ ubd) ubg (TAEHole {u = u} {Θ' = Θ'} {Γ' = Γ'} {τ' = τ'} x x₁ x₂ x₃) = let ubt' = ubd u Θ' Γ' τ' x in {!   !}
+  tunbound-ta-tunboundt (TUBNEHole x₄ ub) (UBΔ ubd) ubg (TANEHole x ta x₁ x₂ x₃) = {!   !}
+  tunbound-ta-tunboundt (TUBCast ub ubt1 ubt2) ubd ubg (TACast ta x x₁) = ubt2
+  tunbound-ta-tunboundt (TUBFailedCast ub ubt1 ubt2) ubd ubg (TAFailedCast ta x x₁ x₂) = ubt2
 
   wf-unbound-tfresht : ∀{t τ Θ} -> t # Θ -> Θ ⊢ τ wf -> tunboundt-in t τ -> tfresht t τ
   wf-unbound-tfresht {τ = b} apt wf ub = TFBase
@@ -157,4 +168,4 @@ module lemmas-tysubst-ta where
       where
         foo : ∀{t1 t2 t3 t} -> t1 ground -> t2 ground -> Typ[ t3 / t ] t1 ~ Typ[ t3 / t ] t2 -> t1 ~ t2
         foo {t1} {t2} {t3} {t} g1 g2 eq rewrite ground-subst-id {t} {t1} {t3} g1 rewrite ground-subst-id {t} {t2} {t3} g2 = eq
-          
+           

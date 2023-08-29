@@ -21,6 +21,11 @@ module rewrite-util where
   typvar-inj : ∀{t t'} -> T t == T t' -> t == t'
   typvar-inj refl = refl
 
+  arr-inj1 : ∀{τ1 τ2 τ1' τ2'} -> τ1 ==> τ2 == τ1' ==> τ2' -> τ1 == τ1'
+  arr-inj1 refl = refl
+  arr-inj2 : ∀{τ1 τ2 τ1' τ2'} -> τ1 ==> τ2 == τ1' ==> τ2' -> τ2 == τ2'
+  arr-inj2 refl = refl
+
   forall-eq : ∀{t t' τ τ'} -> t == t' -> τ == τ' -> ·∀ t τ == ·∀ t' τ'
   forall-eq eq1 eq2 rewrite eq1 rewrite eq2 = refl
 

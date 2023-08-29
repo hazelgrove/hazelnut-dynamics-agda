@@ -784,6 +784,8 @@ module core where
                             → x ≠ y
                             → unbound-in-σ x (Subst d y σ)
     
+    data tunbound-in-Δ : Nat → hctx → Set where
+      UBΔ : ∀{t Δ} → ((u : Nat) (Θ : typctx) (Γ : tctx) (τ : htyp) → ((u , Θ , Γ , τ) ∈ Δ) → tunboundt-in t τ) → tunbound-in-Δ t Δ
 
     data tunbound-in-Γ : Nat → tctx → Set where
       UBΓ : ∀{t Γ} → ((x : Nat) (y : htyp) → ((x , y) ∈ Γ) → tunboundt-in t y) → tunbound-in-Γ t Γ
@@ -834,8 +836,14 @@ module core where
             tunbound-in t d2 →
             tunbound-in t (d1 ∘ d2)
       TUBTAp : ∀{t τ d} → tunbound-in t d → tunboundt-in t τ → tunbound-in t (d < τ >)
-      TUBCast : ∀{t d τ1 τ2} → tunbound-in t d → tunbound-in t (d ⟨ τ1 ⇒ τ2 ⟩)
-      TUBFailedCast : ∀{t d τ1 τ2} → tunbound-in t d → tunbound-in t (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
+      TUBCast : ∀{t d τ1 τ2} → tunbound-in t d →
+                               tunboundt-in t τ1 →
+                               tunboundt-in t τ2 →
+                               tunbound-in t (d ⟨ τ1 ⇒ τ2 ⟩)
+      TUBFailedCast : ∀{t d τ1 τ2} → tunbound-in t d →
+                               tunboundt-in t τ1 →
+                               tunboundt-in t τ2 →
+                               tunbound-in t (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
     
     data tunboundt-in : (t : Nat) → (τ : htyp) → Set where
       UBBase : ∀{t} → tunboundt-in t b
