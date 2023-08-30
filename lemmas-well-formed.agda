@@ -51,6 +51,8 @@ module lemmas-well-formed where
   ... | Inl refl = abort (neq refl)
   ... | Inr neq = elem
 
+  wf-closed : ∀{τ Θ} → ∅ ⊢ τ wf → Θ ⊢ τ wf
+  wf-closed = {!!}
 
   wf-sub : ∀ {Θ t τ1 τ2 τ3} → Θ ⊢ τ1 wf → (Θ ,, (t , <>)) ⊢ τ3 wf → τ2 == ·∀ t τ3 → Θ ⊢ Typ[ τ1 / t ] τ3 wf
   wf-sub {τ3 = b} wf1 wf2 eq = WFBase
@@ -86,9 +88,9 @@ module lemmas-well-formed where
   t-sub-id (TFForall x tft) rewrite natEQneq x = forall-eq refl (t-sub-id tft)
 
   tctx-sub-id : ∀{Γ t τ} →
-    tunbound-in-Γ t Γ →
+    tfresh-in-Γ t Γ →
     Tctx[ τ / t ] Γ == Γ
-  tctx-sub-id {Γ} {t} {τ} (UBTΓ ubig) = funext (λ x → foo x)
+  tctx-sub-id {Γ} {t} {τ} (TFΓ ubig) = funext (λ x → foo x)
     where
       foo : (x : Nat) -> (Tctx[ τ / t ] Γ) x == Γ x
       foo x with ctxindirect (Tctx[ τ / t ] Γ) x | ctxindirect Γ x
@@ -96,6 +98,17 @@ module lemmas-well-formed where
       ... | Inr nig1 | Inr nig2 rewrite nig1 rewrite nig2 = refl
       ... | Inl (y1 , ing1) | Inr nig2 rewrite ing1 rewrite nig2 = abort (somenotnone (! ing1))
       ... | Inr nig1 | Inl (y2 , ing2) rewrite nig1 rewrite ing2 = abort (somenotnone nig1)
+
+  t-sub-idem : ∀{τ t} → (τ0 : htyp) → ∅ ⊢ τ wf → Typ[ τ / t ] (Typ[ τ / t ] τ0) == Typ[ τ / t ] τ0
+  t-sub-idem t0 wf = {!   !}
+
+  tctx-sub-idem : ∀{τ t} → (Γ : tctx) → ∅ ⊢ τ wf → Tctx[ τ / t ] (Tctx[ τ / t ] Γ) == Tctx[ τ / t ] Γ
+  tctx-sub-idem Γ wf = funext (λ x → foo x Γ wf)
+    where
+      foo : ∀{τ t} → (x : Nat) → (Γ : tctx) → ∅ ⊢ τ wf → (Tctx[ τ / t ] (Tctx[ τ / t ] Γ)) x == (Tctx[ τ / t ] Γ) x
+      foo {τ} {t} x Γ wf with ctxindirect Γ x
+      ... | Inl (y , ing) rewrite ing rewrite t-sub-idem {τ} {t} y wf = refl
+      ... | Inr nig rewrite nig = refl
 
   t-sub-unit : ∀{τ τ' t Θ} →
     t # Θ -> Θ ⊢ τ wf → Typ[ τ' / t ] τ == τ
@@ -122,6 +135,36 @@ module lemmas-well-formed where
       ... | Inr nig1 | Inr nig2 rewrite nig1 rewrite nig2 = refl
       ... | Inl (y1 , ing1) | Inr nig2 rewrite ing1 rewrite nig2 = abort (somenotnone (! ing1))
       ... | Inr nig1 | Inl (y2 , ing2) rewrite nig1 rewrite ing2 = abort (somenotnone nig1)
+
+  t-sub-comm :  ∀{τ' τ'' t' t''} → (τ : htyp) →
+    ∅ ⊢ τ' wf → ∅ ⊢ τ'' wf → t' ≠ t'' → Typ[ τ'' / t'' ] (Typ[ τ' / t' ] τ) == Typ[ τ' / t' ] (Typ[ τ'' / t'' ] τ)
+  t-sub-comm b wf1 wf2 ne = refl
+  t-sub-comm {t' = t'} {t'' = t''} (T x) wf1 wf2 ne with natEQ t' x | natEQ t'' x
+  ... | Inl refl | Inl refl = abort (ne refl)
+  ... | Inl refl | Inr neq'' rewrite natEQrefl {x = t'} = t-sub-closed wf1
+  ... | Inr neq' | Inl refl rewrite natEQrefl {x = t''} = ! (t-sub-closed wf2)
+  ... | Inr neq' | Inr neq'' rewrite natEQneq neq' rewrite natEQneq neq'' = refl
+  t-sub-comm ⦇-⦈ wf1 wf2 ne = refl
+  t-sub-comm (τ1 ==> τ2) wf1 wf2 ne = arr-eq (t-sub-comm τ1 wf1 wf2 ne) (t-sub-comm τ2 wf1 wf2 ne)
+  t-sub-comm {t' = t'} {t'' = t''} (·∀ t τ) wf1 wf2 ne with natEQ t' t | natEQ t'' t
+  ... | Inl refl | Inl refl = abort (ne refl)
+  ... | Inl refl | Inr neq'' rewrite natEQrefl {x = t'} rewrite natEQneq neq'' = refl
+  ... | Inr neq' | Inl refl rewrite natEQrefl {x = t''} rewrite natEQneq neq' = refl
+  ... | Inr neq' | Inr neq'' rewrite natEQneq neq' rewrite natEQneq neq'' = forall-eq refl (t-sub-comm τ wf1 wf2 ne)
+  
+  tctx-sub-comm : ∀{τ' τ'' t' t''} → (Γ : tctx) →
+    ∅ ⊢ τ' wf → ∅ ⊢ τ'' wf → t' ≠ t'' → Tctx[ τ'' / t'' ] (Tctx[ τ' / t' ] Γ) == Tctx[ τ' / t' ] (Tctx[ τ'' / t'' ] Γ)
+  tctx-sub-comm Γ wf1 wf2 ne = {!   !}
+
+  ihexp-sub-comm : ∀{τ' τ'' t' t''} → (d : ihexp) →
+    ∅ ⊢ τ' wf → ∅ ⊢ τ'' wf → t' ≠ t'' → Ihexp[ τ'' / t'' ] (Ihexp[ τ' / t' ] d) == Ihexp[ τ' / t' ] (Ihexp[ τ'' / t'' ] d)
+  ihexp-sub-comm d wf1 wf2 ne = {!   !}
+
+  sub-sub-comm : ∀{τ' τ'' t' t''} → (σ : env) →
+    ∅ ⊢ τ' wf → ∅ ⊢ τ'' wf → t' ≠ t'' → Sub[ τ'' / t'' ] (Sub[ τ' / t' ] σ) == Sub[ τ' / t' ] (Sub[ τ'' / t'' ] σ)
+  sub-sub-comm (Id Γ) wf1 wf2 ne rewrite tctx-sub-comm Γ wf1 wf2 ne = refl
+  sub-sub-comm (Subst d y ts) wf1 wf2 ne = subst-eq (ihexp-sub-comm d wf1 wf2 ne) refl (sub-sub-comm ts wf1 wf2 ne)
+
 
   match-arr-wf : ∀ {Θ τ τ1 τ2} → Θ ⊢ τ wf → τ ▸arr (τ1 ==> τ2) → Θ ⊢ (τ1 ==> τ2) wf
   match-arr-wf wf MAHole = WFArr WFHole WFHole
@@ -246,9 +289,9 @@ module lemmas-well-formed where
     typenv-wf hctxwf ctxwf1 (STAIdSubst sub x) ctxwf2 wf eq =
       typenv-wf hctxwf ctxwf3 sub ctxwf2 wf eq 
       where 
-      ctxwf3 = merge-tctx-wf ctxwf1 (wf-ta ctxwf1 hctxwf x)
+      ctxwf3 = merge-tctx-wf ctxwf1 (wf-ta ctxwf1 hctxwf {! x !})
     typenv-wf {Θ = Θ} {θ = θ} {τ = τ} hctxwf ctxwf1 (STASubst {y = y} sub x) ctxwf2 wf eq =
-      typsub-wf wf2 x eq
+      {! typsub-wf wf2 x eq !}
       where 
       wf2 = typenv-wf hctxwf (weaken-tctx-wf ctxwf1) {! sub !} {! ctxwf2 !} wf refl
 
@@ -260,7 +303,7 @@ module lemmas-well-formed where
     wf-ta ctxwf hctwwf TAConst = WFBase
     wf-ta (CCtx x₁) hctwwf (TAVar x) = x₁ x
     wf-ta ctxwf hctwwf (TALam x x₁ wt) = WFArr x₁ (wf-ta (merge-tctx-wf ctxwf x₁) hctwwf wt)
-    wf-ta ctxwf hctwwf (TATLam wt) = WFForall (wf-ta (weaken-tctx-wf ctxwf) hctwwf wt)
+    wf-ta ctxwf hctwwf (TATLam apt wt) = WFForall (wf-ta (weaken-tctx-wf ctxwf) hctwwf wt)
     wf-ta ctxwf hctwwf (TAAp wt wt₁) with (wf-ta ctxwf hctwwf wt)
     ... | WFArr wf1 wf2 = wf2
     wf-ta ctxwf hctwwf (TATAp x wt eq) with (wf-ta ctxwf hctwwf wt)
