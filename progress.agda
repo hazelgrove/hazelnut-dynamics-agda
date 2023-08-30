@@ -46,7 +46,7 @@ module progress where
 
     -- Lambdas 
 
-  progress hctxwf (TATLam wt) = BV (BVVal VTLam)
+  progress hctxwf (TATLam apt wt) = BV (BVVal VTLam)
 
     -- applications
   progress hctxwf (TAAp wt1 wt2)
@@ -59,8 +59,8 @@ module progress where
   progress hctxwf (TAAp wt1 wt2) | I x | I x₁
     with canonical-indeterminate-forms-arr wt1 x
   progress hctxwf (TAAp wt1 wt2) | I x | I y | CIFACast (_ , _ , _ , _ , _ , refl , _ , _ ) = S (_ , Step FHOuter ITApCast FHOuter)
-  progress hctxwf (TAAp wt1 wt2) | I x | I y | CIFAEHole (_ , _ , _ , _ , _ , _ , refl , _)             = I (IAp (λ _ _ _ _ _ ()) x (FIndet y))
-  progress hctxwf (TAAp wt1 wt2) | I x | I y | CIFANEHole (_ , _ , _ , _ , _ , _ , _ , _ , refl , _)    = I (IAp (λ _ _ _ _ _ ()) x (FIndet y))
+  progress hctxwf (TAAp wt1 wt2) | I x | I y | CIFAEHole (_ , _ , _ , _ , _ , _ , _ , refl , _)             = I (IAp (λ _ _ _ _ _ ()) x (FIndet y))
+  progress hctxwf (TAAp wt1 wt2) | I x | I y | CIFANEHole (_ , _ , _ , _ , _ , _ , _ , _ , _ , refl , _)    = I (IAp (λ _ _ _ _ _ ()) x (FIndet y))
   progress hctxwf (TAAp wt1 wt2) | I x | I y | CIFAAp (_ , _ , _ , _ , _ , refl , _)        = I (IAp (λ _ _ _ _ _ ()) x (FIndet y))
   progress hctxwf (TAAp wt1 wt2) | I x | I y | CIFATApArr (_ , _ , _ , _ , _ , refl , _ , _ )   = I (IAp (λ _ _ _ _ _ ()) x (FIndet y))
   progress hctxwf (TAAp wt1 wt2) | I x | I y | CIFATApId (_ , _ , _ , _ , refl , _ , _ )        = I (IAp (λ _ _ _ _ _ ()) x (FIndet y))
@@ -70,8 +70,8 @@ module progress where
   progress hctxwf (TAAp wt1 wt2) | I x | BV x₁
     with canonical-indeterminate-forms-arr wt1 x
   progress hctxwf (TAAp wt1 wt2) | I x | BV y | CIFACast (_ , _ , _ , _ , _ , refl , _ , _ ) = S (_ , Step FHOuter ITApCast FHOuter)
-  progress hctxwf (TAAp wt1 wt2) | I x | BV y | CIFAEHole (_ , _ , _ , _ , _ , _ , refl , _)             = I (IAp (λ _ _ _ _ _ ()) x (FBoxedVal y))
-  progress hctxwf (TAAp wt1 wt2) | I x | BV y | CIFANEHole (_ , _ , _ , _ , _ , _ , _ , _ , refl , _)    = I (IAp (λ _ _ _ _ _ ()) x (FBoxedVal y))
+  progress hctxwf (TAAp wt1 wt2) | I x | BV y | CIFAEHole (_ , _ , _ , _ , _ , _ , _ , refl , _)             = I (IAp (λ _ _ _ _ _ ()) x (FBoxedVal y))
+  progress hctxwf (TAAp wt1 wt2) | I x | BV y | CIFANEHole (_ , _ , _ , _ , _ , _ , _ , _ , _ , refl , _)    = I (IAp (λ _ _ _ _ _ ()) x (FBoxedVal y))
   progress hctxwf (TAAp wt1 wt2) | I x | BV y | CIFAAp (_ , _ , _ , _ , _ , refl , _)        = I (IAp (λ _ _ _ _ _ ()) x (FBoxedVal y))
   progress hctxwf (TAAp wt1 wt2) | I x | BV y | CIFATApArr (_ , _ , _ , _ , _ , refl , _ , _ )   = I (IAp (λ _ _ _ _ _ ()) x (FBoxedVal y))
   progress hctxwf (TAAp wt1 wt2) | I x | BV y | CIFATApId (_ , _ , _ , _ , refl , _ , _ )        = I (IAp (λ _ _ _ _ _ ()) x (FBoxedVal y))
@@ -95,8 +95,8 @@ module progress where
   progress hctxwf (TATAp wf wt eq) with progress hctxwf wt 
   progress hctxwf (TATAp wf wt eq) | S (_ , Step x y z) = S (_ , (Step (FHTAp x) y (FHTAp z)))
   progress hctxwf (TATAp wf wt eq) | I x with canonical-indeterminate-forms-forall wt x 
-  progress hctxwf (TATAp wf wt eq) | I x | CIFFEHole (_ , _ , _ , _ , _ , _ , refl , _) = I (ITAp (λ t1 t2 τ1 τ2 d' ()) x)
-  progress hctxwf (TATAp wf wt eq) | I x | CIFFNEHole (_ , _ , _ , _ , _ , _ , _ , _ , refl , _) = I (ITAp (λ t1 t2 τ1 τ2 d' ()) x)
+  progress hctxwf (TATAp wf wt eq) | I x | CIFFEHole (_ , _ , _ , _ , _ , _ , _ , refl , _) = I (ITAp (λ t1 t2 τ1 τ2 d' ()) x)
+  progress hctxwf (TATAp wf wt eq) | I x | CIFFNEHole (_ , _ , _ , _ , _ , _ , _ , _ , _ , refl , _) = I (ITAp (λ t1 t2 τ1 τ2 d' ()) x)
   progress hctxwf (TATAp wf wt eq) | I x | CIFFAp (_ , _ , _ , refl , _) = I (ITAp (λ t1 t2 τ1 τ2 d' ()) x)
   progress hctxwf (TATAp wf wt eq) | I x | CIFFTApForall (_ , _ , _ , _ , _ , refl , _ ) = I (ITAp (λ t1 t2 τ1 τ2 d' ()) x)
   progress hctxwf (TATAp wf wt eq) | I x | CIFFTApId (_ , _ , _ , refl , _ ) = I (ITAp (λ t1 t2 τ1 τ2 d' ()) x)
@@ -111,10 +111,10 @@ module progress where
   
 
     -- empty holes are indeterminate
-  progress hctxwf (TAEHole _ _ _ ) = I IEHole
+  progress hctxwf (TAEHole _ _ _ _ ) = I IEHole
 
     -- nonempty holes step if the innards step, indet otherwise
-  progress hctxwf (TANEHole xin wt x₁ eq)
+  progress hctxwf (TANEHole xin wt x₁ eq eq2)
     with progress hctxwf wt
   ... | S (_ , Step x y z) = S (_ , Step (FHNEHole x) y (FHNEHole z))
   ... | I  x = I (INEHole (FIndet x))
@@ -148,8 +148,8 @@ module progress where
     -- if second type is hole
   progress hctxwf (TACast wt wf (ConsistHole2 {τ = b})) | I x
     with canonical-indeterminate-forms-hole wt x
-  progress hctxwf (TACast wt wf (ConsistHole2)) | I x | CIFHEHole (_ , _ , _ , _ , _ , _ , refl , f)           = I (ICastHoleGround (λ _ _ ()) x GBase)
-  progress hctxwf (TACast wt wf (ConsistHole2)) | I x | CIFHNEHole (_ , _ , _ , _ , _ , _ , _ , _ , refl , _ ) = I (ICastHoleGround (λ _ _ ()) x GBase)
+  progress hctxwf (TACast wt wf (ConsistHole2)) | I x | CIFHEHole (_ , _ , _ , _ , _ , _ , _ , refl , f)           = I (ICastHoleGround (λ _ _ ()) x GBase)
+  progress hctxwf (TACast wt wf (ConsistHole2)) | I x | CIFHNEHole (_ , _ , _ , _ , _ , _ , _ , _ , _ , refl , _ ) = I (ICastHoleGround (λ _ _ ()) x GBase)
   progress hctxwf (TACast wt wf (ConsistHole2)) | I x | CIFHAp (_ , _ , _ , refl , _ )             = I (ICastHoleGround (λ _ _ ()) x GBase)
   progress hctxwf (TACast wt wf (ConsistHole2)) | I x | CIFHTApHole (_ , _ , _ , refl , _ )        = I (ICastHoleGround (λ _ _ ()) x GBase)
   progress hctxwf (TACast wt wf (ConsistHole2)) | I x | CIFHTApId (_ , _ , _ , refl , _ )          = I (ICastHoleGround (λ _ _ ()) x GBase)
@@ -165,8 +165,8 @@ module progress where
     with ground-decidable (τ11 ==> τ12)
   progress hctxwf (TACast wt wf (ConsistHole2 {τ = .⦇-⦈ ==> .⦇-⦈})) | I x₁ | Inl GArr
     with canonical-indeterminate-forms-hole wt x₁
-  progress hctxwf (TACast wt wf (ConsistHole2 {τ = .⦇-⦈ ==> .⦇-⦈})) | I x | Inl GArr | CIFHEHole (_ , _ , _ , _ , _ , _ , refl , _)          = I (ICastHoleGround (λ _ _ ()) x GArr)
-  progress hctxwf (TACast wt wf (ConsistHole2 {τ = .⦇-⦈ ==> .⦇-⦈})) | I x | Inl GArr | CIFHNEHole (_ , _ , _ , _ , _ , _ , _ , _ , refl , _) = I (ICastHoleGround (λ _ _ ()) x GArr)
+  progress hctxwf (TACast wt wf (ConsistHole2 {τ = .⦇-⦈ ==> .⦇-⦈})) | I x | Inl GArr | CIFHEHole (_ , _ , _ , _ , _ , _ , _ , refl , _)          = I (ICastHoleGround (λ _ _ ()) x GArr)
+  progress hctxwf (TACast wt wf (ConsistHole2 {τ = .⦇-⦈ ==> .⦇-⦈})) | I x | Inl GArr | CIFHNEHole (_ , _ , _ , _ , _ , _ , _ , _ , _ , refl , _) = I (ICastHoleGround (λ _ _ ()) x GArr)
   progress hctxwf (TACast wt wf (ConsistHole2 {τ = .⦇-⦈ ==> .⦇-⦈})) | I x | Inl GArr | CIFHAp (_ , _ , _ , refl , _ )            = I (ICastHoleGround (λ _ _ ()) x GArr)
   progress hctxwf (TACast wt wf (ConsistHole2 {τ = .⦇-⦈ ==> .⦇-⦈})) | I x | Inl GArr | CIFHTApHole (_ , _ , _ , refl , _ )            = I (ICastHoleGround (λ _ _ ()) x GArr)
   progress hctxwf (TACast wt wf (ConsistHole2 {τ = .⦇-⦈ ==> .⦇-⦈})) | I x | Inl GArr | CIFHTApId (_ , _ , _ , refl , _ )            = I (ICastHoleGround (λ _ _ ()) x GArr)
@@ -178,8 +178,8 @@ module progress where
     with ground-decidable (·∀ t τ)
   progress hctxwf (TACast wt wf (ConsistHole2 {τ = ·∀ t ⦇-⦈})) | I x | Inl GForall 
     with canonical-indeterminate-forms-hole wt x
-  progress hctxwf (TACast wt wf (ConsistHole2 {τ = .(·∀ _ ⦇-⦈)})) | I x | Inl GForall | CIFHEHole (_ , _ , _ , _ , _ , _ , refl , _) = I (ICastHoleGround (λ d' τ' ()) x GForall)
-  progress hctxwf (TACast wt wf (ConsistHole2 {τ = .(·∀ _ ⦇-⦈)})) | I x | Inl GForall | CIFHNEHole (_ , _ , _ , _ , _ , _ , _ , _ , refl , _) = I (ICastHoleGround (λ d' τ' ()) x GForall)
+  progress hctxwf (TACast wt wf (ConsistHole2 {τ = .(·∀ _ ⦇-⦈)})) | I x | Inl GForall | CIFHEHole (_ , _ , _ , _ , _ , _ , _ , refl , _) = I (ICastHoleGround (λ d' τ' ()) x GForall)
+  progress hctxwf (TACast wt wf (ConsistHole2 {τ = .(·∀ _ ⦇-⦈)})) | I x | Inl GForall | CIFHNEHole (_ , _ , _ , _ , _ , _ , _ , _ , _ , refl , _) = I (ICastHoleGround (λ d' τ' ()) x GForall)
   progress hctxwf (TACast wt wf (ConsistHole2 {τ = .(·∀ _ ⦇-⦈)})) | I x | Inl GForall | CIFHAp (_ , _ , _ , refl , _ ) = I (ICastHoleGround (λ d' τ' ()) x GForall)
   progress hctxwf (TACast wt wf (ConsistHole2 {τ = .(·∀ _ ⦇-⦈)})) | I x | Inl GForall | CIFHTApHole (_ , _ , _ , refl , _ ) = I (ICastHoleGround (λ d' τ' ()) x GForall)
   progress hctxwf (TACast wt wf (ConsistHole2 {τ = .(·∀ _ ⦇-⦈)})) | I x | Inl GForall | CIFHTApId (_ , _ , _ , refl , _ )   = I (ICastHoleGround (λ d' τ' ()) x GForall)

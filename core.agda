@@ -494,7 +494,7 @@ module core where
                  Δ , Θ , Γ ⊢ d :: τ'' →
                  Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ'' →
                  τ == apply-typenv θ τ' →
-                Γ'' == apply-typenv-env θ Γ' →
+                 Γ'' == apply-typenv-env θ Γ' →
                  Δ , Θ , Γ ⊢ ⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩ :: τ
       TACast : ∀{Δ Θ Γ d τ1 τ2} →
              Δ , Θ , Γ ⊢ d :: τ1 →

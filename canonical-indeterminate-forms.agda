@@ -12,21 +12,23 @@ module canonical-indeterminate-forms where
   -- forms lemma for indeterminates at base type
   data cif-base : (Δ : hctx) (d : ihexp) → Set where
     CIFBEHole : ∀ {Δ d} →
-      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ τ ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ]
+      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ τ ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇-⦈⟨ u , θ , σ ⟩) ×
          ((u :: τ [ Θ , Γ ]) ∈ Δ) ×
          (b == apply-typenv θ τ) ×
-         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ)
+         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ') ×
+         (Γ' == apply-typenv-env θ Γ) 
         )
        → cif-base Δ d
     CIFBNEHole : ∀ {Δ d} →
-      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ τ ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ] Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ]
+      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ τ ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ] Σ[ Γ' ∈ tctx ] Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ]
         ((d == ⦇⌜ d' ⌟⦈⟨ u , θ , σ ⟩) ×
          (Δ , ∅ , ∅ ⊢ d' :: τ') ×
          (d' final) ×
          ((u :: τ [ Θ , Γ ]) ∈ Δ) ×
          (b == apply-typenv θ τ) ×
-         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ)
+         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ') ×
+         (Γ' == apply-typenv-env θ Γ) 
         )
         → cif-base Δ d
     CIFBAp : ∀ {Δ d} →
@@ -86,8 +88,8 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-base {d = d} (TATAp {t = t} {τ1 = τ1} {τ2 = ·∀ t' τ2} wf x eq) (ITAp x₃ ind) with natEQ t t' | eq
   ... | Inl refl | ()
   ... | Inr neq | ()
-  canonical-indeterminate-forms-base (TAEHole {τ' = τ} x x₁ eq) IEHole = CIFBEHole (_ , _ , _ , _ , _ , _ , refl , x , eq , x₁)
-  canonical-indeterminate-forms-base (TANEHole x wt x₁ eq) (INEHole x₂) = CIFBNEHole (_ , _ , _ , _ , _ , _ , _ , _ , refl , wt , x₂ , x , eq , x₁)
+  canonical-indeterminate-forms-base (TAEHole {τ' = τ} x x₁ eq eq2) IEHole = CIFBEHole (_ , _ , _ , _ , _ , _ , _ , refl , x , eq , x₁ , eq2)
+  canonical-indeterminate-forms-base (TANEHole x wt x₁ eq eq2) (INEHole x₂) = CIFBNEHole (_ , _ , _ , _ , _ , _ , _ , _ , _ , refl , wt , x₂ , x , eq , x₁ , eq2)
   canonical-indeterminate-forms-base (TACast wt _ x) (ICastHoleGround x₁ ind x₂) = CIFBCast (_ , refl , wt , ind , x₁)
   canonical-indeterminate-forms-base (TAFailedCast x x₁ x₂ x₃) (IFailedCast x₄ x₅ x₆ x₇) = CIFBFailedCast (_ , _ , refl , x , x₅ , x₇)
 
@@ -95,21 +97,23 @@ module canonical-indeterminate-forms where
   -- forms lemma for indeterminates at arrow type
   data cif-arr : (Δ : hctx) (d : ihexp) (τ1 τ2 : htyp) → Set where
     CIFAEHole : ∀{d Δ τ1 τ2} →
-      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ τ ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ]
+      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ τ ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇-⦈⟨ u , θ , σ ⟩) ×
          ((u :: τ [ Θ , Γ ]) ∈ Δ) ×
          ((τ1 ==> τ2) == apply-typenv θ τ) ×
-         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ)
+         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ') ×
+         (Γ' == apply-typenv-env θ Γ) 
         )
       → cif-arr Δ d τ1 τ2
     CIFANEHole : ∀{d Δ τ1 τ2} →
-      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ] Σ[ τ ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ]
+      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ] Σ[ τ ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇⌜ d' ⌟⦈⟨ u , θ , σ ⟩) ×
          (Δ , ∅ , ∅ ⊢ d' :: τ') ×
          (d' final) ×
          ((u :: τ [ Θ , Γ ]) ∈ Δ) ×
          ((τ1 ==> τ2) == apply-typenv θ τ) ×
-         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ)
+         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ') ×
+         (Γ' == apply-typenv-env θ Γ)
         )
         → cif-arr Δ d τ1 τ2
     CIFAAp : ∀{d Δ τ1 τ2} →
@@ -181,8 +185,8 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-arr (TATAp {t = t} {τ2 = ·∀ t' τ2} wf wt eq) (ITAp x ind) with natEQ t t' | eq
   ... | Inl refl | ()
   ... | Inr neq | ()
-  canonical-indeterminate-forms-arr (TAEHole x x₁ eq) IEHole = CIFAEHole (_ , _ , _ , _ , _ , _ , refl , x , eq , x₁)
-  canonical-indeterminate-forms-arr (TANEHole x wt x₁ eq) (INEHole x₂) = CIFANEHole (_ , _ , _ , _ , _ , _ , _ , _ , refl , wt , x₂ , x , eq , x₁)
+  canonical-indeterminate-forms-arr (TAEHole x x₁ eq eq2) IEHole = CIFAEHole (_ , _ , _ , _ , _ , _ , _ , refl , x , eq , x₁ , eq2)
+  canonical-indeterminate-forms-arr (TANEHole x wt x₁ eq eq2) (INEHole x₂) = CIFANEHole (_ , _ , _ , _ , _ , _ , _ , _ , _ , refl , wt , x₂ , x , eq , x₁ , eq2)
   canonical-indeterminate-forms-arr (TACast wt _ x) (ICastArr x₁ ind) = CIFACast (_ , _ , _ , _ , _ , refl , wt , ind , x₁)
   canonical-indeterminate-forms-arr (TACast wt _ TCHole2) (ICastHoleGround x₁ ind GArr) = CIFACastHole (_ , refl , refl , refl , wt , ind , x₁)
   canonical-indeterminate-forms-arr (TAFailedCast x x₁ GArr x₃) (IFailedCast x₄ x₅ GArr x₇) = CIFAFailedCast (_ , _ , refl , refl , refl , x , x₅ , x₇)
@@ -191,21 +195,23 @@ module canonical-indeterminate-forms where
   -- forms lemma for indeterminates at forall type
   data cif-forall : (Δ : hctx) (d : ihexp) (t : Nat) (τ : htyp) → Set where
     CIFFEHole : ∀{d Δ t τ} →
-      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ τ' ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ]
+      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ τ' ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇-⦈⟨ u , θ , σ ⟩) ×
          ((u :: τ' [ Θ , Γ ]) ∈ Δ) ×
          ((·∀ t τ) == apply-typenv θ τ') ×
-         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ)
+         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ') ×
+         (Γ' == apply-typenv-env θ Γ)
         )
       → cif-forall Δ d t τ
     CIFFNEHole : ∀{d Δ t τ} →
-      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ d' ∈ ihexp ] Σ[ τ'' ∈ htyp ] Σ[ τ' ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ]
+      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ d' ∈ ihexp ] Σ[ τ'' ∈ htyp ] Σ[ τ' ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇⌜ d' ⌟⦈⟨ u , θ , σ ⟩) ×
          (Δ , ∅ , ∅ ⊢ d' :: τ'') ×
          (d' final) ×
          ((u :: τ' [ Θ , Γ ]) ∈ Δ) ×
          ((·∀ t τ) == apply-typenv θ τ') ×
-         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ)
+         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ') ×
+         (Γ' == apply-typenv-env θ Γ)
         )
         → cif-forall Δ d t τ
     CIFFAp : ∀{d Δ t τ} →
@@ -274,8 +280,8 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-forall {t = t} (TATAp {t = t'} {τ2 = T t''} wf wt eq) (ITAp x ind) with natEQ t' t'' | eq
   ... | Inl refl | refl = CIFFTApId (_ , _ , _ , refl , wt , ind , x)
   ... | Inr neq | ()
-  canonical-indeterminate-forms-forall (TAEHole x x₁ eq) IEHole = CIFFEHole (_ , _ , _ , _ , _ , _ , refl , x , eq , x₁)
-  canonical-indeterminate-forms-forall (TANEHole x wt x₁ eq) (INEHole x₂) = CIFFNEHole (_ , _ , _ , _ , _ , _ , _ , _ , refl , wt , x₂ , x , eq , x₁)
+  canonical-indeterminate-forms-forall (TAEHole x x₁ eq eq2) IEHole = CIFFEHole (_ , _ , _ , _ , _ , _ , _ , refl , x , eq , x₁ , eq2)
+  canonical-indeterminate-forms-forall (TANEHole x wt x₁ eq eq2) (INEHole x₂) = CIFFNEHole (_ , _ , _ , _ , _ , _ , _ , _ , _ , refl , wt , x₂ , x , eq , x₁ , eq2)
   canonical-indeterminate-forms-forall (TACast wt _ x) (ICastForall neq ind) = CIFFCast (_ , _ , _ , _ , _ , refl , wt , ind , neq )
   canonical-indeterminate-forms-forall (TACast wt _ TCHole2) (ICastHoleGround x₁ ind GForall) = CIFFCastHole (_ , refl , refl , wt , ind , x₁)
   canonical-indeterminate-forms-forall (TAFailedCast x x₁ GForall x₃) (IFailedCast x₄ x₅ GForall x₇) = CIFFFailedCast (_ , _ , refl , refl , x , x₅ , x₇)
@@ -285,21 +291,23 @@ module canonical-indeterminate-forms where
   -- forms lemma for indeterminates at hole type
   data cif-hole : (Δ : hctx) (d : ihexp) → Set where
     CIFHEHole : ∀ {Δ d} →
-      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ τ ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ]
+      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ τ ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇-⦈⟨ u , θ , σ ⟩) ×
          ((u :: τ [ Θ , Γ ]) ∈ Δ) ×
          (⦇-⦈ == apply-typenv θ τ) ×
-         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ)
+         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ') ×
+         (Γ' == apply-typenv-env θ Γ)
         )
       → cif-hole Δ d
     CIFHNEHole : ∀ {Δ d} →
-      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ] Σ[ τ ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ]
+      Σ[ u ∈ Nat ] Σ[ θ ∈ typenv ] Σ[ σ ∈ env ] Σ[ d' ∈ ihexp ] Σ[ τ' ∈ htyp ] Σ[ τ ∈ htyp ] Σ[ Θ ∈ typctx ] Σ[ Γ ∈ tctx ] Σ[ Γ' ∈ tctx ]
         ((d == ⦇⌜ d' ⌟⦈⟨ u , θ , σ ⟩) ×
          (Δ , ∅ , ∅ ⊢ d' :: τ') ×
          (d' final) ×
          ((u :: τ [ Θ , Γ ]) ∈ Δ) ×
          (⦇-⦈ == apply-typenv θ τ) ×
-         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ)
+         (Δ , ∅ , ∅ ⊢ θ , σ :s: Θ , Γ') ×
+         (Γ' == apply-typenv-env θ Γ)
         )
       → cif-hole Δ d
     CIFHAp : ∀ {Δ d} →
@@ -350,8 +358,8 @@ module canonical-indeterminate-forms where
   canonical-indeterminate-forms-hole (TATAp {t = t} {τ1 = τ1} {τ2 = ·∀ t' τ2} wf wt eq) (ITAp x ind) with natEQ t t' | eq
   ... | Inl refl | ()
   ... | Inr neq | ()
-  canonical-indeterminate-forms-hole (TAEHole x x₁ eq) IEHole = CIFHEHole (_ , _ , _ , _ , _ , _ , refl , x , eq , x₁)
-  canonical-indeterminate-forms-hole (TANEHole x wt x₁ eq) (INEHole x₂) = CIFHNEHole (_ , _ , _ , _ , _ , _ , _ , _ , refl , wt , x₂ , x , eq , x₁)
+  canonical-indeterminate-forms-hole (TAEHole x x₁ eq eq2) IEHole = CIFHEHole (_ , _ , _ , _ , _ , _ , _ , refl , x , eq , x₁ , eq2)
+  canonical-indeterminate-forms-hole (TANEHole x wt x₁ eq eq2) (INEHole x₂) = CIFHNEHole (_ , _ , _ , _ , _ , _ , _ , _ , _ , refl , wt , x₂ , x , eq , x₁ , eq2)
   canonical-indeterminate-forms-hole (TACast wt wf x) (ICastGroundHole x₁ ind) = CIFHCast (_ , _ , refl , wt , x₁ , ind)
   canonical-indeterminate-forms-hole (TACast wt wf x) (ICastHoleGround x₁ ind ())
   canonical-indeterminate-forms-hole (TAFailedCast x x₁ () x₃) (IFailedCast x₄ x₅ x₆ x₇)
