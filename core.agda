@@ -444,7 +444,9 @@ module core where
 
   mutual
     -- substitution typing
-    -- variables in σ(x) appear in Γ, variables in θ(x) appear in Θ
+    -- WARNING - TODO: these rules are provisional and not verified with respect
+    -- to the fill and resume semantics. Need re-examination when hole contexts
+    -- are added to the implementation or used in the mechanization.
     data _,_,_⊢_,_:s:_,_ : hctx → typctx → tctx → typenv → env → typctx → tctx → Set where
       STAIdId : ∀{Γ Γ' Δ Θ Θ'} →
                   ((x : Nat) (τ : htyp) → (x , τ) ∈ Γ' → (x , τ) ∈ Γ) →
