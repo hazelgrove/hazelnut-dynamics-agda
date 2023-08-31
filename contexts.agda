@@ -366,6 +366,11 @@ module contexts where
   ... | None rewrite natEQneq (flip neq) = refl
   ... | Some t = abort (somenotnone apt)
 
+  lem-apart-extend-rev : {A : Set} {Γ : A ctx} {x y : Nat} {v : A} → x # Γ → x ≠ y → x # ((■ (y , v)) ∪ Γ)
+  lem-apart-extend-rev {Γ = Γ} {x = x} {y = y} {v = v} apt neq with ctxindirect (■ (y , v)) x
+  ... | Inr nmem rewrite nmem = apt
+  ... | Inl (v , mem) = abort (neq (lem-dom-eq (v , mem)))
+
   lem-singleton-apart : {A : Set} {x y : Nat} {v : A} → x ≠ y → x # (■ (y , v))
   lem-singleton-apart {A} {x} {y} neq with natEQ y x
   ... | Inl refl = abort (neq refl)

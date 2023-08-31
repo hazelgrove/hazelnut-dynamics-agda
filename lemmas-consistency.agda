@@ -142,6 +142,42 @@ module lemmas-consistency where
   ... | Inr neq | Inr neq' = {!!}
   -}
 
+  wf⊢~refl : {ΓL ΓR : Nat ctx} {Θ : typctx} {τ : htyp} → Θ ⊢ τ wf → ((t : Nat) → (t , <>) ∈ Θ → ((t , t) ∈ ΓL × (t , t) ∈ ΓR)) → ΓL , ΓR ⊢ τ ~ τ
+  wf⊢~refl (WFVar {a = a} x) cond = ConsistVarBound (π1 (cond a x)) (π2 (cond a x))
+  wf⊢~refl WFBase cond = ConsistBase
+  wf⊢~refl WFHole cond = ConsistHole1
+  wf⊢~refl (WFArr wf wf₁) cond = ConsistArr (wf⊢~refl wf cond) (wf⊢~refl wf₁ cond)
+  wf⊢~refl {ΓL} {ΓR} {Θ} {τ} (WFForall {n = n} wf) cond = ConsistForall (wf⊢~refl wf foo)
+    where
+      foo : (t : Nat) -> (t , <>) ∈ (Θ ,, (n , <>)) -> ((t , t) ∈ ((■ (n , n)) ∪ ΓL)) × ((t , t) ∈ ((■ (n , n)) ∪ ΓR))
+      foo t mem with natEQ n t
+      ... | Inl refl = refl , refl
+      ... | Inr neq with ctxindirect Θ t
+      ...   | Inl (<> , int) rewrite int rewrite natEQneq neq = cond t int
+      ...   | Inr nit rewrite nit rewrite natEQneq neq = abort (somenotnone (! mem))
+
+
+  closed-~refl : {ΓL ΓR : Nat ctx} {τ : htyp} → ∅ ⊢ τ wf → ΓL , ΓR ⊢ τ ~ τ
+  closed-~refl wf = wf⊢~refl wf λ t x → abort (somenotnone (! x))
+
+  ⊢~Typ[] : {ΓL ΓR : Nat ctx} {t1 t2 t : htyp} {n : Nat} → ∅ ⊢ t wf -> n # ΓL -> n # ΓR -> tunboundt-in n t1 -> tunboundt-in n t2 -> ΓL , ΓR ⊢ t ~ t -> ΓL , ΓR ⊢ t1 ~ t2 → ΓL , ΓR ⊢ Typ[ t / n ] t1 ~ Typ[ t / n ] t2
+  ⊢~Typ[] wf aptl aptr ub1 ub2 ih ConsistBase = ConsistBase
+  ⊢~Typ[] {n = n} wf aptl aptr ub1 ub2 ih (ConsistVarBound {x = x} {y = y} inl inr) with natEQ n x | natEQ n y
+  ... | Inl refl | _ = abort (somenotnone ((! inl) · aptl))
+  ... | _ | Inl refl = abort (somenotnone ((! inr) · aptr))
+  ... | Inr neq1 | Inr neq2 = ConsistVarBound inl inr
+  ⊢~Typ[] {n = n} wf aptl aptr ub1 ub2 ih (ConsistVarFree {x = x} nil nir) with natEQ n x 
+  ... | Inl refl = ih
+  ... | Inr neq = ConsistVarFree nil nir
+  ⊢~Typ[] wf aptl aptr ub1 ub2 ih ConsistHole1 = ConsistHole1
+  ⊢~Typ[] wf aptl aptr ub1 ub2 ih ConsistHole2 = ConsistHole2
+  ⊢~Typ[] wf aptl aptr (UBArr ub1 ub1') (UBArr ub2 ub2') ih (ConsistArr consist1 consist2) = ConsistArr (⊢~Typ[] wf aptl aptr ub1 ub2 ih consist1) (⊢~Typ[] wf aptl aptr ub1' ub2' ih consist2)
+  ⊢~Typ[] wf aptl aptr (UBForall neq1 ub1) (UBForall neq2 ub2) ih (ConsistForall consist) rewrite natEQneq neq1 rewrite natEQneq neq2 = 
+    ConsistForall (⊢~Typ[] wf (lem-apart-extend-rev aptl neq1) (lem-apart-extend-rev aptr neq2) ub1 ub2 (closed-~refl wf) consist)
+
+  ~Typ[] : {t1 t2 t : htyp} {n : Nat} → ∅ ⊢ t wf -> tunboundt-in n t1 -> tunboundt-in n t2 -> t1 ~ t2 → Typ[ t / n ] t1 ~ Typ[ t / n ] t2
+  ~Typ[] wf ub1 ub2 consist = ⊢~Typ[] wf refl refl ub1 ub2 ~refl consist
+
   -- type consistency isn't transitive
   not-trans : ((t1 t2 t3 : htyp) → t1 ~ t2 → t2 ~ t3 → t1 ~ t3) → ⊥
   not-trans t with t (b ==> b) ⦇-⦈ b ConsistHole1 ConsistHole2

@@ -15,7 +15,7 @@ open import exchange
 
 module lemmas-tysubst-ta where
 
-  rewrite-codomain-in : ∀{t t' x Γ} -> t == t' -> (x , t) ∈ Γ -> (x , t') ∈ Γ
+  rewrite-codomain-in : ∀{t : htyp} {t' x Γ} -> t == t' -> (x , t) ∈ Γ -> (x , t') ∈ Γ
   rewrite-codomain-in eq p rewrite eq = p
 
   lem-sub-ub : ∀{t t' τ τ''} → (τ' : htyp) → tunboundt-in t τ' → tunboundt-in t τ'' → Typ[ τ'' / t' ] τ' == τ → tunboundt-in t τ
@@ -59,6 +59,7 @@ module lemmas-tysubst-ta where
   tunbound-ta-tunboundt (TUBCast ub ubt1 ubt2) ubd ubg (TACast ta x x₁) = ubt2
   tunbound-ta-tunboundt (TUBFailedCast ub ubt1 ubt2) ubd ubg (TAFailedCast ta x x₁ x₂) = ubt2
 
+{-
   wf-unbound-tfresht : ∀{t τ Θ} -> t # Θ -> Θ ⊢ τ wf -> tunboundt-in t τ -> tfresht t τ
   wf-unbound-tfresht {τ = b} apt wf ub = TFBase
   wf-unbound-tfresht {t} {τ = T x} apt (WFVar int) UBTVar with natEQ t x 
@@ -67,32 +68,20 @@ module lemmas-tysubst-ta where
   wf-unbound-tfresht {τ = ⦇-⦈} apt wf ub = TFHole
   wf-unbound-tfresht {τ = τ ==> τ₁} apt (WFArr wf1 wf2) (UBArr ub1 ub2) = TFArr (wf-unbound-tfresht apt wf1 ub1) (wf-unbound-tfresht apt wf2 ub2)
   wf-unbound-tfresht {τ = ·∀ x τ} {Θ = Θ} apt (WFForall wf) (UBForall ne ub) = TFForall ne (wf-unbound-tfresht (lem-apart-extend {Γ = Θ} apt ne) wf ub)
-
-  equiv-cond : ∀{Θ Θ'} -> ((τ : htyp) → Θ' ⊢ τ wf → Θ ⊢ τ wf) -> ((t : Nat) -> (t , <>) ∈ Θ' -> (t , <>) ∈ Θ)
-  equiv-cond f = {!!}
-
-  binders-tenvtfresh : ∀{Δ Γ Γ' t θ σ Θ Θ'} → Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' → t # Θ → tunbound-in-θ t θ → tbinders-unique-θ θ → tenvtfresh t θ
-  binders-tenvtfresh {t = t} {Θ' = Θ'} (STAIdId gsub tsub) apt ub bu with ctxindirect Θ' t 
-  ... | Inl (<> , inl) = abort (somenotnone (! (equiv-cond  tsub t inl) · apt) )
-  ... | Inr inr = TETFId inr
-  binders-tenvtfresh (STAIdSubst ts x) apt ub bu = binders-tenvtfresh ts apt ub bu
-  binders-tenvtfresh {Θ = Θ} (STASubst ts x) apt (UBθSubst x₁ ub x₂) (BUθSubst x₃ bu x₄) = {!   !} -- TETFSubst (wf-unbound-tfresht apt x x₁) (binders-tenvtfresh ts (lem-apart-extend {Γ = Θ} apt x₂) ub bu) x₂
+-}
 
   lemma-typsubst-typsubst-comm : ∀{t1 t2 τ1 τ2 Δ Θ Θ' Γ Γ' θ σ} → Δ , Θ , Γ ⊢ TypSubst τ1 t1 (TypSubst τ2 t2 θ) , σ :s: Θ' , Γ'
     → Δ , Θ , Γ ⊢ TypSubst τ2 t2 (TypSubst τ1 t1 θ) , σ :s: Θ' , Γ'
-  lemma-typsubst-typsubst-comm {Θ = Θ} (STASubst (STASubst ts x₁) x) = {!   !} -- STASubst (STASubst (rewrite-theta-subst (exchange-Θ {Θ = Θ}) ts) (weaken-t-wf x)) wf
+  lemma-typsubst-typsubst-comm {Θ = Θ} (STASubst (STASubst ts x₁) x) = STASubst (STASubst (rewrite-theta-subst (exchange-Θ {Θ = Θ}) ts) x) x₁
+  -- STASubst (STASubst (rewrite-theta-subst (exchange-Θ {Θ = Θ}) ts) (weaken-t-wf x)) wf
 
   lemma-typsubst-subst-comm : ∀{Δ Θ Θ' Γ Γ' t τ τ' d y θ σ} →
     Δ , Θ , (Γ ,, (y , τ))  ⊢ TypSubst τ' t θ , σ :s: Θ' , Γ' →
     Δ , Θ , Γ ⊢ d :: τ →
     Δ , Θ , Γ ⊢ TypSubst τ' t θ , Subst d y σ :s: Θ' , Γ'
-  lemma-typsubst-subst-comm = {!   !}
-{-
-  lemma-typsubst-subst-comm {θ = TypId Θ} (STASubst (STAIdId gammasub thetasub) x) ta = STASubst (STAIdSubst (STAIdId gammasub thetasub) (weaken-ta-typ ta)) x
-  lemma-typsubst-subst-comm {θ = TypId Θ} (STASubst (STAIdSubst ts ta) x) ta' = STASubst (STAIdSubst (STAIdSubst ts ta) (weaken-ta-typ ta')) x
-  lemma-typsubst-subst-comm {θ = TypSubst τ t θ} (STASubst {τ = τ'} (STASubst ts x₁) x) ta = 
-    STASubst (lemma-typsubst-subst-comm (STASubst ts x₁) (weaken-ta-typ ta)) x
--}
+  lemma-typsubst-subst-comm (STASubst (STAIdId x x₁) wf) ta = STASubst (STAIdSubst (STAIdId x x₁) (weaken-ta-typ {!   !} ta)) wf
+  lemma-typsubst-subst-comm (STASubst (STAIdSubst ts x) wf) ta = STASubst {!   !} wf
+  lemma-typsubst-subst-comm (STASubst (STASubst ts x) wf) ta = STASubst (lemma-typsubst-subst-comm (STASubst ts x) (weaken-ta-typ {!   !} ta)) wf
 
   lemma-subst-comm : ∀{Δ Θ Θ' Γ Γ' τ d y θ σ} →
     Δ , Θ , (Γ ,, (y , τ))  ⊢ θ , σ :s: Θ' , Γ' →
@@ -143,9 +132,6 @@ module lemmas-tysubst-ta where
   ...     | (UBForall nequb ub) = forall-eq refl (lemma-typ-typ-2 τ ub wf neq)
 
   mutual
-    lemma-strengthen-subst-typ : ∀{Δ Θ Θ' Γ Γ' θ σ t} -> tenvtfresh t θ -> Δ , (Θ ,, (t , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ' -> Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ'
-    lemma-strengthen-subst-typ ef ts = {!!}
-
     lemma-tysubst-subst : ∀{Δ Θ Θ' Γ Γ' θ σ t τ} -> ∅ ⊢ τ wf ->
       tunbound-in-Δ t Δ → tunbound-in-Γ t Γ → tunbound-in-σ t σ ->
       Δ , (Θ ,, (t , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ' -> 
@@ -186,7 +172,7 @@ module lemmas-tysubst-ta where
     lemma-tysubst wf ubd ubg (TUBHole x₁ x₂) (TAEHole x ts eq eq') rewrite eq rewrite eq' = 
       TAEHole x (lemma-tysubst-subst wf ubd ubg x₂ ts) refl refl
     lemma-tysubst wf ubd ubg (TUBNEHole x₁ ubs ub) (TANEHole x ta ts eq eq') rewrite eq rewrite eq' = TANEHole x (lemma-tysubst wf ubd ubg ub ta) (lemma-tysubst-subst wf ubd ubg ubs ts) refl refl
-    lemma-tysubst wf ubd ubg (TUBCast ub x₁ x₂) (TACast ta x x~) = TACast (lemma-tysubst wf ubd ubg ub ta) ((wf-sub (wf-closed wf) x refl)) {! (~Typ[] x~) !}
+    lemma-tysubst wf ubd ubg (TUBCast ub x₁ x₂) (TACast ta x x~) = TACast (lemma-tysubst wf ubd ubg ub ta) ((wf-sub (wf-closed wf) x refl)) (~Typ[] wf x₁ x₂ x~)
     lemma-tysubst wf ubd ubg (TUBFailedCast ub x₁ x₂) (TAFailedCast ta tgnd tgnd' x) = TAFailedCast (lemma-tysubst wf ubd ubg ub ta) (ground-subst tgnd) (ground-subst tgnd') 
       λ eq → x (foo tgnd tgnd' eq)
       where
