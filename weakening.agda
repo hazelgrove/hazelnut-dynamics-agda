@@ -132,7 +132,7 @@ module weakening where
                      Δ , (Θ ,, (t , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ'
     weaken-subst-Θ ef (STAIdId x p) = STAIdId x λ τ x₁ → weaken-t-wf (p τ x₁)
     weaken-subst-Θ (TETFId x₂) (STAIdSubst x x₁) = STAIdSubst (weaken-subst-Θ (TETFId x₂) x) {!!} -- This is definitely true. Use associativity and commutativity of contexts (which works in general if the codomain is top) and induct.
-    weaken-subst-Θ {Θ = Θ} (TETFSubst x₂ ef x₃) (STASubst x x₁) = STASubst (rewrite-theta-subst (exchange-Θ {Θ = Θ}) (weaken-subst-Θ ef x)) x₁
+    weaken-subst-Θ {Θ = Θ} (TETFSubst x₂ ef x₃) (STASubst x x₁) = STASubst {!   !} x₁
     
     weaken-ta-typ : ∀{Γ Δ Θ d t τ} →
                     tfresh t d →
@@ -148,4 +148,28 @@ module weakening where
     weaken-ta-typ (TFNEHole ef tef tf) (TANEHole x x₁ x₂ eq eq') = TANEHole x (weaken-ta-typ tf x₁) (weaken-subst-Θ tef x₂) eq eq' 
     weaken-ta-typ (TFCast tf) (TACast x wf x₁) = TACast (weaken-ta-typ tf x) (weaken-t-wf wf) x₁
     weaken-ta-typ (TFFailedCast tf) (TAFailedCast x x₁ x₂ x₃) = TAFailedCast (weaken-ta-typ tf x) x₁ x₂ x₃ 
+
+    weaken-subst-Θ2 : ∀{Γ Δ θ t σ Γ' Θ Θ'} →
+                     tunbound-in-θ t θ →
+                     tunbound-in-σ t σ →
+                     Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' →
+                     Δ , (Θ ,, (t , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ'
+    weaken-subst-Θ2 ub ubs (STAIdId x p) = STAIdId x λ τ x₁ → weaken-t-wf (p τ x₁)
+    weaken-subst-Θ2 UBθId (TUBσSubst x₂ ubs) (STAIdSubst x x₁) = STAIdSubst (weaken-subst-Θ2 UBθId ubs x) (weaken-ta-typ2 x₂ x₁)
+    weaken-subst-Θ2 {Θ = Θ} (UBθSubst x₂ ub) ubs (STASubst x x₁) = STASubst (rewrite-theta-subst (exchange-Θ {Θ = Θ}) (weaken-subst-Θ2 ub ubs x)) x₁
+
+    weaken-ta-typ2 : ∀{Γ Δ Θ d t τ} →
+                  tunbound-in t d →
+                  Δ , Θ , Γ ⊢ d :: τ →
+                  Δ , (Θ ,, (t , <>)) , Γ ⊢ d :: τ
+    weaken-ta-typ2 ub TAConst = TAConst
+    weaken-ta-typ2 ub (TAVar x) = TAVar x
+    weaken-ta-typ2 (TUBLam2 ub x₂) (TALam x x₁ ta) = TALam x (weaken-t-wf x₁) (weaken-ta-typ2 ub ta)
+    weaken-ta-typ2 {Θ = Θ} (TUBTLam x₁ ub) (TATLam x ta) = TATLam (lem-apart-extend {Γ = Θ} x (flip x₁)) (rewrite-theta (exchange-Θ {Θ = Θ}) (weaken-ta-typ2 ub ta))
+    weaken-ta-typ2 (TUBAp ub ub₁) (TAAp ta ta₁) = TAAp (weaken-ta-typ2 ub ta) (weaken-ta-typ2 ub₁ ta₁)
+    weaken-ta-typ2 (TUBTAp ub x₂) (TATAp x ta x₁) = TATAp (weaken-t-wf x) (weaken-ta-typ2 ub ta) x₁
+    weaken-ta-typ2 (TUBHole x₄ x₅) (TAEHole x x₁ x₂ x₃) = TAEHole x (weaken-subst-Θ2 x₄ x₅ x₁) x₂ x₃
+    weaken-ta-typ2 (TUBNEHole x₄ x₅ ub) (TANEHole x ta x₁ x₂ x₃) = TANEHole x (weaken-ta-typ2 ub ta) (weaken-subst-Θ2 x₄ x₅ x₁) x₂ x₃
+    weaken-ta-typ2 (TUBCast ub x₂ x₃) (TACast ta x x₁) = TACast (weaken-ta-typ2 ub ta) (weaken-t-wf x) x₁
+    weaken-ta-typ2 (TUBFailedCast ub x₃ x₄) (TAFailedCast ta x x₁ x₂) = TAFailedCast (weaken-ta-typ2 ub ta) x x₁ x₂
  

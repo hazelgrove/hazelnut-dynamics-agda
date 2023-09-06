@@ -796,14 +796,12 @@ module core where
       TUBσId : ∀{x Γ} → tunbound-in-σ x (Id Γ)
       TUBσSubst : ∀{x d y σ} → tunbound-in x d
                             → tunbound-in-σ x σ
-                            → x ≠ y
                             → tunbound-in-σ x (Subst d y σ)
     
     data tunbound-in-θ : Nat → typenv → Set where
       UBθId : ∀{t Γ} → tunbound-in-θ t (TypId Γ)
       UBθSubst : ∀{t τ y θ} → tunboundt-in t τ
                             → tunbound-in-θ t θ
-                            → t ≠ y
                             → tunbound-in-θ t (TypSubst τ y θ)
 
     data unbound-in : (x : Nat) (d : ihexp) → Set where
@@ -894,6 +892,11 @@ module core where
       BDCast : ∀{d1 d2 τ1 τ2} → binders-disjoint d1 d2 → binders-disjoint (d1 ⟨ τ1 ⇒ τ2 ⟩) d2
       BDFailedCast : ∀{d1 d2 τ1 τ2} → binders-disjoint d1 d2 → binders-disjoint (d1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) d2
       
+    data tbinders-disjoint-σ : env → ihexp → Set where
+      BDσId : ∀{Γ d} → tbinders-disjoint-σ (Id Γ) d
+      BDσSubst : ∀{d1 d2 y σ} → tbinders-disjoint d1 d2
+                              → tbinders-disjoint-σ σ d2
+                              → tbinders-disjoint-σ (Subst d1 y σ) d2
       
     data tbinders-disjoint-θ : typenv → ihexp → Set where
       BDTθId : ∀{Θ d} → tbinders-disjoint-θ (TypId Θ) d
@@ -907,6 +910,12 @@ module core where
                → tbinderst-disjoint-θ θ τ'
                → tbinderst-disjoint-θ (TypSubst τ t θ) τ'
                
+    data tbinders-disjoint-θ-σ : typenv → env → Set where
+      BDTθId : ∀{Θ σ} → tbinders-disjoint-θ-σ (TypId Θ) σ
+      BDTθSubst : ∀{τ t θ σ} → tunbound-in-σ t σ
+               → tbinders-disjoint-θ-σ θ σ
+               → tbinders-disjoint-θ-σ (TypSubst τ t θ) σ
+    
     data tbinderst-disjoint : htyp → ihexp → Set where
       TBDTConst : ∀{τ} → tbinderst-disjoint τ c
       TBDTVar : ∀{x τ} → tbinderst-disjoint τ (X x)
@@ -1003,6 +1012,13 @@ module core where
                           → tbinderst-disjoint-θ θ τ
                           → tbinders-unique-θ (TypSubst τ t θ)
     
+    data tbinders-unique-σ : env → Set where
+      TBUσId : ∀{Γ} → tbinders-unique-σ (Id Γ)
+      TBUσSubst : ∀{d y σ} → tbinders-unique d
+                          → tbinders-unique-σ σ
+                          → tbinders-disjoint-σ σ d
+                          → tbinders-unique-σ (Subst d y σ)
+    
     data tbinderst-unique : htyp → Set where
       BUBase : tbinderst-unique b
       BUTVar : ∀{t} → tbinderst-unique (T t)
@@ -1024,15 +1040,21 @@ module core where
                        → tunbound-in t d
                        → tbinders-unique (·Λ t d)
       TBUEHole : ∀{u θ σ} → tbinders-unique-θ θ
-                        → tbinders-unique (⦇-⦈⟨ u , θ , σ ⟩)
+                          → tbinders-unique-σ σ
+                          → tbinders-disjoint-θ-σ θ σ
+                          → tbinders-unique (⦇-⦈⟨ u , θ , σ ⟩)
       TBUNEHole : ∀{u σ θ d} → tbinders-unique d
                            → tbinders-unique-θ θ
+                           → tbinders-unique-σ σ
+                           → tbinders-disjoint-θ-σ θ σ
                            → tbinders-unique (⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩)
       TBUAp : ∀{d1 d2} → tbinders-unique d1
                        → tbinders-unique d2
                        → tbinders-disjoint d1 d2
                        → tbinders-unique (d1 ∘ d2)
       TBUTAp : ∀{d τ} → tbinders-unique d
+                      → tbinderst-unique τ
+                      → tbinderst-disjoint τ d
                        → tbinders-unique (d < τ >)
       TBUCast : ∀{d τ1 τ2} → tbinders-unique d
                            → tbinders-unique (d ⟨ τ1 ⇒ τ2 ⟩)

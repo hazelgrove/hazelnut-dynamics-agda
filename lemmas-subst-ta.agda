@@ -22,7 +22,7 @@ module lemmas-subst-ta where
                                                                                     EFSubst (binders-fresh {y = y} x₁ zz x₂ apt)
                                                                                             (binders-envfresh subst (apart-extend1 Γ neq apt) unbound x₃)
                                                                                             neq
-    binders-envfresh {Γ = Γ} {y = y} (STASubst subst wf) apt ub bu = binders-envfresh subst apt ub bu
+    binders-envfresh {Γ = Γ} {y = y} (STASubst subst wf) apt ub bu = binders-envfresh {!   !} apt ub bu
 
     binders-fresh : ∀{ Δ Γ d2 τ y Θ} → Δ , Θ , Γ ⊢ d2 :: τ
                                       → binders-unique d2
@@ -36,7 +36,7 @@ module lemmas-subst-ta where
     binders-fresh {y = y} (TALam {x = x} x₁ wf wt) bu2 ub apt  with natEQ y x
     binders-fresh (TALam x₂ wf wt) bu2 (UBLam2 x₁ ub) apt | Inl refl = abort (x₁ refl)
     binders-fresh {Γ = Γ} (TALam {x = x} x₂ wf wt) (BULam bu2 x₃) (UBLam2 x₄ ub) apt | Inr x₁ =  FLam x₁ (binders-fresh wt bu2 ub (apart-extend1 Γ x₄ apt))
-    binders-fresh {Γ = Γ} (TATLam wt) (BUTLam bu) (UBTLam ub2) x₃ = FTLam (binders-fresh wt bu ub2 x₃)
+    binders-fresh {Γ = Γ} (TATLam apt wt) (BUTLam bu) (UBTLam ub2) x₃ = FTLam (binders-fresh wt bu ub2 x₃)
     binders-fresh (TAAp wt wt₁)  (BUAp bu2 bu3 x) (UBAp ub ub₁) apt = FAp (binders-fresh wt bu2 ub apt) (binders-fresh wt₁ bu3 ub₁ apt)
     binders-fresh (TATAp wf wt eq) (BUTAp x) (UBTAp x₂) x₃ = FTAp (binders-fresh wt x x₂ x₃)
     binders-fresh (TAEHole x₁ x₂ eq eq') (BUEHole x) (UBHole x₃) apt = FHole (binders-envfresh x₂ apt x₃ x )
@@ -79,7 +79,7 @@ module lemmas-subst-ta where
   ... | Inl eq = abort (x≠y (! eq))
   ... | Inr _  = TALam y#Γ wf (lem-subst {Δ = Δ} {Γ = Γ ,, (y , τ1)} {x = x} {d1 = d} (apart-extend1 Γ x≠y x#Γ) bd bu2 (exchange-ta-Γ {Γ = Γ} x≠y wt1)
                                          (weaken-ta (binders-fresh wt2 bu2 bd' y#Γ) wt2))
-  lem-subst {Γ = Γ} {Θ = Θ} apt (BDTLam bd) bu (TATLam wt1) wt2 = TATLam (lem-subst apt bd bu wt1 (weaken-ta-typ wt2))
+  lem-subst {Γ = Γ} {Θ = Θ} apt (BDTLam bd) bu (TATLam apt' wt1) wt2 = TATLam apt' (lem-subst apt bd bu wt1 (weaken-ta-typ {!   !} wt2))
   lem-subst apt (BDAp bd bd₁) bu3 (TAAp wt1 wt2) wt3 = TAAp (lem-subst apt bd bu3 wt1 wt3) (lem-subst apt bd₁ bu3 wt2 wt3)
   lem-subst apt (BDTAp bd) bu (TATAp wf wt1 eq) wt2 = TATAp wf (lem-subst apt bd bu wt1 wt2) eq
   lem-subst apt bd bu2 (TAEHole inΔ sub eq eq') wt2 = TAEHole inΔ {! (STAIdSubst sub wt2) !} eq eq'
