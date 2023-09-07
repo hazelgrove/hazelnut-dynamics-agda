@@ -42,48 +42,33 @@ module lemmas-subst-ta where
     binders-fresh (TAEHole x₁ x₂ eq eq') (BUEHole x) (UBHole x₃) apt = FHole (binders-envfresh x₂ apt x₃ x )
     binders-fresh (TANEHole x₁ wt x₂ eq eq') (BUNEHole bu2 x) (UBNEHole x₃ ub) apt = FNEHole (binders-envfresh x₂ apt x₃ x) (binders-fresh wt bu2  ub apt)
     binders-fresh (TACast wt wf x₁ alpha) (BUCast bu2) (UBCast ub) apt = FCast (binders-fresh wt bu2 ub apt)
-    binders-fresh (TAFailedCast wt x x₁ x₂) (BUFailedCast bu2) (UBFailedCast ub) apt = FFailedCast (binders-fresh wt  bu2  ub apt)
-{-
-    binders-tfresh : ∀{ Δ Γ d2 τ y Θ} → Δ , Θ , Γ ⊢ d2 :: τ
-                                      → binders-unique d2
-                                      → unbound-in y d2
-                                      → y # Θ
-                                      → tfresh y d2
-    binders-tfresh TAConst BUHole UBConst apt = TFConst
-    binders-tfresh (TAVar x) BUVar UBVar apt = TFVar
-    binders-tfresh (TALam x₁ x₂ ta) (BULam bu x) (UBLam2 x₃ ub) apt = TFLam {!   !} (binders-tfresh ta bu ub apt)
-    binders-tfresh {Θ = Θ} (TATLam apt ta) (BUTLam bu x) (UBTLam ne ub) apt' = TFTLam ne (binders-tfresh ta bu ub (apart-extend1 Θ ne apt'))
-    binders-tfresh (TAEHole x₂ x₃) (BUEHole x) (UBHole x₁) apt = TFHole (binders-envtfresh x₃ apt x₁ x {!!})
-    binders-tfresh ta (BUNEHole bu x) ub apt = {!   !}
-    binders-tfresh ta (BUAp bu bu₁ x) ub apt = {!   !}
-    binders-tfresh ta (BUTAp bu) ub apt = {!   !}
-    binders-tfresh ta (BUCast bu) ub apt = {!   !}
-    binders-tfresh ta (BUFailedCast bu) ub apt = {!   !}
--}
+    binders-fresh (TAFailedCast wt x x₁ x₂ alpha) (BUFailedCast bu2) (UBFailedCast ub) apt = FFailedCast (binders-fresh wt bu2 ub apt)
+
   -- the substition lemma for preservation
-  lem-subst : ∀{Δ Γ x τ1 d1 τ d2 Θ} →
+  lem-subst : ∀{Δ Γ x τ1 τ1' d1 τ d2 Θ} →
                   x # Γ →
                   binders-disjoint d1 d2 →
                   binders-unique d2 →
                   Δ , Θ , Γ ,, (x , τ1) ⊢ d1 :: τ →
-                  Δ , Θ , Γ ⊢ d2 :: τ1 →
+                  Δ , Θ , Γ ⊢ d2 :: τ1' →
+                  τ1' =α τ1 →
                   Δ , Θ , Γ ⊢ [ d2 / x ] d1 :: τ
-  lem-subst apt bd bu2  TAConst wt2 = TAConst
-  lem-subst {x = x} apt bd bu2  (TAVar {x = x'} x₂) wt2 with natEQ x' x
-  lem-subst {Γ = Γ} apt bd bu2 (TAVar x₃) wt2 | Inl refl with lem-apart-union-eq {Γ = Γ} apt x₃
-  lem-subst apt bd bu2  (TAVar x₃) wt2 | Inl refl | refl = wt2
-  lem-subst {Γ = Γ} apt bd bu2  (TAVar x₃) wt2 | Inr x₂ = TAVar (lem-neq-union-eq {Γ = Γ} x₂ x₃)
-  lem-subst {Δ = Δ} {Γ = Γ} {x = x} {d2 = d2} x#Γ (BDLam bd bd') bu2 (TALam {x = y} {τ1 = τ1} {d = d} {τ2 = τ2} x₂ wf wt1) wt2
+  lem-subst apt bd bu2  TAConst wt2 alpha = TAConst
+  lem-subst {x = x} apt bd bu2 (TAVar {x = x'} x₂) wt2 alpha with natEQ x' x
+  lem-subst {Γ = Γ} apt bd bu2 (TAVar x₃) wt2 alpha | Inl refl with lem-apart-union-eq {Γ = Γ} apt x₃
+  lem-subst apt bd bu2  (TAVar x₃) wt2 alpha | Inl refl | refl = {!   !} -- wt2
+  lem-subst {Γ = Γ} apt bd bu2  (TAVar x₃) wt2 alpha | Inr x₂ = TAVar (lem-neq-union-eq {Γ = Γ} x₂ x₃)
+  lem-subst {Δ = Δ} {Γ = Γ} {x = x} {d2 = d2} x#Γ (BDLam bd bd') bu2 (TALam {x = y} {τ1 = τ1} {d = d} {τ2 = τ2} x₂ wf wt1) wt2 alpha
     with lem-union-none {Γ = Γ} x₂
   ... |  x≠y , y#Γ with natEQ y x
   ... | Inl eq = abort (x≠y (! eq))
-  ... | Inr _  = TALam y#Γ wf (lem-subst {Δ = Δ} {Γ = Γ ,, (y , τ1)} {x = x} {d1 = d} (apart-extend1 Γ x≠y x#Γ) bd bu2 (exchange-ta-Γ {Γ = Γ} x≠y wt1)
-                                         (weaken-ta (binders-fresh wt2 bu2 bd' y#Γ) wt2))
-  lem-subst {Γ = Γ} {Θ = Θ} apt (BDTLam bd) bu (TATLam apt' wt1) wt2 = TATLam apt' (lem-subst apt bd bu wt1 (weaken-ta-typ {!   !} wt2))
-  lem-subst apt (BDAp bd bd₁) bu3 (TAAp wt1 wt2 alpha) wt3 = TAAp (lem-subst apt bd bu3 wt1 wt3) (lem-subst apt bd₁ bu3 wt2 wt3) alpha
-  lem-subst apt (BDTAp bd) bu (TATAp wf wt1 eq) wt2 = TATAp wf (lem-subst apt bd bu wt1 wt2) eq
-  lem-subst apt bd bu2 (TAEHole inΔ sub eq eq') wt2 = TAEHole inΔ {! (STAIdSubst sub wt2) !} eq eq'
-  lem-subst apt (BDNEHole x₁ bd) bu2 (TANEHole x₃ wt1 x₄ eq eq') wt2 = TANEHole x₃ (lem-subst apt bd bu2 wt1 wt2) {! (STAIdSubst x₄ wt2) !} eq eq'
-  lem-subst apt (BDCast bd) bu2 (TACast wt1 wf x₁ alpha) wt2 = TACast (lem-subst apt bd bu2 wt1 wt2) wf x₁ alpha
-  lem-subst apt (BDFailedCast bd) bu2 (TAFailedCast wt1 x₁ x₂ x₃) wt2 = TAFailedCast (lem-subst apt bd bu2 wt1 wt2) x₁ x₂ x₃
+  ... | Inr _  = TALam y#Γ wf {! (lem-subst {Δ = Δ} {Γ = Γ ,, (y , τ1)} {x = x} {d1 = d} (apart-extend1 Γ x≠y x#Γ) bd bu2 (exchange-ta-Γ {Γ = Γ} x≠y wt1)
+                                         (weaken-ta (binders-fresh wt2 bu2 bd' y#Γ) wt2)) !}
+  lem-subst {Γ = Γ} {Θ = Θ} apt (BDTLam bd) bu (TATLam apt' wt1) wt2 alpha = TATLam apt' (lem-subst apt bd bu wt1 (weaken-ta-typ2 {!   !} wt2) alpha)
+  lem-subst apt (BDAp bd bd₁) bu3 (TAAp wt1 wt2 alpha') wt3 alpha = TAAp (lem-subst apt bd bu3 wt1 wt3 alpha) (lem-subst apt bd₁ bu3 wt2 wt3 alpha) alpha'
+  lem-subst apt (BDTAp bd) bu (TATAp wf wt1 eq) wt2 alpha = TATAp wf (lem-subst apt bd bu wt1 wt2 alpha) eq
+  lem-subst apt bd bu2 (TAEHole inΔ sub eq eq') wt2 alpha = TAEHole inΔ {! (STAIdSubst sub wt2) !} eq eq'
+  lem-subst apt (BDNEHole x₁ bd) bu2 (TANEHole x₃ wt1 x₄ eq eq') wt2 alpha = TANEHole x₃ (lem-subst apt bd bu2 wt1 wt2 alpha) {! (STAIdSubst x₄ wt2) !} eq eq'
+  lem-subst apt (BDCast bd) bu2 (TACast wt1 wf x₁ alpha') wt2 alpha = TACast (lem-subst apt bd bu2 wt1 wt2 alpha) wf x₁ alpha'
+  lem-subst apt (BDFailedCast bd) bu2 (TAFailedCast wt1 x₁ x₂ x₃ alpha') wt2 alpha = TAFailedCast (lem-subst apt bd bu2 wt1 wt2 alpha) x₁ x₂ x₃ alpha'
   

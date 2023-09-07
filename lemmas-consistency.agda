@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 open import Prelude
 open import core
 open import contexts
@@ -56,8 +58,40 @@ module lemmas-consistency where
   data dom-cod : Nat ctx → Nat ctx → Set where 
     DC : ∀{Γ1 Γ2} → ((y : Nat) → dom Γ2 y → (Σ[ x ∈ Nat ] ((x , y) ∈ Γ1))) → dom-cod Γ1 Γ2
 
-  comp-lextend : (x y z : Nat) → (Γ1 Γ2 : Nat ctx) -> dom-cod ((■ (y , z)) ∪ Γ2) ((■ (x , y)) ∪ Γ1) → ((■ (x , z)) ∪ (Γ2 <=< Γ1)) == ((■ (y , z)) ∪ Γ2) <=< ((■ (x , y)) ∪ Γ1)
-  comp-lextend x y z Γ1 Γ2 (DC cond) = funext (λ w → foo w)
+
+  prunel : Nat ctx → Nat ctx → Nat ctx
+  prunel Γ1 Γ2 x with Γ1 x
+  ... | None = None
+  ... | Some y with Γ2 y
+  ...   | Some x = Some y
+  ...   | _ = None
+  
+  pruner : Nat ctx → Nat ctx → Nat ctx
+  pruner Γ1 Γ2 x with Γ2 x
+  ... | None = None
+  ... | Some y with Γ1 y
+  ...   | Some x = Some y
+  ...   | _ = None
+
+  prunel-def : ∀{x y ΓL ΓR} → (x , y) ∈ ΓL → (y , x) ∈ ΓR → (x , y) ∈ prunel ΓL ΓR
+  prunel-def = {!   !}
+
+  prune-pres-alpha1 : ∀{ΓL ΓR τ1 τ2} → ΓL , ΓR ⊢ τ1 =α τ2 → prunel ΓL ΓR , pruner ΓL ΓR ⊢ τ1 =α τ2
+  prune-pres-alpha1 AlphaBase = AlphaBase
+  prune-pres-alpha1 {ΓL} {ΓR} (AlphaVarBound {x = x} {y = y} meml memr) with ctxindirect ΓL x | ctxindirect ΓR y
+  ... | Inl (y , inl) | Inl (x , inr) = AlphaVarBound (prunel-def meml inr) {!  !}
+  ... | _ | _ = {!   !}
+  prune-pres-alpha1 (AlphaVarFree x x₁) = {!   !}
+  prune-pres-alpha1 AlphaHole = AlphaHole
+  prune-pres-alpha1 (AlphaArr alpha alpha₁) = AlphaArr (prune-pres-alpha1 alpha) (prune-pres-alpha1 alpha₁)
+  prune-pres-alpha1 (AlphaForall alpha) = {!   !}
+
+
+  prune-pres-alpha2 : ∀{ΓL ΓR τ1 τ2} → prunel ΓL ΓR , pruner ΓL ΓR ⊢ τ1 =α τ2 → ΓL , ΓR ⊢ τ1 =α τ2
+  prune-pres-alpha2 = {!   !}
+
+  comp-lextend : (x y z : Nat) → (Γ1 Γ2 : Nat ctx) → ((■ (x , z)) ∪ (Γ2 <=< Γ1)) == ((■ (y , z)) ∪ Γ2) <=< ((■ (x , y)) ∪ Γ1)
+  comp-lextend x y z Γ1 Γ2 = funext (λ w → foo w)
     where
       foo : (w : Nat) → ((■ (x , z)) ∪ (Γ2 <=< Γ1)) w == (((■ (y , z)) ∪ Γ2) <=< ((■ (x , y)) ∪ Γ1)) w
       foo w with natEQ x w
@@ -68,19 +102,34 @@ module lemmas-consistency where
       ...     | Inl refl = {!   !}
       ...     | Inr neq' = refl
 
+  comp-lextend-prunel : (x y z : Nat) → (ΓL1 ΓL2 ΓR1 ΓR2 : Nat ctx) → 
+    prunel ((■ (x , z)) ∪ (ΓL2 <=< ΓL1)) 
+           ((■ (z , x)) ∪ (ΓR1 <=< ΓR2)) == 
+    (prunel ((■ (y , z)) ∪ ΓL2) ((■ (z , y)) ∪ ΓR2) <=< 
+     prunel ((■ (x , y)) ∪ ΓL1) ((■ (y , x)) ∪ ΓR1))
+  comp-lextend-prunel x y z ΓL1 ΓL2 ΓR1 ΓR2 = {!   !}
+
+  comp-lextend-pruner : (x y z : Nat) → (ΓL1 ΓL2 ΓR1 ΓR2 : Nat ctx) → pruner ((■ (x , z)) ∪ (ΓL2 <=< ΓL1)) ((■ (z , x)) ∪ (ΓR1 <=< ΓR2)) == pruner (((■ (y , z)) ∪ ΓL2) <=< ((■ (x , y)) ∪ ΓL1)) (((■ (y , x)) ∪ ΓR1) <=< ((■ (z , y)) ∪ ΓR2))
+  comp-lextend-pruner = {!   !}
+
   alpha-rewrite-gamma : ∀{ΓL ΓL' ΓR ΓR' τ1 τ2} → ΓL == ΓL' → ΓR == ΓR' → ΓL , ΓR ⊢ τ1 =α τ2 → ΓL' , ΓR' ⊢ τ1 =α τ2
   alpha-rewrite-gamma eq1 eq2 alpha rewrite ! eq1 rewrite ! eq2 = alpha
 
-  alpha-trans : {ΓL1 ΓR1 ΓL2 ΓR2 : Nat ctx} {τ1 τ2 τ3 : htyp} → dom-cod ΓL2 ΓL1 → dom-cod ΓR2 ΓR1 → ΓL1 , ΓR1 ⊢ τ1 =α τ2 → ΓL2 , ΓR2 ⊢ τ2 =α τ3 → (ΓL2 <=< ΓL1) , (ΓR1 <=< ΓR2) ⊢ τ1 =α τ3
-  alpha-trans _ _ AlphaBase AlphaBase = AlphaBase
-  alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} _ _ (AlphaVarBound x₁ x₂) (AlphaVarBound x₃ x₄) = AlphaVarBound (comp-elem ΓL2 ΓL1 x₁ x₃) (comp-elem ΓR1 ΓR2 x₄ x₂)
-  alpha-trans _ _ (AlphaVarBound x₁ x₂) (AlphaVarFree x₃ x₄) = {!   !}
-  alpha-trans {ΓL2 = ΓL2} {ΓR2 = ΓR2} _ _ (AlphaVarFree x x₁) (AlphaVarBound x₂ x₃) = {!   !}
-  alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} _ _ (AlphaVarFree x x₁) (AlphaVarFree x₂ x₃) = AlphaVarFree {!   !} {!   !}
-  alpha-trans {ΓL2 = ΓL2} {ΓR2 = ΓR2} _ _ AlphaHole AlphaHole = AlphaHole
-  alpha-trans _ _ (AlphaArr a1 a3) (AlphaArr a2 a4) = {!   !} -- AlphaArr (alpha-trans a1 a2) (alpha-trans a3 a4)
-  alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} cd1 cd2 (AlphaForall {x = x} {y = y} a1) (AlphaForall {x = y} {y = y'} a2) = 
-    AlphaForall {!   !} -- (alpha-rewrite-gamma (! (comp-lextend x y y' ΓL1 ΓL2)) (! (comp-lextend y' y x ΓR2 ΓR1)) (alpha-trans a1 a2)) -- AlphaForall {!   !}
+  ⊢alpha-trans : {ΓL1 ΓR1 ΓL2 ΓR2 : Nat ctx} {τ1 τ2 τ3 : htyp} → ΓL1 , ΓR1 ⊢ τ1 =α τ2 → ΓL2 , ΓR2 ⊢ τ2 =α τ3 → (ΓL2 <=< ΓL1) , (ΓR1 <=< ΓR2) ⊢ τ1 =α τ3
+  ⊢alpha-trans AlphaBase AlphaBase = AlphaBase
+  ⊢alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} (AlphaVarBound x₁ x₂) (AlphaVarBound x₃ x₄) = AlphaVarBound (comp-elem ΓL2 ΓL1 x₁ x₃) (comp-elem ΓR1 ΓR2 x₄ x₂)
+  ⊢alpha-trans (AlphaVarBound x₁ x₂) (AlphaVarFree x₃ x₄) = {!   !}
+  ⊢alpha-trans {ΓL2 = ΓL2} {ΓR2 = ΓR2} (AlphaVarFree x x₁) (AlphaVarBound x₂ x₃) = {!   !}
+  ⊢alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} (AlphaVarFree x x₁) (AlphaVarFree x₂ x₃) = AlphaVarFree {!   !} {!   !}
+  ⊢alpha-trans {ΓL2 = ΓL2} {ΓR2 = ΓR2} AlphaHole AlphaHole = AlphaHole
+  ⊢alpha-trans (AlphaArr a1 a3) (AlphaArr a2 a4) = {!   !} -- AlphaArr (alpha-trans a1 a2) (alpha-trans a3 a4)
+  ⊢alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} (AlphaForall {x = x} {y = y} a1) (AlphaForall {x = y} {y = y'} a2) = 
+    AlphaForall (prune-pres-alpha2 (alpha-rewrite-gamma (! (comp-lextend-prunel x y y' ΓL1 ΓL2 ΓR1 ΓR2)) {!   !} (⊢alpha-trans (prune-pres-alpha1 a1) (prune-pres-alpha1 a2))))
+    
+  alpha-trans : ∀{τ1 τ2 τ3} → τ1 =α τ2 → τ2 =α τ3 → τ1 =α τ3
+  alpha-trans = ⊢alpha-trans
+
+     -- AlphaForall (prune-pres-alpha2 (alpha-rewrite-gamma (! (comp-lextend-prunel x y y' ΓL1 ΓL2 ΓR1 ΓR2)) (! (comp-lextend-pruner x y y' ΓL1 ΓL2 ΓR1 ΓR2)) (prune-pres-alpha1 (alpha-trans a1 a2)))) -- (alpha-rewrite-gamma (! (comp-lextend x y y' ΓL1 ΓL2)) (! (comp-lextend y' y x ΓR2 ΓR1)) (alpha-trans a1 a2)) -- AlphaForall {!   !}
 
   ⊢~refl : {Γ : Nat ctx} -> {t : htyp} → (∀ {x y} → (x , y) ∈ Γ → (x , x) ∈ Γ) -> (_,_⊢_~_) Γ Γ t t
   ⊢~refl {t = b} _ = ConsistBase

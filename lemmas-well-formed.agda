@@ -313,7 +313,7 @@ module lemmas-well-formed where
     wf-ta ctxwf (HCtx map) (TANEHole x wt x₁ eq eq') with map x 
     ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ {! thing1 !} thing2 eq
     wf-ta ctxwf hctwwf (TACast wt x x₁ alpha) = x
-    wf-ta ctxwf hctwwf (TAFailedCast wt x x₁ x₂) = ground-wf x₁
+    wf-ta ctxwf hctwwf (TAFailedCast wt x x₁ x₂ _) = ground-wf x₁
 
   
     no-tvar-casts : ∀{ Γ n τ d Δ} → ∅ ⊢ Γ tctxwf → Δ hctxwf → Δ , ∅ , Γ ⊢ d ⟨ T n ⇒ ⦇-⦈ ⟩ :: τ → ⊥

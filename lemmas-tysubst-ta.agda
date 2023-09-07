@@ -57,7 +57,7 @@ module lemmas-tysubst-ta where
   tunbound-ta-tunboundt (TUBNEHole ubt ubs ub) (UBΔ ubd) ubg (TANEHole {u = u} {Θ' = Θ'} {Γ' = Γ'} {τ' = τ'} x ta x₁ x₂ x₃) = let ubt' = ubd u Θ' Γ' τ' x in
     lem-sub-sub-ub τ' ubt' ubt (! x₂)
   tunbound-ta-tunboundt (TUBCast ub ubt1 ubt2) ubd ubg (TACast ta x x₁ alpha) = ubt2
-  tunbound-ta-tunboundt (TUBFailedCast ub ubt1 ubt2) ubd ubg (TAFailedCast ta x x₁ x₂) = ubt2
+  tunbound-ta-tunboundt (TUBFailedCast ub ubt1 ubt2) ubd ubg (TAFailedCast ta x x₁ x₂ _) = ubt2
 
 {-
   wf-unbound-tfresht : ∀{t τ Θ} -> t # Θ -> Θ ⊢ τ wf -> tunboundt-in t τ -> tfresht t τ
@@ -205,8 +205,7 @@ module lemmas-tysubst-ta where
       TAEHole x (lemma-tysubst-subst wf ubd ubg {!   !} x₂ x₅ x₄ ts) refl refl
     lemma-tysubst wf ubd ubg (TUBNEHole x₁ ubs ub) (TBUNEHole bu but bus bdts) (TANEHole x ta ts eq eq') rewrite eq rewrite eq' = TANEHole x (lemma-tysubst wf ubd ubg ub bu ta) (lemma-tysubst-subst wf ubd ubg {!   !} ubs bdts bus ts) refl refl
     lemma-tysubst wf ubd ubg (TUBCast ub x₁ x₂) (TBUCast bu) (TACast ta x x~ alpha) = TACast (lemma-tysubst wf ubd ubg ub bu ta) ((wf-sub (wf-closed wf) x refl)) (~Typ[] wf x₁ x₂ x~) {!   !}
-    lemma-tysubst wf ubd ubg (TUBFailedCast ub x₁ x₂) (TBUFailedCast bu) (TAFailedCast ta tgnd tgnd' x) = TAFailedCast (lemma-tysubst wf ubd ubg ub bu ta) (ground-subst tgnd) (ground-subst tgnd') 
-      λ eq → x (foo tgnd tgnd' eq)
+    lemma-tysubst wf ubd ubg (TUBFailedCast ub x₁ x₂) (TBUFailedCast bu) (TAFailedCast ta tgnd tgnd' x alpha) = TAFailedCast (lemma-tysubst wf ubd ubg ub bu ta) (ground-subst tgnd) (ground-subst tgnd') (λ eq → x (foo tgnd tgnd' eq)) {!   !}
       where
         foo : ∀{t1 t2 t3 t} -> t1 ground -> t2 ground -> Typ[ t3 / t ] t1 ~ Typ[ t3 / t ] t2 -> t1 ~ t2
         foo {t1} {t2} {t3} {t} g1 g2 eq rewrite ground-subst-id {t} {t1} {t3} g1 rewrite ground-subst-id {t} {t2} {t3} g2 = eq

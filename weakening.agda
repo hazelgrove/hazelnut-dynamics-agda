@@ -54,7 +54,7 @@ module weakening where
     weaken-ta-Δ1 {Δ1} {Δ2} {Γ} disj (TAEHole {u = u} {Γ' = Γ'} x x₁ eq eq') = TAEHole (x∈∪l Δ1 Δ2 u _ x ) (weaken-subst-Δ disj x₁) eq eq'
     weaken-ta-Δ1 {Δ1} {Δ2} {Γ} disj (TANEHole {u = u} {Γ' = Γ'} x wt x₁ eq eq') = TANEHole (x∈∪l Δ1 Δ2 u _ x) (weaken-ta-Δ1 disj wt) (weaken-subst-Δ disj x₁) eq eq'
     weaken-ta-Δ1 disj (TACast wt wf x alpha) = TACast (weaken-ta-Δ1 disj wt) wf x alpha
-    weaken-ta-Δ1 disj (TAFailedCast wt x x₁ x₂) = TAFailedCast (weaken-ta-Δ1 disj wt) x x₁ x₂
+    weaken-ta-Δ1 disj (TAFailedCast wt x x₁ x₂ alpha) = TAFailedCast (weaken-ta-Δ1 disj wt) x x₁ x₂ alpha
 
   -- this is a little bit of a time saver. since ∪ is commutative on
   -- disjoint contexts, and we need that premise anyway in both positions,
@@ -123,7 +123,7 @@ module weakening where
     weaken-ta (FHole x₁) (TAEHole x₂ x₃ eq eq') = TAEHole x₂ (weaken-subst-Γ x₁ x₃) eq eq'
     weaken-ta (FNEHole x₁ frsh) (TANEHole x₂ wt x₃ eq eq') = TANEHole x₂ (weaken-ta frsh wt) (weaken-subst-Γ x₁ x₃) eq eq'
     weaken-ta (FCast frsh) (TACast wt wf x₁ alpha) = TACast (weaken-ta frsh wt) wf x₁ alpha
-    weaken-ta (FFailedCast frsh) (TAFailedCast wt x₁ x₂ x₃) = TAFailedCast (weaken-ta frsh wt) x₁ x₂ x₃
+    weaken-ta (FFailedCast frsh) (TAFailedCast wt x₁ x₂ x₃ alpha) = TAFailedCast (weaken-ta frsh wt) x₁ x₂ x₃ alpha
 
   mutual 
     weaken-subst-Θ : ∀{Γ Δ θ t σ Γ' Θ Θ'} →
@@ -147,7 +147,7 @@ module weakening where
     weaken-ta-typ (TFHole ef tef) (TAEHole x x₁ eq eq') = TAEHole x (weaken-subst-Θ tef x₁) eq eq' 
     weaken-ta-typ (TFNEHole ef tef tf) (TANEHole x x₁ x₂ eq eq') = TANEHole x (weaken-ta-typ tf x₁) (weaken-subst-Θ tef x₂) eq eq' 
     weaken-ta-typ (TFCast tf) (TACast x wf x₁ alpha) = TACast (weaken-ta-typ tf x) (weaken-t-wf wf) x₁ alpha
-    weaken-ta-typ (TFFailedCast tf) (TAFailedCast x x₁ x₂ x₃) = TAFailedCast (weaken-ta-typ tf x) x₁ x₂ x₃ 
+    weaken-ta-typ (TFFailedCast tf) (TAFailedCast x x₁ x₂ x₃ alpha) = TAFailedCast (weaken-ta-typ tf x) x₁ x₂ x₃ alpha
 
     weaken-subst-Θ2 : ∀{Γ Δ θ t σ Γ' Θ Θ'} →
                      tunbound-in-θ t θ →
@@ -171,5 +171,5 @@ module weakening where
     weaken-ta-typ2 (TUBHole x₄ x₅) (TAEHole x x₁ x₂ x₃) = TAEHole x (weaken-subst-Θ2 x₄ x₅ x₁) x₂ x₃
     weaken-ta-typ2 (TUBNEHole x₄ x₅ ub) (TANEHole x ta x₁ x₂ x₃) = TANEHole x (weaken-ta-typ2 ub ta) (weaken-subst-Θ2 x₄ x₅ x₁) x₂ x₃
     weaken-ta-typ2 (TUBCast ub x₂ x₃) (TACast ta x x₁ alpha) = TACast (weaken-ta-typ2 ub ta) (weaken-t-wf x) x₁ alpha
-    weaken-ta-typ2 (TUBFailedCast ub x₃ x₄) (TAFailedCast ta x x₁ x₂) = TAFailedCast (weaken-ta-typ2 ub ta) x x₁ x₂
+    weaken-ta-typ2 (TUBFailedCast ub x₃ x₄) (TAFailedCast ta x x₁ x₂ alpha) = TAFailedCast (weaken-ta-typ2 ub ta) x x₁ x₂ alpha
  
