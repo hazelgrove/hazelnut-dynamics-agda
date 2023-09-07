@@ -53,8 +53,11 @@ module lemmas-consistency where
   ... | Inl (y' , ing) rewrite ing rewrite someinj i1 = i2
   ... | Inr ning = {!   !}
 
-  comp-lextend : (x y z : Nat) → (Γ1 Γ2 : Nat ctx) -> ((■ (x , z)) ∪ (Γ2 <=< Γ1)) == ((■ (y , z)) ∪ Γ2) <=< ((■ (x , y)) ∪ Γ1)
-  comp-lextend x y z Γ1 Γ2 = funext (λ w → foo w)
+  data dom-cod : Nat ctx → Nat ctx → Set where 
+    DC : ∀{Γ1 Γ2} → ((y : Nat) → dom Γ2 y → (Σ[ x ∈ Nat ] ((x , y) ∈ Γ1))) → dom-cod Γ1 Γ2
+
+  comp-lextend : (x y z : Nat) → (Γ1 Γ2 : Nat ctx) -> dom-cod ((■ (y , z)) ∪ Γ2) ((■ (x , y)) ∪ Γ1) → ((■ (x , z)) ∪ (Γ2 <=< Γ1)) == ((■ (y , z)) ∪ Γ2) <=< ((■ (x , y)) ∪ Γ1)
+  comp-lextend x y z Γ1 Γ2 (DC cond) = funext (λ w → foo w)
     where
       foo : (w : Nat) → ((■ (x , z)) ∪ (Γ2 <=< Γ1)) w == (((■ (y , z)) ∪ Γ2) <=< ((■ (x , y)) ∪ Γ1)) w
       foo w with natEQ x w
@@ -68,15 +71,15 @@ module lemmas-consistency where
   alpha-rewrite-gamma : ∀{ΓL ΓL' ΓR ΓR' τ1 τ2} → ΓL == ΓL' → ΓR == ΓR' → ΓL , ΓR ⊢ τ1 =α τ2 → ΓL' , ΓR' ⊢ τ1 =α τ2
   alpha-rewrite-gamma eq1 eq2 alpha rewrite ! eq1 rewrite ! eq2 = alpha
 
-  alpha-trans : {ΓL1 ΓR1 ΓL2 ΓR2 : Nat ctx} {τ1 τ2 τ3 : htyp} → ΓL1 , ΓR1 ⊢ τ1 =α τ2 → ΓL2 , ΓR2 ⊢ τ2 =α τ3 → (ΓL2 <=< ΓL1) , (ΓR1 <=< ΓR2) ⊢ τ1 =α τ3
-  alpha-trans AlphaBase AlphaBase = AlphaBase
-  alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} (AlphaVarBound x₁ x₂) (AlphaVarBound x₃ x₄) = AlphaVarBound (comp-elem ΓL2 ΓL1 x₁ x₃) (comp-elem ΓR1 ΓR2 x₄ x₂)
-  alpha-trans (AlphaVarBound x₁ x₂) (AlphaVarFree x₃ x₄) = {!   !}
-  alpha-trans {ΓL2 = ΓL2} {ΓR2 = ΓR2} (AlphaVarFree x x₁) (AlphaVarBound x₂ x₃) = {!   !}
-  alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} (AlphaVarFree x x₁) (AlphaVarFree x₂ x₃) = AlphaVarFree {!   !} {!   !}
-  alpha-trans {ΓL2 = ΓL2} {ΓR2 = ΓR2} AlphaHole AlphaHole = AlphaHole
-  alpha-trans (AlphaArr a1 a3) (AlphaArr a2 a4) = {!   !} -- AlphaArr (alpha-trans a1 a2) (alpha-trans a3 a4)
-  alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} (AlphaForall {x = x} {y = y} a1) (AlphaForall {x = y} {y = y'} a2) = 
+  alpha-trans : {ΓL1 ΓR1 ΓL2 ΓR2 : Nat ctx} {τ1 τ2 τ3 : htyp} → dom-cod ΓL2 ΓL1 → dom-cod ΓR2 ΓR1 → ΓL1 , ΓR1 ⊢ τ1 =α τ2 → ΓL2 , ΓR2 ⊢ τ2 =α τ3 → (ΓL2 <=< ΓL1) , (ΓR1 <=< ΓR2) ⊢ τ1 =α τ3
+  alpha-trans _ _ AlphaBase AlphaBase = AlphaBase
+  alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} _ _ (AlphaVarBound x₁ x₂) (AlphaVarBound x₃ x₄) = AlphaVarBound (comp-elem ΓL2 ΓL1 x₁ x₃) (comp-elem ΓR1 ΓR2 x₄ x₂)
+  alpha-trans _ _ (AlphaVarBound x₁ x₂) (AlphaVarFree x₃ x₄) = {!   !}
+  alpha-trans {ΓL2 = ΓL2} {ΓR2 = ΓR2} _ _ (AlphaVarFree x x₁) (AlphaVarBound x₂ x₃) = {!   !}
+  alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} _ _ (AlphaVarFree x x₁) (AlphaVarFree x₂ x₃) = AlphaVarFree {!   !} {!   !}
+  alpha-trans {ΓL2 = ΓL2} {ΓR2 = ΓR2} _ _ AlphaHole AlphaHole = AlphaHole
+  alpha-trans _ _ (AlphaArr a1 a3) (AlphaArr a2 a4) = {!   !} -- AlphaArr (alpha-trans a1 a2) (alpha-trans a3 a4)
+  alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} cd1 cd2 (AlphaForall {x = x} {y = y} a1) (AlphaForall {x = y} {y = y'} a2) = 
     AlphaForall {!   !} -- (alpha-rewrite-gamma (! (comp-lextend x y y' ΓL1 ΓL2)) (! (comp-lextend y' y x ΓR2 ΓR1)) (alpha-trans a1 a2)) -- AlphaForall {!   !}
 
   ⊢~refl : {Γ : Nat ctx} -> {t : htyp} → (∀ {x y} → (x , y) ∈ Γ → (x , x) ∈ Γ) -> (_,_⊢_~_) Γ Γ t t
