@@ -48,7 +48,7 @@ module lemmas-tysubst-ta where
   tunbound-ta-tunboundt {τ = τ} TUBVar ubd (UBΓ ubg) (TAVar {x = y} x) = ubg y τ x
   tunbound-ta-tunboundt (TUBLam2 ub ubt) ubd ubg (TALam x x₁ ta) = UBArr ubt (tunbound-ta-tunboundt ub ubd (lem-ub-extend ubt ubg) ta)
   tunbound-ta-tunboundt (TUBTLam x₁ ub) ubd ubg (TATLam x ta) = UBForall x₁ (tunbound-ta-tunboundt ub ubd ubg ta)
-  tunbound-ta-tunboundt (TUBAp ub1 ub2) ubd ubg (TAAp ta ta₁) with tunbound-ta-tunboundt ub1 ubd ubg ta
+  tunbound-ta-tunboundt (TUBAp ub1 ub2) ubd ubg (TAAp ta ta₁ alpha) with tunbound-ta-tunboundt ub1 ubd ubg ta
   ... | UBArr _ ubt2 = ubt2
   tunbound-ta-tunboundt (TUBTAp ub ubt) ubd ubg (TATAp x ta eq) with tunbound-ta-tunboundt ub ubd ubg ta
   ... | UBForall ub' ubt' = lem-sub-ub _ ubt' ubt eq
@@ -56,7 +56,7 @@ module lemmas-tysubst-ta where
     lem-sub-sub-ub τ' ubt' ubt (! x₂)
   tunbound-ta-tunboundt (TUBNEHole ubt ubs ub) (UBΔ ubd) ubg (TANEHole {u = u} {Θ' = Θ'} {Γ' = Γ'} {τ' = τ'} x ta x₁ x₂ x₃) = let ubt' = ubd u Θ' Γ' τ' x in
     lem-sub-sub-ub τ' ubt' ubt (! x₂)
-  tunbound-ta-tunboundt (TUBCast ub ubt1 ubt2) ubd ubg (TACast ta x x₁) = ubt2
+  tunbound-ta-tunboundt (TUBCast ub ubt1 ubt2) ubd ubg (TACast ta x x₁ alpha) = ubt2
   tunbound-ta-tunboundt (TUBFailedCast ub ubt1 ubt2) ubd ubg (TAFailedCast ta x x₁ x₂) = ubt2
 
 {-
@@ -116,7 +116,7 @@ module lemmas-tysubst-ta where
   ... | Inl refl rewrite natEQrefl {x} = refl
   ... | Inr neq rewrite natEQneq neq = forall-eq refl (lemma-typ-typ-1 τ wf)
 
-  lemma-typ-typ-2 : ∀{τ1 τ2 t t'} → (τ : htyp) → tunboundt-in t (Typ[ τ1 / t' ] τ) → ∅ ⊢ τ2 wf → t ≠ t' → Typ[ Typ[ τ2 / t ] τ1 / t' ] (Typ[ τ2 / t ] τ) == Typ[ τ2 / t ] (Typ[ τ1 / t' ] τ)
+  lemma-typ-typ-2 : ∀{τ1 τ2 t t'} → (τ : htyp) → tunboundt-in t τ → ∅ ⊢ τ2 wf → t ≠ t' → Typ[ Typ[ τ2 / t ] τ1 / t' ] (Typ[ τ2 / t ] τ) == Typ[ τ2 / t ] (Typ[ τ1 / t' ] τ)
   lemma-typ-typ-2 b _ wf neq = refl
   lemma-typ-typ-2 {t = t} {t' = t'} (T x) _ wf neq with natEQ t x
   ... | Inl refl rewrite natEQneq (flip neq) rewrite natEQrefl {x} = t-sub-closed wf
@@ -191,7 +191,7 @@ module lemmas-tysubst-ta where
     ... | Inr neq | Inr nint = TATLam nint (lemma-tysubst wf ubd ubg ub bu (rewrite-theta (exchange-Θ {Θ = Θ}) ta))
     ... | _ | Inl (<> , int) rewrite int = abort (somenotnone apt)
     ... | Inl refl | Inr nint rewrite nint rewrite natEQrefl {t} = abort (somenotnone apt)
-    lemma-tysubst wf ubd ubg (TUBAp ub1 ub2) (TBUAp bu bu₁ x) (TAAp ta ta') = TAAp (lemma-tysubst wf ubd ubg ub1 bu ta) (lemma-tysubst wf ubd ubg ub2 bu₁ ta')
+    lemma-tysubst wf ubd ubg (TUBAp ub1 ub2) (TBUAp bu bu₁ x) (TAAp ta ta' alpha) = TAAp (lemma-tysubst wf ubd ubg ub1 bu ta) (lemma-tysubst wf ubd ubg ub2 bu₁ ta') {!   !}
     lemma-tysubst {t = t} {τ2 = τ2} wf ubd ubg (TUBTAp ubt ubt') (TBUTAp bu _ _) (TATAp {t = t'} {τ1 = τ1} {τ2 = τ4} {τ3 = τ3} x ta eq) with natEQ t t'
     ... | Inl refl rewrite natEQrefl {t'} rewrite natEQrefl {t} rewrite ! eq = TATAp {t = t'} {τ2 = τ4} ((wf-sub (wf-closed wf) x refl))
                      (rewrite-typ (forall-sub-eq refl) (lemma-tysubst wf ubd ubg ubt bu ta))
@@ -200,14 +200,14 @@ module lemmas-tysubst-ta where
     ...   | UBForall _ ub4 =
        TATAp {t = t'} {τ2 = Typ[ τ2 / t ] τ4} (wf-sub (wf-closed wf) x refl)
                     (rewrite-typ (forall-sub-neq neq) (lemma-tysubst wf ubd ubg ubt bu ta))
-                    (lemma-typ-typ-2 τ4 (lem-sub-ub τ4 ub4 ubt' refl) wf neq)
+                    (lemma-typ-typ-2 τ4 ub4 wf neq)
     lemma-tysubst wf ubd ubg (TUBHole x₁ x₂) (TBUEHole x₃ x₄ x₅) (TAEHole x ts eq eq') rewrite eq rewrite eq' = 
       TAEHole x (lemma-tysubst-subst wf ubd ubg {!   !} x₂ x₅ x₄ ts) refl refl
     lemma-tysubst wf ubd ubg (TUBNEHole x₁ ubs ub) (TBUNEHole bu but bus bdts) (TANEHole x ta ts eq eq') rewrite eq rewrite eq' = TANEHole x (lemma-tysubst wf ubd ubg ub bu ta) (lemma-tysubst-subst wf ubd ubg {!   !} ubs bdts bus ts) refl refl
-    lemma-tysubst wf ubd ubg (TUBCast ub x₁ x₂) (TBUCast bu) (TACast ta x x~) = TACast (lemma-tysubst wf ubd ubg ub bu ta) ((wf-sub (wf-closed wf) x refl)) (~Typ[] wf x₁ x₂ x~)
+    lemma-tysubst wf ubd ubg (TUBCast ub x₁ x₂) (TBUCast bu) (TACast ta x x~ alpha) = TACast (lemma-tysubst wf ubd ubg ub bu ta) ((wf-sub (wf-closed wf) x refl)) (~Typ[] wf x₁ x₂ x~) {!   !}
     lemma-tysubst wf ubd ubg (TUBFailedCast ub x₁ x₂) (TBUFailedCast bu) (TAFailedCast ta tgnd tgnd' x) = TAFailedCast (lemma-tysubst wf ubd ubg ub bu ta) (ground-subst tgnd) (ground-subst tgnd') 
       λ eq → x (foo tgnd tgnd' eq)
       where
         foo : ∀{t1 t2 t3 t} -> t1 ground -> t2 ground -> Typ[ t3 / t ] t1 ~ Typ[ t3 / t ] t2 -> t1 ~ t2
         foo {t1} {t2} {t3} {t} g1 g2 eq rewrite ground-subst-id {t} {t1} {t3} g1 rewrite ground-subst-id {t} {t2} {t3} g2 = eq
-           
+            

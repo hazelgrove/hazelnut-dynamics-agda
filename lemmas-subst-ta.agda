@@ -37,11 +37,11 @@ module lemmas-subst-ta where
     binders-fresh (TALam x₂ wf wt) bu2 (UBLam2 x₁ ub) apt | Inl refl = abort (x₁ refl)
     binders-fresh {Γ = Γ} (TALam {x = x} x₂ wf wt) (BULam bu2 x₃) (UBLam2 x₄ ub) apt | Inr x₁ =  FLam x₁ (binders-fresh wt bu2 ub (apart-extend1 Γ x₄ apt))
     binders-fresh {Γ = Γ} (TATLam apt wt) (BUTLam bu) (UBTLam ub2) x₃ = FTLam (binders-fresh wt bu ub2 x₃)
-    binders-fresh (TAAp wt wt₁)  (BUAp bu2 bu3 x) (UBAp ub ub₁) apt = FAp (binders-fresh wt bu2 ub apt) (binders-fresh wt₁ bu3 ub₁ apt)
+    binders-fresh (TAAp wt wt₁ alpha)  (BUAp bu2 bu3 x) (UBAp ub ub₁) apt = FAp (binders-fresh wt bu2 ub apt) (binders-fresh wt₁ bu3 ub₁ apt)
     binders-fresh (TATAp wf wt eq) (BUTAp x) (UBTAp x₂) x₃ = FTAp (binders-fresh wt x x₂ x₃)
     binders-fresh (TAEHole x₁ x₂ eq eq') (BUEHole x) (UBHole x₃) apt = FHole (binders-envfresh x₂ apt x₃ x )
     binders-fresh (TANEHole x₁ wt x₂ eq eq') (BUNEHole bu2 x) (UBNEHole x₃ ub) apt = FNEHole (binders-envfresh x₂ apt x₃ x) (binders-fresh wt bu2  ub apt)
-    binders-fresh (TACast wt wf x₁) (BUCast bu2) (UBCast ub) apt = FCast (binders-fresh wt  bu2  ub apt)
+    binders-fresh (TACast wt wf x₁ alpha) (BUCast bu2) (UBCast ub) apt = FCast (binders-fresh wt bu2 ub apt)
     binders-fresh (TAFailedCast wt x x₁ x₂) (BUFailedCast bu2) (UBFailedCast ub) apt = FFailedCast (binders-fresh wt  bu2  ub apt)
 {-
     binders-tfresh : ∀{ Δ Γ d2 τ y Θ} → Δ , Θ , Γ ⊢ d2 :: τ
@@ -80,10 +80,10 @@ module lemmas-subst-ta where
   ... | Inr _  = TALam y#Γ wf (lem-subst {Δ = Δ} {Γ = Γ ,, (y , τ1)} {x = x} {d1 = d} (apart-extend1 Γ x≠y x#Γ) bd bu2 (exchange-ta-Γ {Γ = Γ} x≠y wt1)
                                          (weaken-ta (binders-fresh wt2 bu2 bd' y#Γ) wt2))
   lem-subst {Γ = Γ} {Θ = Θ} apt (BDTLam bd) bu (TATLam apt' wt1) wt2 = TATLam apt' (lem-subst apt bd bu wt1 (weaken-ta-typ {!   !} wt2))
-  lem-subst apt (BDAp bd bd₁) bu3 (TAAp wt1 wt2) wt3 = TAAp (lem-subst apt bd bu3 wt1 wt3) (lem-subst apt bd₁ bu3 wt2 wt3)
+  lem-subst apt (BDAp bd bd₁) bu3 (TAAp wt1 wt2 alpha) wt3 = TAAp (lem-subst apt bd bu3 wt1 wt3) (lem-subst apt bd₁ bu3 wt2 wt3) alpha
   lem-subst apt (BDTAp bd) bu (TATAp wf wt1 eq) wt2 = TATAp wf (lem-subst apt bd bu wt1 wt2) eq
   lem-subst apt bd bu2 (TAEHole inΔ sub eq eq') wt2 = TAEHole inΔ {! (STAIdSubst sub wt2) !} eq eq'
   lem-subst apt (BDNEHole x₁ bd) bu2 (TANEHole x₃ wt1 x₄ eq eq') wt2 = TANEHole x₃ (lem-subst apt bd bu2 wt1 wt2) {! (STAIdSubst x₄ wt2) !} eq eq'
-  lem-subst apt (BDCast bd) bu2 (TACast wt1 wf x₁) wt2 = TACast (lem-subst apt bd bu2 wt1 wt2) wf x₁
+  lem-subst apt (BDCast bd) bu2 (TACast wt1 wf x₁ alpha) wt2 = TACast (lem-subst apt bd bu2 wt1 wt2) wf x₁ alpha
   lem-subst apt (BDFailedCast bd) bu2 (TAFailedCast wt1 x₁ x₂ x₃) wt2 = TAFailedCast (lem-subst apt bd bu2 wt1 wt2) x₁ x₂ x₃
   

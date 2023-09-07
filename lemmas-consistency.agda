@@ -43,6 +43,42 @@ module lemmas-consistency where
   alpha-hole : (τ : htyp) → (τ =α ⦇-⦈) → τ == ⦇-⦈
   alpha-hole .⦇-⦈ AlphaHole = refl
 
+  _<=<_ : Nat ctx → Nat ctx → Nat ctx
+  (ΓL <=< ΓR) x with ΓR x
+  ... | Some y = ΓL y
+  ... | None = None
+
+  comp-elem : ∀{x y z} → (Γ1 Γ2 : Nat ctx) → (x , y) ∈ Γ2 → (y , z) ∈ Γ1 → (x , z) ∈ (Γ1 <=< Γ2)
+  comp-elem {x} {y} {z} Γ1 Γ2 i1 i2 with ctxindirect Γ2 x
+  ... | Inl (y' , ing) rewrite ing rewrite someinj i1 = i2
+  ... | Inr ning = {!   !}
+
+  comp-lextend : (x y z : Nat) → (Γ1 Γ2 : Nat ctx) -> ((■ (x , z)) ∪ (Γ2 <=< Γ1)) == ((■ (y , z)) ∪ Γ2) <=< ((■ (x , y)) ∪ Γ1)
+  comp-lextend x y z Γ1 Γ2 = funext (λ w → foo w)
+    where
+      foo : (w : Nat) → ((■ (x , z)) ∪ (Γ2 <=< Γ1)) w == (((■ (y , z)) ∪ Γ2) <=< ((■ (x , y)) ∪ Γ1)) w
+      foo w with natEQ x w
+      ... | Inl refl rewrite natEQrefl {x} rewrite natEQrefl {y} = refl
+      ... | Inr neq rewrite natEQneq neq with ctxindirect Γ1 w 
+      ...   | Inr ning1 rewrite ning1 = refl
+      ...   | Inl (w' , ing1) rewrite ing1 with natEQ y w' 
+      ...     | Inl refl = {!   !}
+      ...     | Inr neq' = refl
+
+  alpha-rewrite-gamma : ∀{ΓL ΓL' ΓR ΓR' τ1 τ2} → ΓL == ΓL' → ΓR == ΓR' → ΓL , ΓR ⊢ τ1 =α τ2 → ΓL' , ΓR' ⊢ τ1 =α τ2
+  alpha-rewrite-gamma eq1 eq2 alpha rewrite ! eq1 rewrite ! eq2 = alpha
+
+  alpha-trans : {ΓL1 ΓR1 ΓL2 ΓR2 : Nat ctx} {τ1 τ2 τ3 : htyp} → ΓL1 , ΓR1 ⊢ τ1 =α τ2 → ΓL2 , ΓR2 ⊢ τ2 =α τ3 → (ΓL2 <=< ΓL1) , (ΓR1 <=< ΓR2) ⊢ τ1 =α τ3
+  alpha-trans AlphaBase AlphaBase = AlphaBase
+  alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} (AlphaVarBound x₁ x₂) (AlphaVarBound x₃ x₄) = AlphaVarBound (comp-elem ΓL2 ΓL1 x₁ x₃) (comp-elem ΓR1 ΓR2 x₄ x₂)
+  alpha-trans (AlphaVarBound x₁ x₂) (AlphaVarFree x₃ x₄) = {!   !}
+  alpha-trans {ΓL2 = ΓL2} {ΓR2 = ΓR2} (AlphaVarFree x x₁) (AlphaVarBound x₂ x₃) = {!   !}
+  alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} (AlphaVarFree x x₁) (AlphaVarFree x₂ x₃) = AlphaVarFree {!   !} {!   !}
+  alpha-trans {ΓL2 = ΓL2} {ΓR2 = ΓR2} AlphaHole AlphaHole = AlphaHole
+  alpha-trans (AlphaArr a1 a3) (AlphaArr a2 a4) = {!   !} -- AlphaArr (alpha-trans a1 a2) (alpha-trans a3 a4)
+  alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} (AlphaForall {x = x} {y = y} a1) (AlphaForall {x = y} {y = y'} a2) = 
+    AlphaForall {!   !} -- (alpha-rewrite-gamma (! (comp-lextend x y y' ΓL1 ΓL2)) (! (comp-lextend y' y x ΓR2 ΓR1)) (alpha-trans a1 a2)) -- AlphaForall {!   !}
+
   ⊢~refl : {Γ : Nat ctx} -> {t : htyp} → (∀ {x y} → (x , y) ∈ Γ → (x , x) ∈ Γ) -> (_,_⊢_~_) Γ Γ t t
   ⊢~refl {t = b} _ = ConsistBase
   ⊢~refl {Γ} {t = T x} r with ctxindirect Γ x

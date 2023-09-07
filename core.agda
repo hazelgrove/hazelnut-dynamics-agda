@@ -474,9 +474,10 @@ module core where
               t # Θ →
               Δ , Θ ,, (t , <>) , Γ ⊢ d :: τ →
               Δ , Θ , Γ ⊢ ·Λ t d :: (·∀ t τ)
-      TAAp : ∀{Δ Θ Γ d1 d2 τ1 τ} →
+      TAAp : ∀{Δ Θ Γ d1 d2 τ1 τ1' τ} →
              Δ , Θ , Γ ⊢ d1 :: τ1 ==> τ →
-             Δ , Θ , Γ ⊢ d2 :: τ1 →
+             Δ , Θ , Γ ⊢ d2 :: τ1' →
+             τ1 =α τ1' →
              Δ , Θ , Γ ⊢ d1 ∘ d2 :: τ
       TATAp : ∀ {Δ Θ Γ d t τ1 τ2 τ3} → 
                 Θ ⊢ τ1 wf →
@@ -496,10 +497,11 @@ module core where
                  τ == apply-typenv θ τ' →
                  Γ'' == apply-typenv-env θ Γ' →
                  Δ , Θ , Γ ⊢ ⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩ :: τ
-      TACast : ∀{Δ Θ Γ d τ1 τ2} →
-             Δ , Θ , Γ ⊢ d :: τ1 →
+      TACast : ∀{Δ Θ Γ d τ1 τ1' τ2} →
+             Δ , Θ , Γ ⊢ d :: τ1' →
              Θ ⊢ τ2 wf →
              τ1 ~ τ2 →
+             τ1 =α τ1' →
              Δ , Θ , Γ ⊢ d ⟨ τ1 ⇒ τ2 ⟩ :: τ2
       TAFailedCast : ∀{Δ Θ Γ d τ1 τ2} →
              Δ , Θ , Γ ⊢ d :: τ1 →
@@ -892,6 +894,72 @@ module core where
       BDCast : ∀{d1 d2 τ1 τ2} → binders-disjoint d1 d2 → binders-disjoint (d1 ⟨ τ1 ⇒ τ2 ⟩) d2
       BDFailedCast : ∀{d1 d2 τ1 τ2} → binders-disjoint d1 d2 → binders-disjoint (d1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) d2
       
+    data tbinderst-disjoint-Δ : hctx -> htyp -> Set where
+      TBDΔ : ∀{τ Δ} → 
+        ((u : Nat) (Θ : typctx) (Γ : tctx) (τ' : htyp) → ((u , Θ , Γ , τ') ∈ Δ) → 
+        tbinderstt-disjoint τ' τ × tbinderst-disjoint-Γ Γ τ) → tbinderst-disjoint-Δ Δ τ
+    
+    data tbinders-disjoint-Δ : hctx -> ihexp -> Set where
+      TBDΔConst : ∀{Δ} → tbinders-disjoint-Δ Δ c
+      TBDΔVar : ∀{x Δ} → tbinders-disjoint-Δ Δ (X x)
+      TBDΔLam : ∀{x τ d Δ} → tbinders-disjoint-Δ Δ d
+                            → tbinderst-disjoint-Δ Δ τ
+                            → tbinders-disjoint-Δ Δ (·λ_[_]_ x τ d)
+      TBDΔTLam :  ∀{t Δ d} → tbinders-disjoint-Δ Δ d
+                          → tunbound-in-Δ t Δ
+                          → tbinders-disjoint-Δ Δ (·Λ t d)
+      BDΔHole : ∀{u θ σ Δ} → tbinders-disjoint-Δ Δ (⦇-⦈⟨ u , θ , σ ⟩)
+        {- Could all tb-d between theta and sigma if needed) -}
+      TBDΔNEHole : ∀{u σ θ Δ d} → tbinders-disjoint-Δ Δ d
+                                → tbinders-disjoint-Δ Δ (⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩)
+      TBDΔAp :  ∀{Δ d1 d2} → tbinders-disjoint-Δ Δ d1
+                          → tbinders-disjoint-Δ Δ d2
+                          → tbinders-disjoint-Δ Δ (d1 ∘ d2)
+      TBDΔTAp : ∀{Δ d τ} → tbinders-disjoint-Δ Δ d
+                           → tbinderst-disjoint-Δ Δ τ
+                          → tbinders-disjoint-Δ Δ (d < τ >)
+      TBDΔCast : ∀{Δ d τ1 τ2} → tbinders-disjoint-Δ Δ d
+                           → tbinderst-disjoint-Δ Δ τ1
+                           → tbinderst-disjoint-Δ Δ τ2
+                           → tbinders-disjoint-Δ Δ (d ⟨ τ1 ⇒ τ2 ⟩)
+      TBDΔFailedCast : ∀{Δ d τ1 τ2} → tbinders-disjoint-Δ Δ d
+                           → tbinderst-disjoint-Δ Δ τ1
+                           → tbinderst-disjoint-Δ Δ τ2
+                           → tbinders-disjoint-Δ Δ (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
+    
+    data tbinderst-disjoint-Γ : tctx -> htyp -> Set where
+      TBDΔ : ∀{τ Γ} → 
+        ((x : Nat) (τ' : htyp) → ((x , τ') ∈ Γ) → 
+        tbinderstt-disjoint τ' τ) → tbinderst-disjoint-Γ Γ τ
+        
+    data tbinders-disjoint-Γ : tctx -> ihexp -> Set where
+      TBDΓConst : ∀{Γ} → tbinders-disjoint-Γ Γ c
+      TBDΓVar : ∀{x Γ} → tbinders-disjoint-Γ Γ (X x)
+      TBDΓLam : ∀{x τ d Γ} → tbinders-disjoint-Γ Γ d
+                            → tbinderst-disjoint-Γ Γ τ
+                            → tbinders-disjoint-Γ Γ (·λ_[_]_ x τ d)
+      TBDΓTLam :  ∀{t Γ d} → tbinders-disjoint-Γ Γ d
+                          → tunbound-in-Γ t Γ
+                          → tbinders-disjoint-Γ Γ (·Λ t d)
+      BDΓHole : ∀{u θ σ Γ} → tbinders-disjoint-Γ Γ (⦇-⦈⟨ u , θ , σ ⟩)
+        {- Could all tb-d between theta and sigma if needed) -}
+      TBDΓNEHole : ∀{u σ θ Γ d} → tbinders-disjoint-Γ Γ d
+                                → tbinders-disjoint-Γ Γ (⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩)
+      TBDΓAp :  ∀{Γ d1 d2} → tbinders-disjoint-Γ Γ d1
+                          → tbinders-disjoint-Γ Γ d2
+                          → tbinders-disjoint-Γ Γ (d1 ∘ d2)
+      TBDΓTAp : ∀{Γ d τ} → tbinders-disjoint-Γ Γ d
+                           → tbinderst-disjoint-Γ Γ τ
+                          → tbinders-disjoint-Γ Γ (d < τ >)
+      TBDΓCast : ∀{Γ d τ1 τ2} → tbinders-disjoint-Γ Γ d
+                           → tbinderst-disjoint-Γ Γ τ1
+                           → tbinderst-disjoint-Γ Γ τ2
+                           → tbinders-disjoint-Γ Γ (d ⟨ τ1 ⇒ τ2 ⟩)
+      TBDΓFailedCast : ∀{Γ d τ1 τ2} → tbinders-disjoint-Γ Γ d
+                           → tbinderst-disjoint-Γ Γ τ1
+                           → tbinderst-disjoint-Γ Γ τ2
+                           → tbinders-disjoint-Γ Γ (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
+    
     data tbinders-disjoint-σ : env → ihexp → Set where
       BDσId : ∀{Γ d} → tbinders-disjoint-σ (Id Γ) d
       BDσSubst : ∀{d1 d2 y σ} → tbinders-disjoint d1 d2

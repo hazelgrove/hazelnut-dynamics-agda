@@ -304,7 +304,7 @@ module lemmas-well-formed where
     wf-ta (CCtx x₁) hctwwf (TAVar x) = x₁ x
     wf-ta ctxwf hctwwf (TALam x x₁ wt) = WFArr x₁ (wf-ta (merge-tctx-wf ctxwf x₁) hctwwf wt)
     wf-ta ctxwf hctwwf (TATLam apt wt) = WFForall (wf-ta (weaken-tctx-wf ctxwf) hctwwf wt)
-    wf-ta ctxwf hctwwf (TAAp wt wt₁) with (wf-ta ctxwf hctwwf wt)
+    wf-ta ctxwf hctwwf (TAAp wt wt₁ alpha) with (wf-ta ctxwf hctwwf wt)
     ... | WFArr wf1 wf2 = wf2
     wf-ta ctxwf hctwwf (TATAp x wt eq) with (wf-ta ctxwf hctwwf wt)
     ... | WFForall wf' rewrite (sym eq) = wf-sub x wf' refl
@@ -312,10 +312,10 @@ module lemmas-well-formed where
     ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ {! thing1 !} thing2 eq
     wf-ta ctxwf (HCtx map) (TANEHole x wt x₁ eq eq') with map x 
     ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ {! thing1 !} thing2 eq
-    wf-ta ctxwf hctwwf (TACast wt x x₁) = x
+    wf-ta ctxwf hctwwf (TACast wt x x₁ alpha) = x
     wf-ta ctxwf hctwwf (TAFailedCast wt x x₁ x₂) = ground-wf x₁
 
   
     no-tvar-casts : ∀{ Γ n τ d Δ} → ∅ ⊢ Γ tctxwf → Δ hctxwf → Δ , ∅ , Γ ⊢ d ⟨ T n ⇒ ⦇-⦈ ⟩ :: τ → ⊥
-    no-tvar-casts ctxwf hctxwf (TACast wt x x₁) with wf-ta ctxwf hctxwf wt 
+    no-tvar-casts ctxwf hctxwf (TACast wt x x₁ alpha) with wf-ta ctxwf hctxwf wt 
     ... | WFVar () 

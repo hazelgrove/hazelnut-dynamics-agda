@@ -18,7 +18,7 @@ module type-assignment-unicity where
   type-assignment-unicity (TATLam apt1 d1) (TATLam apt2 d2)
     with type-assignment-unicity d1 d2
   ... | refl = refl
-  type-assignment-unicity (TAAp x x₁) (TAAp y y₁)
+  type-assignment-unicity (TAAp x x₁ xalpha) (TAAp y y₁ yalpha)
     with type-assignment-unicity x y
   ... | refl = refl
   type-assignment-unicity (TATAp _ x eq1) (TATAp _ y eq2) with type-assignment-unicity x y
@@ -29,7 +29,7 @@ module type-assignment-unicity where
   type-assignment-unicity (TANEHole {Δ = Δ} x d1 y eq1 _) (TANEHole x₁ d2 x₂ eq2 _)
     with ctxunicity {Γ = Δ} x₁ x
   ... | refl rewrite eq1 | eq2 = refl
-  type-assignment-unicity (TACast d1 _ x) (TACast d2 _ x₁)
+  type-assignment-unicity (TACast d1 _ x alpha1) (TACast d2 _ x₁ alpha2)
     with type-assignment-unicity d1 d2
   ... | refl = refl
   type-assignment-unicity (TAFailedCast x x₁ x₂ x₃) (TAFailedCast y x₄ x₅ x₆)
