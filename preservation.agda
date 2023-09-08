@@ -6,22 +6,17 @@ open import contexts
 
 open import lemmas-consistency
 open import lemmas-alpha
+open import lemmas-typ-subst
+open import lemmas-well-formed
 open import type-assignment-unicity
 open import binders-disjoint-checks
 
 open import lemmas-subst-ta
 open import lemmas-tysubst-ta
-open import lemmas-well-formed
 
 open import rewrite-util
 
 module preservation where
-
-  alpha-sub : ∀{τ t1 τ1 t2 τ2} → ·∀ t1 τ1 =α ·∀ t2 τ2 → (Typ[ τ / t1 ] τ1) =α (Typ[ τ / t2 ] τ2)
-  alpha-sub alpha = {!   !}
-
-  consist-sub : ∀{τ t1 τ1 t2 τ2} → ·∀ t1 τ1 ~ ·∀ t2 τ2 → (Typ[ τ / t1 ] τ1) ~ (Typ[ τ / t2 ] τ2)
-  consist-sub consis = {!   !}
 
   alpha-refl-ta : ∀{ Δ Θ Γ d τ } → Δ , Θ , Γ ⊢ d :: τ → Σ[ τ' ∈ htyp ] (τ' =α τ × Δ , Θ , Γ ⊢ d :: τ')
   alpha-refl-ta {τ = τ} ta = τ , alpha-refl τ , ta
