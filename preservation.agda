@@ -5,6 +5,7 @@ open alpha
 open import contexts
 
 open import lemmas-consistency
+open import lemmas-alpha
 open import type-assignment-unicity
 open import binders-disjoint-checks
 
@@ -15,9 +16,6 @@ open import lemmas-well-formed
 open import rewrite-util
 
 module preservation where
-
-  ~closed : ∀{τ τ'} → ∅ ⊢ τ wf → τ ~ τ' → ∅ ⊢ τ' wf
-  ~closed wf consis = {!   !}
 
   alpha-sub : ∀{τ t1 τ1 t2 τ2} → ·∀ t1 τ1 =α ·∀ t2 τ2 → (Typ[ τ / t1 ] τ1) =α (Typ[ τ / t2 ] τ2)
   alpha-sub alpha = {!   !}

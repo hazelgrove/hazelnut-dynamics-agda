@@ -289,11 +289,19 @@ module lemmas-well-formed where
     typenv-wf hctxwf ctxwf1 (STAIdSubst sub x) ctxwf2 wf eq =
       typenv-wf hctxwf ctxwf3 sub ctxwf2 wf eq 
       where 
-      ctxwf3 = merge-tctx-wf ctxwf1 (wf-ta ctxwf1 hctxwf {! x !})
+      ctxwf3 = merge-tctx-wf ctxwf1 (wf-ta ctxwf1 hctxwf x)
     typenv-wf {Θ = Θ} {θ = θ} {τ = τ} hctxwf ctxwf1 (STASubst {y = y} sub x) ctxwf2 wf eq =
-      {! typsub-wf wf2 x eq !}
+      typsub-wf wf2 (wf-closed x) eq
       where 
-      wf2 = typenv-wf hctxwf (weaken-tctx-wf ctxwf1) {! sub !} {! ctxwf2 !} wf refl
+      wf2 = typenv-wf hctxwf (weaken-tctx-wf ctxwf1) sub ctxwf2 wf refl
+
+    -- Should hold since everything in θ is closed
+    wf-ty-subst : ∀{Δ Θ Θ' Γ Γ' Γ'' θ σ} →
+      Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ'' →
+      Γ'' == apply-typenv-env θ Γ' →
+      Θ' ⊢ Γ' tctxwf →
+      Θ' ⊢ Γ'' tctxwf
+    wf-ty-subst = {!   !}
 
     wf-ta : ∀{Θ Γ d τ Δ} → 
             Θ ⊢ Γ tctxwf → 
@@ -309,9 +317,9 @@ module lemmas-well-formed where
     wf-ta ctxwf hctwwf (TATAp x wt eq) with (wf-ta ctxwf hctwwf wt)
     ... | WFForall wf' rewrite (sym eq) = wf-sub x wf' refl
     wf-ta ctxwf (HCtx map) (TAEHole x x₁ eq eq') with map x 
-    ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ {! thing1 !} thing2 eq
+    ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ (wf-ty-subst x₁ eq' thing1) thing2 eq
     wf-ta ctxwf (HCtx map) (TANEHole x wt x₁ eq eq') with map x 
-    ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ {! thing1 !} thing2 eq
+    ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ (wf-ty-subst x₁ eq' thing1) thing2 eq
     wf-ta ctxwf hctwwf (TACast wt x x₁ alpha) = x
     wf-ta ctxwf hctwwf (TAFailedCast wt x x₁ x₂ _) = ground-wf x₁
 
@@ -319,3 +327,7 @@ module lemmas-well-formed where
     no-tvar-casts : ∀{ Γ n τ d Δ} → ∅ ⊢ Γ tctxwf → Δ hctxwf → Δ , ∅ , Γ ⊢ d ⟨ T n ⇒ ⦇-⦈ ⟩ :: τ → ⊥
     no-tvar-casts ctxwf hctxwf (TACast wt x x₁ alpha) with wf-ta ctxwf hctxwf wt 
     ... | WFVar () 
+
+
+  ~closed : ∀{τ τ'} → ∅ ⊢ τ wf → τ ~ τ' → ∅ ⊢ τ' wf
+  ~closed wf consis = {!   !}
