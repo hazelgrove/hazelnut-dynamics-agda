@@ -49,16 +49,22 @@ module lemmas-well-formed where
   ... | Inl refl = abort (neq refl)
   ... | Inr neq = elem
 
-  lem-subctx-extend : {A : Set} → (Γ Γ' : A ctx) (x : Nat) (y : A) → ((x' : Nat) (y' : A) → (x' , y') ∈ Γ → (x' , y') ∈ Γ') →
-    ((x' : Nat) (y' : A) → (x' , y') ∈ (Γ ,, (x , y)) → (x' , y') ∈ (Γ' ,, (x , y)))
-  lem-subctx-extend Γ Γ' x y cond x' y' mem = {!   !}
+  lem-subctx-extend : (Γ Γ' : ⊤ ctx) (x : Nat) → ((x' : Nat) → (x' , <>) ∈ Γ → (x' , <>) ∈ Γ') →
+    ((x' : Nat) → (x' , <>) ∈ (Γ ,, (x , <>)) → (x' , <>) ∈ (Γ' ,, (x , <>)))
+  lem-subctx-extend Γ Γ' x cond x' mem with ctxindirect Γ x'
+  ... | Inl (<> , inl) rewrite inl rewrite ! (someinj mem) rewrite cond x' inl = refl
+  ... | Inr nil rewrite nil with natEQ x x'
+  ...   | Inr neq = abort (somenotnone (! mem))
+  ...   | Inl refl with Γ' x'
+  ...     | Some <> = refl
+  ...     | None rewrite natEQrefl {x'} = refl
 
   wf-weaken-gen : ∀{τ Θ Θ'} → ((t : Nat) → (t , <>) ∈ Θ → (t , <>) ∈ Θ') → Θ ⊢ τ wf → Θ' ⊢ τ wf
   wf-weaken-gen cond (WFVar {a = a} x) = WFVar (cond a x)
   wf-weaken-gen cond WFBase = WFBase
   wf-weaken-gen cond WFHole = WFHole
   wf-weaken-gen cond (WFArr wf wf₁) = WFArr (wf-weaken-gen cond wf) (wf-weaken-gen cond wf₁)
-  wf-weaken-gen {Θ = Θ} {Θ' = Θ'} cond (WFForall {n = n} wf) = WFForall (wf-weaken-gen (λ t mem → lem-subctx-extend Θ Θ' n <> (λ x' → λ {(<>) → cond x'}) t <> mem) wf)
+  wf-weaken-gen {Θ = Θ} {Θ' = Θ'} cond (WFForall {n = n} wf) = WFForall (wf-weaken-gen (lem-subctx-extend Θ Θ' n cond) wf)
 
   wf-closed : ∀{τ Θ} → ∅ ⊢ τ wf → Θ ⊢ τ wf
   wf-closed = wf-weaken-gen (λ t mem → abort (somenotnone (! mem)))
