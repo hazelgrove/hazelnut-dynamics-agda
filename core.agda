@@ -1004,7 +1004,7 @@ module core where
       TBDTTAp : ∀{τ τ' d} → tbinderst-disjoint τ d
                           -> tbinderstt-disjoint τ τ'
                           → tbinderst-disjoint τ (d < τ' >)
-      TBDTCast : ∀{τ d τ1 τ2} → tbinderst-disjoint τ d → tbinderstt-disjoint τ τ1 -> tbinderstt-disjoint τ τ2 -> tbinderst-disjoint τ (d ⟨ τ1 ⇒ τ2 ⟩)
+      TBDTCast : ∀{τ d τ1 τ2} → tbinderst-disjoint τ d → tbinderstt-disjoint τ1 τ -> tbinderstt-disjoint τ2 τ -> tbinderst-disjoint τ (d ⟨ τ1 ⇒ τ2 ⟩)
       TBDTFailedCast : ∀{τ d τ1 τ2} → tbinderst-disjoint τ d → tbinderstt-disjoint τ τ1 -> tbinderstt-disjoint τ τ2 -> tbinderst-disjoint τ (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
                
     data tbinderstt-disjoint : htyp → htyp → Set where
@@ -1126,6 +1126,10 @@ module core where
                       → tbinderst-disjoint τ d
                        → tbinders-unique (d < τ >)
       TBUCast : ∀{d τ1 τ2} → tbinders-unique d
+                           → tbinderst-disjoint τ1 d
+                           → tbinderst-disjoint τ2 d
                            → tbinders-unique (d ⟨ τ1 ⇒ τ2 ⟩)
       TBUFailedCast : ∀{d τ1 τ2} → tbinders-unique d
+                                 → tbinderst-disjoint τ1 d
+                                 → tbinderst-disjoint τ2 d
                                  → tbinders-unique (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)

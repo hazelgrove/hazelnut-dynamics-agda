@@ -64,7 +64,7 @@ module lemmas-subst-ta where
   ... | Inl eq = abort (x≠y (! eq))
   ... | Inr _  = TALam y#Γ wf {! (lem-subst {Δ = Δ} {Γ = Γ ,, (y , τ1)} {x = x} {d1 = d} (apart-extend1 Γ x≠y x#Γ) bd bu2 (exchange-ta-Γ {Γ = Γ} x≠y wt1)
                                          (weaken-ta (binders-fresh wt2 bu2 bd' y#Γ) wt2)) !}
-  lem-subst {Γ = Γ} {Θ = Θ} apt (BDTLam bd) bu (TATLam apt' wt1) wt2 alpha = TATLam apt' (lem-subst apt bd bu wt1 (weaken-ta-typ2 {!   !} wt2) alpha)
+  lem-subst {Γ = Γ} {Θ = Θ} apt (BDTLam bd) bu (TATLam apt' wt1) wt2 alpha = TATLam apt' (lem-subst apt bd bu wt1 (weaken-ta-typ {!   !} wt2) alpha)
   lem-subst apt (BDAp bd bd₁) bu3 (TAAp wt1 wt2 alpha') wt3 alpha = TAAp (lem-subst apt bd bu3 wt1 wt3 alpha) (lem-subst apt bd₁ bu3 wt2 wt3 alpha) alpha'
   lem-subst apt (BDTAp bd) bu (TATAp wf wt1 eq) wt2 alpha = TATAp wf (lem-subst apt bd bu wt1 wt2 alpha) eq
   lem-subst apt bd bu2 (TAEHole inΔ sub eq eq') wt2 alpha = TAEHole inΔ {! (STAIdSubst sub wt2) !} eq eq'

@@ -19,47 +19,6 @@ module lemmas-tysubst-ta where
   rewrite-codomain-in : ∀{t : htyp} {t' x Γ} -> t == t' -> (x , t) ∈ Γ -> (x , t') ∈ Γ
   rewrite-codomain-in eq p rewrite eq = p
 
-  lem-sub-ub : ∀{t t' τ τ''} → (τ' : htyp) → tunboundt-in t τ' → tunboundt-in t τ'' → Typ[ τ'' / t' ] τ' == τ → tunboundt-in t τ
-  lem-sub-ub b ub1 ub2 eq rewrite ! eq = ub1
-  lem-sub-ub {t' = t'} (T x) ub1 ub2 eq with natEQ t' x
-  ... | Inl refl rewrite eq = ub2
-  ... | Inr neq rewrite ! eq = ub1
-  lem-sub-ub ⦇-⦈ ub1 ub2 eq rewrite ! eq = ub1
-  lem-sub-ub (τ' ==> τ'') (UBArr ub1 ub3) ub2 eq rewrite ! eq = UBArr (lem-sub-ub τ' ub1 ub2 refl) (lem-sub-ub τ'' ub3 ub2 refl)
-  lem-sub-ub {t' = t'} (·∀ x τ') (UBForall ne ub1) ub2 eq with natEQ t' x
-  ... | Inl refl rewrite ! eq = UBForall ne ub1
-  ... | Inr neq rewrite ! eq = UBForall ne (lem-sub-ub τ' ub1 ub2 refl)
-
-  lem-ub-extend : ∀{x t τ Γ} → tunboundt-in t τ → tunbound-in-Γ t Γ → tunbound-in-Γ t (Γ ,, (x , τ))
-  lem-ub-extend {x} {t} {τ} {Γ} ubt (UBΓ ubg) = UBΓ foo
-    where
-      foo : (x' : Nat) -> (τ' : htyp) -> (x' , τ') ∈ (Γ ,, (x , τ)) -> tunboundt-in t τ'
-      foo x' τ' mem with ctxindirect Γ x'
-      ... | Inl (τ'' , ing) rewrite ing rewrite ! (someinj mem) = ubg x' τ'' ing
-      ... | Inr nig rewrite nig with natEQ x x'
-      ...   | Inl refl rewrite someinj mem = ubt
-      ...   | Inr neq = abort (somenotnone (! mem))
-
-  lem-sub-sub-ub : ∀{t τ θ} → (τ' : htyp) → tunboundt-in t τ' → tunbound-in-θ t θ → apply-typenv θ τ' == τ → tunboundt-in t τ
-  lem-sub-sub-ub τ' ub UBθId eq rewrite eq = ub
-  lem-sub-sub-ub τ' ub (UBθSubst {θ = θ} x ubth) eq = lem-sub-ub (apply-typenv θ τ') (lem-sub-sub-ub τ' ub ubth refl) x eq
-
-  tunbound-ta-tunboundt : ∀{Δ Θ Γ d t τ} → tunbound-in t d → tunbound-in-Δ t Δ → tunbound-in-Γ t Γ → Δ , Θ , Γ ⊢ d :: τ → tunboundt-in t τ
-  tunbound-ta-tunboundt ub ubd ubg TAConst = UBBase
-  tunbound-ta-tunboundt {τ = τ} TUBVar ubd (UBΓ ubg) (TAVar {x = y} x) = ubg y τ x
-  tunbound-ta-tunboundt (TUBLam2 ub ubt) ubd ubg (TALam x x₁ ta) = UBArr ubt (tunbound-ta-tunboundt ub ubd (lem-ub-extend ubt ubg) ta)
-  tunbound-ta-tunboundt (TUBTLam x₁ ub) ubd ubg (TATLam x ta) = UBForall x₁ (tunbound-ta-tunboundt ub ubd ubg ta)
-  tunbound-ta-tunboundt (TUBAp ub1 ub2) ubd ubg (TAAp ta ta₁ alpha) with tunbound-ta-tunboundt ub1 ubd ubg ta
-  ... | UBArr _ ubt2 = ubt2
-  tunbound-ta-tunboundt (TUBTAp ub ubt) ubd ubg (TATAp x ta eq) with tunbound-ta-tunboundt ub ubd ubg ta
-  ... | UBForall ub' ubt' = lem-sub-ub _ ubt' ubt eq
-  tunbound-ta-tunboundt (TUBHole ubt ubs) (UBΔ ubd) ubg (TAEHole {u = u} {Θ' = Θ'} {Γ' = Γ'} {τ' = τ'} x x₁ x₂ x₃) = let ubt' = ubd u Θ' Γ' τ' x in
-    lem-sub-sub-ub τ' ubt' ubt (! x₂)
-  tunbound-ta-tunboundt (TUBNEHole ubt ubs ub) (UBΔ ubd) ubg (TANEHole {u = u} {Θ' = Θ'} {Γ' = Γ'} {τ' = τ'} x ta x₁ x₂ x₃) = let ubt' = ubd u Θ' Γ' τ' x in
-    lem-sub-sub-ub τ' ubt' ubt (! x₂)
-  tunbound-ta-tunboundt (TUBCast ub ubt1 ubt2) ubd ubg (TACast ta x x₁ alpha) = ubt2
-  tunbound-ta-tunboundt (TUBFailedCast ub ubt1 ubt2) ubd ubg (TAFailedCast ta x x₁ x₂ _) = ubt2
-
 {-
   wf-unbound-tfresht : ∀{t τ Θ} -> t # Θ -> Θ ⊢ τ wf -> tunboundt-in t τ -> tfresht t τ
   wf-unbound-tfresht {τ = b} apt wf ub = TFBase
@@ -81,9 +40,9 @@ module lemmas-tysubst-ta where
       Δ , Θ , (Γ ,, (y , τ))  ⊢ TypSubst τ' t θ , σ :s: Θ' , Γ' →
       Δ , Θ , Γ ⊢ d :: τ →
       Δ , Θ , Γ ⊢ TypSubst τ' t θ , Subst d y σ :s: Θ' , Γ'
-    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STAIdId x x₁) wf) ta = STASubst (STAIdSubst (STAIdId x x₁) (weaken-ta-typ2 x₂ ta)) wf
-    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STAIdSubst ts x) wf) ta = STASubst (lemma-subst-comm ub (STAIdSubst ts x) (weaken-ta-typ2 x₂ ta)) wf
-    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STASubst ts x) wf) ta = STASubst (lemma-typsubst-subst-comm ub (STASubst ts x) (weaken-ta-typ2 x₂ ta)) wf
+    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STAIdId x x₁) wf) ta = STASubst (STAIdSubst (STAIdId x x₁) (weaken-ta-typ x₂ ta)) wf
+    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STAIdSubst ts x) wf) ta = STASubst (lemma-subst-comm ub (STAIdSubst ts x) (weaken-ta-typ x₂ ta)) wf
+    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STASubst ts x) wf) ta = STASubst (lemma-typsubst-subst-comm ub (STASubst ts x) (weaken-ta-typ x₂ ta)) wf
     
     lemma-subst-comm : ∀{Δ Θ Θ' Γ Γ' τ d y θ σ} →
       tbinders-disjoint-θ-σ θ (Subst d y σ) →
@@ -205,8 +164,8 @@ module lemmas-tysubst-ta where
     lemma-tysubst wf ubd ubg (TUBHole x₁ x₂) (TBUEHole x₃ x₄ x₅) (TAEHole x ts eq eq') rewrite eq rewrite eq' = 
       TAEHole x (lemma-tysubst-subst wf ubd ubg {!   !} x₂ x₅ x₄ ts) refl refl
     lemma-tysubst wf ubd ubg (TUBNEHole x₁ ubs ub) (TBUNEHole bu but bus bdts) (TANEHole x ta ts eq eq') rewrite eq rewrite eq' = TANEHole x (lemma-tysubst wf ubd ubg ub bu ta) (lemma-tysubst-subst wf ubd ubg {!   !} ubs bdts bus ts) refl refl
-    lemma-tysubst wf ubd ubg (TUBCast ub x₁ x₂) (TBUCast bu) (TACast ta x x~ alpha) = TACast (lemma-tysubst wf ubd ubg ub bu ta) ((wf-sub (wf-closed wf) x refl)) (~Typ[] wf x₁ x₂ x~) {!   !}
-    lemma-tysubst wf ubd ubg (TUBFailedCast ub x₁ x₂) (TBUFailedCast bu) (TAFailedCast ta tgnd tgnd' x alpha) = TAFailedCast (lemma-tysubst wf ubd ubg ub bu ta) (ground-subst tgnd) (ground-subst tgnd') (λ eq → x (foo tgnd tgnd' eq)) {!   !}
+    lemma-tysubst wf ubd ubg (TUBCast ub x₁ x₂) (TBUCast bu bd1 bd2) (TACast ta x x~ alpha) = TACast (lemma-tysubst wf ubd ubg ub bu ta) ((wf-sub (wf-closed wf) x refl)) (~Typ[] wf x₁ x₂ x~) {!   !}
+    lemma-tysubst wf ubd ubg (TUBFailedCast ub x₁ x₂) (TBUFailedCast bu _ _) (TAFailedCast ta tgnd tgnd' x alpha) = TAFailedCast (lemma-tysubst wf ubd ubg ub bu ta) (ground-subst tgnd) (ground-subst tgnd') (λ eq → x (foo tgnd tgnd' eq)) {!   !}
       where
         foo : ∀{t1 t2 t3 t} -> t1 ground -> t2 ground -> Typ[ t3 / t ] t1 ~ Typ[ t3 / t ] t2 -> t1 ~ t2
         foo {t1} {t2} {t3} {t} g1 g2 eq rewrite ground-subst-id {t} {t1} {t3} g1 rewrite ground-subst-id {t} {t2} {t3} g2 = eq

@@ -23,14 +23,14 @@ module preservation where
 
   -- if d and d' both result from filling the hole in ε with terms of the
   -- same type, they too have the same type.
-  wt-different-fill : ∀{ Δ Γ Θ d ε d1 d2 d' τ τ1 τ2} →
+  wt-different-fill : ∀{ Δ Γ d ε d1 d2 d' τ τ1 τ2} →
             d == ε ⟦ d1 ⟧ →
-            Δ , Γ , Θ ⊢ d :: τ →
-            Δ , Γ , Θ ⊢ d1 :: τ1 →
-            Δ , Γ , Θ ⊢ d2 :: τ2 →
+            Δ , ∅ , Γ ⊢ d :: τ →
+            Δ , ∅ , Γ ⊢ d1 :: τ1 →
+            Δ , ∅ , Γ ⊢ d2 :: τ2 →
             τ1 =α τ2 →
             d' == ε ⟦ d2 ⟧ →
-            Σ[ τ' ∈ htyp ] (τ' =α τ × Δ , Γ , Θ ⊢ d' :: τ')
+            Σ[ τ' ∈ htyp ] (τ' =α τ × Δ , ∅ , Γ ⊢ d' :: τ')
   wt-different-fill {τ2 = τ2} FHOuter D1 D2 D3 A FHOuter
     with type-assignment-unicity D1 D2
   ... | refl = τ2 , alpha-sym A , D3
@@ -39,7 +39,7 @@ module preservation where
   wt-different-fill {τ = τ} (FHAp2 eps) (TAAp D1 D2 A1) D3 D4 A (FHAp2 D5) with wt-different-fill eps D2 D3 D4 A D5
   ... | τ' , ar , p = alpha-refl-ta (TAAp D1 p (alpha-trans A1 (alpha-sym ar)))
   wt-different-fill (FHTAp eps) (TATAp {τ1 = t} wf D1 eq) D2 D3 A (FHTAp D4) with wt-different-fill eps D1 D2 D3 A D4
-  ... | ·∀ x τ' , ar , p rewrite ! eq = Typ[ t / x ] τ' , alpha-sub ar , TATAp wf p refl
+  ... | ·∀ x τ' , ar , p rewrite ! eq = Typ[ t / x ] τ' , alpha-sub {!   !} {!   !} {!   !} ar , TATAp wf p refl
   wt-different-fill {τ = τ} (FHNEHole eps) (TANEHole x D1 x₁ eq eq') D2 D3 A (FHNEHole D4) with (wt-different-fill eps D1 D2 D3 A D4) 
   ... | τ' , ar , p = alpha-refl-ta (TANEHole x p x₁ eq eq')
   wt-different-fill (FHCast eps) (TACast D1 wf x A1) D2 D3 A (FHCast D4) with wt-different-fill eps D1 D2 D3 A D4
@@ -49,10 +49,10 @@ module preservation where
 
   -- if a well typed term results from filling the hole in ε, then the term
   -- that filled the hole is also well typed
-  wt-filling : ∀{ ε Δ Γ Θ d τ d' } →
-             Δ , Γ , Θ ⊢ d :: τ →
+  wt-filling : ∀{ ε Δ Γ d τ d' } →
+             Δ , ∅ , Γ ⊢ d :: τ →
              d == ε ⟦ d' ⟧ →
-             Σ[ τ' ∈ htyp ] (Δ , Γ , Θ ⊢ d' :: τ')
+             Σ[ τ' ∈ htyp ] (Δ , ∅ , Γ ⊢ d' :: τ')
   wt-filling TAConst FHOuter = _ , TAConst
   wt-filling (TAVar x₁) FHOuter = _ , TAVar x₁
   wt-filling (TALam f wf ta) FHOuter = _ , TALam f wf ta
@@ -93,8 +93,8 @@ module preservation where
   ... | WFArr wf1' wf2' = alpha-refl-ta (TACast (TAAp ta (TACast ta₁ (alpha-closed wf1' (alpha-sym a1)) (~sym x) alpha') (alpha-sym a1)) wf2 x₁ a2)
   preserve-trans {Γ = Γ} {d = ·Λ t d < τ >} {τ = τf} _ (TBUTAp (TBUTLam tbu x₁) _ (TBDTTLam tbd x₂)) (TBDΔTAp (TBDΔTLam tbdd x₆) x₅) (TBDΓTAp (TBDΓTLam tbdg x₄) x₃) tcwf hcwf (TATAp wf (TATLam apt x) eq) ITTLam = alpha-refl-ta (rewrite-typ eq (rewrite-gamma (tctx-sub-closed {Γ} {t} {τ} tcwf)
     (lemma-tysubst wf x₆ x₄ x₁ tbu x)))
-  preserve-trans _ (TBUTAp (TBUCast tbu) x₁ (TBDTCast x₂ x₃ x₄)) _ _ _ _ (TATAp wf (TACast {τ1' = ·∀ x₅ τ1'} ta (WFForall wf2) x alpha) eq) ITTApCast rewrite ! eq
-    = alpha-refl-ta (TACast (TATAp wf ta refl) (wf-sub wf wf2 refl) (consist-sub x) (alpha-sub alpha))
+  preserve-trans _ (TBUTAp (TBUCast tbu tbd1 tbd2) x₁ (TBDTCast x₂ (BDTForall x₃ x₇) (BDTForall x₄ x₆))) _ _ _ _ (TATAp wf (TACast {τ1' = ·∀ x₅ τ1'} ta (WFForall wf2) x alpha) eq) ITTApCast rewrite ! eq
+    = alpha-refl-ta (TACast (TATAp wf ta refl) (wf-sub wf wf2 refl) {! consist-sub wf ? ? x !} {!(alpha-sub alpha)!})
   preserve-trans {τ = τ} _ _ _ _ _ _ (TACast {τ1' = τ1'} ta wf x alpha) (ITCastID {τ1 = τ1} alphaeq) = τ1' , (alpha-trans (alpha-sym alpha) alphaeq) , ta
   preserve-trans {τ = τ} _ _ _ _ _ _ (TACast (TACast {τ1' = τ1'} ta _ x alpha) _ x₁ alpha2) (ITCastSucceed {τ1 = τ1} g1 g2 alpha3) = τ1' , (alpha-trans (alpha-sym alpha) alpha3) , ta
   preserve-trans _ _ _ _ _ _ (TACast ta wf x alpha) (ITGround (MGArr x₁)) = alpha-refl-ta (TACast (TACast ta (WFArr wf wf) (ConsistArr ConsistHole1 ConsistHole1) alpha) wf ConsistHole1 (AlphaArr AlphaHole AlphaHole)) -- alpha-refl-ta (TACast (TACast ta (WFArr wf wf) (ConsistArr ConsistHole1 ConsistHole1) ) wf ConsistHole1)
@@ -119,8 +119,8 @@ module preservation where
   lem-tbd-ε1 (FHAp2 fh) (TBUAp bu bu₁ x) = lem-tbd-ε1 fh bu₁
   lem-tbd-ε1 (FHTAp fh) (TBUTAp bu x x₁) = lem-tbd-ε1 fh bu
   lem-tbd-ε1 (FHNEHole fh) (TBUNEHole bu x x₁ x₂) = lem-tbd-ε1 fh bu
-  lem-tbd-ε1 (FHCast fh) (TBUCast bu) = lem-tbd-ε1 fh bu
-  lem-tbd-ε1 (FHFailedCast fh) (TBUFailedCast bu) = lem-tbd-ε1 fh bu
+  lem-tbd-ε1 (FHCast fh) (TBUCast bu _ _) = lem-tbd-ε1 fh bu
+  lem-tbd-ε1 (FHFailedCast fh) (TBUFailedCast bu _ _) = lem-tbd-ε1 fh bu
 
   lem-tbdΔ-ε1 : ∀{d ε d0 Δ} → d == ε ⟦ d0 ⟧ → tbinders-disjoint-Δ Δ d → tbinders-disjoint-Δ Δ d0
   lem-tbdΔ-ε1 FHOuter bd = bd
@@ -180,4 +180,4 @@ module preservation where
              d ↦ d' →
              Σ[ τ' ∈ htyp ] (τ' =α τ × Δ , ∅ , ∅ ⊢ d' :: τ')
   preservation' bu tbu tbdd hcwf = preservation bu tbu tbdd (lem-tbdΓ-empty bu) wf-empty-tctx hcwf
-            
+             
