@@ -39,7 +39,7 @@ module preservation where
   wt-different-fill {τ = τ} (FHAp2 eps) (TAAp D1 D2 A1) D3 D4 A (FHAp2 D5) with wt-different-fill eps D2 D3 D4 A D5
   ... | τ' , ar , p = alpha-refl-ta (TAAp D1 p (alpha-trans A1 (alpha-sym ar)))
   wt-different-fill (FHTAp eps) (TATAp {τ1 = t} wf D1 eq) D2 D3 A (FHTAp D4) with wt-different-fill eps D1 D2 D3 A D4
-  ... | ·∀ x τ' , ar , p rewrite ! eq = Typ[ t / x ] τ' , alpha-sub {!   !} {!   !} {!   !} ar , TATAp wf p refl
+  ... | ·∀ x τ' , ar , p rewrite ! eq = Typ[ t / x ] τ' , alpha-sub wf ar , TATAp wf p refl
   wt-different-fill {τ = τ} (FHNEHole eps) (TANEHole x D1 x₁ eq eq') D2 D3 A (FHNEHole D4) with (wt-different-fill eps D1 D2 D3 A D4) 
   ... | τ' , ar , p = alpha-refl-ta (TANEHole x p x₁ eq eq')
   wt-different-fill (FHCast eps) (TACast D1 wf x A1) D2 D3 A (FHCast D4) with wt-different-fill eps D1 D2 D3 A D4
@@ -94,7 +94,7 @@ module preservation where
   preserve-trans {Γ = Γ} {d = ·Λ t d < τ >} {τ = τf} _ (TBUTAp (TBUTLam tbu x₁) _ (TBDTTLam tbd x₂)) (TBDΔTAp (TBDΔTLam tbdd x₆) x₅) (TBDΓTAp (TBDΓTLam tbdg x₄) x₃) tcwf hcwf (TATAp wf (TATLam apt x) eq) ITTLam = alpha-refl-ta (rewrite-typ eq (rewrite-gamma (tctx-sub-closed {Γ} {t} {τ} tcwf)
     (lemma-tysubst wf x₆ x₄ x₁ tbu x)))
   preserve-trans _ (TBUTAp (TBUCast tbu tbd1 tbd2) x₁ (TBDTCast x₂ (BDTForall x₃ x₇) (BDTForall x₄ x₆))) _ _ _ _ (TATAp wf (TACast {τ1' = ·∀ x₅ τ1'} ta (WFForall wf2) x alpha) eq) ITTApCast rewrite ! eq
-    = alpha-refl-ta (TACast (TATAp wf ta refl) (wf-sub wf wf2 refl) {! consist-sub wf ? ? x !} {!(alpha-sub alpha)!})
+    = alpha-refl-ta (TACast (TATAp wf ta refl) (wf-sub wf wf2 refl) {! consist-sub wf ? ? x !} (alpha-sub wf alpha))
   preserve-trans {τ = τ} _ _ _ _ _ _ (TACast {τ1' = τ1'} ta wf x alpha) (ITCastID {τ1 = τ1} alphaeq) = τ1' , (alpha-trans (alpha-sym alpha) alphaeq) , ta
   preserve-trans {τ = τ} _ _ _ _ _ _ (TACast (TACast {τ1' = τ1'} ta _ x alpha) _ x₁ alpha2) (ITCastSucceed {τ1 = τ1} g1 g2 alpha3) = τ1' , (alpha-trans (alpha-sym alpha) alpha3) , ta
   preserve-trans _ _ _ _ _ _ (TACast ta wf x alpha) (ITGround (MGArr x₁)) = alpha-refl-ta (TACast (TACast ta (WFArr wf wf) (ConsistArr ConsistHole1 ConsistHole1) alpha) wf ConsistHole1 (AlphaArr AlphaHole AlphaHole)) -- alpha-refl-ta (TACast (TACast ta (WFArr wf wf) (ConsistArr ConsistHole1 ConsistHole1) ) wf ConsistHole1)

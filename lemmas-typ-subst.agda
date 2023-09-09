@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 open import Nat
 open import Prelude
 open import core
@@ -123,27 +125,66 @@ module lemmas-typ-subst where
   closed-alpha-refl : ∀{ΓL ΓR τ} → ∅ ⊢ τ wf → ΓL , ΓR ⊢ τ =α τ
   closed-alpha-refl wf = wf-alpha-refl wf λ t x → abort (somenotnone (! x))
 
-  ⊢alpha-sub : ∀{τ t1 τ1 t2 τ2 ΓL ΓR} → tunboundt-in t1 τ1 → tunboundt-in t2 τ2 → ∅ ⊢ τ wf → ((■ (t1 , t2)) ∪ ΓL) , (■ (t2 , t1)) ∪ ΓR ⊢ τ1 =α τ2 → ΓL , ΓR ⊢ (Typ[ τ / t1 ] τ1) =α (Typ[ τ / t2 ] τ2)
-  ⊢alpha-sub {τ1 = b} {τ2 = b} _ _ _ alpha = AlphaBase
-  ⊢alpha-sub {t1 = t1} {τ1 = T x} {t2 = t2} {τ2 = T x'} UBTVar UBTVar wf (AlphaVarBound x₂ x₃) with natEQ t1 x | natEQ t2 x' 
+  ctx-lshadow : ∀{A x y z} → (Γ : A ctx) → (■ (x , y)) ∪ ((■ (x , z)) ∪ Γ) == ((■ (x , y)) ∪ Γ)
+  ctx-lshadow {x = x} {y} {z} Γ = funext foo
+    where
+      foo : (x' : Nat) → ((■ (x , y)) ∪ ((■ (x , z)) ∪ Γ)) x' == ((■ (x , y)) ∪ Γ) x'
+      foo x' with natEQ x x'
+      ... | Inl refl rewrite natEQrefl {x} = refl
+      ... | Inr neq rewrite natEQneq neq = refl
+
+  lem-alpha-sub-forall-asym : ∀{x t1 t2 τ1 τ2 τ ΓL ΓR} → x ≠ t1 → ((■ (x , t2)) ∪ ((■ (t1 , t2)) ∪ ΓL)) , (■ (t2 , x)) ∪ ΓR ⊢ τ1 =α τ2 → (Typ[ τ / t1 ] τ1) == τ1
+  lem-alpha-sub-forall-asym ne AlphaBase = refl
+  lem-alpha-sub-forall-asym {x} {t1 = t1} {t2} ne (AlphaVarBound {x = x'} {y = y} meml memr) with natEQ t1 x'
+  ... | Inr neq = refl
+  ... | Inl refl with natEQ t2 y
+  ...   | Inl refl = abort (ne (someinj memr))
+  ...   | Inr neq with natEQ x t1
+  ...     | Inl refl = abort (ne refl)
+  ...     | Inr neq' rewrite natEQrefl {t1} = abort (neq (someinj meml))
+  lem-alpha-sub-forall-asym ne (AlphaVarFree x x₁) = {!   !}
+  lem-alpha-sub-forall-asym ne AlphaHole = refl
+  lem-alpha-sub-forall-asym ne (AlphaArr alpha alpha₁) = arr-eq (lem-alpha-sub-forall-asym ne alpha) (lem-alpha-sub-forall-asym ne alpha₁)
+  lem-alpha-sub-forall-asym ne (AlphaForall alpha) = {!   !}
+
+  lem-apt-extendl2 : ∀{z x' y'} → (x y : Nat) → (Γ : Nat ctx) → z # ((■ (x , y)) ∪ ((■ (x' , y')) ∪ Γ)) → z # ((■ (x , y)) ∪ Γ)
+  lem-apt-extendl2 {z} {x'} x y Γ apt with natEQ x z
+  ... | Inl refl rewrite natEQrefl {z} = apt
+  ... | Inr neq rewrite natEQneq neq with natEQ x' z 
+  ...   | Inl refl = abort (somenotnone apt)
+  ...   | Inr neq' = apt
+
+  lem-alpha-prunel1 : ∀{τ1 τ2} → (ΓL ΓR : Nat ctx) → (x y x' : Nat) → ((■ (x , y)) ∪ ((■ (x' , y)) ∪ ΓL)) , (■ (y , x)) ∪ ΓR ⊢ τ1 =α τ2 → ((■ (x , y)) ∪ ΓL) , (■ (y , x)) ∪ ΓR ⊢ τ1 =α τ2
+  lem-alpha-prunel1 ΓL ΓR x y x' AlphaBase = AlphaBase
+  lem-alpha-prunel1 ΓL ΓR x y x' (AlphaVarBound {x = z} x₁ x₂) = AlphaVarBound {!   !} {!   !}
+  lem-alpha-prunel1 ΓL ΓR x y x' (AlphaVarFree {x = z} x₁ x₂) = AlphaVarFree (lem-apt-extendl2 {z = z} {x' = x'} {y' = y} x y ΓL x₁) x₂
+  lem-alpha-prunel1 ΓL ΓR x y x' AlphaHole = {!   !}
+  lem-alpha-prunel1 ΓL ΓR x y x' (AlphaArr alpha alpha₁) = {!   !}
+  lem-alpha-prunel1 ΓL ΓR x y x' (AlphaForall alpha) = {!   !}
+
+  ⊢alpha-sub : ∀{τ t1 τ1 t2 τ2 ΓL ΓR} → ∅ ⊢ τ wf → ((■ (t1 , t2)) ∪ ΓL) , (■ (t2 , t1)) ∪ ΓR ⊢ τ1 =α τ2 → ΓL , ΓR ⊢ (Typ[ τ / t1 ] τ1) =α (Typ[ τ / t2 ] τ2)
+  ⊢alpha-sub {τ1 = b} {τ2 = b} _ alpha = AlphaBase
+  ⊢alpha-sub {t1 = t1} {τ1 = T x} {t2 = t2} {τ2 = T x'} wf (AlphaVarBound x₂ x₃) with natEQ t1 x | natEQ t2 x' 
   ... | Inr neq | Inr neq' = AlphaVarBound x₂ x₃
   ... | Inl refl | Inr neq = abort (neq (someinj x₂))
   ... | Inr neq | Inl refl = abort (neq (someinj x₃))
   ... | Inl refl | Inl refl = closed-alpha-refl wf
-  ⊢alpha-sub {t1 = t1} {τ1 = T x} {t2 = t2} {τ2 = T .x} _ _ wf (AlphaVarFree x₁ x₂) with natEQ t1 x | natEQ t2 x
+  ⊢alpha-sub {t1 = t1} {τ1 = T x} {t2 = t2} {τ2 = T .x} wf (AlphaVarFree x₁ x₂) with natEQ t1 x | natEQ t2 x
   ... | Inr neq | Inr neq' = AlphaVarFree x₁ x₂
   ... | _ | Inl refl = abort (somenotnone x₂)
   ... | Inl refl | _ = abort (somenotnone x₁)
-  ⊢alpha-sub {τ1 = ⦇-⦈} {τ2 = ⦇-⦈} _ _ _ alpha = AlphaHole
-  ⊢alpha-sub {τ1 = τ1 ==> τ3} {τ2 = τ2 ==> τ4} (UBArr ub1 ub4) (UBArr ub2 ub3) wf (AlphaArr alpha alpha₁) = AlphaArr (⊢alpha-sub ub1 ub2 wf alpha) (⊢alpha-sub ub4 ub3 wf alpha₁)
-  ⊢alpha-sub {t1 = t1} {τ1 = ·∀ x τ1} {t2 = t2} {τ2 = ·∀ x' τ2} {ΓL} {ΓR} (UBForall ne1 ub1) (UBForall ne2 ub2) wf (AlphaForall alpha) with natEQ t1 x | natEQ t2 x'
-  ... | Inl refl | _ = abort (ne1 refl)
-  ... | _ | Inl refl = abort (ne2 refl)
-  ... | Inr neq | Inr neq' rewrite natEQneq (flip neq) rewrite natEQneq (flip neq') = AlphaForall (⊢alpha-sub {ΓL = ((■ (x , x')) ∪ ΓL)} {ΓR = ((■ (x' , x)) ∪ ΓR)} ub1 ub2 wf
-    (alpha-rewrite-gamma (ctx-lextend-exchange {x = t1} {x' = t2} {y = x} {y' = x'} ΓL ne1) (ctx-lextend-exchange {x = t2} {x' = t1} {y = x'} {y' = x} ΓR ne2) alpha))
+  ⊢alpha-sub {τ1 = ⦇-⦈} {τ2 = ⦇-⦈} _ alpha = AlphaHole
+  ⊢alpha-sub {τ1 = τ1 ==> τ3} {τ2 = τ2 ==> τ4} wf (AlphaArr alpha alpha₁) = AlphaArr (⊢alpha-sub wf alpha) (⊢alpha-sub wf alpha₁)
+  ⊢alpha-sub {τ} {t1 = t1} {τ1 = ·∀ x τ1} {t2 = t2} {τ2 = ·∀ x' τ2} {ΓL} {ΓR} wf (AlphaForall alpha) with natEQ t1 x | natEQ t2 x'
+  ... | Inl refl | Inl refl = AlphaForall (alpha-rewrite-gamma (ctx-lshadow {x = t1} {y = t2} ΓL) (ctx-lshadow {x = t2} {y = t1} ΓR) alpha)
+  ... | Inr neq | Inl refl rewrite lem-alpha-sub-forall-asym {τ = τ} {ΓL = ΓL} {ΓR = ΓR} (flip neq) (alpha-rewrite-gamma refl (ctx-lshadow {x = t2} {y = x} ΓR) alpha) = 
+            AlphaForall (lem-alpha-prunel1 ΓL ΓR x x' t1 (alpha-rewrite-gamma refl (ctx-lshadow {x = x'} {y = x} {z = t1} ΓR) alpha))
+  ... | Inl refl | Inr neq = {!   !}
+  ... | Inr neq | Inr neq' rewrite natEQneq (flip neq) rewrite natEQneq (flip neq') = AlphaForall (⊢alpha-sub {ΓL = ((■ (x , x')) ∪ ΓL)} {ΓR = ((■ (x' , x)) ∪ ΓR)} wf
+    (alpha-rewrite-gamma (ctx-lextend-exchange {x = t1} {x' = t2} {y = x} {y' = x'} ΓL neq) (ctx-lextend-exchange {x = t2} {x' = t1} {y = x'} {y' = x} ΓR neq') alpha))
 
-  alpha-sub : ∀{τ t1 τ1 t2 τ2} → ∅ ⊢ τ wf → tunboundt-in t1 τ1 → tunboundt-in t2 τ2 → ·∀ t1 τ1 =α ·∀ t2 τ2 → (Typ[ τ / t1 ] τ1) =α (Typ[ τ / t2 ] τ2)
-  alpha-sub wf ub1 ub2 (AlphaForall alpha) = ⊢alpha-sub ub1 ub2 wf alpha
+  alpha-sub : ∀{τ t1 τ1 t2 τ2} → ∅ ⊢ τ wf → ·∀ t1 τ1 =α ·∀ t2 τ2 → (Typ[ τ / t1 ] τ1) =α (Typ[ τ / t2 ] τ2)
+  alpha-sub wf (AlphaForall alpha) = ⊢alpha-sub wf alpha
 
   -- Logic here is basically the same as ⊢alpha-sub
   wf-consist-refl : ∀{ΓL ΓR Θ τ} → Θ ⊢ τ wf → ((t : Nat) → (t , <>) ∈ Θ → (t , t) ∈ ΓL × (t , t) ∈ ΓR) → ΓL , ΓR ⊢ τ ~ τ
@@ -219,3 +260,4 @@ module lemmas-typ-subst where
     lem-sub-sub-ub τ' ubt' ubt (! x₂)
   tunbound-ta-tunboundt (TUBCast ub ubt1 ubt2) ubd ubg (TACast ta x x₁ alpha) = ubt2
   tunbound-ta-tunboundt (TUBFailedCast ub ubt1 ubt2) ubd ubg (TAFailedCast ta x x₁ x₂ _) = ubt2
+ 
