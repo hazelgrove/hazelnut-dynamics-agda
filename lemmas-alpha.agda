@@ -4,6 +4,7 @@ open import Prelude
 open import core
 open import contexts
 open import Nat
+open import rewrite-util
 
 module lemmas-alpha where
 
@@ -112,9 +113,6 @@ module lemmas-alpha where
   comp-lextend-pruner : (x y z : Nat) → (ΓL1 ΓL2 ΓR1 ΓR2 : Nat ctx) → pruner ((■ (x , z)) ∪ (ΓL2 <=< ΓL1)) ((■ (z , x)) ∪ (ΓR1 <=< ΓR2)) == pruner (((■ (y , z)) ∪ ΓL2) <=< ((■ (x , y)) ∪ ΓL1)) (((■ (y , x)) ∪ ΓR1) <=< ((■ (z , y)) ∪ ΓR2))
   comp-lextend-pruner = {!   !}
 
-  alpha-rewrite-gamma : ∀{ΓL ΓL' ΓR ΓR' τ1 τ2} → ΓL == ΓL' → ΓR == ΓR' → ΓL , ΓR ⊢ τ1 =α τ2 → ΓL' , ΓR' ⊢ τ1 =α τ2
-  alpha-rewrite-gamma eq1 eq2 alpha rewrite ! eq1 rewrite ! eq2 = alpha
-
   ⊢alpha-trans : {ΓL1 ΓR1 ΓL2 ΓR2 : Nat ctx} {τ1 τ2 τ3 : htyp} → ΓL1 , ΓR1 ⊢ τ1 =α τ2 → ΓL2 , ΓR2 ⊢ τ2 =α τ3 → (ΓL2 <=< ΓL1) , (ΓR1 <=< ΓR2) ⊢ τ1 =α τ3
   ⊢alpha-trans AlphaBase AlphaBase = AlphaBase
   ⊢alpha-trans {ΓL1} {ΓR1} {ΓL2} {ΓR2} (AlphaVarBound x₁ x₂) (AlphaVarBound x₃ x₄) = AlphaVarBound (comp-elem ΓL2 ΓL1 x₁ x₃) (comp-elem ΓR1 ΓR2 x₄ x₂)
@@ -128,5 +126,22 @@ module lemmas-alpha where
     
   alpha-trans : ∀{τ1 τ2 τ3} → τ1 =α τ2 → τ2 =α τ3 → τ1 =α τ3
   alpha-trans = ⊢alpha-trans
+
+  -- needs a stronger inductive hypothesis.
+  alpha-closed : ∀{τ τ'} → ∅ ⊢ τ wf → τ =α τ' → ∅ ⊢ τ' wf
+  alpha-closed wf AlphaBase = {!   !}
+  alpha-closed wf (AlphaVarFree x x₁) = {!   !}
+  alpha-closed wf AlphaHole = {!   !}
+  alpha-closed wf (AlphaArr alpha alpha₁) = {!   !}
+  alpha-closed (WFForall wf) (AlphaForall alpha) = WFForall {!   !}
+  -- Alternatively can prove the below and use:
+  -- alpha-closed = alpha-wf
+
+  alpha-wf : ∀{Θ τ τ'} → Θ ⊢ τ wf → τ =α τ' → Θ ⊢ τ' wf
+  alpha-wf wf AlphaBase = wf
+  alpha-wf wf (AlphaVarFree x x₁) = wf
+  alpha-wf wf AlphaHole = wf
+  alpha-wf (WFArr wf wf₁) (AlphaArr alpha alpha₁) = WFArr (alpha-wf wf alpha) (alpha-wf wf₁ alpha₁)
+  alpha-wf (WFForall wf) (AlphaForall alpha) = WFForall (alpha-wf {! wf  !} {!   !})
 
      -- AlphaForall (prune-pres-alpha2 (alpha-rewrite-gamma (! (comp-lextend-prunel x y y' ΓL1 ΓL2 ΓR1 ΓR2)) (! (comp-lextend-pruner x y y' ΓL1 ΓL2 ΓR1 ΓR2)) (prune-pres-alpha1 (alpha-trans a1 a2)))) -- (alpha-rewrite-gamma (! (comp-lextend x y y' ΓL1 ΓL2)) (! (comp-lextend y' y x ΓR2 ΓR1)) (alpha-trans a1 a2)) -- AlphaForall {!   !}

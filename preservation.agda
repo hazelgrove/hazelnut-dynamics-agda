@@ -90,7 +90,7 @@ module preservation where
   preserve-trans {τ = τ} (BUAp (BULam bd x₁) bd₁ (BDLam x₂ x₃)) _ _ _ _ _ (TAAp (TALam apt wf ta) ta₁ alpha) ITLam = alpha-refl-ta (lem-subst apt x₂ bd₁ ta ta₁ (alpha-sym alpha))
   preserve-trans _ _ _ _ _ _ (TATLam apt ta) ()
   preserve-trans {τ = τ} _ _ _ _ tcwf hcwf (TAAp (TACast ta (WFArr wf1 wf2) (ConsistArr x x₁) (AlphaArr a1 a2)) ta₁ alpha') ITApCast with wf-ta tcwf hcwf ta
-  ... | WFArr wf1' wf2' = alpha-refl-ta (TACast (TAAp ta (TACast ta₁ (~closed wf1 (~sym x)) (~sym x) alpha') (alpha-sym a1)) wf2 x₁ a2)
+  ... | WFArr wf1' wf2' = alpha-refl-ta (TACast (TAAp ta (TACast ta₁ (alpha-closed wf1' (alpha-sym a1)) (~sym x) alpha') (alpha-sym a1)) wf2 x₁ a2)
   preserve-trans {Γ = Γ} {d = ·Λ t d < τ >} {τ = τf} _ (TBUTAp (TBUTLam tbu x₁) _ (TBDTTLam tbd x₂)) (TBDΔTAp (TBDΔTLam tbdd x₆) x₅) (TBDΓTAp (TBDΓTLam tbdg x₄) x₃) tcwf hcwf (TATAp wf (TATLam apt x) eq) ITTLam = alpha-refl-ta (rewrite-typ eq (rewrite-gamma (tctx-sub-closed {Γ} {t} {τ} tcwf)
     (lemma-tysubst wf x₆ x₄ x₁ tbu x)))
   preserve-trans _ (TBUTAp (TBUCast tbu) x₁ (TBDTCast x₂ x₃ x₄)) _ _ _ _ (TATAp wf (TACast {τ1' = ·∀ x₅ τ1'} ta (WFForall wf2) x alpha) eq) ITTApCast rewrite ! eq

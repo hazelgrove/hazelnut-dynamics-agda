@@ -63,3 +63,10 @@ module rewrite-util where
 
   id-eq : ∀{Γ Γ'} → Γ == Γ' → Id Γ == Id Γ'
   id-eq eq rewrite eq = refl
+
+  open alpha
+  alpha-rewrite-gamma : ∀{ΓL ΓL' ΓR ΓR' τ1 τ2} → ΓL == ΓL' → ΓR == ΓR' → ΓL , ΓR ⊢ τ1 =α τ2 → ΓL' , ΓR' ⊢ τ1 =α τ2
+  alpha-rewrite-gamma eq1 eq2 consist rewrite ! eq1 rewrite ! eq2 = consist
+
+  consist-rewrite-gamma : ∀{ΓL ΓL' ΓR ΓR' τ1 τ2} → ΓL == ΓL' → ΓR == ΓR' → ΓL , ΓR ⊢ τ1 ~ τ2 → ΓL' , ΓR' ⊢ τ1 ~ τ2
+  consist-rewrite-gamma eq1 eq2 consist rewrite ! eq1 rewrite ! eq2 = consist

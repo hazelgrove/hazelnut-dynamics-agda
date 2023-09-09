@@ -6,6 +6,7 @@ open import weakening
 open import contraction
 open import exchange
 open import rewrite-util
+open import lemmas-typ-subst
 
 module lemmas-well-formed where 
 
@@ -49,25 +50,8 @@ module lemmas-well-formed where
   ... | Inl refl = abort (neq refl)
   ... | Inr neq = elem
 
-  lem-subctx-extend : (Γ Γ' : ⊤ ctx) (x : Nat) → ((x' : Nat) → (x' , <>) ∈ Γ → (x' , <>) ∈ Γ') →
-    ((x' : Nat) → (x' , <>) ∈ (Γ ,, (x , <>)) → (x' , <>) ∈ (Γ' ,, (x , <>)))
-  lem-subctx-extend Γ Γ' x cond x' mem with ctxindirect Γ x'
-  ... | Inl (<> , inl) rewrite inl rewrite ! (someinj mem) rewrite cond x' inl = refl
-  ... | Inr nil rewrite nil with natEQ x x'
-  ...   | Inr neq = abort (somenotnone (! mem))
-  ...   | Inl refl with Γ' x'
-  ...     | Some <> = refl
-  ...     | None rewrite natEQrefl {x'} = refl
-
-  wf-weaken-gen : ∀{τ Θ Θ'} → ((t : Nat) → (t , <>) ∈ Θ → (t , <>) ∈ Θ') → Θ ⊢ τ wf → Θ' ⊢ τ wf
-  wf-weaken-gen cond (WFVar {a = a} x) = WFVar (cond a x)
-  wf-weaken-gen cond WFBase = WFBase
-  wf-weaken-gen cond WFHole = WFHole
-  wf-weaken-gen cond (WFArr wf wf₁) = WFArr (wf-weaken-gen cond wf) (wf-weaken-gen cond wf₁)
-  wf-weaken-gen {Θ = Θ} {Θ' = Θ'} cond (WFForall {n = n} wf) = WFForall (wf-weaken-gen (lem-subctx-extend Θ Θ' n cond) wf)
-
   wf-closed : ∀{τ Θ} → ∅ ⊢ τ wf → Θ ⊢ τ wf
-  wf-closed = wf-weaken-gen (λ t mem → abort (somenotnone (! mem)))
+  wf-closed = weaken-t-wf' (λ t mem → abort (somenotnone (! mem)))
 
   wf-sub : ∀ {Θ t τ1 τ2 τ3} → Θ ⊢ τ1 wf → (Θ ,, (t , <>)) ⊢ τ3 wf → τ2 == ·∀ t τ3 → Θ ⊢ Typ[ τ1 / t ] τ3 wf
   wf-sub {τ3 = b} wf1 wf2 eq = WFBase
@@ -222,12 +206,13 @@ module lemmas-well-formed where
       wf2 = typenv-wf hctxwf (weaken-tctx-wf ctxwf1) sub ctxwf2 wf refl
 
     -- Should hold since everything in θ is closed
-    wf-ty-subst : ∀{Δ Θ Θ' Γ Γ' Γ'' θ σ} →
-      Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ'' →
+    wf-ty-subst : ∀{Δ Θ Θ' Γ Γ' Γ'' Γ''' θ σ} →
+      Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ''' →
       Γ'' == apply-typenv-env θ Γ' →
       Θ' ⊢ Γ' tctxwf →
       Θ' ⊢ Γ'' tctxwf
-    wf-ty-subst = {!   !}
+    wf-ty-subst {θ = TypId Θ} ts eq tcwf rewrite eq = tcwf
+    wf-ty-subst {Γ' = Γ'} {θ = TypSubst τ t θ} (STASubst ts x) eq tcwf rewrite eq = tctx-sub-wf (wf-ty-subst {Γ'' = apply-typenv-env θ Γ'} ts refl tcwf) (wf-closed x)
 
     wf-ta : ∀{Θ Γ d τ Δ} → 
             Θ ⊢ Γ tctxwf → 
@@ -253,7 +238,3 @@ module lemmas-well-formed where
     no-tvar-casts : ∀{ Γ n τ d Δ} → ∅ ⊢ Γ tctxwf → Δ hctxwf → Δ , ∅ , Γ ⊢ d ⟨ T n ⇒ ⦇-⦈ ⟩ :: τ → ⊥
     no-tvar-casts ctxwf hctxwf (TACast wt x x₁ alpha) with wf-ta ctxwf hctxwf wt 
     ... | WFVar () 
-
-
-  ~closed : ∀{τ τ'} → ∅ ⊢ τ wf → τ ~ τ' → ∅ ⊢ τ' wf
-  ~closed wf consis = {!   !}

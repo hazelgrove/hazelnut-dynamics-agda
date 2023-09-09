@@ -9,6 +9,7 @@ open import lemmas-consistency
 open import lemmas-ground
 
 open import lemmas-well-formed
+open import lemmas-typ-subst
 open import rewrite-util
 open import weakening
 open import exchange

@@ -17,6 +17,23 @@ module weakening where
   weaken-t-wf WFHole = WFHole
   weaken-t-wf (WFArr wf wf₁) = WFArr (weaken-t-wf wf) (weaken-t-wf wf₁)
   weaken-t-wf {Θ} (WFForall wf) = WFForall (exchange-wf {Θ = Θ} (weaken-t-wf wf))
+
+  lem-subctx-extend : (Γ Γ' : ⊤ ctx) (x : Nat) → ((x' : Nat) → (x' , <>) ∈ Γ → (x' , <>) ∈ Γ') →
+    ((x' : Nat) → (x' , <>) ∈ (Γ ,, (x , <>)) → (x' , <>) ∈ (Γ' ,, (x , <>)))
+  lem-subctx-extend Γ Γ' x cond x' mem with ctxindirect Γ x'
+  ... | Inl (<> , inl) rewrite inl rewrite ! (someinj mem) rewrite cond x' inl = refl
+  ... | Inr nil rewrite nil with natEQ x x'
+  ...   | Inr neq = abort (somenotnone (! mem))
+  ...   | Inl refl with Γ' x'
+  ...     | Some <> = refl
+  ...     | None rewrite natEQrefl {x'} = refl
+  
+  weaken-t-wf' : ∀{τ Θ Θ'} → ((t : Nat) → (t , <>) ∈ Θ → (t , <>) ∈ Θ') → Θ ⊢ τ wf → Θ' ⊢ τ wf
+  weaken-t-wf' cond (WFVar {a = a} x) = WFVar (cond a x)
+  weaken-t-wf' cond WFBase = WFBase
+  weaken-t-wf' cond WFHole = WFHole
+  weaken-t-wf' cond (WFArr wf wf₁) = WFArr (weaken-t-wf' cond wf) (weaken-t-wf' cond wf₁)
+  weaken-t-wf' {Θ = Θ} {Θ' = Θ'} cond (WFForall {n = n} wf) = WFForall (weaken-t-wf' (lem-subctx-extend Θ Θ' n cond) wf)
   
   {-with natEQ x y
   ... | Inl refl = WFForall (abort (ne refl)) 
