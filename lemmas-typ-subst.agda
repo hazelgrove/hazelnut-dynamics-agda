@@ -162,6 +162,9 @@ module lemmas-typ-subst where
   lem-alpha-prunel1 ΓL ΓR x y x' (AlphaArr alpha alpha₁) = {!   !}
   lem-alpha-prunel1 ΓL ΓR x y x' (AlphaForall alpha) = {!   !}
 
+  lem-alpha-pruner1 : ∀{τ1 τ2} → (ΓL ΓR : Nat ctx) → (x y y' : Nat) → ((■ (x , y)) ∪ ΓL) , ((■ (y , x)) ∪ ((■ (y' , x)) ∪ ΓR)) ⊢ τ1 =α τ2 → ((■ (x , y)) ∪ ΓL) , (■ (y , x)) ∪ ΓR ⊢ τ1 =α τ2
+  lem-alpha-pruner1 ΓL ΓR x y y' alpha = {!   !}
+
   ⊢alpha-sub : ∀{τ t1 τ1 t2 τ2 ΓL ΓR} → ∅ ⊢ τ wf → ((■ (t1 , t2)) ∪ ΓL) , (■ (t2 , t1)) ∪ ΓR ⊢ τ1 =α τ2 → ΓL , ΓR ⊢ (Typ[ τ / t1 ] τ1) =α (Typ[ τ / t2 ] τ2)
   ⊢alpha-sub {τ1 = b} {τ2 = b} _ alpha = AlphaBase
   ⊢alpha-sub {t1 = t1} {τ1 = T x} {t2 = t2} {τ2 = T x'} wf (AlphaVarBound x₂ x₃) with natEQ t1 x | natEQ t2 x' 
@@ -179,7 +182,8 @@ module lemmas-typ-subst where
   ... | Inl refl | Inl refl = AlphaForall (alpha-rewrite-gamma (ctx-lshadow {x = t1} {y = t2} ΓL) (ctx-lshadow {x = t2} {y = t1} ΓR) alpha)
   ... | Inr neq | Inl refl rewrite lem-alpha-sub-forall-asym {τ = τ} {ΓL = ΓL} {ΓR = ΓR} (flip neq) (alpha-rewrite-gamma refl (ctx-lshadow {x = t2} {y = x} ΓR) alpha) = 
             AlphaForall (lem-alpha-prunel1 ΓL ΓR x x' t1 (alpha-rewrite-gamma refl (ctx-lshadow {x = x'} {y = x} {z = t1} ΓR) alpha))
-  ... | Inl refl | Inr neq = {!   !}
+  ... | Inl refl | Inr neq rewrite lem-alpha-sub-forall-asym {τ = τ} {ΓL = ΓR} {ΓR = ΓL} (flip neq) (alpha-rewrite-gamma refl (ctx-lshadow {x = t1} {y = x'} ΓL) (alpha-sym-ctx ((■ (t1 , x')) ∪ ((■ (t1 , t2)) ∪ ΓL)) ((■ (x' , t1)) ∪ ((■ (t2 , t1)) ∪ ΓR)) τ1 τ2 alpha)) =
+            AlphaForall (lem-alpha-pruner1 ΓL ΓR x x' t2 (alpha-rewrite-gamma (ctx-lshadow {x = t1} {y = x'} {z = t2} ΓL) refl alpha))
   ... | Inr neq | Inr neq' rewrite natEQneq (flip neq) rewrite natEQneq (flip neq') = AlphaForall (⊢alpha-sub {ΓL = ((■ (x , x')) ∪ ΓL)} {ΓR = ((■ (x' , x)) ∪ ΓR)} wf
     (alpha-rewrite-gamma (ctx-lextend-exchange {x = t1} {x' = t2} {y = x} {y' = x'} ΓL neq) (ctx-lextend-exchange {x = t2} {x' = t1} {y = x'} {y' = x} ΓR neq') alpha))
 
