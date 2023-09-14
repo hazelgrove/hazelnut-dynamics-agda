@@ -18,9 +18,6 @@ open import rewrite-util
 
 module preservation where
 
-  alpha-refl-ta : ∀{ Δ Θ Γ d τ } → Δ , Θ , Γ ⊢ d :: τ → Σ[ τ' ∈ htyp ] (τ' =α τ × Δ , Θ , Γ ⊢ d :: τ')
-  alpha-refl-ta {τ = τ} ta = τ , alpha-refl τ , ta
-
   -- if d and d' both result from filling the hole in ε with terms of the
   -- same type, they too have the same type.
   wt-different-fill : ∀{ Δ Γ d ε d1 d2 d' τ τ1 τ2} →

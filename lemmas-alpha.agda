@@ -27,6 +27,8 @@ module lemmas-alpha where
   alpha-refl : (τ : htyp) → τ =α τ
   alpha-refl τ = alpha-refl-ctx ∅ (λ ()) τ
 
+  alpha-refl-ta : ∀{ Δ Θ Γ d τ } → Δ , Θ , Γ ⊢ d :: τ → Σ[ τ' ∈ htyp ] (τ' =α τ × Δ , Θ , Γ ⊢ d :: τ')
+  alpha-refl-ta {τ = τ} ta = τ , alpha-refl τ , ta
 
   alpha-sym-ctx : (ΓL ΓR : Nat ctx) → (τ1 τ2 : htyp) → ΓL , ΓR ⊢ τ1 =α τ2 → ΓR , ΓL ⊢ τ2 =α τ1
   alpha-sym-ctx ΓL ΓR b b eq = AlphaBase
