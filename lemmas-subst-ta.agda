@@ -9,6 +9,7 @@ open import exchange
 open import lemmas-disjointness
 open import binders-disjoint-checks
 open import lemmas-alpha
+open import lemmas-typ-subst
 
 module lemmas-subst-ta where
   -- this is what makes the binders-unique assumption below good enough: it
@@ -69,10 +70,15 @@ module lemmas-subst-ta where
   ...   | τ' , alpha , ta = τ1 ==> τ' , AlphaArr (alpha-refl τ1) alpha , (TALam y#Γ wf ta)
   lem-subst {Γ = Γ} {Θ = Θ}  apt (BDTLam bd) bu (TATLam {t = t} apt' wt1) wt2 alpha with (lem-subst apt bd bu wt1 (weaken-ta-typ {!   !} wt2) alpha)
   ... | τ' , alpha , ta = ·∀ t τ' , {!   !} , (TATLam apt' ta)
-  lem-subst apt (BDAp bd bd₁) bu3 (TAAp wt1 wt2 alpha') wt3 alpha = {!   !} -- TAAp (lem-subst apt bd bu3 wt1 wt3 alpha) (lem-subst apt bd₁ bu3 wt2 wt3 alpha) alpha'
-  lem-subst apt (BDTAp bd) bu (TATAp wf wt1 eq) wt2 alpha = {!   !} -- TATAp wf (lem-subst apt bd bu wt1 wt2 alpha) eq
-  lem-subst apt bd bu2 (TAEHole inΔ sub eq eq') wt2 alpha = {!   !} -- TAEHole inΔ {! (STAIdSubst sub wt2) !} eq eq'
-  lem-subst apt (BDNEHole x₁ bd) bu2 (TANEHole x₃ wt1 x₄ eq eq') wt2 alpha = {!   !} -- TANEHole x₃ (lem-subst apt bd bu2 wt1 wt2 alpha) {! (STAIdSubst x₄ wt2) !} eq eq'
-  lem-subst apt (BDCast bd) bu2 (TACast wt1 wf x₁ alpha') wt2 alpha = {!   !} -- TACast (lem-subst apt bd bu2 wt1 wt2 alpha) wf x₁ alpha'
-  lem-subst apt (BDFailedCast bd) bu2 (TAFailedCast wt1 x₁ x₂ x₃ alpha') wt2 alpha = {!   !} -- TAFailedCast (lem-subst apt bd bu2 wt1 wt2 alpha) x₁ x₂ x₃ alpha'
-  
+  lem-subst apt (BDAp bd bd₁) bu3 (TAAp wt1 wt2 alpha') wt3 alpha with lem-subst apt bd bu3 wt1 wt3 alpha | lem-subst apt bd₁ bu3 wt2 wt3 alpha
+  ... | τ' ==> τ'1 , AlphaArr alpha1 alpha1' , ta1 | τ'2 , alpha2 , ta2 = τ'1 , alpha1' , (TAAp ta1 ta2 (alpha-trans alpha1 (alpha-trans alpha' (alpha-sym alpha2))))
+  lem-subst apt (BDTAp bd) bu (TATAp {τ1 = τ} wf wt1 eq) wt2 alpha with lem-subst apt bd bu wt1 wt2 alpha
+  ... | ·∀ t' τ' , alpha , ta rewrite ! eq = Typ[ τ / t' ] τ' , alpha-sub {! wf  !} alpha , (TATAp wf ta refl) -- TATAp wf (lem-subst apt bd bu wt1 wt2 alpha) eq
+  lem-subst apt bd bu2 (TAEHole inΔ sub eq eq') wt2 alpha = alpha-refl-ta (TAEHole inΔ {! (STAIdSubst sub wt2) !} eq eq')
+  lem-subst apt (BDNEHole x₁ bd) bu2 (TANEHole x₃ wt1 x₄ eq eq') wt2 alpha with lem-subst apt bd bu2 wt1 wt2 alpha
+  ... | τ' , alpha , ta = alpha-refl-ta (TANEHole x₃ ta {!  STAIdSubst x₄ wt2 !} eq eq')
+  lem-subst apt (BDCast bd) bu2 (TACast wt1 wf x₁ alpha') wt2 alpha with lem-subst apt bd bu2 wt1 wt2 alpha
+  ... | τ' , alpha , ta = alpha-refl-ta (TACast ta wf x₁ (alpha-trans alpha' (alpha-sym alpha)))
+  lem-subst apt (BDFailedCast bd) bu2 (TAFailedCast wt1 x₁ x₂ x₃ alpha') wt2 alpha with lem-subst apt bd bu2 wt1 wt2 alpha
+  ... | τ' , alpha , ta = alpha-refl-ta (TAFailedCast ta x₁ x₂ x₃ (alpha-trans alpha' (alpha-sym alpha))) -- TAFailedCast (lem-subst apt bd bu2 wt1 wt2 alpha) x₁ x₂ x₃ alpha'
+   
