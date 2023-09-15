@@ -190,6 +190,9 @@ module lemmas-typ-subst where
   alpha-sub : ∀{τ t1 τ1 t2 τ2} → ∅ ⊢ τ wf → ·∀ t1 τ1 =α ·∀ t2 τ2 → (Typ[ τ / t1 ] τ1) =α (Typ[ τ / t2 ] τ2)
   alpha-sub wf (AlphaForall alpha) = ⊢alpha-sub wf alpha
 
+  alpha-sub2 : ∀{Θ τ t1 τ1 t2 τ2} → Θ ⊢ τ wf → ·∀ t1 τ1 =α ·∀ t2 τ2 → (Typ[ τ / t1 ] τ1) =α (Typ[ τ / t2 ] τ2)
+  alpha-sub2 = ?
+
   -- Logic here is basically the same as ⊢alpha-sub
   wf-consist-refl : ∀{ΓL ΓR Θ τ} → Θ ⊢ τ wf → ((t : Nat) → (t , <>) ∈ Θ → (t , t) ∈ ΓL × (t , t) ∈ ΓR) → ΓL , ΓR ⊢ τ ~ τ
   wf-consist-refl (WFVar {a = a} x) cond = ConsistVarBound (π1 (cond a x)) (π2 (cond a x))

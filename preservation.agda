@@ -84,7 +84,7 @@ module preservation where
   preserve-trans _ _ _ _ _ _ TAConst ()
   preserve-trans _ _ _ _ _ _ (TAVar x₁) ()
   preserve-trans _ _ _ _ _ _ (TALam _ _ ta) ()
-  preserve-trans {τ = τ} (BUAp (BULam bd x₁) bd₁ (BDLam x₂ x₃)) _ _ _ _ _ (TAAp (TALam apt wf ta) ta₁ alpha) ITLam = alpha-refl-ta (lem-subst apt x₂ bd₁ ta ta₁ (alpha-sym alpha))
+  preserve-trans {τ = τ} (BUAp (BULam bd x₁) bd₁ (BDLam x₂ x₃)) (TBUAp (TBULam tbu) tbu' (TBDLam tbd)) _ _ _ _ (TAAp (TALam apt wf ta) ta₁ alpha) ITLam = lem-subst apt x₂ bd₁ tbd ta ta₁ (alpha-sym alpha)
   preserve-trans _ _ _ _ _ _ (TATLam apt ta) ()
   preserve-trans {τ = τ} _ _ _ _ tcwf hcwf (TAAp (TACast ta (WFArr wf1 wf2) (ConsistArr x x₁) (AlphaArr a1 a2)) ta₁ alpha') ITApCast with wf-ta tcwf hcwf ta
   ... | WFArr wf1' wf2' = alpha-refl-ta (TACast (TAAp ta (TACast ta₁ (alpha-closed wf1' (alpha-sym a1)) (~sym x) alpha') (alpha-sym a1)) wf2 x₁ a2)
