@@ -1034,7 +1034,8 @@ module core where
       TBDAp :  ∀{d1 d2 d3} → tbinders-disjoint d1 d3
                           → tbinders-disjoint d2 d3
                           → tbinders-disjoint (d1 ∘ d2) d3
-      TBDTAp : ∀{d1 d2 τ} → tbinders-disjoint d1 d2
+      TBDTAp : ∀{d1 d2 τ} → tbinderst-disjoint τ d2
+                          → tbinders-disjoint d1 d2
                           → tbinders-disjoint (d1 < τ >) d2
       TBDCast : ∀{d1 d2 τ1 τ2} → tbinders-disjoint d1 d2 → tbinders-disjoint (d1 ⟨ τ1 ⇒ τ2 ⟩) d2
       TBDFailedCast : ∀{d1 d2 τ1 τ2} → tbinders-disjoint d1 d2 → tbinders-disjoint (d1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) d2
