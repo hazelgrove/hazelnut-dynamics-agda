@@ -909,7 +909,7 @@ module core where
       TBDΔTLam :  ∀{t Δ d} → tbinders-disjoint-Δ Δ d
                           → tunbound-in-Δ t Δ
                           → tbinders-disjoint-Δ Δ (·Λ t d)
-      BDΔHole : ∀{u θ σ Δ} → tbinders-disjoint-Δ Δ (⦇-⦈⟨ u , θ , σ ⟩)
+      TBDΔHole : ∀{u θ σ Δ} → tbinders-disjoint-Δ Δ (⦇-⦈⟨ u , θ , σ ⟩)
         {- Could all tb-d between theta and sigma if needed) -}
       TBDΔNEHole : ∀{u σ θ Δ d} → tbinders-disjoint-Δ Δ d
                                 → tbinders-disjoint-Δ Δ (⦇⌜ d ⌟⦈⟨ u , θ , σ ⟩)
@@ -970,6 +970,7 @@ module core where
     data tbinders-disjoint-θ : typenv → ihexp → Set where
       BDTθId : ∀{Θ d} → tbinders-disjoint-θ (TypId Θ) d
       BDTθSubst : ∀{τ d t θ} → tbinderst-disjoint τ d
+               → tunbound-in t d
                → tbinders-disjoint-θ θ d
                → tbinders-disjoint-θ (TypSubst τ t θ) d
                
@@ -1027,8 +1028,10 @@ module core where
                             → tunbound-in t d2
                             → tbinders-disjoint (·Λ t d1) d2
       TBDHole : ∀{u θ σ d2} → tbinders-disjoint-θ θ d2
+                            → tbinders-disjoint-σ σ d2
                             → tbinders-disjoint (⦇-⦈⟨ u , θ , σ ⟩) d2
       TBDNEHole : ∀{u σ θ d1 d2} → tbinders-disjoint-θ θ d2
+                                → tbinders-disjoint-σ σ d2
                                 → tbinders-disjoint d1 d2
                                 → tbinders-disjoint (⦇⌜ d1 ⌟⦈⟨ u , θ , σ ⟩) d2
       TBDAp :  ∀{d1 d2 d3} → tbinders-disjoint d1 d3

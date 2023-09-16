@@ -1,5 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
-
 open import Nat
 open import Prelude
 open import core
@@ -7,6 +5,7 @@ open import contexts
 
 open import lemmas-consistency
 open import lemmas-ground
+open import lemmas-alpha
 
 open import lemmas-well-formed
 open import lemmas-typ-subst
@@ -18,40 +17,6 @@ module lemmas-tysubst-ta where
 
   rewrite-codomain-in : ∀{t : htyp} {t' x Γ} -> t == t' -> (x , t) ∈ Γ -> (x , t') ∈ Γ
   rewrite-codomain-in eq p rewrite eq = p
-
-{-
-  wf-unbound-tfresht : ∀{t τ Θ} -> t # Θ -> Θ ⊢ τ wf -> tunboundt-in t τ -> tfresht t τ
-  wf-unbound-tfresht {τ = b} apt wf ub = TFBase
-  wf-unbound-tfresht {t} {τ = T x} apt (WFVar int) UBTVar with natEQ t x 
-  ... | Inl refl = TFTVar (abort (somenotnone ((! int) · apt)))
-  ... | Inr neq = TFTVar neq
-  wf-unbound-tfresht {τ = ⦇-⦈} apt wf ub = TFHole
-  wf-unbound-tfresht {τ = τ ==> τ₁} apt (WFArr wf1 wf2) (UBArr ub1 ub2) = TFArr (wf-unbound-tfresht apt wf1 ub1) (wf-unbound-tfresht apt wf2 ub2)
-  wf-unbound-tfresht {τ = ·∀ x τ} {Θ = Θ} apt (WFForall wf) (UBForall ne ub) = TFForall ne (wf-unbound-tfresht (lem-apart-extend {Γ = Θ} apt ne) wf ub)
--}
-
-  lemma-typsubst-typsubst-comm : ∀{t1 t2 τ1 τ2 Δ Θ Θ' Γ Γ' θ σ} → Δ , Θ , Γ ⊢ TypSubst τ1 t1 (TypSubst τ2 t2 θ) , σ :s: Θ' , Γ'
-    → Δ , Θ , Γ ⊢ TypSubst τ2 t2 (TypSubst τ1 t1 θ) , σ :s: Θ' , Γ'
-  lemma-typsubst-typsubst-comm {Θ = Θ} (STASubst (STASubst ts x₁) x) = STASubst (STASubst (rewrite-theta-subst (exchange-Θ {Θ = Θ}) ts) x) x₁
-
-  mutual
-    lemma-typsubst-subst-comm : ∀{Δ Θ Θ' Γ Γ' t τ τ' d y θ σ} →
-      tbinders-disjoint-θ-σ (TypSubst τ' t θ) (Subst d y σ) →
-      Δ , Θ , (Γ ,, (y , τ))  ⊢ TypSubst τ' t θ , σ :s: Θ' , Γ' →
-      Δ , Θ , Γ ⊢ d :: τ →
-      Δ , Θ , Γ ⊢ TypSubst τ' t θ , Subst d y σ :s: Θ' , Γ'
-    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STAIdId x x₁) wf) ta = STASubst (STAIdSubst (STAIdId x x₁) (weaken-ta-typ x₂ ta)) wf
-    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STAIdSubst ts x) wf) ta = STASubst (lemma-subst-comm ub (STAIdSubst ts x) (weaken-ta-typ x₂ ta)) wf
-    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STASubst ts x) wf) ta = STASubst (lemma-typsubst-subst-comm ub (STASubst ts x) (weaken-ta-typ x₂ ta)) wf
-    
-    lemma-subst-comm : ∀{Δ Θ Θ' Γ Γ' τ d y θ σ} →
-      tbinders-disjoint-θ-σ θ (Subst d y σ) →
-      Δ , Θ , (Γ ,, (y , τ))  ⊢ θ , σ :s: Θ' , Γ' →
-      Δ , Θ , Γ ⊢ d :: τ →
-      Δ , Θ , Γ ⊢ θ , Subst d y σ :s: Θ' , Γ'
-    lemma-subst-comm {Δ} {Θ} {.Θ₁} {Γ} {Γ'} {τ} {d} {y} {TypId Θ₁} {.(Id Γ')} bd (STAIdId x x₁) ta = STAIdSubst (STAIdId x x₁) ta
-    lemma-subst-comm {Δ} {Θ} {.Θ₁} {Γ} {Γ'} {τ} {d} {y} {TypId Θ₁} {.(Subst _ _ _)} bd (STAIdSubst ts x) ta = STAIdSubst (STAIdSubst ts x) ta
-    lemma-subst-comm {Δ} {Θ} {Θ'} {Γ} {Γ'} {τ} {d} {y} {TypSubst τ₁ t θ} {σ} (BDTθSubst (TUBσSubst x x₁) bd) ts ta = lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x x₁) bd) ts ta
 
   gamma-sub-pres : ∀{Γ Γ' f} → ((x : Nat) (τ : htyp) → (x , τ) ∈ Γ' → (x , τ) ∈ Γ) → 
     ((x : Nat) (τ : htyp) → (x , τ) ∈ map f Γ' → (x , τ) ∈ map f Γ)
@@ -132,40 +97,40 @@ module lemmas-tysubst-ta where
     lemma-tysubst-subst {Γ = Γ} wf ubd ubg tub (TUBσSubst x₁ ubs) bd (TBUσSubst x₂ bu x₃) (STAIdSubst ts x) = 
       lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst (unbound-ihexp-sub x₁ tub) (unbound-sub-sub ubs tub)) BDTθId) (rewrite-gamma-subst (lem-map-extend-dist {Γ = Γ}) 
         (lemma-tysubst-subst wf ubd (lem-ub-extend (tunbound-ta-tunboundt x₁ ubd ubg x) ubg) tub ubs BDTθId bu ts)) 
-        (lemma-tysubst wf ubd ubg x₁ x₂ x)
+        (lemma-tysubst wf tub ubd ubg x₁ x₂ x)
     lemma-tysubst-subst {Θ = Θ} {σ = σ} wf ubd ubg tub ubs (BDTθSubst x₁ bd) bu (STASubst ts x) =
       lemma-typsubst-typsubst-comm (STASubst 
         (lemma-tysubst-subst wf ubd ubg tub ubs bd bu (rewrite-theta-subst (exchange-Θ {Θ = Θ}) ts)) x) 
 
     lemma-tysubst : ∀{ Δ Γ Θ d t τ1 τ2 } -> 
-      ∅ ⊢ τ2 wf -> tunbound-in-Δ t Δ -> tunbound-in-Γ t Γ -> tunbound-in t d -> tbinders-unique d →
+      ∅ ⊢ τ2 wf -> tunboundt-in t τ2 → tunbound-in-Δ t Δ -> tunbound-in-Γ t Γ -> tunbound-in t d -> tbinders-unique d →
       Δ , (Θ ,, (t , <>)), Γ ⊢ d :: τ1 -> 
       Δ , Θ , Tctx[ τ2 / t ] Γ ⊢ (Ihexp[ τ2 / t ] d) :: Typ[ τ2 / t ] τ1
-    lemma-tysubst _ _ _ _ _ TAConst = TAConst
-    lemma-tysubst {Γ = Γ} {t = t} {τ1 = τ1} {τ2 = τ2} wf _ _ _ _ (TAVar {x = x} ing) = TAVar (lem-map-preserve-elem {Γ = Γ} ing)
-    lemma-tysubst {Γ = Γ} wf ubd ubg (TUBLam2 ub ub') (TBULam bu) (TALam x x₁ ta) = 
+    lemma-tysubst _ _ _ _ _ _ TAConst = TAConst
+    lemma-tysubst {Γ = Γ} {t = t} {τ1 = τ1} {τ2 = τ2} wf tub _ _ _ _ (TAVar {x = x} ing) = TAVar (lem-map-preserve-elem {Γ = Γ} ing)
+    lemma-tysubst {Γ = Γ} wf tub ubd ubg (TUBLam2 ub ub') (TBULam bu) (TALam x x₁ ta) = 
       TALam (lem-map-preserve-apart {Γ = Γ} x) 
       (wf-sub (wf-closed wf) x₁ refl)
-      (rewrite-gamma (lem-map-extend-dist {Γ = Γ}) (lemma-tysubst wf ubd (lem-ub-extend ub' ubg) ub bu ta))
-    lemma-tysubst {Θ = Θ} {t = t} wf ubd ubg (TUBTLam x ub) (TBUTLam bu x₁) (TATLam {t = t'} apt ta) with natEQ t t' | ctxindirect Θ t' 
-    ... | Inr neq | Inr nint = TATLam nint (lemma-tysubst wf ubd ubg ub bu (rewrite-theta (exchange-Θ {Θ = Θ}) ta))
+      (rewrite-gamma (lem-map-extend-dist {Γ = Γ}) (lemma-tysubst wf tub ubd (lem-ub-extend ub' ubg) ub bu ta))
+    lemma-tysubst {Θ = Θ} {t = t} wf tub ubd ubg (TUBTLam x ub) (TBUTLam bu x₁) (TATLam {t = t'} apt ta) with natEQ t t' | ctxindirect Θ t' 
+    ... | Inr neq | Inr nint = TATLam nint (lemma-tysubst wf tub ubd ubg ub bu (rewrite-theta (exchange-Θ {Θ = Θ}) ta))
     ... | _ | Inl (<> , int) rewrite int = abort (somenotnone apt)
     ... | Inl refl | Inr nint rewrite nint rewrite natEQrefl {t} = abort (somenotnone apt)
-    lemma-tysubst wf ubd ubg (TUBAp ub1 ub2) (TBUAp bu bu₁ x) (TAAp ta ta' alpha) = TAAp (lemma-tysubst wf ubd ubg ub1 bu ta) (lemma-tysubst wf ubd ubg ub2 bu₁ ta') {!   !}
-    lemma-tysubst {t = t} {τ2 = τ2} wf ubd ubg (TUBTAp ubt ubt') (TBUTAp bu _ _) (TATAp {t = t'} {τ1 = τ1} {τ2 = τ4} {τ3 = τ3} x ta eq) with natEQ t t'
+    lemma-tysubst wf tub ubd ubg (TUBAp ub1 ub2) (TBUAp bu bu₁ x) (TAAp ta ta' alpha) = TAAp (lemma-tysubst wf tub ubd ubg ub1 bu ta) (lemma-tysubst wf tub ubd ubg ub2 bu₁ ta') (alpha-sub wf (lemma-alpha-forall alpha))
+    lemma-tysubst {t = t} {τ2 = τ2} wf tub ubd ubg (TUBTAp ubt ubt') (TBUTAp bu _ _) (TATAp {t = t'} {τ1 = τ1} {τ2 = τ4} {τ3 = τ3} x ta eq) with natEQ t t'
     ... | Inl refl rewrite natEQrefl {t'} rewrite natEQrefl {t} rewrite ! eq = TATAp {t = t'} {τ2 = τ4} ((wf-sub (wf-closed wf) x refl))
-                     (rewrite-typ (forall-sub-eq refl) (lemma-tysubst wf ubd ubg ubt bu ta))
+                     (rewrite-typ (forall-sub-eq refl) (lemma-tysubst wf tub ubd ubg ubt bu ta))
                      (lemma-typ-typ-1 τ4 wf)
     ... | Inr neq rewrite natEQneq neq rewrite ! eq with tunbound-ta-tunboundt ubt ubd ubg ta
     ...   | UBForall _ ub4 =
        TATAp {t = t'} {τ2 = Typ[ τ2 / t ] τ4} (wf-sub (wf-closed wf) x refl)
-                    (rewrite-typ (forall-sub-neq neq) (lemma-tysubst wf ubd ubg ubt bu ta))
+                    (rewrite-typ (forall-sub-neq neq) (lemma-tysubst wf tub ubd ubg ubt bu ta))
                     (lemma-typ-typ-2 τ4 ub4 wf neq)
-    lemma-tysubst wf ubd ubg (TUBHole x₁ x₂) (TBUEHole x₃ x₄ x₅) (TAEHole x ts eq eq') rewrite eq rewrite eq' = 
-      TAEHole x (lemma-tysubst-subst wf ubd ubg {!   !} x₂ x₅ x₄ ts) refl refl
-    lemma-tysubst wf ubd ubg (TUBNEHole x₁ ubs ub) (TBUNEHole bu but bus bdts) (TANEHole x ta ts eq eq') rewrite eq rewrite eq' = TANEHole x (lemma-tysubst wf ubd ubg ub bu ta) (lemma-tysubst-subst wf ubd ubg {!   !} ubs bdts bus ts) refl refl
-    lemma-tysubst wf ubd ubg (TUBCast ub x₁ x₂) (TBUCast bu bd1 bd2) (TACast ta x x~ alpha) = TACast (lemma-tysubst wf ubd ubg ub bu ta) ((wf-sub (wf-closed wf) x refl)) (~Typ[] wf x₁ x₂ x~) {!   !}
-    lemma-tysubst wf ubd ubg (TUBFailedCast ub x₁ x₂) (TBUFailedCast bu _ _) (TAFailedCast ta tgnd tgnd' x alpha) = TAFailedCast (lemma-tysubst wf ubd ubg ub bu ta) (ground-subst tgnd) (ground-subst tgnd') (λ eq → x (foo tgnd tgnd' eq)) {!   !}
+    lemma-tysubst wf tub ubd ubg (TUBHole x₁ x₂) (TBUEHole x₃ x₄ x₅) (TAEHole x ts eq eq') rewrite eq rewrite eq' = 
+      TAEHole x (lemma-tysubst-subst wf ubd ubg tub x₂ x₅ x₄ ts) refl refl
+    lemma-tysubst wf tub ubd ubg (TUBNEHole x₁ ubs ub) (TBUNEHole bu but bus bdts) (TANEHole x ta ts eq eq') rewrite eq rewrite eq' = TANEHole x (lemma-tysubst wf tub ubd ubg ub bu ta) (lemma-tysubst-subst wf ubd ubg tub ubs bdts bus ts) refl refl
+    lemma-tysubst wf tub ubd ubg (TUBCast ub x₁ x₂) (TBUCast bu bd1 bd2) (TACast ta x x~ alpha) = TACast (lemma-tysubst wf tub ubd ubg ub bu ta) ((wf-sub (wf-closed wf) x refl)) (~Typ[] wf x₁ x₂ x~) (alpha-sub wf (lemma-alpha-forall alpha))
+    lemma-tysubst wf tub ubd ubg (TUBFailedCast ub x₁ x₂) (TBUFailedCast bu _ _) (TAFailedCast ta tgnd tgnd' x alpha) = TAFailedCast (lemma-tysubst wf tub ubd ubg ub bu ta) (ground-subst tgnd) (ground-subst tgnd') (λ eq → x (foo tgnd tgnd' eq)) (alpha-sub wf (lemma-alpha-forall alpha))
       where
         foo : ∀{t1 t2 t3 t} -> t1 ground -> t2 ground -> Typ[ t3 / t ] t1 ~ Typ[ t3 / t ] t2 -> t1 ~ t2
         foo {t1} {t2} {t3} {t} g1 g2 eq rewrite ground-subst-id {t} {t1} {t3} g1 rewrite ground-subst-id {t} {t2} {t3} g2 = eq

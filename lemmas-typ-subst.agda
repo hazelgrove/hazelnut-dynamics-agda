@@ -9,6 +9,7 @@ open import weakening
 open import lemmas-alpha
 
 open import rewrite-util
+open import exchange
 
 module lemmas-typ-subst where
 
@@ -190,9 +191,6 @@ module lemmas-typ-subst where
   alpha-sub : ∀{τ t1 τ1 t2 τ2} → ∅ ⊢ τ wf → ·∀ t1 τ1 =α ·∀ t2 τ2 → (Typ[ τ / t1 ] τ1) =α (Typ[ τ / t2 ] τ2)
   alpha-sub wf (AlphaForall alpha) = ⊢alpha-sub wf alpha
 
-  alpha-sub2 : ∀{Θ τ t1 τ1 t2 τ2} → Θ ⊢ τ wf → ·∀ t1 τ1 =α ·∀ t2 τ2 → (Typ[ τ / t1 ] τ1) =α (Typ[ τ / t2 ] τ2)
-  alpha-sub2 = ?
-
   -- Logic here is basically the same as ⊢alpha-sub
   wf-consist-refl : ∀{ΓL ΓR Θ τ} → Θ ⊢ τ wf → ((t : Nat) → (t , <>) ∈ Θ → (t , t) ∈ ΓL × (t , t) ∈ ΓR) → ΓL , ΓR ⊢ τ ~ τ
   wf-consist-refl (WFVar {a = a} x) cond = ConsistVarBound (π1 (cond a x)) (π2 (cond a x))
@@ -224,8 +222,8 @@ module lemmas-typ-subst where
   ... | Inr neq | Inr neq' = ConsistForall (⊢consist-sub ub1 ub2 wf 
     (consist-rewrite-gamma (ctx-lextend-exchange ΓL ne1) (ctx-lextend-exchange ΓR ne2) consis))
   
-  consist-sub : ∀{τ t1 τ1 t2 τ2} → ∅ ⊢ τ wf → tunboundt-in t1 τ1 → tunboundt-in t2 τ2 → ·∀ t1 τ1 ~ ·∀ t2 τ2 → (Typ[ τ / t1 ] τ1) ~ (Typ[ τ / t2 ] τ2)
-  consist-sub wf ub1 ub2 (ConsistForall consis) = ⊢consist-sub ub1 ub2 wf consis
+  consist-sub : ∀{τ t1 τ1 t2 τ2} → ∅ ⊢ τ wf → ·∀ t1 τ1 ~ ·∀ t2 τ2 → (Typ[ τ / t1 ] τ1) ~ (Typ[ τ / t2 ] τ2)
+  consist-sub wf (ConsistForall consis) = ⊢consist-sub {!   !} {!   !} wf consis
 
   lem-sub-ub : ∀{t t' τ τ''} → (τ' : htyp) → tunboundt-in t τ' → tunboundt-in t τ'' → Typ[ τ'' / t' ] τ' == τ → tunboundt-in t τ
   lem-sub-ub b ub1 ub2 eq rewrite ! eq = ub1
@@ -267,4 +265,32 @@ module lemmas-typ-subst where
     lem-sub-sub-ub τ' ubt' ubt (! x₂)
   tunbound-ta-tunboundt (TUBCast ub ubt1 ubt2) ubd ubg (TACast ta x x₁ alpha) = ubt2
   tunbound-ta-tunboundt (TUBFailedCast ub ubt1 ubt2) ubd ubg (TAFailedCast ta x x₁ x₂ _) = ubt2
+ 
+
+  lemma-typsubst-typsubst-comm : ∀{t1 t2 τ1 τ2 Δ Θ Θ' Γ Γ' θ σ} → Δ , Θ , Γ ⊢ TypSubst τ1 t1 (TypSubst τ2 t2 θ) , σ :s: Θ' , Γ'
+    → Δ , Θ , Γ ⊢ TypSubst τ2 t2 (TypSubst τ1 t1 θ) , σ :s: Θ' , Γ'
+  lemma-typsubst-typsubst-comm {Θ = Θ} (STASubst (STASubst ts x₁) x) = STASubst (STASubst (rewrite-theta-subst (exchange-Θ {Θ = Θ}) ts) x) x₁
+
+  mutual
+    lemma-typsubst-subst-comm : ∀{Δ Θ Θ' Γ Γ' t τ τ' d y θ σ} →
+      tbinders-disjoint-θ-σ (TypSubst τ' t θ) (Subst d y σ) →
+      Δ , Θ , (Γ ,, (y , τ))  ⊢ TypSubst τ' t θ , σ :s: Θ' , Γ' →
+      Δ , Θ , Γ ⊢ d :: τ →
+      Δ , Θ , Γ ⊢ TypSubst τ' t θ , Subst d y σ :s: Θ' , Γ'
+    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STAIdId x x₁) wf) ta = STASubst (STAIdSubst (STAIdId x x₁) (weaken-ta-typ x₂ ta)) wf
+    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STAIdSubst ts x) wf) ta = STASubst (lemma-subst-comm ub (STAIdSubst ts x) (weaken-ta-typ x₂ ta)) wf
+    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STASubst ts x) wf) ta = STASubst (lemma-typsubst-subst-comm ub (STASubst ts x) (weaken-ta-typ x₂ ta)) wf
+    
+    lemma-subst-comm : ∀{Δ Θ Θ' Γ Γ' τ d y θ σ} →
+      tbinders-disjoint-θ-σ θ (Subst d y σ) →
+      Δ , Θ , (Γ ,, (y , τ))  ⊢ θ , σ :s: Θ' , Γ' →
+      Δ , Θ , Γ ⊢ d :: τ →
+      Δ , Θ , Γ ⊢ θ , Subst d y σ :s: Θ' , Γ'
+    lemma-subst-comm {Δ} {Θ} {.Θ₁} {Γ} {Γ'} {τ} {d} {y} {θ = TypId Θ₁} {σ = .(Id Γ')} bd (STAIdId x x₁) ta = STAIdSubst (STAIdId x x₁) ta
+    lemma-subst-comm {Δ} {Θ} {.Θ₁} {Γ} {Γ'} {τ} {d} {y} {θ = TypId Θ₁} {.(Subst _ _ _)} bd (STAIdSubst ts x) ta = STAIdSubst (STAIdSubst ts x) ta
+    lemma-subst-comm {Δ} {Θ} {Θ'} {Γ} {Γ'} {τ} {d} {y} {θ = TypSubst τ₁ t θ} {σ} (BDTθSubst (TUBσSubst x x₁) bd) ts ta = lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x x₁) bd) ts ta
+
+  lemma-tbdθσ-comm : ∀{θ σ d y} → tbinders-disjoint-θ-σ θ σ → tbinders-disjoint-θ θ d → tbinders-disjoint-θ-σ θ (Subst d y σ)
+  lemma-tbdθσ-comm {TypId Θ} tdts tdt = BDTθId
+  lemma-tbdθσ-comm {TypSubst τ t θ} (BDTθSubst x tdts) (BDTθSubst x₁ x₂ tdt) = BDTθSubst (TUBσSubst x₂ x) (lemma-tbdθσ-comm tdts tdt)
  
