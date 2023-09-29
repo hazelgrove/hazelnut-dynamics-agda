@@ -112,7 +112,7 @@ module lemmas-consistency where
   wf⊢~refl WFBase cond = ConsistBase
   wf⊢~refl WFHole cond = ConsistHole1
   wf⊢~refl (WFArr wf wf₁) cond = ConsistArr (wf⊢~refl wf cond) (wf⊢~refl wf₁ cond)
-  wf⊢~refl {ΓL} {ΓR} {Θ} {τ} (WFForall {n = n} wf) cond = ConsistForall (wf⊢~refl wf foo)
+  wf⊢~refl {ΓL} {ΓR} {Θ} {τ} (WFForall {n = n} apt wf) cond = ConsistForall (wf⊢~refl wf foo)
     where
       foo : (t : Nat) -> (t , <>) ∈ (Θ ,, (n , <>)) -> ((t , t) ∈ ((■ (n , n)) ∪ ΓL)) × ((t , t) ∈ ((■ (n , n)) ∪ ΓR))
       foo t mem with natEQ n t

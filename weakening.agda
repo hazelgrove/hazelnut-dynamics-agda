@@ -1,3 +1,4 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 open import Nat
 open import Prelude
 open import core
@@ -5,16 +6,17 @@ open import contexts
 open import lemmas-disjointness
 open import exchange
 open import rewrite-util
+open import lemmas-alpha
 
 -- this module contains all the proofs of different weakening structural
 -- properties that we use for the hypothetical judgements
 module weakening where
-  weaken-t-wf : ∀ {Θ x τ} → Θ ⊢ τ wf → (Θ ,, (x , <>)) ⊢ τ wf
-  weaken-t-wf {Θ} (WFVar x) = WFVar (x∈∪l Θ _ _ <> x)
-  weaken-t-wf WFBase = WFBase
-  weaken-t-wf WFHole = WFHole
-  weaken-t-wf (WFArr wf wf₁) = WFArr (weaken-t-wf wf) (weaken-t-wf wf₁)
-  weaken-t-wf {Θ} (WFForall wf) = WFForall (exchange-wf {Θ = Θ} (weaken-t-wf wf))
+  weaken-t-wf : ∀ {Θ x τ} → tunboundt-in x τ → Θ ⊢ τ wf → (Θ ,, (x , <>)) ⊢ τ wf
+  weaken-t-wf {Θ} _ (WFVar x) = WFVar (x∈∪l Θ _ _ <> x)
+  weaken-t-wf _ WFBase = WFBase
+  weaken-t-wf _ WFHole = WFHole
+  weaken-t-wf (UBArr ub ub₁) (WFArr wf wf₁) = WFArr (weaken-t-wf ub wf) (weaken-t-wf ub₁ wf₁)
+  weaken-t-wf {Θ} (UBForall x ub) (WFForall apt wf) = WFForall (lem-apart-extend {Γ = Θ} apt (flip x)) (exchange-wf {Θ = Θ} (weaken-t-wf ub wf))
 
   lem-subctx-extend : (Γ Γ' : ⊤ ctx) (x : Nat) → ((x' : Nat) → (x' , <>) ∈ Γ → (x' , <>) ∈ Γ') →
     ((x' : Nat) → (x' , <>) ∈ (Γ ,, (x , <>)) → (x' , <>) ∈ (Γ' ,, (x , <>)))
@@ -25,21 +27,21 @@ module weakening where
   ...   | Inl refl with Γ' x'
   ...     | Some <> = refl
   ...     | None rewrite natEQrefl {x'} = refl
-  
+  {-
   weaken-t-wf' : ∀{τ Θ Θ'} → ((t : Nat) → (t , <>) ∈ Θ → (t , <>) ∈ Θ') → Θ ⊢ τ wf → Θ' ⊢ τ wf
   weaken-t-wf' cond (WFVar {a = a} x) = WFVar (cond a x)
   weaken-t-wf' cond WFBase = WFBase
   weaken-t-wf' cond WFHole = WFHole
   weaken-t-wf' cond (WFArr wf wf₁) = WFArr (weaken-t-wf' cond wf) (weaken-t-wf' cond wf₁)
-  weaken-t-wf' {Θ = Θ} {Θ' = Θ'} cond (WFForall {n = n} wf) = WFForall (weaken-t-wf' (lem-subctx-extend Θ Θ' n cond) wf)
-  
+  weaken-t-wf' {Θ = Θ} {Θ' = Θ'} cond (WFForall {n = n} apt wf) = WFForall {!   !} (weaken-t-wf' (lem-subctx-extend Θ Θ' n cond) wf)
+  -}
   {-with natEQ x y
   ... | Inl refl = WFForall (abort (ne refl)) 
   ... | Inr neq = WFForall (exchange-wf {y} {x} {t} {Θ} (flip neq) {! wf  !})
   -}
 
   weaken-tctx-wf : ∀ {Θ Γ x} → Θ ⊢ Γ tctxwf → (Θ ,, (x , <>)) ⊢ Γ tctxwf
-  weaken-tctx-wf (CCtx x) = CCtx (λ x₁ → weaken-t-wf (x x₁))
+  weaken-tctx-wf (CCtx x) = CCtx (λ x₁ → weaken-t-wf {!   !} (x x₁))
 
 {-
   weaken-hctx-wf : ∀ {Θ Δ x} → Θ ⊢ Δ hctxwf → (Θ ,, (x , <>)) ⊢ Δ hctxwf
@@ -54,7 +56,7 @@ module weakening where
                                      → Δ1 , Θ , Γ ⊢ θ , σ :s: Θ' , Γ'
                                      → (Δ1 ∪ Δ2) , Θ , Γ ⊢ θ , σ :s: Θ' , Γ'
     weaken-subst-Δ disj (STAIdId x₁ x₂) = STAIdId x₁ x₂
-    weaken-subst-Δ disj (STAIdSubst subst x) = STAIdSubst (weaken-subst-Δ disj subst) (weaken-ta-Δ1 disj x)
+    weaken-subst-Δ disj (STAIdSubst subst x alpha) = STAIdSubst (weaken-subst-Δ disj subst) (weaken-ta-Δ1 disj x) alpha
     weaken-subst-Δ disj (STASubst subst x) = STASubst (weaken-subst-Δ disj subst) x
 
     weaken-ta-Δ1 : ∀{Δ1 Δ2 Γ d τ Θ} → Δ1 ## Δ2
@@ -116,12 +118,13 @@ module weakening where
                      Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' →
                      Δ , Θ , (Γ ,, (x , τ)) ⊢ θ , σ :s: Θ' , Γ'
     weaken-subst-Γ {Γ = Γ} (EFId x₁) (STAIdId x₂ prem) = STAIdId (λ x τ x₃ → x∈∪l Γ _ x τ (x₂ x τ x₃) ) prem
-    weaken-subst-Γ {x = x} {Γ = Γ} (EFSubst x₁ efrsh x₂) (STAIdSubst {y = y} {τ = τ'} subst x₃) =
-      STAIdSubst (exchange-subst-Γ {Γ = Γ} (flip x₂) (weaken-subst-Γ {Γ = Γ ,, (y , τ')} efrsh subst))
-               (weaken-ta x₁ x₃)
+    weaken-subst-Γ {x = x} {Γ = Γ} (EFSubst x₁ efrsh x₂) (STAIdSubst {y = y} {τ = τ'} subst x₃ alpha) =
+      STAIdSubst (exchange-subst-Γ {Γ = Γ} (flip x₂) (weaken-subst-Γ {Γ = Γ ,, (y , τ')} efrsh {!   !}))
+               (weaken-ta x₁ x₃) (alpha-refl τ')
     weaken-subst-Γ (EFId x) (STASubst x₁ x₂) = STASubst (weaken-subst-Γ (EFId x) x₁) x₂
     weaken-subst-Γ {x = x} {Γ = Γ} (EFSubst x₁ efrsh x₂) (STASubst {y = y} {τ = τ'} subst x₃) =
       STASubst (weaken-subst-Γ ((EFSubst x₁ efrsh x₂)) subst) x₃ 
+    
 
     weaken-ta : ∀{x Γ Δ d τ τ' Θ} →
                 fresh x d →
@@ -146,8 +149,8 @@ module weakening where
                      tunbound-in-σ t σ →
                      Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' →
                      Δ , (Θ ,, (t , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ'
-    weaken-subst-Θ ub ubs (STAIdId x p) = STAIdId x λ τ x₁ → weaken-t-wf (p τ x₁)
-    weaken-subst-Θ UBθId (TUBσSubst x₂ ubs) (STAIdSubst x x₁) = STAIdSubst (weaken-subst-Θ UBθId ubs x) (weaken-ta-typ x₂ x₁)
+    weaken-subst-Θ UBθId ubs (STAIdId x p) = STAIdId x λ τ x₁ → weaken-t-wf {!   !} (p τ x₁)
+    weaken-subst-Θ UBθId (TUBσSubst x₂ ubs) (STAIdSubst x x₁ alpha) = STAIdSubst (weaken-subst-Θ UBθId ubs x) (weaken-ta-typ x₂ x₁) alpha
     weaken-subst-Θ {Θ = Θ} (UBθSubst x₂ ub) ubs (STASubst x x₁) = STASubst (rewrite-theta-subst (exchange-Θ {Θ = Θ}) (weaken-subst-Θ ub ubs x)) x₁
 
     weaken-ta-typ : ∀{Γ Δ Θ d t τ} →
@@ -156,12 +159,12 @@ module weakening where
                   Δ , (Θ ,, (t , <>)) , Γ ⊢ d :: τ
     weaken-ta-typ ub TAConst = TAConst
     weaken-ta-typ ub (TAVar x) = TAVar x
-    weaken-ta-typ (TUBLam2 ub x₂) (TALam x x₁ ta) = TALam x (weaken-t-wf x₁) (weaken-ta-typ ub ta)
+    weaken-ta-typ (TUBLam2 ub x₂) (TALam x x₁ ta) = TALam x (weaken-t-wf x₂ x₁) (weaken-ta-typ ub ta)
     weaken-ta-typ {Θ = Θ} (TUBTLam x₁ ub) (TATLam x ta) = TATLam (lem-apart-extend {Γ = Θ} x (flip x₁)) (rewrite-theta (exchange-Θ {Θ = Θ}) (weaken-ta-typ ub ta))
     weaken-ta-typ (TUBAp ub ub₁) (TAAp ta ta₁ alpha) = TAAp (weaken-ta-typ ub ta) (weaken-ta-typ ub₁ ta₁) alpha
-    weaken-ta-typ (TUBTAp ub x₂) (TATAp x ta x₁) = TATAp (weaken-t-wf x) (weaken-ta-typ ub ta) x₁
+    weaken-ta-typ (TUBTAp ub x₂) (TATAp x ta x₁) = TATAp (weaken-t-wf x₂ x) (weaken-ta-typ ub ta) x₁
     weaken-ta-typ (TUBHole x₄ x₅) (TAEHole x x₁ x₂ x₃) = TAEHole x (weaken-subst-Θ x₄ x₅ x₁) x₂ x₃
     weaken-ta-typ (TUBNEHole x₄ x₅ ub) (TANEHole x ta x₁ x₂ x₃) = TANEHole x (weaken-ta-typ ub ta) (weaken-subst-Θ x₄ x₅ x₁) x₂ x₃
-    weaken-ta-typ (TUBCast ub x₂ x₃) (TACast ta x x₁ alpha) = TACast (weaken-ta-typ ub ta) (weaken-t-wf x) x₁ alpha
+    weaken-ta-typ (TUBCast ub x₂ x₃) (TACast ta x x₁ alpha) = TACast (weaken-ta-typ ub ta) (weaken-t-wf x₃ x) x₁ alpha
     weaken-ta-typ (TUBFailedCast ub x₃ x₄) (TAFailedCast ta x x₁ x₂ alpha) = TAFailedCast (weaken-ta-typ ub ta) x x₁ x₂ alpha
  

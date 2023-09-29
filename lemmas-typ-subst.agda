@@ -42,7 +42,7 @@ module lemmas-typ-subst where
   ... | Inl refl = abort (somenotnone ((! mem) · apt))
   ... | Inr neq = refl
   t-sub-unit apt (WFArr wf1 wf2) = arr-eq (t-sub-unit apt wf1) (t-sub-unit apt wf2)
-  t-sub-unit {t = t} {Θ = Θ} apt (WFForall {n = t'} wf) with natEQ t t'
+  t-sub-unit {t = t} {Θ = Θ} apt (WFForall {n = t'} apt' wf) with natEQ t t'
   ... | Inl refl = refl
   ... | Inr neq = forall-eq refl (t-sub-unit (lem-apart-extend {Γ = Θ} apt neq) wf)
 
@@ -61,16 +61,16 @@ module lemmas-typ-subst where
       ... | Inr nig1 | Inl (y2 , ing2) rewrite nig1 rewrite ing2 = abort (somenotnone nig1)
 
   t-sub-wf : ∀{Θ τ τ' t} →
-    Θ ⊢ τ wf → Θ ⊢ τ' wf → Θ ⊢ (Typ[ τ' / t ] τ) wf
-  t-sub-wf {t = t} (WFVar {a = a} x) wf' with natEQ t a
+    tbinderstt-disjoint τ τ' → Θ ⊢ τ wf → Θ ⊢ τ' wf → Θ ⊢ (Typ[ τ' / t ] τ) wf
+  t-sub-wf {t = t} bd (WFVar {a = a} x) wf' with natEQ t a
   ... | Inl refl = wf'
   ... | Inr neq = WFVar x
-  t-sub-wf WFBase wf' = WFBase
-  t-sub-wf WFHole wf' = WFHole
-  t-sub-wf (WFArr wf wf₁) wf' = WFArr (t-sub-wf wf wf') (t-sub-wf wf₁ wf')
-  t-sub-wf {t = t} (WFForall {n = n} wf) wf' with natEQ t n
-  ... | Inl refl = WFForall wf
-  ... | Inr neq = WFForall (t-sub-wf wf (weaken-t-wf wf'))
+  t-sub-wf bd WFBase wf' = WFBase
+  t-sub-wf bd WFHole wf' = WFHole
+  t-sub-wf (BDTArr bd bd₁) (WFArr wf wf₁) wf' = WFArr (t-sub-wf bd wf wf') (t-sub-wf bd₁ wf₁ wf')
+  t-sub-wf {t = t} (BDTForall bd x) (WFForall {n = n} apt wf) wf' with natEQ t n
+  ... | Inl refl = WFForall apt wf
+  ... | Inr neq = WFForall apt (t-sub-wf bd wf  (weaken-t-wf x wf'))
 
   tctx-sub-wf : ∀{Θ Γ τ t} →
     Θ ⊢ Γ tctxwf → Θ ⊢ τ wf → Θ ⊢ (Tctx[ τ / t ] Γ) tctxwf
@@ -79,7 +79,7 @@ module lemmas-typ-subst where
       foo : (x : Nat) → (y : htyp) → (x , y) ∈ (Tctx[ τ / t ] Γ) → Θ ⊢ y wf
       foo x y mem with ctxindirect Γ x
       ... | Inr nil rewrite nil = abort (somenotnone (! mem))
-      ... | Inl (y' , inl) rewrite inl rewrite ! (someinj mem) = t-sub-wf (tcwf inl) wf
+      ... | Inl (y' , inl) rewrite inl rewrite ! (someinj mem) = t-sub-wf {!   !} (tcwf inl) wf
 
   t-sub-comm :  ∀{τ' τ'' t' t''} → (τ : htyp) →
     ∅ ⊢ τ' wf → ∅ ⊢ τ'' wf → t' ≠ t'' → Typ[ τ'' / t'' ] (Typ[ τ' / t' ] τ) == Typ[ τ' / t' ] (Typ[ τ'' / t'' ] τ)
@@ -121,7 +121,7 @@ module lemmas-typ-subst where
   wf-alpha-refl WFBase cond = AlphaBase
   wf-alpha-refl WFHole cond = AlphaHole
   wf-alpha-refl (WFArr wf wf₁) cond = AlphaArr (wf-alpha-refl wf cond) (wf-alpha-refl wf₁ cond)
-  wf-alpha-refl {ΓL} {ΓR} {Θ = Θ} (WFForall {n = n} wf) cond = AlphaForall (wf-alpha-refl wf (λ t₁ x → lem-extend-refl t₁ ΓL (λ t z → π1 (cond t z)) x , lem-extend-refl t₁ ΓR (λ t z → π2 (cond t z)) x))
+  wf-alpha-refl {ΓL} {ΓR} {Θ = Θ} (WFForall {n = n} apt wf) cond = AlphaForall (wf-alpha-refl wf (λ t₁ x → lem-extend-refl t₁ ΓL (λ t z → π1 (cond t z)) x , lem-extend-refl t₁ ΓR (λ t z → π2 (cond t z)) x))
 
   closed-alpha-refl : ∀{ΓL ΓR τ} → ∅ ⊢ τ wf → ΓL , ΓR ⊢ τ =α τ
   closed-alpha-refl wf = wf-alpha-refl wf λ t x → abort (somenotnone (! x))
@@ -191,13 +191,25 @@ module lemmas-typ-subst where
   alpha-sub : ∀{τ t1 τ1 t2 τ2} → ∅ ⊢ τ wf → ·∀ t1 τ1 =α ·∀ t2 τ2 → (Typ[ τ / t1 ] τ1) =α (Typ[ τ / t2 ] τ2)
   alpha-sub wf (AlphaForall alpha) = ⊢alpha-sub wf alpha
 
+{-  alpha-sub2 : ∀{τ t1 τ1 t2 τ2} → Θ ⊢ τ wf → Θ ⊢ (·∀ t1 τ1) wf → Θ ⊢ (·∀ t2 τ2) wf →
+    ·∀ t1 τ1 =α ·∀ t2 τ2 → (Typ[ τ / t1 ] τ1) =α (Typ[ τ / t2 ] τ2)
+  alpha-sub2 wf wfl wfr (AlphaForall alpha) = ?
+-}
+-- Θ = (A, C)
+-- [A / C](forall A -> C)
+-- [A / C](forall B -> C)
+
+-- forall A -> forall A -> A
+-- A
+
+
   -- Logic here is basically the same as ⊢alpha-sub
   wf-consist-refl : ∀{ΓL ΓR Θ τ} → Θ ⊢ τ wf → ((t : Nat) → (t , <>) ∈ Θ → (t , t) ∈ ΓL × (t , t) ∈ ΓR) → ΓL , ΓR ⊢ τ ~ τ
   wf-consist-refl (WFVar {a = a} x) cond = ConsistVarBound (π1 (cond a x)) (π2 (cond a x))
   wf-consist-refl WFBase cond = ConsistBase
   wf-consist-refl WFHole cond = ConsistHole1
   wf-consist-refl (WFArr wf wf₁) cond = ConsistArr (wf-consist-refl wf cond) (wf-consist-refl wf₁ cond)
-  wf-consist-refl {ΓL} {ΓR} {Θ = Θ} (WFForall {n = n} wf) cond = ConsistForall (wf-consist-refl wf (λ t₁ x → lem-extend-refl t₁ ΓL (λ t z → π1 (cond t z)) x , lem-extend-refl t₁ ΓR (λ t z → π2 (cond t z)) x))
+  wf-consist-refl {ΓL} {ΓR} {Θ = Θ} (WFForall {n = n} apt wf) cond = ConsistForall (wf-consist-refl wf (λ t₁ x → lem-extend-refl t₁ ΓL (λ t z → π1 (cond t z)) x , lem-extend-refl t₁ ΓR (λ t z → π2 (cond t z)) x))
 
   closed-consist-refl : ∀{ΓL ΓR τ} → ∅ ⊢ τ wf → ΓL , ΓR ⊢ τ ~ τ
   closed-consist-refl wf = wf-consist-refl wf λ t x → abort (somenotnone (! x))
@@ -277,8 +289,8 @@ module lemmas-typ-subst where
       Δ , Θ , (Γ ,, (y , τ))  ⊢ TypSubst τ' t θ , σ :s: Θ' , Γ' →
       Δ , Θ , Γ ⊢ d :: τ →
       Δ , Θ , Γ ⊢ TypSubst τ' t θ , Subst d y σ :s: Θ' , Γ'
-    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STAIdId x x₁) wf) ta = STASubst (STAIdSubst (STAIdId x x₁) (weaken-ta-typ x₂ ta)) wf
-    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STAIdSubst ts x) wf) ta = STASubst (lemma-subst-comm ub (STAIdSubst ts x) (weaken-ta-typ x₂ ta)) wf
+    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STAIdId x x₁) wf) ta = STASubst (STAIdSubst (STAIdId x x₁) (weaken-ta-typ x₂ ta) {!   !}) wf
+    lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STAIdSubst ts x alpha) wf) ta = STASubst (lemma-subst-comm ub (STAIdSubst ts x {!   !}) (weaken-ta-typ x₂ ta)) wf
     lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x₂ x₃) ub) (STASubst (STASubst ts x) wf) ta = STASubst (lemma-typsubst-subst-comm ub (STASubst ts x) (weaken-ta-typ x₂ ta)) wf
     
     lemma-subst-comm : ∀{Δ Θ Θ' Γ Γ' τ d y θ σ} →
@@ -286,8 +298,8 @@ module lemmas-typ-subst where
       Δ , Θ , (Γ ,, (y , τ))  ⊢ θ , σ :s: Θ' , Γ' →
       Δ , Θ , Γ ⊢ d :: τ →
       Δ , Θ , Γ ⊢ θ , Subst d y σ :s: Θ' , Γ'
-    lemma-subst-comm {Δ} {Θ} {.Θ₁} {Γ} {Γ'} {τ} {d} {y} {θ = TypId Θ₁} {σ = .(Id Γ')} bd (STAIdId x x₁) ta = STAIdSubst (STAIdId x x₁) ta
-    lemma-subst-comm {Δ} {Θ} {.Θ₁} {Γ} {Γ'} {τ} {d} {y} {θ = TypId Θ₁} {.(Subst _ _ _)} bd (STAIdSubst ts x) ta = STAIdSubst (STAIdSubst ts x) ta
+    lemma-subst-comm {Δ} {Θ} {.Θ₁} {Γ} {Γ'} {τ} {d} {y} {θ = TypId Θ₁} {σ = .(Id Γ')} bd (STAIdId x x₁) ta = STAIdSubst (STAIdId x x₁) ta {!   !}
+    lemma-subst-comm {Δ} {Θ} {.Θ₁} {Γ} {Γ'} {τ} {d} {y} {θ = TypId Θ₁} {.(Subst _ _ _)} bd (STAIdSubst ts x alpha) ta = STAIdSubst (STAIdSubst ts x {!   !}) ta {!   !}
     lemma-subst-comm {Δ} {Θ} {Θ'} {Γ} {Γ'} {τ} {d} {y} {θ = TypSubst τ₁ t θ} {σ} (BDTθSubst (TUBσSubst x x₁) bd) ts ta = lemma-typsubst-subst-comm (BDTθSubst (TUBσSubst x x₁) bd) ts ta
 
   lemma-tbdθσ-comm : ∀{θ σ d y} → tbinders-disjoint-θ-σ θ σ → tbinders-disjoint-θ θ d → tbinders-disjoint-θ-σ θ (Subst d y σ)

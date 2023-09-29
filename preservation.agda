@@ -88,16 +88,16 @@ module preservation where
   preserve-trans _ _ _ _ _ _ (TATLam apt ta) ()
   preserve-trans {τ = τ} _ _ _ _ tcwf hcwf (TAAp (TACast ta (WFArr wf1 wf2) (ConsistArr x x₁) (AlphaArr a1 a2)) ta₁ alpha') ITApCast with wf-ta tcwf hcwf ta
   ... | WFArr wf1' wf2' = alpha-refl-ta (TACast (TAAp ta (TACast ta₁ (alpha-closed wf1' (alpha-sym a1)) (~sym x) alpha') (alpha-sym a1)) wf2 x₁ a2)
-  preserve-trans {Γ = Γ} {d = ·Λ t d < τ >} {τ = τf} _ (TBUTAp (TBUTLam tbu x₁) _ (TBDTTLam tbd x₂)) (TBDΔTAp (TBDΔTLam tbdd x₆) x₅) (TBDΓTAp (TBDΓTLam tbdg x₄) x₃) tcwf hcwf (TATAp wf (TATLam apt x) eq) ITTLam = alpha-refl-ta (rewrite-typ eq (rewrite-gamma (tctx-sub-closed {Γ} {t} {τ} tcwf)
+  preserve-trans {Γ = Γ} {d = ·Λ t d < τ >} {τ = τf} _ (TBUTAp (TBUTLam tbu x₁) tbu' (TBDTTLam tbd x₂)) (TBDΔTAp (TBDΔTLam tbdd x₆) x₅) (TBDΓTAp (TBDΓTLam tbdg x₄) x₃) tcwf hcwf (TATAp wf (TATLam apt x) eq) ITTLam = alpha-refl-ta (rewrite-typ eq (rewrite-gamma (tctx-sub-closed {Γ} {t} {τ} tcwf)
     (lemma-tysubst wf x₂ x₆ x₄ x₁ tbu x)))
-  preserve-trans _ (TBUTAp (TBUCast tbu tbd1 tbd2) x₁ (TBDTCast x₂ (BDTForall x₃ x₇) (BDTForall x₄ x₆))) _ _ _ _ (TATAp wf (TACast {τ1' = ·∀ x₅ τ1'} ta (WFForall wf2) x alpha) eq) ITTApCast rewrite ! eq
-    = alpha-refl-ta (TACast (TATAp wf ta refl) (wf-sub wf wf2 refl) (consist-sub wf x) (alpha-sub wf alpha))
+  preserve-trans _ (TBUTAp (TBUCast tbu tbd1 tbd2) x₁ (TBDTCast x₂ (BDTForall x₃ x₇) (BDTForall x₄ x₆))) _ _ _ _ (TATAp wf (TACast {τ1' = ·∀ x₅ τ1'} ta (WFForall apt wf2) x alpha) eq) ITTApCast rewrite ! eq
+    = alpha-refl-ta (TACast (TATAp wf ta refl) (wf-sub (BDTForall x₄ x₆) wf wf2 refl) (consist-sub wf x) (alpha-sub wf alpha))
   preserve-trans {τ = τ} _ _ _ _ _ _ (TACast {τ1' = τ1'} ta wf x alpha) (ITCastID {τ1 = τ1} alphaeq) = τ1' , (alpha-trans (alpha-sym alpha) alphaeq) , ta
   preserve-trans {τ = τ} _ _ _ _ _ _ (TACast (TACast {τ1' = τ1'} ta _ x alpha) _ x₁ alpha2) (ITCastSucceed {τ1 = τ1} g1 g2 alpha3) = τ1' , (alpha-trans (alpha-sym alpha) alpha3) , ta
   preserve-trans _ _ _ _ _ _ (TACast ta wf x alpha) (ITGround (MGArr x₁)) = alpha-refl-ta (TACast (TACast ta (WFArr wf wf) (ConsistArr ConsistHole1 ConsistHole1) alpha) wf ConsistHole1 (AlphaArr AlphaHole AlphaHole)) -- alpha-refl-ta (TACast (TACast ta (WFArr wf wf) (ConsistArr ConsistHole1 ConsistHole1) ) wf ConsistHole1)
-  preserve-trans _ _ _ _ _ _ (TACast ta wf x alpha) (ITGround (MGForall x₁)) = alpha-refl-ta (TACast (TACast ta (WFForall WFHole) (ConsistForall ConsistHole1) alpha) wf ConsistHole1 (AlphaForall AlphaHole))
+  preserve-trans _ _ _ _ _ _ (TACast ta wf x alpha) (ITGround (MGForall x₁)) = alpha-refl-ta (TACast (TACast ta (WFForall refl WFHole) (ConsistForall ConsistHole1) alpha) wf ConsistHole1 (AlphaForall AlphaHole))
   preserve-trans _ _ _ _ _ _ (TACast ta wf TCHole2 alpha) (ITExpand (MGArr x₁)) = alpha-refl-ta (TACast (TACast ta (WFArr WFHole WFHole) ConsistHole2 alpha) wf (ConsistArr ConsistHole2 ConsistHole2) (AlphaArr AlphaHole AlphaHole))
-  preserve-trans _ _ _ _ _ _ (TACast ta wf TCHole2 alpha) (ITExpand (MGForall x₁)) = alpha-refl-ta (TACast (TACast ta (WFForall WFHole) ConsistHole2 alpha) wf (ConsistForall ConsistHole2) (AlphaForall AlphaHole))
+  preserve-trans _ _ _ _ _ _ (TACast ta wf TCHole2 alpha) (ITExpand (MGForall x₁)) = alpha-refl-ta (TACast (TACast ta (WFForall refl WFHole) ConsistHole2 alpha) wf (ConsistForall ConsistHole2) (AlphaForall AlphaHole))
   preserve-trans _ _ _ _ _ _ (TACast (TACast ta _ x alpha) _ x₁ alpha2) (ITCastFail w y z) = alpha-refl-ta (TAFailedCast ta w y z alpha)
   preserve-trans _ _ _ _ _ _ (TAFailedCast x y z q _) ()
 

@@ -19,7 +19,7 @@ module lemmas-subst-ta where
     binders-envfresh {Γ' = Γ'} {y = y} (STAIdId x _) apt unbound unique with ctxindirect Γ' y
     binders-envfresh {Γ' = Γ'} {y = y} (STAIdId x₁ _) apt unbound unique | Inl x = abort (somenotnone (! (x₁ y (π1 x) (π2 x)) · apt))
     binders-envfresh (STAIdId x₁ _) apt unbound unique | Inr x = EFId x
-    binders-envfresh {Γ = Γ} {y = y} (STAIdSubst  {y = z} subst x₁) apt (UBσSubst x₂ unbound neq) (BUσSubst zz x₃ x₄) =
+    binders-envfresh {Γ = Γ} {y = y} (STAIdSubst  {y = z} subst x₁ alpha) apt (UBσSubst x₂ unbound neq) (BUσSubst zz x₃ x₄) =
                                                                                     EFSubst (binders-fresh {y = y} x₁ zz x₂ apt)
                                                                                             (binders-envfresh subst (apart-extend1 Γ neq apt) unbound x₃)
                                                                                             neq
@@ -66,7 +66,7 @@ module lemmas-subst-ta where
   lem-subst {Δ = Δ} {Γ = Γ} {x = x} {d2 = d2} x#Γ (BDLam bd bd') bu2 (TBDLam tbd) (TBULam tbu) (TALam {x = y} {τ1 = τ1} {d = d} {τ2 = τ2} x₂ wf wt1) wt2 alpha
     with lem-union-none {Γ = Γ} x₂
   ... |  x≠y , y#Γ with natEQ y x
-  ... | Inl eq = abort (x≠y (! eq))
+  ... | Inl eq = abort (x≠y (! eq)) 
   ... | Inr _ with lem-subst {Δ = Δ} {Γ = Γ ,, (y , τ1)} {x = x} {d1 = d} (apart-extend1 Γ x≠y x#Γ) bd bu2 tbd tbu (exchange-ta-Γ {Γ = Γ} x≠y wt1)
                                          (weaken-ta (binders-fresh wt2 bu2 bd' y#Γ) wt2) alpha
   ...   | τ' , alpha' , ta = τ1 ==> τ' , AlphaArr (alpha-refl τ1) alpha' , TALam y#Γ wf ta
