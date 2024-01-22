@@ -27,11 +27,11 @@ module canonical-value-forms where
                                  (Δ , ∅ , ■ (x , τ1) ⊢ d' :: τ2))
   canonical-value-forms-arr (TAVar x₁) ()
   canonical-value-forms-arr (TALam _ _ wt) VLam = _ , _ , refl , wt
-  canonical-value-forms-arr (TAAp wt wt₁) ()
+  canonical-value-forms-arr (TAAp wt wt₁ _) ()
   canonical-value-forms-arr (TAEHole x x₁ eq _) ()
   canonical-value-forms-arr (TANEHole x wt x₁ eq _) ()
-  canonical-value-forms-arr (TACast wt _ x) ()
-  canonical-value-forms-arr (TAFailedCast x x₁ x₂ x₃) ()
+  canonical-value-forms-arr (TACast wt _ x _) ()
+  canonical-value-forms-arr (TAFailedCast x x₁ x₂ x₃ _) ()
 
   canonical-value-forms-typfun : ∀{Δ d t τ} →
                               Δ , ∅ , ∅ ⊢ d :: (·∀ t τ) →
@@ -41,11 +41,11 @@ module canonical-value-forms where
                                  (Δ , (∅ ,, (t , <>)) , ∅ ⊢ d' :: τ))
   canonical-value-forms-typfun (TAVar x₁) ()
   canonical-value-forms-typfun (TATLam apt p) VTLam = _ , refl , p
-  canonical-value-forms-typfun (TAAp wt wt₁) ()
+  canonical-value-forms-typfun (TAAp wt wt₁ _) ()
   canonical-value-forms-typfun (TAEHole x x₁ eq _) ()
   canonical-value-forms-typfun (TANEHole x wt x₁ eq _) ()
-  canonical-value-forms-typfun (TACast wt _ x) ()
-  canonical-value-forms-typfun (TAFailedCast x x₁ x₂ x₃) ()
+  canonical-value-forms-typfun (TACast wt _ x _) ()
+  canonical-value-forms-typfun (TAFailedCast x x₁ x₂ x₃ _) ()
   
   -- this argues (somewhat informally, because you still have to inspect
   -- the types of the theorems above and manually verify this property)
@@ -63,19 +63,19 @@ module canonical-value-forms where
   canonical-value-forms-coverage1 (TAVar x₁) ()
   canonical-value-forms-coverage1 (TALam _ _ wt) VLam = λ _ z _ → z _ _ refl
   canonical-value-forms-coverage1 (TATLam apt wt) VTLam = λ _ _ z → z _ _ refl
-  canonical-value-forms-coverage1 (TAAp wt wt₁) ()
+  canonical-value-forms-coverage1 (TAAp wt wt₁ _) ()
   canonical-value-forms-coverage1 (TAEHole x x₁ eq _) ()
   canonical-value-forms-coverage1 (TANEHole x wt x₁ eq _) ()
-  canonical-value-forms-coverage1 (TACast wt _ x) ()
-  canonical-value-forms-coverage1 (TAFailedCast wt x x₁ x₂) ()
+  canonical-value-forms-coverage1 (TACast wt _ x _) ()
+  canonical-value-forms-coverage1 (TAFailedCast wt x x₁ x₂ _) ()
 
   canonical-value-forms-coverage2 : ∀{Δ d} →
                                    Δ , ∅ , ∅ ⊢ d :: ⦇-⦈ →
                                    d val →
                                    ⊥
   canonical-value-forms-coverage2 (TAVar x₁) ()
-  canonical-value-forms-coverage2 (TAAp wt wt₁) ()
+  canonical-value-forms-coverage2 (TAAp wt wt₁ _) ()
   canonical-value-forms-coverage2 (TAEHole x x₁ eq _) ()
   canonical-value-forms-coverage2 (TANEHole x wt x₁ eq _) ()
-  canonical-value-forms-coverage2 (TACast wt _ x) ()
-  canonical-value-forms-coverage2 (TAFailedCast wt x x₁ x₂) ()
+  canonical-value-forms-coverage2 (TACast wt _ x _) ()
+  canonical-value-forms-coverage2 (TAFailedCast wt x x₁ x₂ _) ()
