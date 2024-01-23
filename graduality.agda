@@ -190,6 +190,31 @@ module graduality where
     Σ[ τ' ∈ htyp ] ((∅ , ∅ ⊢ e' => τ') × (τ ⊑typ τ'))
   graduality1 prec wt = graduality-syn ((λ x ()) , (λ x → refl) , (λ x → refl)) prec wt  
 
+  graduality2-ctx : 
+    ∀{e e' τ v} →     
+    (e ⊑ e') →
+    (∅ , ∅ ⊢ e => τ) →
+    (e ⇓ v) → 
+    (v boxedval) → 
+    Σ[ v' ∈ ihexp ] ((e' ⇓ v') × (v' boxedval) × (v ⊑i v'))
+  graduality2-ctx prec wt conv bv = {!   !}
+
+  graduality-elab-syn : 
+    ∀{e e' Γ Γ' Θ τ d Δ} →     
+    (Γ ⊑ctx Γ') →
+    (e ⊑ e') →
+    (Θ , Γ ⊢ e ⇒ τ ~> d ⊣ Δ) →
+    Σ[ τ' ∈ htyp ] Σ[ d' ∈ ihexp ] Σ[ Δ' ∈ hctx ] ((Θ , Γ ⊢ e' ⇒ τ' ~> d' ⊣ Δ') × (τ ⊑typ τ') × (d ⊑i d'))
+  graduality-elab-syn {Γ = Γ} {Θ = Θ} precctx (PEHole {u = u}) elab = ⦇-⦈ , ⦇-⦈⟨ u , TypId Θ , Id Γ ⟩ , ■ (u , Θ , Γ , ⦇-⦈) , ESEHole , PTHole , PIEHole
+  graduality-elab-syn precctx PConst elab = {!   !}
+  graduality-elab-syn precctx PVar elab = {!   !}
+  graduality-elab-syn precctx (PAsc prec x) elab = {!   !}
+  graduality-elab-syn precctx (PLam2 prec x) elab = {!   !}
+  graduality-elab-syn precctx (PTLam prec) elab = {!   !}
+  graduality-elab-syn precctx (PNEHole prec x) elab = {!   !}
+  graduality-elab-syn precctx (PAp prec prec₁ x) elab = {!   !}
+  graduality-elab-syn precctx (PTAp prec x) elab = {!   !}
+ 
   graduality2 : 
     ∀{e e' τ v} →     
     (e ⊑ e') →
@@ -197,4 +222,4 @@ module graduality where
     (e ⇓ v) → 
     (v boxedval) → 
     Σ[ v' ∈ ihexp ] ((e' ⇓ v') × (v' boxedval) × (v ⊑i v'))
-  graduality2 prec wt conv bv = {!   !}
+  graduality2 prec wt conv bv = {!   !} 
