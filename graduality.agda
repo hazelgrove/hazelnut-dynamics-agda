@@ -9,7 +9,7 @@ open import contexts
 
 -- Note from Thomas: the draft paper is missing a definition of ⊑ for terms
 
-module gradual where
+module graduality where
 
   data _⇓_ : (e : hexp) (v : ihexp) → Set where
     Converge : 
@@ -44,6 +44,18 @@ module gradual where
     PNEHole : ∀{u e1 e2} → e1 ⊑ e2 → hole-name-new e2 u →(⦇⌜ e1 ⌟⦈[ u ]) ⊑ (⦇⌜ e2 ⌟⦈[ u ])
     PAp :  ∀{e1 e2 e3 e4} → e1 ⊑ e3 → e2 ⊑ e4 → holes-disjoint e3 e4 → (e1 ∘ e2) ⊑ (e3 ∘ e4)
     PTAp : ∀{e1 e2 τ1 τ2} → e1 ⊑ e2 → τ1 ⊑typ τ2 → (e1 < τ1 >) ⊑ (e2 < τ2 >)
+
+  data _⊑i_ : (d1 d2 : ihexp) → Set where
+    PIConst : c ⊑i c
+    PIVar : ∀{x} → (X x) ⊑i (X x) 
+    PIEHole : ∀{u e} → e ⊑i ⦇-⦈⟨ u ⟩
+    PILam : ∀{x d1 d2 τ1 τ2} → d1 ⊑i d2 → τ1 ⊑typ τ2 → (·λ x [ τ1 ] d1) ⊑i (·λ x [ τ2 ] d2)
+    PITLam : ∀{t d1 d2} → d1 ⊑i d2 → (·Λ t d1) ⊑i (·Λ t d2)
+    PINEHole : ∀{u d1 d2} → d1 ⊑i d2 →(⦇⌜ d1 ⌟⦈⟨ u ⟩) ⊑i (⦇⌜ d2 ⌟⦈⟨ u ⟩)
+    PIAp :  ∀{d1 d2 d3 d4} → d1 ⊑i d3 → d2 ⊑i d4 → (d1 ∘ d2) ⊑i (d3 ∘ d4)
+    PITAp : ∀{d1 d2 τ1 τ2} → d1 ⊑i d2 → τ1 ⊑typ τ2 → (d1 < τ1 >) ⊑i (d2 < τ2 >)
+    PICast : ∀{d1 d2 τ1 τ2 τ3 τ4} → d1 ⊑i d2 → τ1 ⊑typ τ3 → τ2 ⊑typ τ4 → (d1 ⟨ τ1 ⇒ τ2 ⟩) ⊑i (d2 ⟨ τ3 ⇒ τ4 ⟩)
+    PIFailedCast : ∀{d1 d2 τ1 τ2 τ3 τ4} → d1 ⊑i d2 → τ1 ⊑typ τ3 → τ2 ⊑typ τ4 → (d1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) ⊑i (d2 ⟨ τ3 ⇒⦇-⦈⇏ τ4 ⟩)
 
   _⊑ctx_ : (Γ1 Γ2 : tctx) → Set 
   Γ1 ⊑ctx Γ2 = (∀{x τ1 τ2} → (x , τ1) ∈ Γ1 → (x , τ2) ∈ Γ2 → (τ1 ⊑typ τ2)) × (∀{x} → x # Γ1 → x # Γ2) × (∀{x} → x # Γ2 → x # Γ1)
@@ -177,3 +189,12 @@ module gradual where
     (∅ , ∅ ⊢ e => τ) →
     Σ[ τ' ∈ htyp ] ((∅ , ∅ ⊢ e' => τ') × (τ ⊑typ τ'))
   graduality1 prec wt = graduality-syn ((λ x ()) , (λ x → refl) , (λ x → refl)) prec wt  
+
+  graduality2 : 
+    ∀{e e' τ v} →     
+    (e ⊑ e') →
+    (∅ , ∅ ⊢ e => τ) →
+    (e ⇓ v) → 
+    (v boxedval) → 
+    Σ[ v' ∈ ihexp ] ((e' ⇓ v') × (v' boxedval) × (v ⊑i v'))
+  graduality2 prec wt conv bv = {!   !}
