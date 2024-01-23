@@ -84,6 +84,17 @@ module gradual where
   ⊑typ-▸forall match PTHole = ⦇-⦈ , MFHole , PTHole
   ⊑typ-▸forall MFForall (PTForall prec) = _ , MFForall , prec
 
+  ⊑typ-Typsubst : ∀{t τ1 τ2 τ3 τ4} → (τ1 ⊑typ τ3) → (τ2 ⊑typ τ4) → (Typ[ τ1 / t ] τ2) ⊑typ (Typ[ τ3 / t ] τ4)
+  ⊑typ-Typsubst prec1 PTBase = PTBase
+  ⊑typ-Typsubst prec1 PTHole = PTHole
+  ⊑typ-Typsubst {t = t} prec1 (PTTVar {x = x}) with natEQ t x 
+  ... | Inl refl = prec1 
+  ... | Inr x = PTTVar
+  ⊑typ-Typsubst prec1 (PTArr prec2 prec3) = PTArr (⊑typ-Typsubst prec1 prec2) (⊑typ-Typsubst prec1 prec3)
+  ⊑typ-Typsubst {t = t} prec1 (PTForall {x = x} prec2) with natEQ t x 
+  ... | Inl refl = PTForall prec2 
+  ... | Inr x = PTForall (⊑typ-Typsubst prec1 prec2)
+
   apt-lem : ∀{y x τ τ'} → (Γa Γb : tctx) → ((z : Nat) → z # Γa → z # Γb) → y # (Γa ,, (x , τ)) → y # (Γb ,, (x , τ'))
   apt-lem {y = y} Γa Γb apts aptarg with Γa y in eq | Γb y in eq'
   apt-lem {y = y} Γa Γb apts aptarg | None | Some x rewrite (apts y eq) = sym eq'
@@ -91,12 +102,19 @@ module gradual where
   apt-lem {y = y} Γa Γb apts () | None | None | Inl refl
   ... | Inr x = refl
 
-  -- other-lem : {x z τ τ': Nat} → {τ1 τ2 : htyp} → (Γ Γ' : tctx) → ({y : Nat} {τy τy' : htyp} → (y , τy) ∈ Γ → (y , τy') ∈ Γ' → τy1 ⊑typ τy2) → (x , τ1) ∈ (Γ ,, (z , τ)) → (x , τ2) ∈ (Γ' ,, (z , τ')) → τ1 ⊑typ τ2
-  -- other-lem = ?
+  other-lem : ∀{x z τ τ' τ1 τ2} → (Γ Γ' : tctx) → ((w : Nat) → w # Γ → w # Γ') → ((w : Nat) → w # Γ' → w # Γ) → ({y : Nat} {τy τy' : htyp} → (y , τy) ∈ Γ → (y , τy') ∈ Γ' → τy ⊑typ τy') → (x , τ1) ∈ (Γ ,, (z , τ)) → (x , τ2) ∈ (Γ' ,, (z , τ')) → (τ ⊑typ τ') → τ1 ⊑typ τ2
+  other-lem {x = x} Γ Γ' apt1 apt2 ind in1 in2 prectyp with Γ x in eq | Γ' x in eq' 
+  other-lem {_} Γ Γ' apt1 apt2 ind in1 in2 prectyp | Some thing | Some thing' rewrite in1 rewrite in2 = ind eq eq'
+  other-lem {_} Γ Γ' apt1 apt2 ind in1 in2 prectyp | Some thing | None rewrite (apt2 _ eq') with eq 
+  ... | () 
+  other-lem {_} Γ Γ' apt1 apt2 ind in1 in2 prectyp | None | Some thing rewrite (apt1 _ eq) with eq' 
+  ... | () 
+  other-lem {x = x} {z = z} Γ Γ' apt1 apt2 ind in1 in2 prectyp | None | None with natEQ z x | in1 | in2
+  ... | Inl refl | refl | refl = prectyp
+  ... | Inr x | () | () 
 
   ⊑ctx-entend : ∀{Γ x τ Γ' τ'} → (Γ ⊑ctx Γ') → (τ ⊑typ τ') → (Γ ,, (x , τ)) ⊑ctx (Γ' ,, (x , τ'))
-  -- ⊑ctx-entend = {!   !}
-  ⊑ctx-entend {Γ = Γ} {x = x} {τ = τ} {Γ' = Γ'} {τ' = τ'} ( precctx , apt1 , apt2 ) prectyp = ( {!   !} , (λ {y : Nat} → λ apt → apt-lem Γ Γ' (λ z → apt1) apt) , (λ {y : Nat} → λ apt → apt-lem Γ' Γ (λ z → apt2) apt) ) 
+  ⊑ctx-entend {Γ = Γ} {x = x} {τ = τ} {Γ' = Γ'} {τ' = τ'} ( precctx , apt1 , apt2 ) prectyp = ( ((λ x₁ x₂ → other-lem Γ Γ' (λ w → apt1) (λ w → apt2) precctx x₁ x₂ prectyp)) , (λ {y : Nat} → λ apt → apt-lem Γ Γ' (λ z → apt1) apt) , (λ {y : Nat} → λ apt → apt-lem Γ' Γ (λ z → apt2) apt) ) 
     
   mutual
 
@@ -127,18 +145,35 @@ module gradual where
       (Θ , Γ ⊢ e => τ) →
       Σ[ τ' ∈ htyp ] ((Θ , Γ' ⊢ e' => τ') × (τ ⊑typ τ'))
     graduality-syn precctx PConst SConst = b , SConst , PTBase
-    graduality-syn {τ = τ} precctx PVar (SVar x) = τ , SVar {!   !} , ⊑typ-refl
-    graduality-syn {e' = e' ·: τ'} precctx (PAsc prec x) (SAsc x₁ x₂) = τ' , SAsc (⊑typ-wf x₁ x) (graduality-ana {!   !} x prec x₂) , x
+    graduality-syn {Γ = Γ} {Γ' = Γ'} {τ = τ} ( precctx , apt1 , apt2 ) PVar (SVar {x = x} inctx) with Γ' x in eq'
+    ... | Some τ' = τ' , SVar eq' , precctx inctx eq'
+    ... | None rewrite (apt2 eq') with inctx 
+    ... | () 
+    graduality-syn {e' = e' ·: τ'} precctx (PAsc prec x) (SAsc x₁ x₂) = τ' , SAsc (⊑typ-wf x₁ x) (graduality-ana precctx x prec x₂) , x
     graduality-syn precctx PEHole wt = ⦇-⦈ , SEHole , PTHole
-    graduality-syn precctx (PLam2 prec x) wt = {!   !}
-    graduality-syn precctx (PTLam prec) wt = {!   !}
-    graduality-syn precctx (PNEHole prec) wt = {!   !}
-    graduality-syn precctx (PAp prec prec₁) wt = {!   !}
-    graduality-syn precctx (PTAp prec x) wt = {!   !}
+    graduality-syn ( precctx , apt1 , apt2 ) (PLam2 {τ2 = τ2} prec x) (SLam x₁ x₂ wt) 
+      with graduality-syn (⊑ctx-entend ( precctx , apt1 , apt2 ) x) prec wt 
+    ... | τ' , wt' , prectyp = τ2 ==> τ' , (SLam (apt1 x₁) (⊑typ-wf x₂ x) wt') , PTArr x prectyp
+    graduality-syn precctx (PTLam {t = t} prec) (STLam wt)
+      with graduality-syn precctx prec wt 
+    ... | τ' , wt' , prectyp = ·∀ t τ' , STLam wt' , PTForall prectyp
+    graduality-syn precctx (PNEHole prec) (SNEHole x wt) 
+      with graduality-syn precctx prec wt 
+    ... | τ' , wt' , prectyp = ⦇-⦈ , SNEHole {!   !} wt' , PTHole
+    graduality-syn precctx (PAp prec prec₁) (SAp x syn x₁ ana) 
+      with graduality-syn precctx prec syn
+    ... | τ' , wt' , prectyp 
+      with ⊑typ-▸arr x₁ prectyp 
+    ... | τ1' , τ2' , match , prec1' , prec2' = τ2' , SAp {!   !} wt' match (graduality-ana precctx prec1' prec₁ ana) , prec2'
+    graduality-syn precctx (PTAp {τ2 = τ2} prec x) (STAp {t = t} x₁ wt x₂ x₃) rewrite (sym x₃) 
+      with graduality-syn precctx prec wt 
+    ... | τ' , wt' , prectyp 
+      with ⊑typ-▸forall x₂ prectyp 
+    ... | τ'' , match , prec' = Typ[ τ2 / t ] τ'' , STAp (⊑typ-wf x₁ x) wt' match refl , ⊑typ-Typsubst x prec'
  
   graduality1 : 
-    ∀{e e' τ} →    
+    ∀{e e' τ} →     
     (e ⊑ e') →
     (∅ , ∅ ⊢ e => τ) →
     Σ[ τ' ∈ htyp ] ((∅ , ∅ ⊢ e' => τ') × (τ ⊑typ τ'))
-  graduality1 prec wt = {!   !} 
+  graduality1 prec wt = graduality-syn ((λ x ()) , (λ x → refl) , (λ x → refl)) prec wt  
