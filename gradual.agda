@@ -41,8 +41,8 @@ module gradual where
     PLam1 : ∀{x e1 e2} → e1 ⊑ e2 → (·λ x e1) ⊑ (·λ x e2)
     PLam2 : ∀{x e1 e2 τ1 τ2} → e1 ⊑ e2 → τ1 ⊑typ τ2 → (·λ x [ τ1 ] e1) ⊑ (·λ x [ τ2 ] e2)
     PTLam : ∀{t e1 e2} → e1 ⊑ e2 → (·Λ t e1) ⊑ (·Λ t e2)
-    PNEHole : ∀{u e1 e2} → e1 ⊑ e2 → (⦇⌜ e1 ⌟⦈[ u ]) ⊑ (⦇⌜ e2 ⌟⦈[ u ])
-    PAp :  ∀{e1 e2 e3 e4} → e1 ⊑ e3 → e2 ⊑ e4 → (e1 ∘ e2) ⊑ (e3 ∘ e4)
+    PNEHole : ∀{u e1 e2} → e1 ⊑ e2 → hole-name-new e2 u →(⦇⌜ e1 ⌟⦈[ u ]) ⊑ (⦇⌜ e2 ⌟⦈[ u ])
+    PAp :  ∀{e1 e2 e3 e4} → e1 ⊑ e3 → e2 ⊑ e4 → holes-disjoint e3 e4 → (e1 ∘ e2) ⊑ (e3 ∘ e4)
     PTAp : ∀{e1 e2 τ1 τ2} → e1 ⊑ e2 → τ1 ⊑typ τ2 → (e1 < τ1 >) ⊑ (e2 < τ2 >)
 
   _⊑ctx_ : (Γ1 Γ2 : tctx) → Set 
@@ -157,14 +157,14 @@ module gradual where
     graduality-syn precctx (PTLam {t = t} prec) (STLam wt)
       with graduality-syn precctx prec wt 
     ... | τ' , wt' , prectyp = ·∀ t τ' , STLam wt' , PTForall prectyp
-    graduality-syn precctx (PNEHole prec) (SNEHole x wt) 
+    graduality-syn precctx (PNEHole prec holenew) (SNEHole x wt) 
       with graduality-syn precctx prec wt 
-    ... | τ' , wt' , prectyp = ⦇-⦈ , SNEHole {!   !} wt' , PTHole
-    graduality-syn precctx (PAp prec prec₁) (SAp x syn x₁ ana) 
+    ... | τ' , wt' , prectyp = ⦇-⦈ , SNEHole holenew wt' , PTHole
+    graduality-syn precctx (PAp prec prec₁ disj) (SAp x syn x₁ ana) 
       with graduality-syn precctx prec syn
     ... | τ' , wt' , prectyp 
       with ⊑typ-▸arr x₁ prectyp 
-    ... | τ1' , τ2' , match , prec1' , prec2' = τ2' , SAp {!   !} wt' match (graduality-ana precctx prec1' prec₁ ana) , prec2'
+    ... | τ1' , τ2' , match , prec1' , prec2' = τ2' , SAp disj wt' match (graduality-ana precctx prec1' prec₁ ana) , prec2'
     graduality-syn precctx (PTAp {τ2 = τ2} prec x) (STAp {t = t} x₁ wt x₂ x₃) rewrite (sym x₃) 
       with graduality-syn precctx prec wt 
     ... | τ' , wt' , prectyp 
