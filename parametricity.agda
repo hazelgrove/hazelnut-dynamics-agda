@@ -14,6 +14,9 @@ module parametricity where
   -- casts and some may succeed? Or perhaps I haven't taken sufficient advantage
   -- of the premimses. 
 
+  -- The other open issue is about the types attached to holes. Can they vary?
+  -- The lemma about =0 respecting substitution requires they be able to vary. 
+
   data _=0_ : (d1 d2 : ihexp) → Set where 
     Eq0Const : c =0 c
     Eq0Var : ∀{x} → (X x) =0 (X x) 
@@ -101,6 +104,24 @@ module parametricity where
   ... | eq3 = Eq0Cast eq3
   eq0-subst (d3 ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) (d4 ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) eq1 (Eq0FailedCast eq2) with eq0-subst d3 d4 eq1 eq2 
   ... | eq3 = Eq0FailedCast eq3
+
+  eq0-typsubst : 
+    ∀ {t τ1 τ2} →
+    (d1 d2 : ihexp) →
+    d1 =0 d2 →
+    (Ihexp[ τ1 / t ] d1) =0 (Ihexp[ τ2 / t ] d2)
+  eq0-typsubst .c .c Eq0Const = Eq0Const
+  eq0-typsubst .(X _) .(X _) Eq0Var = Eq0Var
+  eq0-typsubst .(⦇-⦈⟨ _ ⟩) .(⦇-⦈⟨ _ ⟩) Eq0EHole = {!   !}
+  eq0-typsubst (·λ _ [ _ ] d1) (·λ _ [ _ ] d2) (Eq0Lam eq) = Eq0Lam (eq0-typsubst d1 d2 eq)
+  eq0-typsubst {t = t} (·Λ t' d1) (·Λ t' d2) (Eq0TLam eq) with natEQ t t' 
+  ... | Inl refl = Eq0TLam eq
+  ... | Inr x = Eq0TLam (eq0-typsubst d1 d2 eq)
+  eq0-typsubst .(⦇⌜ _ ⌟⦈⟨ _ ⟩) .(⦇⌜ _ ⌟⦈⟨ _ ⟩) (Eq0NEHole eq) = {!   !}
+  eq0-typsubst (d1 ∘ d2) (d3 ∘ d4) (Eq0Ap eq eq₁) = Eq0Ap (eq0-typsubst d1 d3 eq) (eq0-typsubst d2 d4 eq₁)
+  eq0-typsubst (d1 < _ >) (d2 < _ >) (Eq0TAp eq) = Eq0TAp (eq0-typsubst d1 d2 eq)
+  eq0-typsubst (d1 ⟨ _ ⇒ _ ⟩) (d2 ⟨ _ ⇒ _ ⟩) (Eq0Cast eq) = {!   !}
+  eq0-typsubst (d1 ⟨ _ ⇒⦇-⦈⇏ _ ⟩) (d2 ⟨ _ ⇒⦇-⦈⇏ _ ⟩) (Eq0FailedCast eq) = {!   !}
   
   eq0-ctxin : 
     ∀ {d1 d2 d1' ε1} →
