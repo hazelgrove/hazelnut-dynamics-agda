@@ -385,3 +385,7 @@ module contexts where
       ... | Inr ninctx = refl
   lem-extend-lunit : {A : Set} {x : Nat} {y : A} → ∅ ,, (x , y) == (■ (x , y))
   lem-extend-lunit = lem-union-lunit
+
+  lem-dom-extend : {A : Set} {Γ : A ctx} {x x' : Nat} {y : A} → dom Γ x → dom (Γ ,, (x' , y)) x
+  lem-dom-extend {Γ = Γ} {x = x} mem with mem
+  ... | (y , inl) rewrite inl = y , refl

@@ -71,27 +71,27 @@ module preservation where
   wt-filling (TAFailedCast x x₁ x₂ x₃ a) (FHFailedCast y) = wt-filling x y
 
   -- instruction transitions preserve type
-  preserve-trans : ∀{ Δ Γ d τ d' } →
+  preserve-trans : ∀{ Δ d τ d' } →
             binders-unique d →
             tbinders-unique d →
             tbinders-disjoint-Δ Δ d →
-            tbinders-disjoint-Γ Γ d →
-            ∅ ⊢ Γ tctxwf →
+            tbinders-disjoint-Γ ∅ d →
+            ∅ ⊢ ∅ tctxwf →
             Δ hctxwf →
-            Δ , ∅ , Γ ⊢ d :: τ →
+            Δ , ∅ , ∅ ⊢ d :: τ →
             d →> d' →
-            Σ[ τ' ∈ htyp ] (τ' =α τ × Δ , ∅ , Γ ⊢ d' :: τ')
+            Σ[ τ' ∈ htyp ] (τ' =α τ × Δ , ∅ , ∅ ⊢ d' :: τ')
   preserve-trans _ _ _ _ _ _ TAConst ()
   preserve-trans _ _ _ _ _ _ (TAVar x₁) ()
   preserve-trans _ _ _ _ _ _ (TALam _ _ ta) ()
   preserve-trans {τ = τ} (BUAp (BULam bd x₁) bd₁ (BDLam x₂ x₃)) (TBUAp (TBULam tbu) tbu' (TBDLam tbd)) _ _ _ _ (TAAp (TALam apt wf ta) ta₁ alpha) ITLam = lem-subst apt x₂ bd₁ tbd tbu ta ta₁ alpha
   preserve-trans _ _ _ _ _ _ (TATLam apt ta) ()
-  preserve-trans {τ = τ} _ _ _ _ tcwf hcwf (TAAp (TACast ta (WFArr wf1 wf2) (ConsistArr x x₁) (AlphaArr a1 a2)) ta₁ alpha') ITApCast with wf-ta tcwf hcwf ta
+  preserve-trans {τ = τ} _ (TBUAp (TBUCast tbu x₃ x₄) tbu₁ x₂) _ _ tcwf hcwf (TAAp (TACast ta (WFArr wf1 wf2) (ConsistArr x x₁) (AlphaArr a1 a2)) ta₁ alpha') ITApCast  with wf-ta tbu tcwf hcwf ta
   ... | WFArr wf1' wf2' = alpha-refl-ta (TACast (TAAp ta (TACast ta₁ (alpha-closed wf1' (alpha-sym a1)) (~sym x) alpha') (alpha-sym a1)) wf2 x₁ a2)
-  preserve-trans {Γ = Γ} {d = ·Λ t d < τ >} {τ = τf} _ (TBUTAp (TBUTLam tbu x₁) tbu' (TBDTTLam tbd x₂)) (TBDΔTAp (TBDΔTLam tbdd x₆) x₅) (TBDΓTAp (TBDΓTLam tbdg x₄) x₃) tcwf hcwf (TATAp wf (TATLam apt x) eq) ITTLam = alpha-refl-ta (rewrite-typ eq (rewrite-gamma (tctx-sub-closed {Γ} {t} {τ} tcwf)
-    (lemma-tysubst wf x₂ x₆ x₄ x₁ tbu x)))
+  preserve-trans {d = ·Λ t d < τ >} {τ = τf} _ (TBUTAp (TBUTLam tbu x₁) tbu' (TBDTTLam tbd x₂)) (TBDΔTAp (TBDΔTLam tbdd x₆) x₅) (TBDΓTAp (TBDΓTLam tbdg x₄) x₃) tcwf hcwf (TATAp wf (TATLam apt x) eq) ITTLam = alpha-refl-ta (rewrite-typ eq (rewrite-gamma (tctx-sub-closed {∅} {t} {τ} tcwf)
+    {! (lemma-tysubst wf x₂ x₆ x₄ x₁ tbu x) !}))
   preserve-trans _ (TBUTAp (TBUCast tbu tbd1 tbd2) x₁ (TBDTCast x₂ (BDTForall x₃ x₇) (BDTForall x₄ x₆))) _ _ _ _ (TATAp wf (TACast {τ1' = ·∀ x₅ τ1'} ta (WFForall apt wf2) x alpha) eq) ITTApCast rewrite ! eq
-    = alpha-refl-ta (TACast (TATAp wf ta refl) (wf-sub (BDTForall x₄ x₆) wf wf2 refl) (consist-sub wf x) (alpha-sub wf alpha))
+    = alpha-refl-ta (TACast (TATAp wf ta refl) (wf-sub x₄ wf wf2 refl) (consist-sub wf x) (alpha-sub wf alpha))
   preserve-trans {τ = τ} _ _ _ _ _ _ (TACast {τ1' = τ1'} ta wf x alpha) (ITCastID {τ1 = τ1} alphaeq) = τ1' , (alpha-trans (alpha-sym alpha) alphaeq) , ta
   preserve-trans {τ = τ} _ _ _ _ _ _ (TACast (TACast {τ1' = τ1'} ta _ x alpha) _ x₁ alpha2) (ITCastSucceed {τ1 = τ1} g1 g2 alpha3) = τ1' , (alpha-trans (alpha-sym alpha) alpha3) , ta
   preserve-trans _ _ _ _ _ _ (TACast ta wf x alpha) (ITGround (MGArr x₁)) = alpha-refl-ta (TACast (TACast ta (WFArr wf wf) (ConsistArr ConsistHole1 ConsistHole1) alpha) wf ConsistHole1 (AlphaArr AlphaHole AlphaHole)) -- alpha-refl-ta (TACast (TACast ta (WFArr wf wf) (ConsistArr ConsistHole1 ConsistHole1) ) wf ConsistHole1)
@@ -140,26 +140,26 @@ module preservation where
   lem-tbdΓ-empty : ∀{d} → binders-unique d → tbinders-disjoint-Γ ∅ d
   lem-tbdΓ-empty BUHole = TBDΓConst
   lem-tbdΓ-empty BUVar = TBDΓVar
-  lem-tbdΓ-empty (BULam bu x) = TBDΓLam (lem-tbdΓ-empty bu) (TBDΔ (λ x τ' ()))
+  lem-tbdΓ-empty (BULam bu x) = TBDΓLam (lem-tbdΓ-empty bu) (TBDΓ (λ x τ' ()))
   lem-tbdΓ-empty (BUTLam bu) = TBDΓTLam (lem-tbdΓ-empty bu) (UBΓ (λ x y ()))
   lem-tbdΓ-empty (BUEHole x) = BDΓHole
   lem-tbdΓ-empty (BUNEHole bu x) = TBDΓNEHole (lem-tbdΓ-empty bu)
   lem-tbdΓ-empty (BUAp bu bu₁ x) = TBDΓAp (lem-tbdΓ-empty bu) (lem-tbdΓ-empty bu₁)
-  lem-tbdΓ-empty (BUTAp bu) = TBDΓTAp (lem-tbdΓ-empty bu) (TBDΔ (λ x τ' ()))
-  lem-tbdΓ-empty (BUCast bu) = TBDΓCast (lem-tbdΓ-empty bu) (TBDΔ (λ x τ' ())) (TBDΔ (λ x τ' ()))
-  lem-tbdΓ-empty (BUFailedCast bu) = TBDΓFailedCast (lem-tbdΓ-empty bu) (TBDΔ (λ x τ' ())) (TBDΔ (λ x τ' ()))
+  lem-tbdΓ-empty (BUTAp bu) = TBDΓTAp (lem-tbdΓ-empty bu) (TBDΓ (λ x τ' ()))
+  lem-tbdΓ-empty (BUCast bu) = TBDΓCast (lem-tbdΓ-empty bu) (TBDΓ (λ x τ' ())) (TBDΓ (λ x τ' ()))
+  lem-tbdΓ-empty (BUFailedCast bu) = TBDΓFailedCast (lem-tbdΓ-empty bu) (TBDΓ (λ x τ' ())) (TBDΓ (λ x τ' ()))
 
   -- this is the main preservation theorem, gluing together the above
-  preservation : {Δ : hctx} {d d' : ihexp} {τ : htyp} {Γ : tctx} →
+  preservation : {Δ : hctx} {d d' : ihexp} {τ : htyp} →
              binders-unique d →
              tbinders-unique d ->
              tbinders-disjoint-Δ Δ d →
-             tbinders-disjoint-Γ Γ d →
-             ∅ ⊢ Γ tctxwf →
+             tbinders-disjoint-Γ ∅ d →
+             ∅ ⊢ ∅ tctxwf →
              Δ hctxwf →
-             Δ , ∅ , Γ ⊢ d :: τ →
+             Δ , ∅ , ∅ ⊢ d :: τ →
              d ↦ d' →
-             Σ[ τ' ∈ htyp ] (τ' =α τ × Δ , ∅ , Γ ⊢ d' :: τ')
+             Σ[ τ' ∈ htyp ] (τ' =α τ × Δ , ∅ , ∅ ⊢ d' :: τ')
   preservation {τ = τ} bd tbd tbdd tbdg tcwf hcwf D (Step x x₁ x₂)
     with wt-filling D x
   ... | (_ , wt) = let τ' , alpha , trans = preserve-trans (lem-bd-ε1 x bd) (lem-tbd-ε1 x tbd) (lem-tbdΔ-ε1 x tbdd) (lem-tbdΓ-ε1 x tbdg) tcwf hcwf wt x₁ in

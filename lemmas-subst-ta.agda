@@ -10,6 +10,7 @@ open import lemmas-disjointness
 open import binders-disjoint-checks
 open import lemmas-alpha
 open import lemmas-typ-subst
+open import lemmas-well-formed
 
 module lemmas-subst-ta where
   -- this is what makes the binders-unique assumption below good enough: it
@@ -54,34 +55,35 @@ module lemmas-subst-ta where
                   binders-unique d2 →
                   tbinders-disjoint d1 d2 →
                   tbinders-unique d1 →
+                  tbinders-disjoint-Γ Γ d1 →
                   Δ , Θ , Γ ,, (x , τ1) ⊢ d1 :: τ →
                   Δ , Θ , Γ ⊢ d2 :: τ1' →
                   τ1 =α τ1' →
                   Σ[ τ' ∈ htyp ] (τ' =α τ × Δ , Θ , Γ ⊢ [ d2 / x ] d1 :: τ')
-  lem-subst apt bd bu2 tbd tbu TAConst wt2 alpha = alpha-refl-ta TAConst
-  lem-subst {x = x} apt bd bu2 tbd tbu (TAVar {x = x'} x₂) wt2 alpha with natEQ x' x
-  lem-subst {Γ = Γ} apt bd bu2 tbd tbu (TAVar x₃) wt2 alpha | Inl refl with lem-apart-union-eq {Γ = Γ} apt x₃
-  lem-subst {τ1' = τ1'} apt bd bu2 tbd tbu (TAVar x₃) wt2 alpha | Inl refl | refl = τ1' , alpha-sym alpha , wt2
-  lem-subst {Γ = Γ} apt bd bu2 tbd tbu (TAVar x₃) wt2 alpha | Inr x₂ = alpha-refl-ta (TAVar (lem-neq-union-eq {Γ = Γ} x₂ x₃))
-  lem-subst {Δ = Δ} {Γ = Γ} {x = x} {d2 = d2} x#Γ (BDLam bd bd') bu2 (TBDLam tbd) (TBULam tbu) (TALam {x = y} {τ1 = τ1} {d = d} {τ2 = τ2} x₂ wf wt1) wt2 alpha
+  lem-subst apt bd bu2 tbd tbu tbdg TAConst wt2 alpha = alpha-refl-ta TAConst
+  lem-subst {x = x} apt bd bu2 tbd tbu tbdg (TAVar {x = x'} x₂) wt2 alpha with natEQ x' x
+  lem-subst {Γ = Γ} apt bd bu2 tbd tbu tbdg (TAVar x₃) wt2 alpha | Inl refl with lem-apart-union-eq {Γ = Γ} apt x₃
+  lem-subst {τ1' = τ1'} apt bd bu2 tbd tbu tbdg (TAVar x₃) wt2 alpha | Inl refl | refl = τ1' , alpha-sym alpha , wt2
+  lem-subst {Γ = Γ} apt bd bu2 tbd tbu tbdg (TAVar x₃) wt2 alpha | Inr x₂ = alpha-refl-ta (TAVar (lem-neq-union-eq {Γ = Γ} x₂ x₃))
+  lem-subst {Δ = Δ} {Γ = Γ} {x = x} {d2 = d2} x#Γ (BDLam bd bd') bu2 (TBDLam tbd) (TBULam tbu) tbdg (TALam {x = y} {τ1 = τ1} {d = d} {τ2 = τ2} x₂ wf wt1) wt2 alpha
     with lem-union-none {Γ = Γ} x₂
   ... |  x≠y , y#Γ with natEQ y x
   ... | Inl eq = abort (x≠y (! eq)) 
-  ... | Inr _ with lem-subst {Δ = Δ} {Γ = Γ ,, (y , τ1)} {x = x} {d1 = d} (apart-extend1 Γ x≠y x#Γ) bd bu2 tbd tbu (exchange-ta-Γ {Γ = Γ} x≠y wt1)
+  ... | Inr _ with lem-subst {Δ = Δ} {Γ = Γ ,, (y , τ1)} {x = x} {d1 = d} (apart-extend1 Γ x≠y x#Γ) bd bu2 tbd tbu {!   !} (exchange-ta-Γ {Γ = Γ} x≠y wt1)
                                          (weaken-ta (binders-fresh wt2 bu2 bd' y#Γ) wt2) alpha
   ...   | τ' , alpha' , ta = τ1 ==> τ' , AlphaArr (alpha-refl τ1) alpha' , TALam y#Γ wf ta
-  lem-subst {Γ = Γ} {Θ = Θ} apt (BDTLam bd) bu (TBDTLam tbd x) (TBUTLam tbu x₁) (TATLam {t = t} apt' wt1) wt2 alpha with lem-subst apt bd bu tbd tbu wt1 (weaken-ta-typ x wt2) alpha
+  lem-subst {Γ = Γ} {Θ = Θ} apt (BDTLam bd) bu (TBDTLam tbd x) (TBUTLam tbu x₁) tbdg (TATLam {t = t} apt' wt1) wt2 alpha with lem-subst apt bd bu tbd tbu {!   !} wt1 (weaken-ta-typ x wt2) alpha
   ... | τ' , alpha' , ta = let tub1 = tunbound-ta-tunboundt x {!   !} {!   !} wt2 in let tub2 = tunbound-ta-tunboundt x₁ {!   !} {!   !} wt1 in 
           ·∀ t τ' , {!   !} , TATLam apt' ta
-  lem-subst apt (BDAp bd bd₁) bu3 (TBDAp tbd tbd') (TBUAp tbu tbu₁ x) (TAAp wt1 wt2 alpha') wt3 alpha with lem-subst apt bd bu3 tbd tbu wt1 wt3 alpha | lem-subst apt bd₁ bu3 tbd' tbu₁ wt2 wt3 alpha
+  lem-subst apt (BDAp bd bd₁) bu3 (TBDAp tbd tbd') (TBUAp tbu tbu₁ x) tbdg (TAAp wt1 wt2 alpha') wt3 alpha with lem-subst apt bd bu3 tbd tbu {!   !} wt1 wt3 alpha | lem-subst apt bd₁ bu3 tbd' tbu₁ {!   !} wt2 wt3 alpha
   ... | τ'1 ==> τ'2 , AlphaArr alpha'1 alpha'2 , ta | τ'' , alpha'' , ta' = τ'2 , alpha'2 , TAAp ta ta' (alpha-trans alpha'1 (alpha-trans alpha' (alpha-sym alpha'')))
-  lem-subst apt (BDTAp bd) bu (TBDTAp tbtd tbd) (TBUTAp tbu x x₁) (TATAp {τ1 = τ} wf wt1 eq) wt2 alpha with lem-subst apt bd bu tbd tbu wt1 wt2 alpha
-  ... | ·∀ t' τ' , alpha' , ta rewrite ! eq = Typ[ τ / t' ] τ' , {!   !} , TATAp wf ta refl
-  lem-subst apt bd bu2 (TBDHole x x') (TBUEHole x₁ x₂ x₃) (TAEHole inΔ sub eq eq') wt2 alpha = alpha-refl-ta (TAEHole inΔ (lemma-subst-comm (lemma-tbdθσ-comm x₃ x) sub {!   !}) eq eq')
-  lem-subst apt (BDNEHole x₁ bd) bu2 (TBDNEHole x x' tbd) (TBUNEHole tbu x₂ x₅ x₆) (TANEHole x₃ wt1 x₄ eq eq') wt2 alpha with lem-subst apt bd bu2 tbd tbu wt1 wt2 alpha
+  lem-subst apt (BDTAp bd) bu (TBDTAp tbtd tbd) (TBUTAp tbu x x₁) tbdg (TATAp {τ1 = τ} wf wt1 eq) wt2 alpha with lem-subst apt bd bu tbd tbu {!   !} wt1 wt2 alpha
+  ... | ·∀ t' τ' , alpha' , ta rewrite ! eq = Typ[ τ / t' ] τ' , alpha-sub2 wf (wf-ta {!   !} {!   !} {!   !} ta) (wf-ta tbu {!   !} {!   !} wt1) alpha' , TATAp wf ta refl
+  lem-subst apt bd bu2 (TBDHole x x') (TBUEHole x₁ x₂ x₃) tbdg (TAEHole inΔ sub eq eq') wt2 alpha = alpha-refl-ta (TAEHole inΔ (lemma-subst-comm (lemma-tbdθσ-comm x₃ x) sub {!   !}) eq eq')
+  lem-subst apt (BDNEHole x₁ bd) bu2 (TBDNEHole x x' tbd) (TBUNEHole tbu x₂ x₅ x₆) tbdg (TANEHole x₃ wt1 x₄ eq eq') wt2 alpha with lem-subst apt bd bu2 tbd tbu {!   !} wt1 wt2 alpha
   ... | τ' , alpha' , ta = alpha-refl-ta (TANEHole x₃ ta (lemma-subst-comm (lemma-tbdθσ-comm x₆ x) x₄ {!   !}) eq eq')
-  lem-subst apt (BDCast bd) bu2 (TBDCast tbd) (TBUCast tbu x x₂) (TACast wt1 wf x₁ alpha') wt2 alpha with lem-subst apt bd bu2 tbd tbu wt1 wt2 alpha
+  lem-subst apt (BDCast bd) bu2 (TBDCast tbd) (TBUCast tbu x x₂) tbdg (TACast wt1 wf x₁ alpha') wt2 alpha with lem-subst apt bd bu2 tbd tbu {!   !} wt1 wt2 alpha
   ... | τ' , alpha'' , ta = alpha-refl-ta (TACast ta wf x₁ (alpha-trans alpha' (alpha-sym alpha'')))
-  lem-subst apt (BDFailedCast bd) bu2 (TBDFailedCast tbd) (TBUFailedCast tbu x x₄) (TAFailedCast wt1 x₁ x₂ x₃ alpha') wt2 alpha with lem-subst apt bd bu2 tbd tbu wt1 wt2 alpha
+  lem-subst apt (BDFailedCast bd) bu2 (TBDFailedCast tbd) (TBUFailedCast tbu x x₄) tbdg (TAFailedCast wt1 x₁ x₂ x₃ alpha') wt2 alpha with lem-subst apt bd bu2 tbd tbu {!   !} wt1 wt2 alpha
   ... | τ' , alpha'' , ta = alpha-refl-ta (TAFailedCast ta x₁ x₂ x₃ (alpha-trans alpha' (alpha-sym alpha'')))
   

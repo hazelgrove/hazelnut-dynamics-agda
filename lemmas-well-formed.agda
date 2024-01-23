@@ -59,7 +59,7 @@ module lemmas-well-formed where
   wf-closed = {!   !} -- weaken-t-wf' (λ t mem → abort (somenotnone (! mem)))
 
 
-  wf-sub : ∀ {Θ t τ1 τ2 τ3} → tbinderstt-disjoint τ2 τ1 → Θ ⊢ τ1 wf → (Θ ,, (t , <>)) ⊢ τ3 wf → τ2 == ·∀ t τ3 → Θ ⊢ Typ[ τ1 / t ] τ3 wf
+  wf-sub : ∀ {Θ t τ1 τ2 τ3} → tbinderstt-disjoint τ3 τ1 → Θ ⊢ τ1 wf → (Θ ,, (t , <>)) ⊢ τ3 wf → τ2 == ·∀ t τ3 → Θ ⊢ Typ[ τ1 / t ] τ3 wf
   wf-sub {τ3 = b} bd wf1 wf2 eq = WFBase
   wf-sub {Θ} {t = t} {τ3 = T x} bd wf1 (WFVar {a = a} p) eq with natEQ t x
   ... | Inl refl = wf1
@@ -180,23 +180,43 @@ module lemmas-well-formed where
 
   mutual 
 
+{-
     typsub-wf : ∀ {Θ t τ τ' τ''} →
+      tbinderstt-disjoint τ τ' →
       (Θ ,, (t , <>)) ⊢ τ wf →
       Θ ⊢ τ' wf →
       τ'' == Typ[ τ' / t ] τ →
       Θ ⊢ τ'' wf
-    typsub-wf {τ = b} wf1 wf2 eq rewrite eq = WFBase
-    typsub-wf {t = t} {τ = T x} wf1 wf2 eq with natEQ t x 
+    typsub-wf {τ = b} bd wf1 wf2 eq rewrite eq = WFBase
+    typsub-wf {t = t} {τ = T x} bd wf1 wf2 eq with natEQ t x 
     ... | Inl refl rewrite eq = wf2
-    typsub-wf {Θ = Θ} {t = t} {T x} (WFVar elem) wf2 eq | Inr neq rewrite eq = WFVar (strengthening {Γ = Θ} elem (flip neq))
-    typsub-wf {τ = ⦇-⦈} wf1 wf2 eq rewrite eq = WFHole
-    typsub-wf {τ = τ ==> τ₁} (WFArr wf1 wf1') wf2 eq rewrite eq = WFArr (typsub-wf wf1 wf2 refl) (typsub-wf wf1' wf2 refl)
-    typsub-wf {Θ = Θ} {t = t1} {τ = ·∀ t2 τ} (WFForall apt wf1) wf2 eq with natEQ t1 t2
+    typsub-wf {Θ = Θ} {t = t} {T x} bd (WFVar elem) wf2 eq | Inr neq rewrite eq = WFVar (strengthening {Γ = Θ} elem (flip neq))
+    typsub-wf {τ = ⦇-⦈} bd wf1 wf2 eq rewrite eq = WFHole
+    typsub-wf {τ = τ ==> τ₁} bd (WFArr wf1 wf1') wf2 eq rewrite eq = WFArr (typsub-wf {!   !} wf1 wf2 refl) (typsub-wf {!   !} wf1' wf2 refl)
+    typsub-wf {Θ = Θ} {t = t1} {τ = ·∀ t2 τ} bd (WFForall apt wf1) wf2 eq with natEQ t1 t2
     ... | Inl refl rewrite eq rewrite (contract {x = t2} {τ = <>} Θ) = WFForall {!   !} wf1
-    ... | Inr neq rewrite eq rewrite (swap {x = t1} {y = t2} {τ1 = <>} {τ2 = <>} Θ neq) = WFForall {!   !} (typsub-wf wf1 (weaken-t-wf {!   !} wf2) refl) 
+    ... | Inr neq rewrite eq rewrite (swap {x = t1} {y = t2} {τ1 = <>} {τ2 = <>} Θ neq) = WFForall {!   !} (typsub-wf {!   !} wf1 (weaken-t-wf {!   !} wf2) refl) 
+-}
 
+    tbinderstt-disjoint-sym : ∀{τ τ'} → tbinderstt-disjoint τ τ' → tbinderstt-disjoint τ' τ
+    tbinderstt-disjoint-sym tbd = {!   !}
 
-    typenv-wf : ∀ {Δ Θ Γ θ σ Θ' Γ' τ τ'} →
+    tbdΘ-extend : ∀{Θ t τ} → tbinders-disjoint-Θ Θ τ → tunboundt-in t τ → tbinders-disjoint-Θ (Θ ,, (t , <>)) τ
+    tbdΘ-extend = {!   !}
+
+    tbd-typ-subst : ∀{τ τ' τ'' t} → tbinderstt-disjoint τ' τ → tbinderstt-disjoint τ'' τ → tbinderstt-disjoint (Typ[ τ'' / t ] τ') τ
+    tbd-typ-subst {τ' = b} tbd tbd' = tbd
+    tbd-typ-subst {τ' = T x} {t = t} BDTTVar tbd' with natEQ t x
+    ... | Inl refl = tbd'
+    ... | Inr neq = BDTTVar
+    tbd-typ-subst {τ' = ⦇-⦈} tbd tbd' = tbd
+    tbd-typ-subst {τ' = τ' ==> τ''} (BDTArr tbd tbd₁) tbd' = BDTArr (tbd-typ-subst tbd tbd') (tbd-typ-subst tbd₁ tbd')
+    tbd-typ-subst {τ' = ·∀ x τ'} {t = t} (BDTForall tbd x₁) tbd' with natEQ t x 
+    ... | Inl refl = BDTForall tbd x₁
+    ... | Inr neq = BDTForall (tbd-typ-subst tbd tbd') x₁
+    
+
+    typenv-wf : ∀ {Δ Θ Γ θ σ Θ' Γ' τ τ'} →
       Δ hctxwf →
       Θ ⊢ Γ tctxwf →
       Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' →
@@ -204,13 +224,13 @@ module lemmas-well-formed where
       Θ' ⊢ τ wf →
       τ' == apply-typenv θ τ →
       Θ ⊢ τ' wf
-    typenv-wf hctxwf ctxwf1 (STAIdId x₁ x₂) ctxwf2 wf eq rewrite eq = x₂ _ wf
+    typenv-wf hctxwf ctxwf1 (STAIdId x₁ x₂) ctxwf2 wf eq rewrite eq = {!  !} -- x₂ _ wf
     typenv-wf hctxwf ctxwf1 (STAIdSubst sub x alpha) ctxwf2 wf eq =
-      typenv-wf hctxwf ctxwf3 {!   !} ctxwf2 wf eq 
+      t-sub-wf {!   !} {!   !} {!   !} --  hctxwf ctxwf3 {!   !} ctxwf2 wf eq 
       where 
-      ctxwf3 = merge-tctx-wf ctxwf1 (wf-ta ctxwf1 hctxwf x)
+      ctxwf3 = merge-tctx-wf ctxwf1 (wf-ta {!   !} ctxwf1 hctxwf x)
     typenv-wf {Θ = Θ} {θ = θ} {τ = τ} hctxwf ctxwf1 (STASubst {y = y} sub x) ctxwf2 wf eq =
-      typsub-wf wf2 {! (wf-closed x) !} eq
+      t-sub-wf {!   !} {!   !} {!   !} -- typsub-wf {!   !} wf2 {! (wf-closed x) !} eq
       where 
       wf2 = typenv-wf hctxwf (weaken-tctx-wf ctxwf1) sub ctxwf2 wf refl
 
@@ -222,28 +242,47 @@ module lemmas-well-formed where
       Θ' ⊢ Γ'' tctxwf
     wf-ty-subst {θ = TypId Θ} ts eq tcwf rewrite eq = tcwf
     wf-ty-subst {Γ' = Γ'} {θ = TypSubst τ t θ} (STASubst ts x) eq tcwf rewrite eq = tctx-sub-wf (wf-ty-subst {Γ'' = apply-typenv-env θ Γ'} ts refl tcwf) {! (wf-closed x) !}
+    wf-ty-subst {θ = TypSubst τ t θ} (STAIdSubst x₂ x₃ x₄) x x₁ = {!   !}
 
+    tbd-ta-tbdt : ∀{Θ Γ d τ τ' Δ} → tbinderst-disjoint-Δ Δ τ → tbinderst-disjoint-Γ Γ τ → tbinderst-disjoint τ d → Δ , Θ , Γ ⊢ d :: τ' → tbinderstt-disjoint τ' τ
+    tbd-ta-tbdt tbdd tbdg TBDTConst TAConst = BDTBase
+    tbd-ta-tbdt tbdd (TBDΓ x₁) TBDTVar (TAVar {x = x₂} {τ = τ'} x) = x₁ x₂ τ' x
+    tbd-ta-tbdt tbdd tbdg (TBDTLam tbd x₂) (TALam x x₁ ta) = BDTArr (tbinderstt-disjoint-sym x₂) (tbd-ta-tbdt {!   !} (TBDΓ {!   !}) tbd ta)
+    tbd-ta-tbdt tbdd tbdg (TBDTTLam tbd x₁) (TATLam x ta) = BDTForall (tbd-ta-tbdt {!   !} tbdg tbd ta) x₁
+    tbd-ta-tbdt tbdd tbdg (TBDTAp tbd tbd₁) (TAAp ta ta₁ x) with tbd-ta-tbdt {!   !} tbdg tbd ta
+    ... | BDTArr y y₁ = y₁
+    tbd-ta-tbdt tbdd tbdg (TBDTTAp tbd x₂) (TATAp x ta x₁) with tbd-ta-tbdt {!   !} tbdg tbd ta
+    ... | BDTForall y x₃ rewrite ! x₁ = tbd-typ-subst y (tbinderstt-disjoint-sym x₂)
+    tbd-ta-tbdt tbdd tbdg (TBDTHole x₄) (TAEHole x x₁ x₂ x₃) = {!   !}
+    tbd-ta-tbdt tbdd tbdg (TBDTNEHole x₄ tbd) (TANEHole x ta x₁ x₂ x₃) = {!   !}
+    tbd-ta-tbdt tbdd tbdg (TBDTCast tbd x₃ x₄) (TACast ta x x₁ x₂) = {!   !}
+    tbd-ta-tbdt tbdd tbdg (TBDTFailedCast tbd x₄ x₅) (TAFailedCast ta x x₁ x₂ x₃) = {!   !}
+
+    -- Can modify this to require empty gamma.
     wf-ta : ∀{Θ Γ d τ Δ} → 
+            tbinders-unique d →
             Θ ⊢ Γ tctxwf → 
             Δ hctxwf →
             Δ , Θ , Γ ⊢ d :: τ → 
             Θ ⊢ τ wf 
-    wf-ta ctxwf hctwwf TAConst = WFBase
-    wf-ta (CCtx x₁) hctwwf (TAVar x) = x₁ x
-    wf-ta ctxwf hctwwf (TALam x x₁ wt) = WFArr x₁ (wf-ta (merge-tctx-wf ctxwf x₁) hctwwf wt)
-    wf-ta ctxwf hctwwf (TATLam apt wt) = WFForall apt (wf-ta (weaken-tctx-wf ctxwf) hctwwf wt)
-    wf-ta ctxwf hctwwf (TAAp wt wt₁ alpha) with (wf-ta ctxwf hctwwf wt)
+    wf-ta bu ctxwf hctwwf TAConst = WFBase
+    wf-ta bu (CCtx x₁) hctwwf (TAVar x) = x₁ x
+    wf-ta bu ctxwf hctwwf (TALam x x₁ wt) = WFArr x₁ (wf-ta {!   !} (merge-tctx-wf ctxwf x₁) hctwwf wt)
+    wf-ta bu ctxwf hctwwf (TATLam apt wt) = WFForall apt (wf-ta {!   !} (weaken-tctx-wf ctxwf) hctwwf wt)
+    wf-ta bu ctxwf hctwwf (TAAp wt wt₁ alpha) with (wf-ta {!   !} ctxwf hctwwf wt)
     ... | WFArr wf1 wf2 = wf2
-    wf-ta ctxwf hctwwf (TATAp x wt eq) with (wf-ta ctxwf hctwwf wt)
-    ... | WFForall apt wf' rewrite (sym eq) = wf-sub {!   !} x wf' refl
-    wf-ta ctxwf (HCtx map) (TAEHole x x₁ eq eq') with map x 
+    wf-ta (TBUTAp bu x₁ x₂) (CCtx x₃) hctwwf (TATAp x wt eq) with (wf-ta bu (CCtx x₃) hctwwf wt)
+    ... | WFForall apt wf' rewrite (sym eq) with tbd-ta-tbdt {!   !} {! ctxwf  !} x₂ wt
+    ...   | BDTForall tbdt x₃ = wf-sub tbdt x wf' refl 
+    wf-ta bu ctxwf (HCtx map) (TAEHole x x₁ eq eq') with map x 
     ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ (wf-ty-subst x₁ eq' thing1) thing2 eq
-    wf-ta ctxwf (HCtx map) (TANEHole x wt x₁ eq eq') with map x 
+    wf-ta bu ctxwf (HCtx map) (TANEHole x wt x₁ eq eq') with map x 
     ... | (thing1 , thing2) = typenv-wf (HCtx map) ctxwf x₁ (wf-ty-subst x₁ eq' thing1) thing2 eq
-    wf-ta ctxwf hctwwf (TACast wt x x₁ alpha) = x
-    wf-ta ctxwf hctwwf (TAFailedCast wt x x₁ x₂ _) = ground-wf x₁
+    wf-ta bu ctxwf hctwwf (TACast wt x x₁ alpha) = x
+    wf-ta bu ctxwf hctwwf (TAFailedCast wt x x₁ x₂ _) = ground-wf x₁
 
-  
-    no-tvar-casts : ∀{ Γ n τ d Δ} → ∅ ⊢ Γ tctxwf → Δ hctxwf → Δ , ∅ , Γ ⊢ d ⟨ T n ⇒ ⦇-⦈ ⟩ :: τ → ⊥
-    no-tvar-casts ctxwf hctxwf (TACast wt x x₁ alpha) with wf-ta ctxwf hctxwf wt 
+  {-
+    no-tvar-casts : ∀{ Γ n τ d Δ} → tbinders-unique d → ∅ ⊢ Γ tctxwf → Δ hctxwf → Δ , ∅ , Γ ⊢ d ⟨ T n ⇒ ⦇-⦈ ⟩ :: τ → ⊥
+    no-tvar-casts bu ctxwf hctxwf (TACast wt x x₁ alpha) with wf-ta bu ctxwf hctxwf wt 
     ... | WFVar () 
+-}

@@ -120,7 +120,7 @@ module weakening where
     weaken-subst-Γ {Γ = Γ} (EFId x₁) (STAIdId x₂ prem) = STAIdId (λ x τ x₃ → x∈∪l Γ _ x τ (x₂ x τ x₃) ) prem
     weaken-subst-Γ {x = x} {Γ = Γ} (EFSubst x₁ efrsh x₂) (STAIdSubst {y = y} {τ = τ'} subst x₃ alpha) =
       STAIdSubst (exchange-subst-Γ {Γ = Γ} (flip x₂) (weaken-subst-Γ {Γ = Γ ,, (y , τ')} efrsh {!   !}))
-               (weaken-ta x₁ x₃) (alpha-refl τ')
+               (weaken-ta x₁ x₃) alpha
     weaken-subst-Γ (EFId x) (STASubst x₁ x₂) = STASubst (weaken-subst-Γ (EFId x) x₁) x₂
     weaken-subst-Γ {x = x} {Γ = Γ} (EFSubst x₁ efrsh x₂) (STASubst {y = y} {τ = τ'} subst x₃) =
       STASubst (weaken-subst-Γ ((EFSubst x₁ efrsh x₂)) subst) x₃ 
@@ -149,8 +149,8 @@ module weakening where
                      tunbound-in-σ t σ →
                      Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ' →
                      Δ , (Θ ,, (t , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ'
-    weaken-subst-Θ UBθId ubs (STAIdId x p) = STAIdId x λ τ x₁ → weaken-t-wf {!   !} (p τ x₁)
-    weaken-subst-Θ UBθId (TUBσSubst x₂ ubs) (STAIdSubst x x₁ alpha) = STAIdSubst (weaken-subst-Θ UBθId ubs x) (weaken-ta-typ x₂ x₁) alpha
+    weaken-subst-Θ {Θ = Θ} UBθId ubs (STAIdId x p) = STAIdId x λ t x₁ → let p' = p t x₁ in lem-dom-extend {Γ = Θ} p'
+    weaken-subst-Θ ub (TUBσSubst x₂ ubs) (STAIdSubst x x₁ alpha) = STAIdSubst (weaken-subst-Θ ub ubs x) (weaken-ta-typ x₂ x₁) alpha
     weaken-subst-Θ {Θ = Θ} (UBθSubst x₂ ub) ubs (STASubst x x₁) = STASubst (rewrite-theta-subst (exchange-Θ {Θ = Θ}) (weaken-subst-Θ ub ubs x)) x₁
 
     weaken-ta-typ : ∀{Γ Δ Θ d t τ} →

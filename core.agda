@@ -450,13 +450,13 @@ module core where
     data _,_,_⊢_,_:s:_,_ : hctx → typctx → tctx → typenv → env → typctx → tctx → Set where
       STAIdId : ∀{Γ Γ' Δ Θ Θ'} →
                   ((x : Nat) (τ : htyp) → (x , τ) ∈ Γ' → (x , τ) ∈ Γ) →
-                  ((τ : htyp) → Θ' ⊢ τ wf → Θ ⊢ τ wf) →
+                  ((t : Nat) → dom Θ' t → dom Θ t) →
                   Δ , Θ , Γ ⊢ TypId Θ' , Id Γ' :s: Θ' , Γ'
-      STAIdSubst : ∀{Γ Γ' y τ τ' d σ Δ Θ Θ'} →
-                  Δ , Θ , (Γ ,, (y , τ')) ⊢ TypId Θ' , σ :s: Θ' , Γ' →
-                  Δ , Θ , Γ ⊢ d :: τ →
-                  τ' =α τ ->
-                  Δ , Θ , Γ ⊢ TypId Θ' , Subst d y σ :s: Θ' , Γ'
+      STAIdSubst : ∀{Γ Γ' y τ τ' d θ σ Δ Θ Θ'} →
+                  Δ , Θ , (Γ ,, (y , τ)) ⊢ θ , σ :s: Θ' , Γ' →
+                  Δ , Θ , Γ ⊢ d :: τ' →
+                  τ =α τ' →
+                  Δ , Θ , Γ ⊢ θ , Subst d y σ :s: Θ' , Γ'
       STASubst : ∀{Θ Θ' Γ Δ θ σ y Γ' τ } →
                Δ , (Θ ,, (y , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ' →
                ∅ ⊢ τ wf →
@@ -566,7 +566,7 @@ module core where
                     d final →
                     τ1 ground →
                     τ2 ground →
-                    τ1 =α̸  τ2 →
+                    τ1 =α̸ τ2 →
                     d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ indet
 
     -- final expressions
@@ -670,7 +670,7 @@ module core where
                  -- d final → -- red brackets
                  τ1 ground →
                  τ2 ground →
-                 τ1 ~̸  τ2 →
+                 τ1 ~̸ τ2 →
                  (d ⟨ τ1 ⇒ ⦇-⦈ ⇒ τ2 ⟩) →> (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
     ITApCast : ∀{d1 d2 τ1 τ2 τ1' τ2' } →
                -- d1 final → -- red brackets
@@ -803,7 +803,7 @@ module core where
                             → tunbound-in-σ x (Subst d y σ)
     
     data tunbound-in-θ : Nat → typenv → Set where
-      UBθId : ∀{t Γ} → tunbound-in-θ t (TypId Γ)
+      UBθId : ∀{t Θ} → tunbound-in-θ t (TypId Θ)
       UBθSubst : ∀{t τ y θ} → tunboundt-in t τ
                             → tunbound-in-θ t θ
                             → tunbound-in-θ t (TypSubst τ y θ)
@@ -930,7 +930,7 @@ module core where
                            → tbinders-disjoint-Δ Δ (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
     
     data tbinderst-disjoint-Γ : tctx -> htyp -> Set where
-      TBDΔ : ∀{τ Γ} → 
+      TBDΓ : ∀{τ Γ} → 
         ((x : Nat) (τ' : htyp) → ((x , τ') ∈ Γ) → 
         tbinderstt-disjoint τ' τ) → tbinderst-disjoint-Γ Γ τ
         
