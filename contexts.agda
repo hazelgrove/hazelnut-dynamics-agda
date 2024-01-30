@@ -29,6 +29,12 @@ module contexts where
   ctxindirect Γ n | Some x = Inl (x , refl)
   ctxindirect Γ n | None = Inr refl
 
+  -- map a function to all bound values in a context
+  map : {A B : Set} → (A → B) → A ctx → B ctx
+  map f Γ n with Γ n
+  ... | Some x = Some (f x)
+  ... | None = None
+  
   -- apartness for contexts
   _#_ : {A : Set} (n : Nat) → (Γ : A ctx) → Set
   x # Γ = (Γ x) == None
@@ -64,6 +70,12 @@ module contexts where
   _,,_ : {A : Set} → A ctx → (Nat × A) → A ctx
   (Γ ,, (x , t)) = Γ ∪ (■ (x , t))
 
+  -- context removal
+  _/_ : {A : Set} → A ctx → Nat → A ctx
+  (Γ / x) y with natEQ x y 
+  (Γ / x) .x | Inl refl = None 
+  ... | Inr _ = Γ y
+
   infixl 10 _,,_
 
   -- used below in proof of ∪ commutativity and associativity
@@ -74,6 +86,13 @@ module contexts where
   lem-dom-union1 {A} {C1} {C2} {x} (d1 , d2) D with C1 x
   lem-dom-union1 (d1 , d2) D | Some x₁ = refl
   lem-dom-union1 (d1 , d2) D | None = abort (somenotnone (! (π2 D)))
+  
+  lem-dom-union1-stronger : {A : Set} {C1 C2 : A ctx} {x : Nat} →
+                                    dom C1 x →
+                                    (C1 ∪ C2) x == C1 x
+  lem-dom-union1-stronger {A} {C1} {C2} {x} (witness , indom) with C1 x
+  ... | Some x1 = refl
+  ... | None = abort (somenotnone (! indom))
 
   lem-dom-union2 : {A : Set} {C1 C2 : A ctx} {x : Nat} →
                                     C1 ## C2 →
@@ -302,3 +321,71 @@ module contexts where
   lem-dom-union-apt2 {A} {Δ1} {Δ2} {x} {y} apt xin with Δ1 x
   lem-dom-union-apt2 apt xin | Some x₁ = xin
   lem-dom-union-apt2 apt xin | None = abort (somenotnone (! xin · apt))
+
+  -- map distributes over union
+  lem-map-union-dist : {A B : Set} {Γ1 Γ2 : A ctx} {f : A → B} →  map f (Γ1 ∪ Γ2) == (map f Γ1) ∪ (map f Γ2)
+  lem-map-union-dist {A} {B} {Γ1} {Γ2} {f} = funext (\n → ! (helper n))
+    where
+      helper : (x : Nat) → ((map f Γ1) ∪ (map f Γ2)) x == (map f (Γ1 ∪ Γ2)) x
+      helper x with ctxindirect (map f Γ1) x | ctxindirect Γ1 x
+      ... | Inl (_ , ingamma1l) | Inl (_ , ingamma1r) rewrite ingamma1l rewrite ingamma1r = !(ingamma1l)
+      ... | Inl (_ , ingamma1l) | Inr notingamma1r rewrite ingamma1l rewrite notingamma1r = abort (somenotnone (!(ingamma1l)))
+      ... | Inr notingamma1l | Inl (_ , ingamma1r) rewrite notingamma1l rewrite ingamma1r = abort (somenotnone notingamma1l)
+      ... | Inr notingamma1l | Inr notingamma1r rewrite notingamma1l rewrite notingamma1r with ctxindirect (map f Γ2) x | ctxindirect Γ2 x
+      ...   | Inl (_ , ingamma2l) | Inl (_ , ingamma2r) rewrite ingamma2l rewrite ingamma2r = !(ingamma2l)
+      ...   | Inr notingamma2l | Inr notingamma2r rewrite notingamma2l rewrite notingamma2r = refl
+      ...   | Inl (_ , ingamma2l) | Inr notingamma2r rewrite ingamma2l rewrite notingamma2r = abort (somenotnone (!(ingamma2l)))
+      ...   | Inr notingamma2l | Inl (_ , ingamma2r) rewrite notingamma2l rewrite ingamma2r = abort (somenotnone notingamma2l)
+  
+  -- corollary: map distributes over extension
+  map-extend-singleton : {A B : Set} {Γ : A ctx} {f : A → B} {x : Nat} {y : A} → (■ (x , f y)) == map f (■ (x , y))
+  map-extend-singleton {A} {B} {Γ} {f} {x} {y} = funext (\n → helper n)
+    where
+      helper : (n : Nat) → (■ (x , f y)) n == (map f (■ (x , y))) n
+      helper n with natEQ x n
+      ... | Inl refl = refl
+      ... | Inr neq = refl
+  
+  lem-map-extend-dist : {A B : Set} {Γ : A ctx} {f : A → B} {x : Nat} {y : A} → map f (Γ ,, (x , y)) == (map f Γ) ,, (x , f y)
+  lem-map-extend-dist {A} {B} {Γ} {f} {x} {y} rewrite map-extend-singleton {A} {B} {Γ} {f} {x} {y} = lem-map-union-dist {A} {B} {Γ} {(■ (x , y))}
+
+  lem-map-preserve-none : {A B : Set} {Γ : A ctx} {f : A → B} {n : Nat} → Γ n == None → map f Γ n == None
+  lem-map-preserve-none {Γ = Γ} {n = n} eq with Γ n
+  ... | None = refl
+
+  lem-map-preserve-apart : {A B : Set} {Γ : A ctx} {f : A → B} {x : Nat} → x # Γ -> x # (map f Γ)
+  lem-map-preserve-apart {Γ = Γ} {x = x} p with Γ x 
+  ... | None = refl
+  ... | Some t = abort (somenotnone p)
+  
+  lem-map-preserve-elem : {A B : Set} {Γ : A ctx} {f : A → B} {x : Nat} {y : A} → (x , y) ∈ Γ -> (x , f y) ∈ (map f Γ)
+  lem-map-preserve-elem p rewrite p = refl
+  
+  lem-apart-extend : {A : Set} {Γ : A ctx} {x y : Nat} {v : A} → x # Γ → x ≠ y → x # (Γ ,, (y , v))
+  lem-apart-extend {Γ = Γ} {x = x} {y = y} apt neq with Γ x
+  ... | None rewrite natEQneq (flip neq) = refl
+  ... | Some t = abort (somenotnone apt)
+
+  lem-apart-extend-rev : {A : Set} {Γ : A ctx} {x y : Nat} {v : A} → x # Γ → x ≠ y → x # ((■ (y , v)) ∪ Γ)
+  lem-apart-extend-rev {Γ = Γ} {x = x} {y = y} {v = v} apt neq with ctxindirect (■ (y , v)) x
+  ... | Inr nmem rewrite nmem = apt
+  ... | Inl (v , mem) = abort (neq (lem-dom-eq (v , mem)))
+
+  lem-singleton-apart : {A : Set} {x y : Nat} {v : A} → x ≠ y → x # (■ (y , v))
+  lem-singleton-apart {A} {x} {y} neq with natEQ y x
+  ... | Inl refl = abort (neq refl)
+  ... | Inr neq' = refl
+
+  lem-union-lunit : {A : Set} {Γ : A ctx} → ∅ ∪ Γ == Γ
+  lem-union-lunit {A} {Γ = Γ} = funext (λ x → foo x)
+    where
+      foo : (x : Nat) -> (∅ ∪ Γ) x == Γ x
+      foo x with ctxindirect {A} ∅ x
+      ... | Inl (_ , inctx) = refl
+      ... | Inr ninctx = refl
+  lem-extend-lunit : {A : Set} {x : Nat} {y : A} → ∅ ,, (x , y) == (■ (x , y))
+  lem-extend-lunit = lem-union-lunit
+
+  lem-dom-extend : {A : Set} {Γ : A ctx} {x x' : Nat} {y : A} → dom Γ x → dom (Γ ,, (x' , y)) x
+  lem-dom-extend {Γ = Γ} {x = x} mem with mem
+  ... | (y , inl) rewrite inl = y , refl

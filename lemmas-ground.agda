@@ -1,3 +1,4 @@
+open import Nat
 open import Prelude
 open import core
 
@@ -6,18 +7,33 @@ module lemmas-ground where
   ground-arr-not-hole : ∀{τ} →
                       (τ ground → ⊥) →
                       (τ ≠ (⦇-⦈ ==> ⦇-⦈))
-  ground-arr-not-hole notg refl = notg GHole
+  ground-arr-not-hole notg refl = notg GArr
 
-  -- not ground types either have to be hole or an arrow
-  notground : ∀{τ} → (τ ground → ⊥) → (τ == ⦇-⦈) + (Σ[ τ1 ∈ htyp ] Σ[ τ2 ∈ htyp ] (τ == (τ1 ==> τ2)))
+  -- not ground types aren't forall hole
+  ground-forall-not-hole : ∀{t τ} →
+                      (τ ground → ⊥) →
+                      (τ ≠ (·∀ t ⦇-⦈))
+  ground-forall-not-hole notg refl = notg GForall
+
+  -- not ground types either have to be hole, a type variable, an arrow, or a forall
+  notground : ∀{τ} → 
+              (τ ground → ⊥) → 
+              (τ == ⦇-⦈) 
+              + (Σ[ x ∈ Nat ] (τ == (T x)))
+              + (Σ[ τ1 ∈ htyp ] Σ[ τ2 ∈ htyp ] (τ == (τ1 ==> τ2)))
+              + (Σ[ t ∈ Nat ] Σ[ τ1 ∈ htyp ] (τ == (·∀ t τ1)))
   notground {b} gnd = abort (gnd GBase)
   notground {⦇-⦈} gnd = Inl refl
-  notground {b ==> b} gnd = Inr (b , b , refl)
-  notground {b ==> ⦇-⦈} gnd = Inr (b , ⦇-⦈ , refl)
-  notground {b ==> τ2 ==> τ3} gnd = Inr (b , τ2 ==> τ3 , refl)
-  notground {⦇-⦈ ==> b} gnd = Inr (⦇-⦈ , b , refl)
-  notground {⦇-⦈ ==> ⦇-⦈} gnd = abort (gnd GHole)
-  notground {⦇-⦈ ==> τ2 ==> τ3} gnd = Inr (⦇-⦈ , τ2 ==> τ3 , refl)
-  notground {(τ1 ==> τ2) ==> b} gnd = Inr (τ1 ==> τ2 , b , refl)
-  notground {(τ1 ==> τ2) ==> ⦇-⦈} gnd = Inr (τ1 ==> τ2 , ⦇-⦈ , refl)
-  notground {(τ1 ==> τ2) ==> τ3 ==> τ4} gnd = Inr (τ1 ==> τ2 , τ3 ==> τ4 , refl)
+  notground {T x} gnd = Inr (Inl (x , refl))
+  notground {τ1 ==> τ2} gnd = Inr (Inr (Inl (τ1 , τ2 , refl)))
+  notground {·∀ t τ} gnd = Inr (Inr (Inr (t , τ , refl)))
+
+  ground-subst-id : ∀{t τ1 τ2} -> τ1 ground -> (Typ[ τ2 / t ] τ1) == τ1
+  ground-subst-id GBase = refl
+  ground-subst-id GArr = refl
+  ground-subst-id {t = t} (GForall {t = t'}) with natEQ t t'
+  ... | Inl refl = refl
+  ... | Inr neq = refl
+
+  ground-subst : ∀{t τ1 τ2} -> τ1 ground -> (Typ[ τ2 / t ] τ1) ground
+  ground-subst {t} {τ1} {τ2} g rewrite ground-subst-id {t} {τ1} {τ2} g = g
