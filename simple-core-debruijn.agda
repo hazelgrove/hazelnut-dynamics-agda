@@ -1,9 +1,12 @@
 
 open import Nat
 open import Prelude
-open import contexts
+-- open import contexts
 
-module simple-core where
+-- this was a partial attempt to refactor to debriujn, to clean up the 
+-- core even more. 
+
+module simple-core-debruijn where
 
   -- types
   data htyp : Set where
@@ -11,7 +14,7 @@ module simple-core where
     T     : Nat → htyp
     ⦇-⦈    : htyp
     _==>_ : htyp → htyp → htyp
-    ·∀    : Nat → htyp → htyp
+    ·∀    : htyp → htyp
 
   -- arrow type constructors bind very tightly
   infixr 25  _==>_
@@ -22,54 +25,29 @@ module simple-core where
     _·:_    : hexp → htyp → hexp
     X       : Nat → hexp
     ·λ      : Nat → hexp → hexp
-    ·λ_[_]_ : Nat → htyp → hexp → hexp
-    ·Λ      : Nat → hexp → hexp
+    ·λ[_]_  : htyp → hexp → hexp
+    ·Λ      : hexp → hexp
     ⦇-⦈      : hexp
     ⦇⌜_⌟⦈   : hexp → hexp
     _∘_     : hexp → hexp → hexp
     _<_>    : hexp → htyp → hexp
 
-  -- the type of type contexts, i.e. Γs in the judegments below
-  tctx : Set
-  tctx = htyp ctx
+  -- the type of term to type contexts, i.e. Γs in the judegments below
+  data ctx : Set where 
+    ∅ : ctx
+    _,_ : htyp → ctx → ctx
 
-  -- the type of "type contexts" (name collision with above), containing 
-  -- all type variables in scope, i.e. Θs in the judgements below
+  -- the type of type contexts i.e. Θs in the judgements below
   typctx : Set
-  typctx = ⊤ ctx
+  typctx = Nat
 
-  module alpha where 
-
-    data _,_⊢_=α_ : Nat ctx → Nat ctx → htyp → htyp → Set where 
-      AlphaBase : ∀ {ΓL ΓR} → ΓL , ΓR ⊢ b =α b
-      AlphaVarBound : ∀ {ΓL ΓR x y} → (x , y) ∈ ΓL → (y , x) ∈ ΓR → ΓL , ΓR ⊢ T x =α T y
-      AlphaVarFree : ∀ {ΓL ΓR x} → (ΓL x == None) → (ΓR x == None) → ΓL , ΓR ⊢ T x =α T x
-      AlphaHole : ∀ {ΓL ΓR} → ΓL , ΓR ⊢ ⦇-⦈ =α ⦇-⦈
-      AlphaArr : ∀ {ΓL ΓR τ1 τ2 τ3 τ4} → ΓL , ΓR ⊢ τ1 =α τ3 → ΓL , ΓR ⊢ τ2 =α τ4 → ΓL , ΓR ⊢ τ1 ==> τ2 =α τ3 ==> τ4
-      AlphaForall : ∀ {ΓL ΓR τ1 τ2 x y} → (■ (x , y) ∪ ΓL) ,  (■ (y , x) ∪ ΓR) ⊢ τ1 =α τ2 → ΓL , ΓR ⊢ ·∀ x τ1 =α ·∀ y τ2
-
-    data _,_⊢_~_ : Nat ctx → Nat ctx → htyp → htyp → Set where 
-      ConsistBase : ∀ {ΓL ΓR} → ΓL , ΓR ⊢ b ~ b
-      ConsistVarBound : ∀ {ΓL ΓR x y} → (x , y) ∈ ΓL → (y , x) ∈ ΓR → ΓL , ΓR ⊢ T x ~ T y
-      ConsistVarFree : ∀ {ΓL ΓR x} → (ΓL x == None) → (ΓR x == None) → ΓL , ΓR ⊢ T x ~ T x
-      ConsistHole1 : ∀ {ΓL ΓR τ} → ΓL , ΓR ⊢ τ ~ ⦇-⦈
-      ConsistHole2 : ∀ {ΓL ΓR τ} → ΓL , ΓR ⊢ ⦇-⦈ ~ τ
-      ConsistArr : ∀ {ΓL ΓR τ1 τ2 τ3 τ4} → ΓL , ΓR ⊢ τ1 ~ τ3 → ΓL , ΓR ⊢ τ2 ~ τ4 → ΓL , ΓR ⊢ τ1 ==> τ2 ~ τ3 ==> τ4
-      ConsistForall : ∀ {ΓL ΓR τ1 τ2 x y} → (■ (x , y) ∪ ΓL) ,  (■ (y , x) ∪ ΓR) ⊢ τ1 ~ τ2 → ΓL , ΓR ⊢ ·∀ x τ1 ~ ·∀ y τ2
-
-  open alpha
-
-  -- alpha equivalence of types
-  _=α_ : htyp → htyp → Set 
-  τ1 =α τ2 = ∅ , ∅ ⊢ τ1 =α τ2
-
-  -- alpha inequivalence
-  _=α̸_ : (t1 t2 : htyp) → Set
-  _=α̸_ = \(t1 t2 : htyp) → ¬(t1 =α t2)
-
-  -- (alpha) consistency of types
-  _~_ : htyp → htyp → Set 
-  τ1 ~ τ2 = ∅ , ∅ ⊢ τ1 ~ τ2
+  data _~_ : htyp → htyp → Set where 
+      ConsistBase : b ~ b
+      ConsistVar : ∀ {x} → T x ~ T x
+      ConsistHole1 : ∀ {τ} → τ ~ ⦇-⦈
+      ConsistHole2 : ∀ {τ} → ⦇-⦈ ~ τ
+      ConsistArr : ∀ {τ1 τ2 τ3 τ4} → τ1 ==> τ2 ~ τ3 ==> τ4
+      ConsistForall : ∀ {τ1 τ2} → τ1 ~ τ2 → ·∀ τ1 ~ ·∀ τ2
 
   -- type inconsistency
   _~̸_ : (t1 t2 : htyp) → Set
@@ -82,15 +60,15 @@ module simple-core where
 
   --- matching for foralls
   data _▸forall_ : htyp → htyp → Set where
-    MFHole : ∀{t} → ⦇-⦈ ▸forall (·∀ t ⦇-⦈)
-    MFForall : ∀{t τ} → (·∀ t τ) ▸forall (·∀ t τ)
+    MFHole : ⦇-⦈ ▸forall (·∀ ⦇-⦈)
+    MFForall : ∀{τ} → (·∀ τ) ▸forall (·∀ τ)
 
   -- internal expressions
   data ihexp : Set where
     c         : ihexp
     X         : Nat → ihexp
-    ·λ_[_]_   : Nat → htyp → ihexp → ihexp
-    ·Λ        : Nat → ihexp → ihexp
+    ·λ[_]_   : htyp → ihexp → ihexp
+    ·Λ        : ihexp → ihexp
     ⦇-⦈⟨_⟩     : htyp → ihexp
     ⦇⌜_⌟⦈⟨_⟩    : ihexp → htyp → ihexp
     _∘_       : ihexp → ihexp → ihexp
@@ -104,26 +82,26 @@ module simple-core where
   
   -- well-formedness of types
   data _⊢_wf : typctx → htyp → Set where
-    WFVar : ∀{Θ a} → (a , <>) ∈ Θ → Θ ⊢ T a wf
+    WFVarZ : ∀{n} → 1+ n ⊢ T Z wf
+    WFVarS : ∀{n m} → n ⊢ T m wf → 1+ n ⊢ T (1+ m) wf
     WFBase : ∀{Θ} → Θ ⊢ b wf
     WFHole : ∀{Θ} → Θ ⊢ ⦇-⦈ wf
-    WFArr : ∀{Θ t1 t2} → Θ ⊢ t1 wf → Θ ⊢  t2 wf → Θ ⊢ t1 ==> t2 wf
-    WFForall : ∀{Θ n t} → n # Θ → (Θ ,, (n , <>)) ⊢ t wf → Θ ⊢ ·∀ n t wf
+    WFArr : ∀{Θ t1 t2} → Θ ⊢ t1 wf → Θ ⊢ t2 wf → Θ ⊢ t1 ==> t2 wf
+    WFForall : ∀{Θ n t} → 1+ Θ ⊢ t wf → Θ ⊢ ·∀ t wf
 
   -- well-formedness of contexts
   data _⊢_tctxwf : typctx → tctx → Set where
     CCtx : ∀{Θ Γ} → (∀{x y} → (x , y) ∈ Γ → Θ ⊢ y wf) → Θ ⊢ Γ tctxwf
 
   -- substitution of types in types
-  Typ[_/_]_ : htyp → Nat → htyp → htyp 
-  Typ[ τ / a ] b = b
-  Typ[ τ / a ] T a'
-    with natEQ a a'
-  Typ[ τ / a ] T a' | Inl refl = τ
-  Typ[ τ / a ] T a' | Inr neq = T a'
-  Typ[ τ / a ] ⦇-⦈ = ⦇-⦈
-  Typ[ τ / a ] (τ1 ==> τ2) = ((Typ[ τ / a ] τ1) ==> (Typ[ τ / a ] τ2))
-  Typ[ τ / a ] (·∀ t τ') with natEQ a t
+  -- Note: this assumes tau is always closed (wf in Z)
+  TT[_/_]_ : htyp → Nat → htyp → htyp 
+  TT[ τ / a ] b = b
+  TT[ τ / a ] T Z = τ
+  TT[ τ / a ] T (1+ n) = T (1+ n)
+  TT[ τ / a ] ⦇-⦈ = ⦇-⦈
+  TT[ τ / a ] (τ1 ==> τ2) = ((TT[ τ / a ] τ1) ==> (TT[ τ / a ] τ2))
+  TT[ τ / a ] (·∀ t τ') with natEQ a t
   ...  | Inl refl = (·∀ t τ')
   ...  | Inr _ = ·∀ t (Typ[ τ / a ] τ')
 
