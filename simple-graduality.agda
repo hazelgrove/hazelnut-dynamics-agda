@@ -44,6 +44,7 @@ module simple-graduality where
     PAp :  ∀{e1 e2 e3 e4} → e1 ⊑ e3 → e2 ⊑ e4 → (e1 ∘ e2) ⊑ (e3 ∘ e4)
     PTAp : ∀{e1 e2 τ1 τ2} → e1 ⊑ e2 → τ1 ⊑typ τ2 → (e1 < τ1 >) ⊑ (e2 < τ2 >)
 
+  -- see Refined Criteria for Gradual Typing, Figure 9
   data _⊑i_ : (d1 d2 : ihexp) → Set where
     PIConst : c ⊑i c
     PIVar : ∀{x} → (X x) ⊑i (X x) 
@@ -55,6 +56,9 @@ module simple-graduality where
     PITAp : ∀{d1 d2 τ1 τ2} → d1 ⊑i d2 → τ1 ⊑typ τ2 → (d1 < τ1 >) ⊑i (d2 < τ2 >)
     PICast : ∀{d1 d2 τ1 τ2 τ3 τ4} → d1 ⊑i d2 → τ1 ⊑typ τ3 → τ2 ⊑typ τ4 → (d1 ⟨ τ1 ⇒ τ2 ⟩) ⊑i (d2 ⟨ τ3 ⇒ τ4 ⟩)
     PIFailedCast : ∀{d1 d2 τ1 τ2 τ3 τ4} → d1 ⊑i d2 → τ1 ⊑typ τ3 → τ2 ⊑typ τ4 → (d1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) ⊑i (d2 ⟨ τ3 ⇒⦇-⦈⇏ τ4 ⟩)
+    -- PIRemoveCast : TODO
+    -- PIAddCast : TODO
+    -- PIBlame : TODO
 
   _⊑ctx_ : (Γ1 Γ2 : tctx) → Set 
   Γ1 ⊑ctx Γ2 = (∀{x τ1 τ2} → (x , τ1) ∈ Γ1 → (x , τ2) ∈ Γ2 → (τ1 ⊑typ τ2)) × (∀{x} → x # Γ1 → x # Γ2) × (∀{x} → x # Γ2 → x # Γ1)
