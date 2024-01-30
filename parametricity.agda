@@ -14,6 +14,9 @@ module parametricity where
   -- casts and some may succeed? Or perhaps I haven't taken sufficient advantage
   -- of the premimses. 
 
+  -- Disallow casts from varying. Prove lemma that if we elaborate a well-typed
+  -- complete program, all casts are identity casts.
+
   -- The other open issue is about the types attached to holes. Can they vary?
   -- The lemma about =0 respecting substitution requires they be able to vary. 
 
