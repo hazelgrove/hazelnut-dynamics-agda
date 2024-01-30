@@ -486,7 +486,7 @@ module core where
                 Δ , Θ , Γ ⊢ (d < τ1 >) :: τ3
       TAEHole : ∀{Δ Θ Γ θ σ u Θ' Γ' Γ'' τ τ'} →
                 (u , (Θ' , Γ' , τ')) ∈ Δ →
-                Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ'' →
+                Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ'' → -- T: is this a typo? should it be Theta'' rather than Theta'?
                 τ == apply-typenv θ τ' →
                 Γ'' == apply-typenv-env θ Γ' →
                 Δ , Θ , Γ ⊢ ⦇-⦈⟨ u , θ , σ ⟩ :: τ
