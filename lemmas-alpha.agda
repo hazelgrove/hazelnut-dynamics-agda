@@ -54,7 +54,7 @@ module lemmas-alpha where
   alpha-closed wf (AlphaVarFree x x₁) = {!   !}
   alpha-closed wf AlphaHole = {!   !}
   alpha-closed wf (AlphaArr alpha alpha₁) = {!   !}
-  alpha-closed (WFForall wf) (AlphaForall alpha) = WFForall {!   !}
+  alpha-closed (WFForall apt wf) (AlphaForall alpha) = WFForall refl {!   !}
   -- Alternatively can prove the below and use:
   -- alpha-closed = alpha-wf
 
@@ -63,7 +63,7 @@ module lemmas-alpha where
   alpha-wf wf (AlphaVarFree x x₁) = wf
   alpha-wf wf AlphaHole = wf
   alpha-wf (WFArr wf wf₁) (AlphaArr alpha alpha₁) = WFArr (alpha-wf wf alpha) (alpha-wf wf₁ alpha₁)
-  alpha-wf (WFForall wf) (AlphaForall alpha) = WFForall (alpha-wf {! wf  !} {!   !})
+  alpha-wf (WFForall apt wf) (AlphaForall alpha) = WFForall {!   !} (alpha-wf {! wf  !} {!   !})
 
      -- AlphaForall (prune-pres-alpha2 (alpha-rewrite-gamma (! (comp-lextend-prunel x y y' ΓL1 ΓL2 ΓR1 ΓR2)) (! (comp-lextend-pruner x y y' ΓL1 ΓL2 ΓR1 ΓR2)) (prune-pres-alpha1 (alpha-trans a1 a2)))) -- (alpha-rewrite-gamma (! (comp-lextend x y y' ΓL1 ΓL2)) (! (comp-lextend y' y x ΓR2 ΓR1)) (alpha-trans a1 a2)) -- AlphaForall {!   !}
 

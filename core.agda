@@ -128,7 +128,7 @@ module core where
     WFBase : ∀{Θ} → Θ ⊢ b wf
     WFHole : ∀{Θ} → Θ ⊢ ⦇-⦈ wf
     WFArr : ∀{Θ t1 t2} → Θ ⊢ t1 wf → Θ ⊢  t2 wf → Θ ⊢ t1 ==> t2 wf
-    WFForall : ∀{Θ n t} → (Θ ,, (n , <>)) ⊢ t wf → Θ ⊢ ·∀ n t wf
+    WFForall : ∀{Θ n t} → n # Θ → (Θ ,, (n , <>)) ⊢ t wf → Θ ⊢ ·∀ n t wf
 
   -- well-formedness of contexts
   data _⊢_tctxwf : typctx → tctx → Set where
@@ -450,12 +450,13 @@ module core where
     data _,_,_⊢_,_:s:_,_ : hctx → typctx → tctx → typenv → env → typctx → tctx → Set where
       STAIdId : ∀{Γ Γ' Δ Θ Θ'} →
                   ((x : Nat) (τ : htyp) → (x , τ) ∈ Γ' → (x , τ) ∈ Γ) →
-                  ((τ : htyp) → Θ' ⊢ τ wf → Θ ⊢ τ wf) →
+                  ((t : Nat) → dom Θ' t → dom Θ t) →
                   Δ , Θ , Γ ⊢ TypId Θ' , Id Γ' :s: Θ' , Γ'
-      STAIdSubst : ∀{Γ Γ' y τ d σ Δ Θ Θ'} →
-                  Δ , Θ , (Γ ,, (y , τ)) ⊢ TypId Θ' , σ :s: Θ' , Γ' →
-                  Δ , Θ , Γ ⊢ d :: τ →
-                  Δ , Θ , Γ ⊢ TypId Θ' , Subst d y σ :s: Θ' , Γ'
+      STAIdSubst : ∀{Γ Γ' y τ τ' d θ σ Δ Θ Θ'} →
+                  Δ , Θ , (Γ ,, (y , τ)) ⊢ θ , σ :s: Θ' , Γ' →
+                  Δ , Θ , Γ ⊢ d :: τ' →
+                  τ =α τ' →
+                  Δ , Θ , Γ ⊢ θ , Subst d y σ :s: Θ' , Γ'
       STASubst : ∀{Θ Θ' Γ Δ θ σ y Γ' τ } →
                Δ , (Θ ,, (y , <>)) , Γ ⊢ θ , σ :s: Θ' , Γ' →
                ∅ ⊢ τ wf →
@@ -487,8 +488,8 @@ module core where
       TAEHole : ∀{Δ Θ Γ θ σ u Θ' Γ' Γ'' τ τ'} →
                 (u , (Θ' , Γ' , τ')) ∈ Δ →
                 Δ , Θ , Γ ⊢ θ , σ :s: Θ' , Γ'' → -- T: is this a typo? should it be Theta'' rather than Theta'?
-                τ == apply-typenv θ τ' →
-                Γ'' == apply-typenv-env θ Γ' →
+                τ == apply-typenv θ τ' → -- up to alpha?
+                Γ'' == apply-typenv-env θ Γ' → -- Probably need up to alpha equiv at the context level.
                 Δ , Θ , Γ ⊢ ⦇-⦈⟨ u , θ , σ ⟩ :: τ
       TANEHole : ∀ {Δ Θ Γ d τ'' u Θ' Γ' Γ'' θ σ τ τ'} →
                  (u , (Θ' , Γ' , τ')) ∈ Δ →
@@ -501,7 +502,7 @@ module core where
              Δ , Θ , Γ ⊢ d :: τ1' →
              Θ ⊢ τ2 wf →
              τ1 ~ τ2 →
-             τ1 =α τ1' →
+             τ1 =α τ1' → -- Redundant? t1 ~ t2 /\ t1' =alpha t1 -> t1' ~ t2
              Δ , Θ , Γ ⊢ d ⟨ τ1 ⇒ τ2 ⟩ :: τ2
       TAFailedCast : ∀{Δ Θ Γ d τ1 τ1' τ2} →
              Δ , Θ , Γ ⊢ d :: τ1' →
@@ -565,7 +566,7 @@ module core where
                     d final →
                     τ1 ground →
                     τ2 ground →
-                    τ1 =α̸  τ2 →
+                    τ1 =α̸ τ2 →
                     d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ indet
 
     -- final expressions
@@ -669,7 +670,7 @@ module core where
                  -- d final → -- red brackets
                  τ1 ground →
                  τ2 ground →
-                 τ1 ~̸  τ2 →
+                 τ1 ~̸ τ2 →
                  (d ⟨ τ1 ⇒ ⦇-⦈ ⇒ τ2 ⟩) →> (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
     ITApCast : ∀{d1 d2 τ1 τ2 τ1' τ2' } →
                -- d1 final → -- red brackets
@@ -802,7 +803,7 @@ module core where
                             → tunbound-in-σ x (Subst d y σ)
     
     data tunbound-in-θ : Nat → typenv → Set where
-      UBθId : ∀{t Γ} → tunbound-in-θ t (TypId Γ)
+      UBθId : ∀{t Θ} → tunbound-in-θ t (TypId Θ)
       UBθSubst : ∀{t τ y θ} → tunboundt-in t τ
                             → tunbound-in-θ t θ
                             → tunbound-in-θ t (TypSubst τ y θ)
@@ -929,7 +930,7 @@ module core where
                            → tbinders-disjoint-Δ Δ (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
     
     data tbinderst-disjoint-Γ : tctx -> htyp -> Set where
-      TBDΔ : ∀{τ Γ} → 
+      TBDΓ : ∀{τ Γ} → 
         ((x : Nat) (τ' : htyp) → ((x , τ') ∈ Γ) → 
         tbinderstt-disjoint τ' τ) → tbinderst-disjoint-Γ Γ τ
         
@@ -966,6 +967,18 @@ module core where
       BDσSubst : ∀{d1 d2 y σ} → tbinders-disjoint d1 d2
                               → tbinders-disjoint-σ σ d2
                               → tbinders-disjoint-σ (Subst d1 y σ) d2
+
+    data tbinders-disjoint-Θ : typctx → htyp → Set where
+      TBDΘBase : ∀{Θ} → tbinders-disjoint-Θ Θ b
+      TBDΘTVar : ∀{Θ t} → tbinders-disjoint-Θ Θ (T t)
+      TBDΘHole :  ∀{Θ} → tbinders-disjoint-Θ Θ ⦇-⦈
+      TBDΘArr : ∀{Θ τ1 τ2} → tbinders-disjoint-Θ Θ τ1
+                         → tbinders-disjoint-Θ Θ τ2
+                         → tbinders-disjoint-Θ Θ (τ1 ==> τ2)
+      TBDΘForall : ∀{Θ t τ} → tbinders-disjoint-Θ Θ τ
+                           → t # Θ
+                           → tbinders-disjoint-Θ Θ (·∀ t τ)
+
       
     data tbinders-disjoint-θ : typenv → ihexp → Set where
       BDTθId : ∀{Θ d} → tbinders-disjoint-θ (TypId Θ) d
@@ -989,7 +1002,8 @@ module core where
     data tbinderst-disjoint : htyp → ihexp → Set where
       TBDTConst : ∀{τ} → tbinderst-disjoint τ c
       TBDTVar : ∀{x τ} → tbinderst-disjoint τ (X x)
-      TBDTLam : ∀{x τ τ' d} → tbinderstt-disjoint τ τ'
+      TBDTLam : ∀{x τ τ' d} → tbinderst-disjoint τ d
+                            → tbinderstt-disjoint τ τ'
                             → tbinderst-disjoint τ (·λ_[_]_ x τ' d)
       TBDTTLam :  ∀{t τ d} → tbinderst-disjoint τ d
                             → tunboundt-in t τ
