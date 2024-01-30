@@ -1,12 +1,10 @@
+open import Nat
 open import Prelude
 open import contexts
-open import Nat
 open import simple-core
 open import rewrite-util
 
 module simple-lemmas-alpha where
-
-  open alpha
 
   reflex-extend : {x' y : Nat} {Γ : Nat ctx} → (x : Nat) → (∀ {x y} → (x , y) ∈ Γ → (x , x) ∈ Γ) → (x' , y) ∈ (■ (x , x) ∪ Γ) → (x' , x') ∈ (■ (x , x) ∪ Γ)
   reflex-extend {x' = x'} {y = y} x reflex elem with natEQ x x' 

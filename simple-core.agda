@@ -38,26 +38,22 @@ module simple-core where
   typctx : Set
   typctx = ⊤ ctx
 
-  module alpha where 
+  data _,_⊢_=α_ : Nat ctx → Nat ctx → htyp → htyp → Set where 
+    AlphaBase : ∀ {ΓL ΓR} → ΓL , ΓR ⊢ b =α b
+    AlphaVarBound : ∀ {ΓL ΓR x y} → (x , y) ∈ ΓL → (y , x) ∈ ΓR → ΓL , ΓR ⊢ T x =α T y
+    AlphaVarFree : ∀ {ΓL ΓR x} → (ΓL x == None) → (ΓR x == None) → ΓL , ΓR ⊢ T x =α T x
+    AlphaHole : ∀ {ΓL ΓR} → ΓL , ΓR ⊢ ⦇-⦈ =α ⦇-⦈
+    AlphaArr : ∀ {ΓL ΓR τ1 τ2 τ3 τ4} → ΓL , ΓR ⊢ τ1 =α τ3 → ΓL , ΓR ⊢ τ2 =α τ4 → ΓL , ΓR ⊢ τ1 ==> τ2 =α τ3 ==> τ4
+    AlphaForall : ∀ {ΓL ΓR τ1 τ2 x y} → (■ (x , y) ∪ ΓL) ,  (■ (y , x) ∪ ΓR) ⊢ τ1 =α τ2 → ΓL , ΓR ⊢ ·∀ x τ1 =α ·∀ y τ2
 
-    data _,_⊢_=α_ : Nat ctx → Nat ctx → htyp → htyp → Set where 
-      AlphaBase : ∀ {ΓL ΓR} → ΓL , ΓR ⊢ b =α b
-      AlphaVarBound : ∀ {ΓL ΓR x y} → (x , y) ∈ ΓL → (y , x) ∈ ΓR → ΓL , ΓR ⊢ T x =α T y
-      AlphaVarFree : ∀ {ΓL ΓR x} → (ΓL x == None) → (ΓR x == None) → ΓL , ΓR ⊢ T x =α T x
-      AlphaHole : ∀ {ΓL ΓR} → ΓL , ΓR ⊢ ⦇-⦈ =α ⦇-⦈
-      AlphaArr : ∀ {ΓL ΓR τ1 τ2 τ3 τ4} → ΓL , ΓR ⊢ τ1 =α τ3 → ΓL , ΓR ⊢ τ2 =α τ4 → ΓL , ΓR ⊢ τ1 ==> τ2 =α τ3 ==> τ4
-      AlphaForall : ∀ {ΓL ΓR τ1 τ2 x y} → (■ (x , y) ∪ ΓL) ,  (■ (y , x) ∪ ΓR) ⊢ τ1 =α τ2 → ΓL , ΓR ⊢ ·∀ x τ1 =α ·∀ y τ2
-
-    data _,_⊢_~_ : Nat ctx → Nat ctx → htyp → htyp → Set where 
-      ConsistBase : ∀ {ΓL ΓR} → ΓL , ΓR ⊢ b ~ b
-      ConsistVarBound : ∀ {ΓL ΓR x y} → (x , y) ∈ ΓL → (y , x) ∈ ΓR → ΓL , ΓR ⊢ T x ~ T y
-      ConsistVarFree : ∀ {ΓL ΓR x} → (ΓL x == None) → (ΓR x == None) → ΓL , ΓR ⊢ T x ~ T x
-      ConsistHole1 : ∀ {ΓL ΓR τ} → ΓL , ΓR ⊢ τ ~ ⦇-⦈
-      ConsistHole2 : ∀ {ΓL ΓR τ} → ΓL , ΓR ⊢ ⦇-⦈ ~ τ
-      ConsistArr : ∀ {ΓL ΓR τ1 τ2 τ3 τ4} → ΓL , ΓR ⊢ τ1 ~ τ3 → ΓL , ΓR ⊢ τ2 ~ τ4 → ΓL , ΓR ⊢ τ1 ==> τ2 ~ τ3 ==> τ4
-      ConsistForall : ∀ {ΓL ΓR τ1 τ2 x y} → (■ (x , y) ∪ ΓL) ,  (■ (y , x) ∪ ΓR) ⊢ τ1 ~ τ2 → ΓL , ΓR ⊢ ·∀ x τ1 ~ ·∀ y τ2
-
-  open alpha
+  data _,_⊢_~_ : Nat ctx → Nat ctx → htyp → htyp → Set where 
+    ConsistBase : ∀ {ΓL ΓR} → ΓL , ΓR ⊢ b ~ b
+    ConsistVarBound : ∀ {ΓL ΓR x y} → (x , y) ∈ ΓL → (y , x) ∈ ΓR → ΓL , ΓR ⊢ T x ~ T y
+    ConsistVarFree : ∀ {ΓL ΓR x} → (ΓL x == None) → (ΓR x == None) → ΓL , ΓR ⊢ T x ~ T x
+    ConsistHole1 : ∀ {ΓL ΓR τ} → ΓL , ΓR ⊢ τ ~ ⦇-⦈
+    ConsistHole2 : ∀ {ΓL ΓR τ} → ΓL , ΓR ⊢ ⦇-⦈ ~ τ
+    ConsistArr : ∀ {ΓL ΓR τ1 τ2 τ3 τ4} → ΓL , ΓR ⊢ τ1 ~ τ3 → ΓL , ΓR ⊢ τ2 ~ τ4 → ΓL , ΓR ⊢ τ1 ==> τ2 ~ τ3 ==> τ4
+    ConsistForall : ∀ {ΓL ΓR τ1 τ2 x y} → (■ (x , y) ∪ ΓL) ,  (■ (y , x) ∪ ΓR) ⊢ τ1 ~ τ2 → ΓL , ΓR ⊢ ·∀ x τ1 ~ ·∀ y τ2
 
   -- alpha equivalence of types
   _=α_ : htyp → htyp → Set 

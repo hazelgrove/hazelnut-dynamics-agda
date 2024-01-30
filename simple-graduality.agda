@@ -1,11 +1,10 @@
 open import Nat
 open import Prelude
+open import contexts
 open import simple-core
-open alpha
 open import simple-lemmas-alpha
 open import simple-lemmas-consistency
 
-open import contexts
 
 -- Note from Thomas: the draft paper is missing a definition of ⊑ for terms
 
@@ -217,7 +216,8 @@ module simple-graduality where
       (Θ , Γ ⊢ e ⇐ τ1 ~> d :: τ2) →
       Σ[ d' ∈ ihexp ] Σ[ τ2' ∈ htyp ] ((Θ , Γ' ⊢ e' ⇐ τ1' ~> d' :: τ2') × (d ⊑i d') × (τ2 ⊑typ τ2'))
     graduality-elab-ana {e' = ⦇-⦈} precctx prectyp prec (EASubsume neq1 neq2 syn consist) with graduality-elab-syn precctx prec syn 
-    graduality-elab-ana {e' = ⦇-⦈} precctx prectyp prec (EASubsume neq1 neq2 syn consist) | τ' , d' , syn' , prec1 , prec2 = _ , _ , EAEHole , PIEHole , {!   !}
+    graduality-elab-ana {e' = ⦇-⦈} precctx prectyp prec (EASubsume neq1 neq2 syn consist) | τ' , d' , syn' , prec1 , prec2 
+      = _ , _ , EAEHole , PIEHole , {!   !}
     graduality-elab-ana precctx prectyp prec syn = {!   !}
 
     graduality-elab-syn : 
@@ -248,6 +248,14 @@ module simple-graduality where
     ... | τ4'' , match' , prec2 with graduality-elab-ana precctx (PTForall prec2) prec ana 
     ... | d' , τ2'' , ana' , prec3 , prec4 rewrite (sym sub) = _ , _ , ESTAp (⊑typ-wf wf prectyp) syn' match' ana' refl , ⊑typ-Typsubst prectyp prec2 , PITAp (PICast prec3 prec4 (PTForall prec2)) prectyp
    
+  -- not true
+  -- graduality-boxedval : ∀{d d'} → d boxedval → d ⊑i d' → d' boxedval
+  -- graduality-boxedval (BVVal val) prec = {!   !}
+  -- graduality-boxedval (BVArrCast x bv) PIEHole = graduality-boxedval bv PIEHole
+  -- graduality-boxedval (BVArrCast x bv) (PICast prec x₁ x₂) = {!  bv !}
+  -- graduality-boxedval (BVForallCast x bv) prec = {!   !}
+  -- graduality-boxedval (BVHoleCast x bv) prec = {!   !}
+
   graduality2 : 
     ∀{e e' v} →     
     (e ⊑ e') →

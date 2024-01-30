@@ -1,12 +1,10 @@
+open import Nat
 open import Prelude
 open import contexts
-open import Nat
 open import simple-core
 open import simple-lemmas-alpha -- For reflex-extend
 
 module simple-lemmas-consistency where
-
-  open alpha
 
   ⊢~refl : {Γ : Nat ctx} -> {t : htyp} → (∀ {x y} → (x , y) ∈ Γ → (x , x) ∈ Γ) -> Γ , Γ ⊢ t ~ t
   ⊢~refl {t = b} _ = ConsistBase
