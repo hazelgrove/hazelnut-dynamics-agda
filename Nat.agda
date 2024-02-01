@@ -114,3 +114,64 @@ module Nat where
   ... | Inl x = abort (nlt x)
   ... | Inr (Inl x) = x
   ... | Inr (Inr x) = abort (neq x)
+
+
+  -- double : Nat → Nat
+  -- double Z = Z 
+  -- double (1+ n) = 1+ (1+ (double n))
+
+  -- pair : Nat → Nat → Nat 
+  -- pair n Z = double n 
+  -- pair n (1+ m) = 1+ (double (pair n m))
+
+  -- data remainder : Set where 
+  --   RZ : remainder 
+  --   R1 : remainder
+
+  -- half : Nat → (Nat × remainder)
+  -- half Z = (Z , RZ) 
+  -- half (1+ Z) = (Z , R1) 
+  -- half (1+ (1+ n)) with (half n) 
+  -- ... | (q , r) = (1+ q , r)
+
+  -- unpair : Nat → (Nat × Nat)
+  -- unpair n with half n 
+  -- ... | (q , RZ) = (q , Z)
+  -- ... | (q , R1) = {!   !}
+
+  -- half-double : (n : Nat) → (half (double n) == (n , RZ))
+  -- half-double Z = refl
+  -- half-double (1+ n) rewrite (half-double n) = refl
+
+  -- pair-unpair : (n m : Nat) → (unpair (pair n m) == (n , m))
+  -- pair-unpair n Z rewrite half-double n = refl
+  -- pair-unpair n (1+ m) = {!   !}
+
+  postulate
+    pair : (Nat × Nat) → Nat 
+    unpair : Nat → (Nat × Nat)
+    pair-unpair : (p : Nat × Nat) → (unpair (pair p) == p)
+    unpair-pair : (n : Nat) → (pair (unpair n) == n)
+
+  -- data alpha-var-type : Set where 
+  --   Bound : (Nat × Nat) → alpha-var-type
+  --   Free : Nat → alpha-var-type
+
+  -- postulate
+  --   encode-var : alpha-var-type → Nat 
+  --   decode-var : Nat → alpha-var-type
+  --   encode-decode : (n : alpha-var-type) → (decode-var (encode-var n) == n)
+  --   decode-encode : (n : Nat) → (encode-var (decode-var n) == n)
+
+  bijection-injective : {A B : Set} → (f : A → B) → (g : B → A) → ((x : A) → (g (f x) == x)) → ((x : B) → (f (g x) == x)) → (x x' : A) → ((f x) == (f x')) → (x == x')
+  bijection-injective f g inv1 inv2 x x' eq with h1 
+    where 
+      h1 : g (f x) == g (f x')
+      h1 rewrite eq = refl
+  bijection-injective f g inv1 inv2 x x' eq | h1 rewrite (inv1 x) rewrite (inv1 x') = h1
+
+  pair-inj : ∀{x x' y y'} → ((pair (x' , y')) == (pair (x , y))) → (x' == x) × (y' == y)
+  pair-inj {x = x} {x' = x'} {y = y} {y' = y'} eq with bijection-injective pair unpair pair-unpair unpair-pair (x' , y') (x , y) eq 
+  ... | refl = refl , refl 
+
+  pair-natEQ-inj : natEQ (pair (x' , y)) (pair (x , y))
