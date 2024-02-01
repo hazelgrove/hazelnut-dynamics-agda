@@ -173,5 +173,3 @@ module Nat where
   pair-inj : ∀{x x' y y'} → ((pair (x' , y')) == (pair (x , y))) → (x' == x) × (y' == y)
   pair-inj {x = x} {x' = x'} {y = y} {y' = y'} eq with bijection-injective pair unpair pair-unpair unpair-pair (x' , y') (x , y) eq 
   ... | refl = refl , refl 
-
-  pair-natEQ-inj : natEQ (pair (x' , y)) (pair (x , y))

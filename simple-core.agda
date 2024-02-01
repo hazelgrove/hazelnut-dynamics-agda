@@ -79,6 +79,9 @@ module simple-core where
     PTArr : ∀{ΓL ΓR τ1 τ2 τ3 τ4} → ΓL , ΓR ⊢ τ1 ⊑t τ3 → ΓL , ΓR ⊢ τ2 ⊑t τ4 → ΓL , ΓR ⊢ (τ1 ==> τ2) ⊑t (τ3 ==> τ4) 
     PTForall : ∀{ΓL ΓR x y τ1 τ2} → (■ (x , y) ∪ ΓL) ,  (■ (y , x) ∪ ΓR) ⊢ τ1 ⊑t τ2 → ΓL , ΓR ⊢ (·∀ x τ1) ⊑t (·∀ y τ2) 
 
+  _⊑t_ : htyp → htyp → Set 
+  τ1 ⊑t τ2 = ∅ , ∅ ⊢ τ1 ⊑t τ2
+
   data _,_⊢_⊓_==_ : Nat ctx → Nat ctx → htyp → htyp → htyp → Set where 
     JoinBase : ∀ {ΓL ΓR} → ΓL , ΓR ⊢ b ⊓ b == b
     JoinVar : ∀ {ΓL ΓR x y} → (x , y) ∈ ΓL → (y , x) ∈ ΓR → ΓL , ΓR ⊢ T x ⊓ T y == T (pair (x , y))
@@ -93,6 +96,9 @@ module simple-core where
     JoinHoleVar : ∀ {ΓL ΓR x y} → (y , x) ∈ ΓR → ΓL , ΓR ⊢ ⦇-⦈ ⊓ (T y) == T (pair (x , y))
     JoinHoleArr : ∀ {ΓL ΓR τ1 τ2 τ1' τ2'} → ΓL , ΓR ⊢ ⦇-⦈ ⊓ τ1 == τ1' → ΓL , ΓR ⊢ ⦇-⦈ ⊓ τ2 == τ2' → ΓL , ΓR ⊢ ⦇-⦈ ⊓ (τ1 ==> τ2) == (τ1' ==> τ2')
     JoinHoleForall : ∀ {ΓL ΓR x τ τ'} → ΓL ,  (■ (x , x) ∪ ΓR) ⊢ ⦇-⦈ ⊓ τ == τ' → ΓL , ΓR ⊢ ⦇-⦈ ⊓ (·∀ x τ) == ·∀ (pair (x , x)) τ'
+  
+  _⊓_==_ : htyp → htyp → htyp → Set 
+  τ1 ⊓ τ2 == τ3 = ∅ , ∅ ⊢ τ1 ⊓ τ2 == τ3
 
   --- matching for arrows
   data _▸arr_ : htyp → htyp → Set where
