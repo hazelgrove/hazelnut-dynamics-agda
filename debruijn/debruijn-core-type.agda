@@ -51,6 +51,21 @@ module debruijn.debruijn-core-type where
     MFHole : ⦇-⦈ ▸forall (·∀ ⦇-⦈)
     MFForall : ∀{τ} → (·∀ τ) ▸forall (·∀ τ)
 
+  -- ground types
+  data _ground : (τ : htyp) → Set where
+    GBase : b ground
+    GArr : ⦇-⦈ ==> ⦇-⦈ ground
+    GForall : ·∀ ⦇-⦈ ground
+
+  -- matched ground types
+  data _▸gnd_ : htyp → htyp → Set where
+    MGArr : ∀{τ1 τ2} →
+      (τ1 ==> τ2) ≠ (⦇-⦈ ==> ⦇-⦈) →
+      (τ1 ==> τ2) ▸gnd (⦇-⦈ ==> ⦇-⦈)
+    MGForall : ∀{τ} →
+      (·∀ τ ≠ ·∀ ⦇-⦈) →
+      (·∀ τ) ▸gnd (·∀ ⦇-⦈)
+
   -- the type of type contexts i.e. Θs in the judgements below
   typctx : Set
   typctx = Nat

@@ -33,3 +33,74 @@ module debruijn.debruijn-core-exp where
   -- convenient notation for chaining together two agreeable casts
   _⟨_⇒_⇒_⟩ : ihexp → htyp → htyp → htyp → ihexp
   d ⟨ t1 ⇒ t2 ⇒ t3 ⟩ = d ⟨ t1 ⇒ t2 ⟩ ⟨ t2 ⇒ t3 ⟩
+
+  -- values
+  data _val : (d : ihexp) → Set where
+    VConst : c val
+    VLam   : ∀{τ d} → (·λ[ τ ] d) val
+    VTLam  : ∀{d} → (·Λ d) val
+
+  -- boxed values
+  data _boxedval : (d : ihexp) → Set where
+    BVVal : ∀{d} → 
+      d val → 
+      d boxedval
+    BVArrCast : ∀{ d τ1 τ2 τ3 τ4 } →
+      τ1 ==> τ2 ≠ τ3 ==> τ4 →
+      d boxedval →
+      d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ boxedval
+    BVForallCast : ∀{ d τ1 τ2 } →
+      (·∀ τ1) ≠ (·∀ τ2) →
+      d boxedval →
+      d ⟨ (·∀ τ1) ⇒ (·∀ τ2) ⟩ boxedval
+    BVHoleCast : ∀{ τ d } → 
+      τ ground → 
+      d boxedval → 
+      d ⟨ τ ⇒ ⦇-⦈ ⟩ boxedval
+
+  mutual
+    -- indeterminate forms
+    data _indet : (d : ihexp) → Set where
+      IEHole : ∀{τ} → 
+        ⦇-⦈⟨ τ ⟩ indet
+      INEHole : ∀{d τ} → 
+        d final → 
+        ⦇⌜ d ⌟⦈⟨ τ ⟩ indet
+      IAp : ∀{d1 d2} → 
+        ((τ1 τ2 τ3 τ4 : htyp) (d1' : ihexp) →
+        d1 ≠ (d1' ⟨(τ1 ==> τ2) ⇒ (τ3 ==> τ4)⟩)) →
+        d1 indet →
+        d2 final →
+        (d1 ∘ d2) indet
+      ITAp : ∀{d τ} → 
+        ((τ1 τ2 : htyp) (d' : ihexp) → d ≠ (d' ⟨(·∀ τ1) ⇒ (·∀ τ2)⟩)) →
+        d indet →
+        (d < τ >) indet
+      ICastArr : ∀{d τ1 τ2 τ3 τ4} →
+        τ1 ==> τ2 ≠ τ3 ==> τ4 →
+        d indet →
+        d ⟨ (τ1 ==> τ2) ⇒ (τ3 ==> τ4) ⟩ indet
+      ICastForall : ∀{ d τ1 τ2 } →
+        (·∀ τ1) ≠ (·∀ τ2) →
+        d indet →
+        d ⟨ (·∀ τ1) ⇒ (·∀ τ2) ⟩ indet
+      ICastGroundHole : ∀{ τ d } →
+        τ ground →
+        d indet →
+        d ⟨ τ ⇒  ⦇-⦈ ⟩ indet
+      ICastHoleGround : ∀ { d τ } →
+        ((d' : ihexp) (τ' : htyp) → d ≠ (d' ⟨ τ' ⇒ ⦇-⦈ ⟩)) →
+        d indet →
+        τ ground →
+        d ⟨ ⦇-⦈ ⇒ τ ⟩ indet
+      IFailedCast : ∀{ d τ1 τ2 } →
+        d final →
+        τ1 ground →
+        τ2 ground →
+        τ1 ≠ τ2 →
+        d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ indet
+
+    -- final expressions
+    data _final : (d : ihexp) → Set where
+      FBoxedVal : ∀{d} → d boxedval → d final
+      FIndet    : ∀{d} → d indet    → d final
