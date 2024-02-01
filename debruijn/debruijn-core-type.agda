@@ -90,5 +90,10 @@ module debruijn.debruijn-core-type where
     CtxWFExtend : ∀{Θ Γ τ} → Θ ⊢ τ wf → Θ ⊢ Γ ctxwf → Θ ⊢ τ , Γ ctxwf
 
   data _,_∈_ : Nat → htyp → ctx → Set where 
-   InCtxZ : ∀{Γ τ} → Z , τ ∈ Γ 
-   InCtx1+ : ∀{Γ τ τ' n} → (n , τ ∈ Γ) → (1+ n , τ ∈ (τ' , Γ)) 
+    InCtxZ : ∀{Γ τ} → Z , τ ∈ (τ , Γ)
+    InCtx1+ : ∀{Γ τ τ' n} → (n , τ ∈ Γ) → (1+ n , τ ∈ (τ' , Γ)) 
+
+  data _⊑c_ : ctx → ctx → Set where 
+    PCEmpty : ∅ ⊑c ∅ 
+    PCExtend : ∀{τ Γ τ' Γ'} → (τ ⊑t τ') → (Γ ⊑c Γ') → ((τ , Γ) ⊑c (τ' , Γ'))
+    

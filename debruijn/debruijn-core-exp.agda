@@ -34,6 +34,19 @@ module debruijn.debruijn-core-exp where
   _⟨_⇒_⇒_⟩ : ihexp → htyp → htyp → htyp → ihexp
   d ⟨ t1 ⇒ t2 ⇒ t3 ⟩ = d ⟨ t1 ⇒ t2 ⟩ ⟨ t2 ⇒ t3 ⟩
 
+  -- precision for external expressions
+  data _⊑_ : (e1 e2 : hexp) → Set where
+    PConst : c ⊑ c
+    PVar : ∀{n} → (X n) ⊑ (X n) 
+    PAsc : ∀{e1 e2 τ1 τ2} → e1 ⊑ e2 → τ1 ⊑t τ2 → (e1 ·: τ1) ⊑ (e2 ·: τ2)
+    PEHole : ∀{e} → e ⊑ ⦇-⦈
+    PLam1 : ∀{e1 e2} → e1 ⊑ e2 → (·λ e1) ⊑ (·λ e2)
+    PLam2 : ∀{e1 e2 τ1 τ2} → e1 ⊑ e2 → τ1 ⊑t τ2 → (·λ[ τ1 ] e1) ⊑ (·λ[ τ2 ] e2)
+    PTLam : ∀{e1 e2} → e1 ⊑ e2 → (·Λ e1) ⊑ (·Λ e2)
+    PNEHole : ∀{e1 e2} → e1 ⊑ e2 → (⦇⌜ e1 ⌟⦈) ⊑ (⦇⌜ e2 ⌟⦈)
+    PAp :  ∀{e1 e2 e3 e4} → e1 ⊑ e3 → e2 ⊑ e4 → (e1 ∘ e2) ⊑ (e3 ∘ e4)
+    PTAp : ∀{e1 e2 τ1 τ2} → e1 ⊑ e2 → τ1 ⊑t τ2 → (e1 < τ1 >) ⊑ (e2 < τ2 >)
+
   -- values
   data _val : (d : ihexp) → Set where
     VConst : c val
