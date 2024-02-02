@@ -43,8 +43,16 @@ module debruijn.debruijn-lemmas-wf where
         h1 eq with (sym eq) 
         ... | refl = neq refl
 
+  wf-TTSub-helper : ∀{Θ n τ1 τ2} → (Θ ⊢ τ1 wf) → (1+ (Θ nat+ n) ⊢ τ2 wf) → ((Θ nat+ n) ⊢ TT[ τ1 / Θ ] τ2 wf)
+  wf-TTSub-helper = {!   !}
+
   wf-TTSub : ∀{Θ τ1 τ2} → (Θ ⊢ τ1 wf) → (1+ Θ ⊢ τ2 wf) → (Θ ⊢ (TTSub τ1 τ2) wf)
-  wf-TTSub = {!   !}
+  wf-TTSub wf1 WFVarZ = {!   !}
+  wf-TTSub wf1 (WFVarS wf2) = {!   !}
+  wf-TTSub wf1 WFBase = WFBase
+  wf-TTSub wf1 WFHole = WFHole
+  wf-TTSub wf1 (WFArr wf2 wf3) = WFArr (wf-TTSub wf1 wf2) (wf-TTSub wf1 wf3)
+  wf-TTSub wf1 (WFForall wf2) = WFForall {!   !}
   
   wf-▸arr : ∀{τ τ1 τ2 Θ} → τ ▸arr (τ1 ==> τ2) → Θ ⊢ τ wf → ((Θ ⊢ τ1 wf) × (Θ ⊢ τ2 wf))
   wf-▸arr MAHole wf = wf , wf

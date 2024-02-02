@@ -3,9 +3,11 @@ open import Prelude
 open import debruijn.debruijn-core-type
 open import debruijn.debruijn-core-exp
 open import debruijn.debruijn-core
--- open import debruijn.debruijn-lemmas-wf
+open import debruijn.debruijn-lemmas-index
+open import debruijn.debruijn-lemmas-consistency
 open import debruijn.debruijn-lemmas-prec
 open import debruijn.debruijn-lemmas-meet
+-- open import debruijn.debruijn-lemmas-wf
 -- open import debruijn.debruijn-typed-elaboration
 
 module debruijn.debruijn-graduality where
@@ -51,7 +53,7 @@ module debruijn.debruijn-graduality where
     ... | τ1' , τ2' , match' , prec1' , prec2' = τ2' , SAp wt' match' (graduality-ana precc prec1' prec2 ana) , prec2'
     graduality-syn precc (PTAp {τ2 = τ2} prec prect) (STAp wf syn match subst) rewrite (sym subst) with graduality-syn precc prec syn 
     ... | τ' , syn' , prect' with ⊑t-▸forall match prect'
-    ... | τ'' , match' , prec' = _ , STAp (⊑t-wf wf prect) syn' match' refl , ⊑t-TTsub prect prec'
+    ... | τ'' , match' , prec' = _ , STAp (⊑t-wf wf prect) syn' match' refl , {!   !} -- ⊑t-TTsub prect prec'
 
   graduality1 : 
     ∀{e e' τ} →     
@@ -163,5 +165,5 @@ module debruijn.debruijn-graduality where
     graduality-elab-syn precc (PTAp prec prect) (ESTAp wf syn match ana sub) with graduality-syn precc prec syn 
     ... | τ4' , syn' , prec1 with ⊑t-▸forall match prec1 
     ... | τ4'' , match' , prec2 with graduality-elab-ana precc (PTForall prec2) prec ana 
-    ... | d' , τ2'' , ana' , prec3 , prec4 rewrite (sym sub) = _ , _ , ESTAp (⊑t-wf wf prect) syn' match' ana' refl , ⊑t-TTsub prect prec2 , PITAp (PICast prec3 prec4 (PTForall prec2)) prect
+    ... | d' , τ2'' , ana' , prec3 , prec4 rewrite (sym sub) = _ , _ , ESTAp (⊑t-wf wf prect) syn' match' ana' refl , {!   !} , PITAp (PICast prec3 prec4 (PTForall prec2)) prect
    

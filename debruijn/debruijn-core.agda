@@ -6,30 +6,32 @@ open import debruijn.debruijn-core-exp
 
 module debruijn.debruijn-core where
 
-  ↑Nat : Nat  → Nat → Nat
-  ↑Nat Z x = 1+ x
-  ↑Nat (1+ m) Z = Z
-  ↑Nat (1+ m) (1+ x) = 1+ (↑Nat m x)
+  ↑Nat : Nat → Nat  → Nat → Nat
+  ↑Nat Z Z x = x
+  ↑Nat (1+ n) Z x = 1+ (↑Nat n Z x)
+  ↑Nat n (1+ m) Z = Z
+  ↑Nat n (1+ m) (1+ x) = 1+ (↑Nat n m x)
 
-  ↑ : Nat → htyp → htyp 
-  ↑ m (T x) = T (↑Nat m x )
-  ↑ m b = b
-  ↑ m ⦇-⦈ = ⦇-⦈
-  ↑ m (τ1 ==> τ2) = (↑ m τ1) ==> (↑ m τ2)
-  ↑ m (·∀ τ) = ·∀ (↑ (1+ m) τ)
+  ↑ : Nat → Nat → htyp → htyp 
+  ↑ n m (T x) = T (↑Nat n m x )
+  ↑ n m b = b
+  ↑ n m ⦇-⦈ = ⦇-⦈
+  ↑ n m (τ1 ==> τ2) = (↑ n m τ1) ==> (↑ n m τ2)
+  ↑ n m (·∀ τ) = ·∀ (↑ n (1+ m) τ)
 
-  ↓Nat : Nat → Nat → Nat
-  ↓Nat Z Z = Z -- this case shouldn't happen
-  ↓Nat Z (1+ x) = x
-  ↓Nat (1+ m) Z = Z
-  ↓Nat (1+ m) (1+ x) = 1+ (↓Nat m x)
+  ↓Nat : Nat → Nat → Nat → Nat
+  ↓Nat Z Z x = x
+  ↓Nat (1+ n) Z Z = Z -- this case shouldn't happen
+  ↓Nat (1+ n) Z (1+ x) = ↓Nat n Z x
+  ↓Nat n (1+ m) Z = Z
+  ↓Nat n (1+ m) (1+ x) = 1+ (↓Nat n m x)
 
-  ↓ : Nat → htyp → htyp 
-  ↓ m (T x) = T (↓Nat m x)
-  ↓ m b = b
-  ↓ m ⦇-⦈ = ⦇-⦈
-  ↓ m (τ1 ==> τ2) = (↓ m τ1) ==> (↓ m τ2)
-  ↓ m (·∀ τ) = ·∀ (↓ (1+ m) τ)
+  ↓ : Nat → Nat → htyp → htyp 
+  ↓ n m (T x) = T (↓Nat n m x)
+  ↓ n m b = b
+  ↓ n m ⦇-⦈ = ⦇-⦈
+  ↓ n m (τ1 ==> τ2) = (↓ n m τ1) ==> (↓ n m τ2)
+  ↓ n m (·∀ τ) = ·∀ (↓ n (1+ m) τ)
 
   -- substitution of types in types
   TT[_/_]_ : htyp → Nat → htyp → htyp 
@@ -39,10 +41,10 @@ module debruijn.debruijn-core where
   ... | Inr neq = T m
   TT[ τ / n ] ⦇-⦈ = ⦇-⦈
   TT[ τ / n ] (τ1 ==> τ2) = ((TT[ τ / n ] τ1) ==> (TT[ τ / n ] τ2))
-  TT[ τ / n ] (·∀ τ') = ·∀ (TT[ (↑ Z τ) / 1+ n ] τ')
+  TT[ τ / n ] (·∀ τ') = ·∀ (TT[ (↑ 1 Z τ) / 1+ n ] τ')
 
   TTSub : htyp → htyp → htyp 
-  TTSub τ1 τ2 = ↓ Z (TT[ (↑ Z τ1) / Z ] τ2)
+  TTSub τ1 τ2 = ↓ 1 Z (TT[ (↑ 1 Z τ1) / Z ] τ2)
 
   -- Type substitution binds tighter than consistency (20)
   infixl 21 TT[_/_]_
