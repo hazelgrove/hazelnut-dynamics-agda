@@ -115,6 +115,10 @@ module Nat where
   ... | Inr (Inl x) = x
   ... | Inr (Inr x) = abort (neq x)
 
+  _nat+_ : (n m : Nat) → Nat 
+  Z nat+ n = n 
+  (1+ n) nat+ m = 1+ (n nat+ m)
+
 
   -- double : Nat → Nat
   -- double Z = Z 

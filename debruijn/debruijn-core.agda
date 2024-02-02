@@ -6,7 +6,30 @@ open import debruijn.debruijn-core-exp
 
 module debruijn.debruijn-core where
 
-  -- Note: the first aguments of these substitutions is assumed to have no free variables
+  ↑Nat : Nat  → Nat → Nat
+  ↑Nat Z x = 1+ x
+  ↑Nat (1+ m) Z = Z
+  ↑Nat (1+ m) (1+ x) = 1+ (↑Nat m x)
+
+  ↑ : Nat → htyp → htyp 
+  ↑ m (T x) = T (↑Nat m x )
+  ↑ m b = b
+  ↑ m ⦇-⦈ = ⦇-⦈
+  ↑ m (τ1 ==> τ2) = (↑ m τ1) ==> (↑ m τ2)
+  ↑ m (·∀ τ) = ·∀ (↑ (1+ m) τ)
+
+  ↓Nat : Nat → Nat → Nat
+  ↓Nat Z Z = Z -- this case shouldn't happen
+  ↓Nat Z (1+ x) = x
+  ↓Nat (1+ m) Z = Z
+  ↓Nat (1+ m) (1+ x) = 1+ (↓Nat m x)
+
+  ↓ : Nat → htyp → htyp 
+  ↓ m (T x) = T (↓Nat m x)
+  ↓ m b = b
+  ↓ m ⦇-⦈ = ⦇-⦈
+  ↓ m (τ1 ==> τ2) = (↓ m τ1) ==> (↓ m τ2)
+  ↓ m (·∀ τ) = ·∀ (↓ (1+ m) τ)
 
   -- substitution of types in types
   TT[_/_]_ : htyp → Nat → htyp → htyp 
@@ -16,7 +39,10 @@ module debruijn.debruijn-core where
   ... | Inr neq = T m
   TT[ τ / n ] ⦇-⦈ = ⦇-⦈
   TT[ τ / n ] (τ1 ==> τ2) = ((TT[ τ / n ] τ1) ==> (TT[ τ / n ] τ2))
-  TT[ τ / n ] (·∀ τ') = ·∀ (TT[ τ / 1+ n ] τ')
+  TT[ τ / n ] (·∀ τ') = ·∀ (TT[ (↑ Z τ) / 1+ n ] τ')
+
+  TTSub : htyp → htyp → htyp 
+  TTSub τ1 τ2 = ↓ Z (TT[ (↑ Z τ1) / Z ] τ2)
 
   -- Type substitution binds tighter than consistency (20)
   infixl 21 TT[_/_]_
@@ -39,6 +65,7 @@ module debruijn.debruijn-core where
   Tt[ τ / t ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (Tt[ τ / t ] d) ⟨ (TT[ τ / t ] τ1) ⇒ (TT[ τ / t ] τ2) ⟩
   Tt[ τ / t ] (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = (Tt[ τ / t ] d) ⟨ (TT[ τ / t ] τ1) ⇒⦇-⦈⇏ (TT[ τ / t ] τ2) ⟩
     
+  -- Note: the first agument is assumed to have no free variables
   -- substitution of terms in terms
   [_/_]_ : ihexp → Nat → ihexp → ihexp
   [ d / n ] c = c
@@ -88,7 +115,7 @@ module debruijn.debruijn-core where
         Θ ⊢ τ1 wf →
         Θ , Γ ⊢ e => τ2 →
         τ2 ▸forall (·∀ τ3) →
-        TT[ τ1 / Z ] τ3 == τ4 →
+        TTSub τ1 τ3 == τ4 →
         Θ , Γ ⊢ (e < τ1 >) => τ4
 
     -- analysis
@@ -133,7 +160,7 @@ module debruijn.debruijn-core where
         Θ , Γ ⊢ e => τ2 →
         τ2 ▸forall (·∀ τ3) →
         Θ , Γ ⊢ e ⇐ (·∀ τ3) ~> d :: τ2' →
-        TT[ τ1 / Z ] τ3 == τ4 →
+        TTSub τ1 τ3 == τ4 →
         Θ , Γ ⊢ (e < τ1 >) ⇒ τ4 ~> ((d ⟨ τ2' ⇒ (·∀ τ3)⟩) < τ1 >)
       ESEHole : ∀{Θ Γ} →
         Θ , Γ ⊢ ⦇-⦈ ⇒ ⦇-⦈ ~> ⦇-⦈⟨ ⦇-⦈ ⟩
@@ -190,7 +217,7 @@ module debruijn.debruijn-core where
     TATAp : ∀ {Θ Γ d τ1 τ2 τ3} → 
       Θ ⊢ τ1 wf →
       Θ , Γ ⊢ d :: (·∀ τ2) →
-      TT[ τ1 / Z ] τ2 == τ3 → 
+      TTSub τ1 τ2 == τ3 → 
       Θ , Γ ⊢ (d < τ1 >) :: τ3
     TAEHole : ∀{Θ Γ τ} →
       Θ , Γ ⊢ ⦇-⦈⟨ τ ⟩ :: τ
@@ -214,9 +241,9 @@ module debruijn.debruijn-core where
     PIConst : ∀{Θ Γ Γ'} → Θ , Γ , Γ' ⊢ c ⊑i c
     PIVar : ∀{Θ Γ Γ' n} → Θ , Γ , Γ' ⊢ (X n) ⊑i (X n) 
     PIEHole : ∀{Θ Γ Γ' τ d} → Θ , Γ , Γ' ⊢ d ⊑i ⦇-⦈⟨ τ ⟩
-    PILam : ∀{Θ Γ Γ' d1 d2 τ1 τ2} → Θ , Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ2 → Θ , Γ , Γ' ⊢ (·λ[ τ1 ] d1) ⊑i (·λ[ τ2 ] d2)
-    PITLam : ∀{Θ Γ Γ' d1 d2} → Θ , Γ , Γ' ⊢ d1 ⊑i d2 → Θ , Γ , Γ' ⊢ (·Λ d1) ⊑i (·Λ d2)
-    PINEHole : ∀{Θ Γ Γ' τ d1 d2} → Θ , Γ , Γ' ⊢ d1 ⊑i d2 → Θ , Γ , Γ' ⊢ (⦇⌜ d1 ⌟⦈⟨ τ ⟩) ⊑i (⦇⌜ d2 ⌟⦈⟨ τ ⟩)
+    PILam : ∀{Θ Γ Γ' d1 d2 τ1 τ2} → Θ , (τ1 , Γ) , (τ2 , Γ') ⊢ d1 ⊑i d2 → τ1 ⊑t τ2 → Θ , Γ , Γ' ⊢ (·λ[ τ1 ] d1) ⊑i (·λ[ τ2 ] d2)
+    PITLam : ∀{Θ Γ Γ' d1 d2} → (1+ Θ) , Γ , Γ' ⊢ d1 ⊑i d2 → Θ , Γ , Γ' ⊢ (·Λ d1) ⊑i (·Λ d2)
+    PINEHole : ∀{Θ Γ Γ' τ1 τ2 d1 d2} → Θ , Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ2 → Θ , Γ , Γ' ⊢ (⦇⌜ d1 ⌟⦈⟨ τ1 ⟩) ⊑i (⦇⌜ d2 ⌟⦈⟨ τ2 ⟩)
     PIAp :  ∀{Θ Γ Γ' d1 d2 d3 d4} → Θ , Γ , Γ' ⊢ d1 ⊑i d3 → Θ , Γ , Γ' ⊢ d2 ⊑i d4 → Θ , Γ , Γ' ⊢ (d1 ∘ d2) ⊑i (d3 ∘ d4)
     PITAp : ∀{Θ Γ Γ' d1 d2 τ1 τ2} → Θ , Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ2 → Θ , Γ , Γ' ⊢ (d1 < τ1 >) ⊑i (d2 < τ2 >)
     PICast : ∀{Θ Γ Γ' d1 d2 τ1 τ2 τ3 τ4} → Θ , Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ3 → τ2 ⊑t τ4 → Θ , Γ , Γ' ⊢ (d1 ⟨ τ1 ⇒ τ2 ⟩) ⊑i (d2 ⟨ τ3 ⇒ τ4 ⟩)

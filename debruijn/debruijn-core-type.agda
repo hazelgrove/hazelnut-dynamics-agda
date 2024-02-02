@@ -34,12 +34,12 @@ module debruijn.debruijn-core-type where
     PTForall : ∀{τ1 τ2} → τ1 ⊑t τ2 → (·∀ τ1) ⊑t (·∀ τ2) 
 
   data _⊓_==_ : htyp → htyp → htyp → Set where 
-    JoinHoleL : ∀ {τ} → ⦇-⦈ ⊓ τ == τ
-    JoinHoleR : ∀ {τ} → τ ⊓ ⦇-⦈ == τ
-    JoinBase : b ⊓ b == b
-    JoinVar : ∀ {x} → T x ⊓ T x == T x
-    JoinArr : ∀ {τ1 τ2 τ3 τ4 τ5 τ6} → τ1 ⊓ τ3 == τ5 → τ2 ⊓ τ4 == τ6 → τ1 ==> τ2 ⊓ τ3 ==> τ4 == τ5 ==> τ6
-    JoinForall : ∀ {τ1 τ2 τ3} → τ1 ⊓ τ2 == τ3 → ·∀ τ1 ⊓ ·∀ τ2 == ·∀ τ3 
+    MeetHoleL : ∀ {τ} → ⦇-⦈ ⊓ τ == τ
+    MeetHoleR : ∀ {τ} → τ ⊓ ⦇-⦈ == τ
+    MeetBase : b ⊓ b == b
+    MeetVar : ∀ {x} → T x ⊓ T x == T x
+    MeetArr : ∀ {τ1 τ2 τ3 τ4 τ5 τ6} → τ1 ⊓ τ3 == τ5 → τ2 ⊓ τ4 == τ6 → τ1 ==> τ2 ⊓ τ3 ==> τ4 == τ5 ==> τ6
+    MeetForall : ∀ {τ1 τ2 τ3} → τ1 ⊓ τ2 == τ3 → ·∀ τ1 ⊓ ·∀ τ2 == ·∀ τ3 
   
   --- matching for arrows
   data _▸arr_ : htyp → htyp → Set where

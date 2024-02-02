@@ -46,6 +46,15 @@ module debruijn.debruijn-lemmas-prec where
   ⊑t-wf (WFArr wf1 wf2) (PTArr prec1 prec2) = WFArr (⊑t-wf wf1 prec1) (⊑t-wf wf2 prec2)
   ⊑t-wf (WFForall wf) (PTForall prec) = WFForall (⊑t-wf wf prec)
 
+  ⊑t-↑ : ∀{n m τ1 τ2} →
+    (τ1 ⊑t τ2) →
+    (↑ n m τ1) ⊑t (↑ n m τ2)
+  ⊑t-↑ PTBase = PTBase
+  ⊑t-↑ PTHole = PTHole
+  ⊑t-↑ PTTVar = PTTVar
+  ⊑t-↑ (PTArr prec prec₁) = PTArr (⊑t-↑ prec) (⊑t-↑ prec₁)
+  ⊑t-↑ (PTForall prec) = PTForall (⊑t-↑ prec)
+
   ⊑t-TTsub : ∀{n τ1 τ2 τ3 τ4} → (τ1 ⊑t τ3) → (τ2 ⊑t τ4) → (TT[ τ1 / n ] τ2) ⊑t (TT[ τ3 / n ] τ4)
   ⊑t-TTsub prec1 PTBase = PTBase
   ⊑t-TTsub prec1 PTHole = PTHole
@@ -53,7 +62,7 @@ module debruijn.debruijn-lemmas-prec where
   ... | Inl refl = prec1 
   ... | Inr x = PTTVar
   ⊑t-TTsub prec1 (PTArr prec2 prec3) = PTArr (⊑t-TTsub prec1 prec2) (⊑t-TTsub prec1 prec3)
-  ⊑t-TTsub prec1 (PTForall prec2) = PTForall (⊑t-TTsub prec1 prec2)
+  ⊑t-TTsub prec1 (PTForall prec2) = PTForall (⊑t-TTsub (⊑t-↑ prec1) prec2)
 
   ⊑c-var : ∀{n τ Γ Γ'} → (n , τ ∈ Γ) → Γ ⊑c Γ' → Σ[ τ' ∈ htyp ] ((n , τ' ∈ Γ') × (τ ⊑t τ'))
   ⊑c-var InCtxZ (PCExtend prec precc) = _ , InCtxZ , prec
