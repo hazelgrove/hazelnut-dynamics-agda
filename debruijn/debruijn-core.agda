@@ -6,11 +6,17 @@ open import debruijn.debruijn-core-exp
 
 module debruijn.debruijn-core where
 
-  ↑Nat : Nat → Nat  → Nat → Nat
+  ↑Nat : Nat → Nat → Nat → Nat
   ↑Nat Z Z x = x
   ↑Nat (1+ n) Z x = 1+ (↑Nat n Z x)
-  ↑Nat n (1+ m) Z = Z
-  ↑Nat n (1+ m) (1+ x) = 1+ (↑Nat n m x)
+  -- next two are same as : 
+  -- ↑Nat n (1+ m) Z = Z
+  ↑Nat Z (1+ m) Z = Z
+  ↑Nat (1+ n) (1+ m) Z = Z
+  -- next two are same as : 
+  -- ↑Nat n (1+ m) (1+ x) = 1+ (↑Nat n m x)
+  ↑Nat Z (1+ m) (1+ x) = 1+ (↑Nat Z m x)
+  ↑Nat (1+ n) (1+ m) (1+ x) = 1+ (↑Nat (1+ n) m x)
 
   ↑ : Nat → Nat → htyp → htyp 
   ↑ n m (T x) = T (↑Nat n m x )
