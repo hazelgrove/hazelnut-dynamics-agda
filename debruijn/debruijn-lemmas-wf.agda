@@ -43,14 +43,43 @@ module debruijn.debruijn-lemmas-wf where
         h1 eq with (sym eq) 
         ... | refl = neq refl
 
+  wf-index-inc : 
+    ∀{n m Θ τ τ'} → 
+    ↑ n m τ == τ' → 
+    Θ ⊢ τ' wf →
+    (1+ Θ) ⊢ ↑ (1+ n) m τ wf
+  wf-index-inc {n = Z} {m = Z} {τ = T Z} eq WFVarZ = WFVarS WFVarZ
+  wf-index-inc {n = Z} {m = 1+ m} {τ = T Z} eq WFVarZ = WFVarZ
+  wf-index-inc {n = 1+ n} {m = 1+ m} {τ = T Z} eq WFVarZ = WFVarZ
+  wf-index-inc {n = Z} {m = Z} {τ = T (1+ x)} () WFVarZ
+  wf-index-inc {n = 1+ n} {m = Z} {τ = T (1+ x)} () WFVarZ
+  wf-index-inc {n = Z} {m = 1+ m} {τ = T (1+ x)} () WFVarZ
+  wf-index-inc {n = 1+ n} {m = 1+ m} {τ = T (1+ x)} () WFVarZ
+  wf-index-inc {n = Z} {m = Z} {τ = T (1+ x)} refl (WFVarS wf) = WFVarS (WFVarS wf)
+  wf-index-inc {n = Z} {m = 1+ m} {τ = T (1+ x)} refl (WFVarS wf) = WFVarS (wf-index-inc {n = Z} {m = m} {τ = T x} refl wf)
+  wf-index-inc {n = 1+ n} {m = Z} {τ = T Z} refl (WFVarS wf) = WFVarS (wf-index-inc {n = n} {m = Z} {τ = T Z} refl wf)
+  wf-index-inc {n = 1+ n} {m = Z} {τ = T (1+ x)} refl (WFVarS wf) = WFVarS (WFVarS wf)
+  wf-index-inc {n = 1+ n} {m = 1+ m} {τ = T (1+ x)} refl (WFVarS wf) = WFVarS (wf-index-inc {n = 1+ n} {m = m} {τ = T x} refl wf)
+  wf-index-inc {τ = b} eq WFBase = WFBase
+  wf-index-inc {τ = ⦇-⦈} eq WFHole = WFHole
+  wf-index-inc {τ = τ ==> τ₁} refl (WFArr wf wf₁) = WFArr (wf-index-inc refl wf) (wf-index-inc refl wf₁)
+  wf-index-inc {τ = ·∀ τ} refl (WFForall wf) = WFForall (wf-index-inc refl wf)
+
   wf-index-up : 
     ∀{n m Θ τ} → 
     Θ ⊢ τ wf →
     (n nat+ Θ) ⊢ (↑ n m τ) wf
-  wf-index-up = {!   !}
+  wf-index-up {n = Z} {m = m} {τ = τ} wf rewrite ↑Z m τ = wf
+  wf-index-up {n = 1+ n} {m = m} WFVarZ rewrite (sym (↑Natcompose n m Z)) = {!   !}
+  wf-index-up {n = 1+ n} (WFVarS wf) = {!   !}
+  wf-index-up {n = 1+ n} WFBase = WFBase
+  wf-index-up {n = 1+ n} WFHole = WFHole
+  wf-index-up {n = 1+ n} (WFArr wf wf₁) = WFArr (wf-index-up wf) (wf-index-up wf₁)
+  wf-index-up {n = 1+ n} {m = m} {Θ = Θ} (WFForall wf) with wf-index-up {n = n} {m = 1+ m} wf 
+  ... | result rewrite nat+1+ n Θ = WFForall (wf-index-inc refl result)
 
   wf-index-down : 
-    ∀{n m Θ τ} → 
+    ∀{n Θ τ} → 
     1+ (n nat+ Θ) ⊢ τ wf →
     (n nat+ Θ) ⊢ (↓ 1 n τ) wf
   wf-index-down = {!   !}

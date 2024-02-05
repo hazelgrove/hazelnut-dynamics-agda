@@ -119,6 +119,15 @@ module Nat where
   Z nat+ n = n 
   (1+ n) nat+ m = 1+ (n nat+ m)
 
+  nat+Z : (n : Nat) → n nat+ Z == n
+  nat+Z Z = refl
+  nat+Z (1+ n) rewrite nat+Z n = refl
+
+  nat+1+ : (n m : Nat) → n nat+ 1+ m == 1+ (n nat+ m)
+  nat+1+ Z m = refl
+  nat+1+ (1+ n) m rewrite nat+1+ n m = refl
+
+  
 
   -- double : Nat → Nat
   -- double Z = Z 
@@ -177,3 +186,4 @@ module Nat where
   pair-inj : ∀{x x' y y'} → ((pair (x' , y')) == (pair (x , y))) → (x' == x) × (y' == y)
   pair-inj {x = x} {x' = x'} {y = y} {y' = y'} eq with bijection-injective pair unpair pair-unpair unpair-pair (x' , y') (x , y) eq 
   ... | refl = refl , refl 
+ 
