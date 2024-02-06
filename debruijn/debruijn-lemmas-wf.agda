@@ -37,107 +37,65 @@ module debruijn.debruijn-lemmas-wf where
   strengthen-var {Θ = 1+ Z} neq WFVarZ = abort (neq refl)
   strengthen-var {Θ = 1+ (1+ Θ)} neq WFVarZ = WFVarS WFVarZ
   strengthen-var {Θ = 1+ Z} neq (WFVarS ())
-  strengthen-var {Θ = 1+ (1+ Θ)} neq (WFVarS {m = m} wf) = WFVarS (strengthen-var h1 wf) 
+  strengthen-var {Θ = 1+ (1+ Θ)} neq (WFVarS {n = n} wf) = WFVarS (strengthen-var h1 wf) 
     where 
-        h1 : 1+ Θ ≠ 1+ m
+        h1 : 1+ Θ ≠ 1+ n
         h1 eq with (sym eq) 
         ... | refl = neq refl
 
-  wf-index-inc : 
-    ∀{t i Θ τ τ'} → 
-    ↑ t i τ == τ' → 
-    Θ ⊢ τ' wf →
-    (1+ Θ) ⊢ ↑ t (1+ i) τ wf
-  wf-index-inc {t = t} {i = i} {τ = b} eq WFBase = WFBase
-  wf-index-inc {t = t} {i = i} {τ = ⦇-⦈} eq WFHole = WFHole
-  wf-index-inc {t = t} {i = i} {τ = τ ==> τ₁} refl (WFArr wf wf₁) = WFArr (wf-index-inc refl wf) (wf-index-inc refl wf₁)
-  wf-index-inc {t = Z} {i = Z} {τ = T .Z} refl WFVarZ = WFVarS WFVarZ
-  wf-index-inc {t = 1+ t} {i = i} {τ = T Z} eq WFVarZ = WFVarZ
-  wf-index-inc {t = Z} {i = Z} {τ = T (1+ x)} refl (WFVarS wf) = WFVarS (WFVarS wf)
-  wf-index-inc {t = Z} {i = 1+ i} {τ = T x} refl (WFVarS wf) = WFVarS (WFVarS wf)
-  wf-index-inc {t = 1+ t} {i = i} {τ = T (1+ x)} refl (WFVarS wf) = WFVarS (wf-index-inc {t = t} {i = i} {τ = T x} refl wf)
-  wf-index-inc {t = t} {i = i} {τ = ·∀ τ} refl (WFForall wf) = WFForall (wf-index-inc refl wf)
+  wf-TTSub-helper2 :
+    ∀{t n Θ} →
+    (t == n → ⊥) →
+    (1+ (t nat+ Θ)) ⊢ T n wf →
+    (1+ (t nat+ Θ)) ⊢ T (1+ (↓Nat t 1 n)) wf
+  wf-TTSub-helper2 {t = Z} neq WFVarZ = abort (neq refl)
+  wf-TTSub-helper2 {t = 1+ t} neq WFVarZ = WFVarS WFVarZ
+  wf-TTSub-helper2 {t = Z} neq (WFVarS wf) = WFVarS wf
+  wf-TTSub-helper2 {t = 1+ t} neq (WFVarS {n = n} wf) = WFVarS (wf-TTSub-helper2 {t = t} (h1 neq) wf)
+    where 
+      h1 : (1+ t == 1+ n → ⊥) → t == n → ⊥
+      h1 neq eq rewrite eq = neq refl
 
-  wf-index-inc' : 
-    ∀{t Θ τ} → 
+  wf-TTSub-helper3 :
+    ∀{m n Θ τ} → 
     Θ ⊢ τ wf →
-    (1+ Θ) ⊢ ↑ t 1 τ wf
-  wf-index-inc' = {!   !}
+    1+ ((n nat+ Θ)) ⊢ ↓ (m nat+ (1+ n)) 1 (↑ m (1+ (1+ n)) τ) wf
+  wf-TTSub-helper3 {m = Z} {n = Z} {Θ = .(1+ _)} WFVarZ = WFVarS WFVarZ
+  wf-TTSub-helper3 {m = Z} {n = 1+ n} {Θ = .(1+ _)} WFVarZ = WFVarS (wf-TTSub-helper3 {m = Z} {n = n} WFVarZ)
+  wf-TTSub-helper3 {m = Z} {n = Z} {Θ = .(1+ _)} (WFVarS wf) = WFVarS (WFVarS wf)
+  wf-TTSub-helper3 {m = Z} {n = 1+ n} {Θ = .(1+ _)} (WFVarS wf) = WFVarS (wf-TTSub-helper3 {m = Z} {n = n} (WFVarS wf))
+  wf-TTSub-helper3 {m = 1+ m} {n = Z} {Θ = .(1+ _)} WFVarZ = WFVarZ
+  wf-TTSub-helper3 {m = 1+ m} {n = 1+ n} {Θ = .(1+ _)} WFVarZ = WFVarZ
+  wf-TTSub-helper3 {m = 1+ m} {n = Z} {Θ = .(1+ _)} (WFVarS wf) = WFVarS (wf-TTSub-helper3 {m = m} {n = Z} wf)
+  wf-TTSub-helper3 {m = 1+ m} {n = 1+ n} {Θ = (1+ Θ)} (WFVarS wf) with wf-TTSub-helper3 {m = m} {n = 1+ n} wf 
+  ... | result rewrite nat+1+ n Θ = WFVarS result
+  wf-TTSub-helper3 {m = m} {n = n} {Θ = Θ} WFBase = WFBase
+  wf-TTSub-helper3 {m = m} {n = n} {Θ = Θ} WFHole = WFHole
+  wf-TTSub-helper3 {m = m} {n = n} {Θ = Θ} (WFArr wf wf₁) = WFArr (wf-TTSub-helper3 wf) (wf-TTSub-helper3 wf₁)
+  wf-TTSub-helper3 {m = m} {n = n} {Θ = Θ} (WFForall wf) with wf-TTSub-helper3 {m = 1+ m} {n = n} wf
+  ... | result rewrite nat+1+ n Θ = WFForall result
 
-  wf-index-up : 
-    ∀{t i Θ τ} → 
-    Θ ⊢ τ wf →
-    (i nat+ Θ) ⊢ (↑ t i τ) wf
-  wf-index-up {t = t} {i = Z} {τ = τ} wf rewrite ↑Z t τ = wf
-  wf-index-up {t = t} {i = 1+ i} {τ = b} WFBase = WFBase
-  wf-index-up {t = t} {i = 1+ i} {τ = ⦇-⦈} WFHole = WFHole
-  wf-index-up {t = t} {i = 1+ i} {τ = τ ==> τ₁} (WFArr wf wf₁) = WFArr (wf-index-up wf) (wf-index-up wf₁)
-  wf-index-up {t = t} {i = 1+ i} {τ = T Z} WFVarZ = {!   !}
-  wf-index-up {t = t} {i = 1+ i} {τ = T (1+ x)} (WFVarS wf) = {!   !}
-  wf-index-up {t = t} {i = 1+ i} {τ = ·∀ τ} (WFForall wf) = {!   !}
-  -- wf-index-up {m = m} {i = Z} {τ = τ} wf rewrite ↑Z m τ = wf
-  -- wf-index-up {n = 1+ n} {m = Z} WFVarZ = WFVarS (wf-index-up {n = n} WFVarZ)
-  -- wf-index-up {n = 1+ n} {m = 1+ m} WFVarZ = WFVarZ
-  -- wf-index-up {n = 1+ n} {m = Z} (WFVarS wf) = WFVarS (wf-index-up (WFVarS wf))
-  -- wf-index-up {n = 1+ n} {m = 1+ m} {τ = T (1+ x)} (WFVarS {n = n'} wf) rewrite nat+1+ n n' rewrite (sym (↑Natcompose n m x)) = WFVarS (wf-index-inc' {m = m} {τ = ↑ n m (T x)} {!   !})
-  -- wf-index-up {n = 1+ n} WFBase = WFBase
-  -- wf-index-up {n = 1+ n} WFHole = WFHole
-  -- wf-index-up {n = 1+ n} (WFArr wf wf₁) = WFArr (wf-index-up wf) (wf-index-up wf₁)
-  -- wf-index-up {n = 1+ n} {m = m} {Θ = Θ} (WFForall wf) with wf-index-up {n = n} {m = 1+ m} wf 
-  -- ... | result rewrite nat+1+ n Θ = WFForall (wf-index-inc refl result)
+  wf-TTSub-helper : ∀{Θ n τ1 τ2} → (Θ ⊢ τ1 wf) → (1+ (n nat+ Θ) ⊢ τ2 wf) → ((n nat+ Θ) ⊢ (↓ n 1 (TT[ (↑ Z (1+ n) τ1) / n ] τ2)) wf)
+  wf-TTSub-helper wf1 WFBase = WFBase
+  wf-TTSub-helper wf1 WFHole = WFHole
+  wf-TTSub-helper wf1 (WFArr wf2 wf3) = WFArr (wf-TTSub-helper wf1 wf2) (wf-TTSub-helper wf1 wf3)
+  wf-TTSub-helper {Θ = Z} {n = Z} {τ1 = τ1} wf1 WFVarZ rewrite ↓↑invert Z τ1 = wf1
+  wf-TTSub-helper {n = 1+ n} wf1 WFVarZ = WFVarZ 
+  wf-TTSub-helper {Θ = 1+ Θ} {n = Z} {τ1 = τ1} wf1 WFVarZ rewrite ↓↑invert Z τ1 = wf1
+  wf-TTSub-helper {n = Z} wf1 (WFVarS wf2) = wf2
+  wf-TTSub-helper {n = 1+ n} wf1 (WFVarS {n = m} wf2) with natEQ n m 
+  wf-TTSub-helper {Θ = Θ} {1+ n} {τ1 = τ1} wf1 (WFVarS {n = m} wf2) | Inl refl = wf-TTSub-helper3 {m = Z} {n = n} wf1
+  wf-TTSub-helper {n = 1+ n} wf1 (WFVarS {n = m} wf2) | Inr neq = wf-TTSub-helper2 neq wf2
+  wf-TTSub-helper {n = n} {τ1 = τ1} wf1 (WFForall wf2) with (↑compose Z (1+ n) τ1)
+  ... | eq rewrite eq = WFForall (wf-TTSub-helper wf1 wf2)
 
-  -- wf-index-down : 
-  --   ∀{n Θ τ} → 
-  --   1+ (n nat+ Θ) ⊢ τ wf →
-  --   (n nat+ Θ) ⊢ (↓ 1 n τ) wf
-  -- wf-index-down = {!   !}
-
-  -- wf-TTSub-helper1 :
-  --   ∀{n m Θ τ} → 
-  --   (m nat+ Θ) ⊢ τ wf →
-  --   (m nat+ (n nat+ Θ)) ⊢ ↓ 1 (m nat+ n) (↑ (1+ n) m τ) wf
-  -- wf-TTSub-helper1 {n = n} {m = Z} WFVarZ = {!   !}
-  -- wf-TTSub-helper1 {n = n} {m = Z} (WFVarS wf) = {!   !}
-  -- wf-TTSub-helper1 {n = n} {m = 1+ m} wf = {!   !}
-  -- wf-TTSub-helper1 WFBase = WFBase
-  -- wf-TTSub-helper1 WFHole = WFHole
-  -- wf-TTSub-helper1 (WFArr wf wf₁) = WFArr (wf-TTSub-helper1 wf) (wf-TTSub-helper1 wf₁)
-  -- wf-TTSub-helper1 {n = n} {m = m} (WFForall wf) = WFForall (wf-TTSub-helper1 {n = n} {m = 1+ m}  wf)
-
-  -- wf-TTSub-helper2 :
-  --   ∀{n m Θ} →
-  --   (n == m → ⊥) →
-  --   (1+ (n nat+ Θ)) ⊢ T m wf →
-  --   (1+ (n nat+ Θ)) ⊢ T (1+ (↓Nat 1 n m)) wf
-  -- wf-TTSub-helper2 {n = Z} neq WFVarZ = abort (neq refl)
-  -- wf-TTSub-helper2 {n = 1+ n} neq WFVarZ = WFVarS WFVarZ
-  -- wf-TTSub-helper2 {n = Z} neq (WFVarS wf) = WFVarS wf
-  -- wf-TTSub-helper2 {n = 1+ n} neq (WFVarS {m = m} wf) = WFVarS (wf-TTSub-helper2 {n = n} (h1 neq) wf)
-  --   where 
-  --     h1 : (1+ n == 1+ m → ⊥) → n == m → ⊥
-  --     h1 neq eq rewrite eq = neq refl
-
-  -- wf-TTSub-helper : ∀{Θ n τ1 τ2} → (Θ ⊢ τ1 wf) → (1+ (n nat+ Θ) ⊢ τ2 wf) → ((n nat+ Θ) ⊢ (↓ 1 n (TT[ (↑ (1+ n) Z τ1) / n ] τ2)) wf)
-  -- wf-TTSub-helper wf1 WFBase = WFBase
-  -- wf-TTSub-helper wf1 WFHole = WFHole
-  -- wf-TTSub-helper wf1 (WFArr wf2 wf3) = WFArr (wf-TTSub-helper wf1 wf2) (wf-TTSub-helper wf1 wf3)
-  -- wf-TTSub-helper {Θ = Z} {n = Z} {τ1 = τ1} wf1 WFVarZ rewrite ↓↑invert Z τ1 = wf1
-  -- wf-TTSub-helper {n = 1+ n} wf1 WFVarZ = WFVarZ 
-  -- wf-TTSub-helper {Θ = 1+ Θ} {n = Z} {τ1 = τ1} wf1 WFVarZ rewrite ↓↑invert Z τ1 = wf1
-  -- wf-TTSub-helper {n = Z} wf1 (WFVarS wf2) = wf2
-  -- wf-TTSub-helper {Θ = Θ} {n = 1+ n} {τ1 = τ1} wf1 (WFVarS {m = m} wf2) with natEQ n m 
-  -- wf-TTSub-helper {Θ = Θ} {n = 1+ n} {τ1 = τ1} wf1 (WFVarS {m = m} wf2) | Inl refl = {!   !}
-  -- wf-TTSub-helper {Θ = Θ} {n = 1+ n} {τ1 = τ1} wf1 (WFVarS {m = m} wf2) | Inr neq = wf-TTSub-helper2 neq wf2
-  -- wf-TTSub-helper {n = n} {τ1 = τ1} wf1 (WFForall wf2) with (↑compose (1+ n) Z τ1)
-  -- ... | eq rewrite eq = WFForall (wf-TTSub-helper wf1 wf2)
-
-  -- wf-TTSub : ∀{Θ τ1 τ2} → (Θ ⊢ τ1 wf) → (1+ Θ ⊢ τ2 wf) → (Θ ⊢ (TTSub τ1 τ2) wf)
-  -- wf-TTSub {Θ = Θ} {τ1 = τ1} wf1 WFVarZ rewrite ↓↑invert Z τ1 = wf1
-  -- wf-TTSub wf1 (WFVarS wf2) = wf2
-  -- wf-TTSub wf1 WFBase = WFBase
-  -- wf-TTSub wf1 WFHole = WFHole
-  -- wf-TTSub wf1 (WFArr wf2 wf3) = WFArr (wf-TTSub wf1 wf2) (wf-TTSub wf1 wf3)
-  -- wf-TTSub {τ1 = τ1} wf1 (WFForall wf2) rewrite ↑compose 1 Z τ1 = WFForall (wf-TTSub-helper wf1 wf2)
+  wf-TTSub : ∀{Θ τ1 τ2} → (Θ ⊢ τ1 wf) → (1+ Θ ⊢ τ2 wf) → (Θ ⊢ (TTSub τ1 τ2) wf)
+  wf-TTSub {Θ = Θ} {τ1 = τ1} wf1 WFVarZ rewrite ↓↑invert Z τ1 = wf1
+  wf-TTSub wf1 (WFVarS wf2) = wf2
+  wf-TTSub wf1 WFBase = WFBase
+  wf-TTSub wf1 WFHole = WFHole
+  wf-TTSub wf1 (WFArr wf2 wf3) = WFArr (wf-TTSub wf1 wf2) (wf-TTSub wf1 wf3)
+  wf-TTSub {τ1 = τ1} wf1 (WFForall wf2) rewrite ↑compose Z 1 τ1 = WFForall (wf-TTSub-helper wf1 wf2)
   
   wf-▸arr : ∀{τ τ1 τ2 Θ} → τ ▸arr (τ1 ==> τ2) → Θ ⊢ τ wf → ((Θ ⊢ τ1 wf) × (Θ ⊢ τ2 wf))
   wf-▸arr MAHole wf = wf , wf
@@ -147,19 +105,19 @@ module debruijn.debruijn-lemmas-wf where
   wf-▸forall MFHole wf = weakening wf 
   wf-▸forall MFForall (WFForall wf) = wf
   
-  -- wf-syn : ∀{τ e Θ Γ} → 
-  --   (Θ ⊢ Γ ctxwf) → 
-  --   (Θ , Γ ⊢ e => τ) → 
-  --   Θ ⊢ τ wf
-  -- wf-syn ctxwf SConst = WFBase
-  -- wf-syn ctxwf (SAsc x x₁) = x
-  -- wf-syn ctxwf (SVar x) = wf-ctx-var ctxwf x
-  -- wf-syn ctxwf (SAp syn x x₁) = π2 (wf-▸arr x (wf-syn ctxwf syn)) 
-  -- wf-syn ctxwf SEHole = WFHole
-  -- wf-syn ctxwf (SNEHole syn) = WFHole
-  -- wf-syn ctxwf (SLam x syn) = WFArr x (wf-syn (CtxWFExtend x ctxwf) syn)
-  -- wf-syn ctxwf (STLam syn) = WFForall (wf-syn (weakening-ctx ctxwf) syn)   
-  -- wf-syn ctxwf (STAp wf syn match subst) rewrite (sym subst) = wf-TTSub wf (wf-▸forall match (wf-syn ctxwf syn)) 
+  wf-syn : ∀{τ e Θ Γ} → 
+    (Θ ⊢ Γ ctxwf) → 
+    (Θ , Γ ⊢ e => τ) → 
+    Θ ⊢ τ wf
+  wf-syn ctxwf SConst = WFBase
+  wf-syn ctxwf (SAsc x x₁) = x
+  wf-syn ctxwf (SVar x) = wf-ctx-var ctxwf x
+  wf-syn ctxwf (SAp syn x x₁) = π2 (wf-▸arr x (wf-syn ctxwf syn)) 
+  wf-syn ctxwf SEHole = WFHole
+  wf-syn ctxwf (SNEHole syn) = WFHole
+  wf-syn ctxwf (SLam x syn) = WFArr x (wf-syn (CtxWFExtend x ctxwf) syn)
+  wf-syn ctxwf (STLam syn) = WFForall (wf-syn (weakening-ctx ctxwf) syn)   
+  wf-syn ctxwf (STAp wf syn match subst) rewrite (sym subst) = wf-TTSub wf (wf-▸forall match (wf-syn ctxwf syn)) 
   
   -- recycling bin
 
@@ -210,4 +168,70 @@ module debruijn.debruijn-lemmas-wf where
   -- wf-TTsub2 wf1 (WFArr wf2 wf3) = WFArr (wf-TTsub2 wf1 wf2) (wf-TTsub2 wf1 wf3)
   -- wf-TTsub2 wf1 (WFForall wf2) = WFForall {! wf-TTsub2 ? wf2  !} -- (wf-TTsub2 ((wf-↑ wf1)) {! wf2  !})
   -- wf-TTsub2 {Θ = Θ} wf1 wf2 = {!   !}
- 
+   -- wf-index-inc : 
+  --   ∀{t i Θ τ τ'} → 
+  --   ↑ t i τ == τ' → 
+  --   Θ ⊢ τ' wf →
+  --   (1+ Θ) ⊢ ↑ t (1+ i) τ wf
+  -- wf-index-inc {t = t} {i = i} {τ = b} eq WFBase = WFBase
+  -- wf-index-inc {t = t} {i = i} {τ = ⦇-⦈} eq WFHole = WFHole
+  -- wf-index-inc {t = t} {i = i} {τ = τ ==> τ₁} refl (WFArr wf wf₁) = WFArr (wf-index-inc refl wf) (wf-index-inc refl wf₁)
+  -- wf-index-inc {t = Z} {i = Z} {τ = T .Z} refl WFVarZ = WFVarS WFVarZ
+  -- wf-index-inc {t = 1+ t} {i = i} {τ = T Z} eq WFVarZ = WFVarZ
+  -- wf-index-inc {t = Z} {i = Z} {τ = T (1+ x)} refl (WFVarS wf) = WFVarS (WFVarS wf)
+  -- wf-index-inc {t = Z} {i = 1+ i} {τ = T x} refl (WFVarS wf) = WFVarS (WFVarS wf)
+  -- wf-index-inc {t = 1+ t} {i = i} {τ = T (1+ x)} refl (WFVarS wf) = WFVarS (wf-index-inc {t = t} {i = i} {τ = T x} refl wf)
+  -- wf-index-inc {t = t} {i = i} {τ = ·∀ τ} refl (WFForall wf) = WFForall (wf-index-inc refl wf)
+
+  -- -- wf-index-inc' : 
+  -- --   ∀{t Θ τ} → 
+  -- --   Θ ⊢ τ wf →
+  -- --   (1+ Θ) ⊢ ↑ t 1 τ wf
+  -- -- wf-index-inc' = {!   !}
+
+  -- wf-index-up : 
+  --   ∀{t i Θ τ} → 
+  --   Θ ⊢ τ wf →
+  --   (i nat+ Θ) ⊢ (↑ t i τ) wf
+  -- wf-index-up {t = t} {i = Z} {τ = τ} wf rewrite ↑Z t τ = wf
+  -- wf-index-up {t = t} {i = 1+ i} {τ = b} WFBase = WFBase
+  -- wf-index-up {t = t} {i = 1+ i} {τ = ⦇-⦈} WFHole = WFHole
+  -- wf-index-up {t = t} {i = 1+ i} {τ = τ ==> τ₁} (WFArr wf wf₁) = WFArr (wf-index-up wf) (wf-index-up wf₁)
+  -- wf-index-up {t = Z} {i = 1+ i} {τ = T Z} WFVarZ = WFVarS (wf-index-up WFVarZ)
+  -- wf-index-up {t = 1+ t} {i = 1+ i} {τ = T Z} WFVarZ = WFVarZ
+  -- wf-index-up {t = Z} {i = 1+ i} {τ = T (1+ x)} (WFVarS wf) = WFVarS (wf-index-up (WFVarS wf))
+  -- wf-index-up {t = 1+ t} {i = 1+ i} {τ = T (1+ x)} (WFVarS {Θ = Θ} wf) rewrite nat+1+ i Θ 
+  --   = WFVarS (wf-index-inc {t = t} {i = i} refl (wf-index-up {t = t} {i = i} wf))
+  -- wf-index-up {t = t} {i = 1+ i} {Θ = Θ} {τ = ·∀ τ} (WFForall wf) with wf-index-up {t = 1+ t} {i = i} wf 
+  -- ... | result rewrite nat+1+ i Θ = WFForall (wf-index-inc refl result)
+
+  -- wf-index-down : 
+  --   ∀{t Θ τ} → 
+  --   1+ (1+ (t nat+ Θ)) ⊢ τ wf →
+  --   1+ (t nat+ Θ) ⊢ (↓ t 1 τ) wf
+  -- wf-index-down = {!   !}
+
+  -- wf-TTSub-helper1 :
+  --   ∀{t n Θ τ} → 
+  --   1+ (t nat+ Θ) ⊢ τ wf →
+  --   1+ ((n nat+ t) nat+ Θ) ⊢ ↓ (n nat+ t) 1 (↑ t (1+ n) τ) wf
+  -- wf-TTSub-helper1 {t = t} {n = n} {Θ = Θ} wf with wf-index-up {t = t} {i = 1+ n} wf
+  -- ... | result rewrite nat+1+ n (t nat+ Θ) rewrite nat+assoc n t Θ = wf-index-down result
+
+  -- wf-TTSub-helper1 {t = Z} {i = Z} WFVarZ = WFVarZ
+  -- wf-TTSub-helper1 {t = Z} {i = 1+ i} WFVarZ = WFVarS {!   !}
+  -- wf-TTSub-helper1 {t = 1+ t} {i = i} WFVarZ = {!   !}
+  -- wf-TTSub-helper1 {t = Z} {i = i} (WFVarS wf) = {!   !}
+  -- wf-TTSub-helper1 {t = 1+ t} {i = i} (WFVarS wf) = {!   !}
+  -- wf-TTSub-helper1 WFBase = WFBase
+  -- wf-TTSub-helper1 WFHole = WFHole
+  -- wf-TTSub-helper1 (WFArr wf wf₁) = WFArr (wf-TTSub-helper1 wf) (wf-TTSub-helper1 wf₁)
+  -- wf-TTSub-helper1 (WFForall wf) = WFForall (wf-TTSub-helper1 wf)
+
+  -- wf-TTSub-helper1 {n = n} {m = Z} WFVarZ = {!   !}
+  -- wf-TTSub-helper1 {n = n} {m = Z} (WFVarS wf) = {!   !}
+  -- wf-TTSub-helper1 {n = n} {m = 1+ m} wf = {!   !}
+  -- wf-TTSub-helper1 WFBase = WFBase
+  -- wf-TTSub-helper1 WFHole = WFHole
+  -- wf-TTSub-helper1 (WFArr wf wf₁) = WFArr (wf-TTSub-helper1 wf) (wf-TTSub-helper1 wf₁)
+  -- wf-TTSub-helper1 {n = n} {m = m} (WFForall wf) = WFForall (wf-TTSub-helper1 {n = n} {m = 1+ m}  wf)

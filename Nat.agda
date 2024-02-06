@@ -127,7 +127,9 @@ module Nat where
   nat+1+ Z m = refl
   nat+1+ (1+ n) m rewrite nat+1+ n m = refl
 
-  
+  nat+assoc : (n m l : Nat) → n nat+ (m nat+ l) == (n nat+ m) nat+ l
+  nat+assoc Z m l = refl
+  nat+assoc (1+ n) m l rewrite nat+assoc n m l = refl
 
   -- double : Nat → Nat
   -- double Z = Z 
@@ -165,16 +167,6 @@ module Nat where
     unpair : Nat → (Nat × Nat)
     pair-unpair : (p : Nat × Nat) → (unpair (pair p) == p)
     unpair-pair : (n : Nat) → (pair (unpair n) == n)
-
-  -- data alpha-var-type : Set where 
-  --   Bound : (Nat × Nat) → alpha-var-type
-  --   Free : Nat → alpha-var-type
-
-  -- postulate
-  --   encode-var : alpha-var-type → Nat 
-  --   decode-var : Nat → alpha-var-type
-  --   encode-decode : (n : alpha-var-type) → (decode-var (encode-var n) == n)
-  --   decode-encode : (n : Nat) → (encode-var (decode-var n) == n)
 
   bijection-injective : {A B : Set} → (f : A → B) → (g : B → A) → ((x : A) → (g (f x) == x)) → ((x : B) → (f (g x) == x)) → (x x' : A) → ((f x) == (f x')) → (x == x')
   bijection-injective f g inv1 inv2 x x' eq with h1 

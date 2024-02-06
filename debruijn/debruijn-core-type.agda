@@ -72,8 +72,8 @@ module debruijn.debruijn-core-type where
   
   -- well-formedness of types
   data _⊢_wf : typctx → htyp → Set where
-    WFVarZ : ∀{n} → 1+ n ⊢ T Z wf
-    WFVarS : ∀{n m} → n ⊢ T m wf → 1+ n ⊢ T (1+ m) wf
+    WFVarZ : ∀{Θ} → 1+ Θ ⊢ T Z wf
+    WFVarS : ∀{Θ n} → Θ ⊢ T n wf → 1+ Θ ⊢ T (1+ n) wf
     WFBase : ∀{Θ} → Θ ⊢ b wf
     WFHole : ∀{Θ} → Θ ⊢ ⦇-⦈ wf
     WFArr : ∀{Θ τ1 τ2} → Θ ⊢ τ1 wf → Θ ⊢ τ2 wf → Θ ⊢ τ1 ==> τ2 wf
