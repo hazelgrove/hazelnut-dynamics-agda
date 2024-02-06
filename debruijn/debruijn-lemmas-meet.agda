@@ -32,10 +32,26 @@ module debruijn.debruijn-lemmas-meet where
   ⊑t-⊓ (PTForall prec1) (PTForall prec2) (MeetForall meet) with ⊑t-⊓ prec1 prec2 meet 
   ... | _ , meet' , prec' = _ , MeetForall meet' , PTForall prec' 
 
-  ⊓-wf : ∀{τ1 τ2 τ3 Θ} → τ1 ⊓ τ2 == τ3 → Θ ⊢ τ1 wf → Θ ⊢ τ2 wf → Θ ⊢ τ3 wf
-  ⊓-wf MeetHoleL wf1 wf2 = wf2 
-  ⊓-wf MeetHoleR wf1 wf2 = wf1
-  ⊓-wf MeetBase wf1 wf2 = wf2
-  ⊓-wf MeetVar wf1 wf2 = wf2
-  ⊓-wf (MeetArr meet meet₁) (WFArr wf1 wf2) (WFArr wf3 wf4) = WFArr (⊓-wf meet wf1 wf3) (⊓-wf meet₁ wf2 wf4)
-  ⊓-wf (MeetForall meet) (WFForall wf1) (WFForall wf2) = WFForall (⊓-wf meet wf1 wf2)
+  module meet-match where 
+
+    --- direct matching for arrows
+    data _▸arr_ : htyp → htyp → Set where
+      MAHole : ⦇-⦈ ▸arr ⦇-⦈ ==> ⦇-⦈
+      MAArr  : {τ1 τ2 : htyp} → τ1 ==> τ2 ▸arr τ1 ==> τ2
+
+    --- direct matching for foralls
+    data _▸forall_ : htyp → htyp → Set where
+      MFHole : ⦇-⦈ ▸forall (·∀ ⦇-⦈)
+      MFForall : ∀{τ} → (·∀ τ) ▸forall (·∀ τ)
+
+    ⊓-▸arr : ∀{τ1 τ2 τ3} → τ1 ⊓ (⦇-⦈ ==> ⦇-⦈) == τ2 → τ1 ▸arr τ3 → τ2 == τ3
+    ⊓-▸arr MeetHoleL MAHole = refl
+    ⊓-▸arr (MeetArr MeetHoleL MeetHoleL) MAArr = refl
+    ⊓-▸arr (MeetArr MeetHoleL MeetHoleR) MAArr = refl
+    ⊓-▸arr (MeetArr MeetHoleR MeetHoleL) MAArr = refl
+    ⊓-▸arr (MeetArr MeetHoleR MeetHoleR) MAArr = refl
+
+    ⊓-▸forall : ∀{τ1 τ2 τ3} → τ1 ⊓ ·∀ ⦇-⦈ == τ2 → τ1 ▸forall τ3 → τ2 == τ3
+    ⊓-▸forall MeetHoleL MFHole = refl 
+    ⊓-▸forall (MeetForall MeetHoleL) MFForall = refl 
+    ⊓-▸forall (MeetForall MeetHoleR) MFForall = refl

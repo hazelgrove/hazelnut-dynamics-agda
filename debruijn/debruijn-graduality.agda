@@ -53,7 +53,7 @@ module debruijn.debruijn-graduality where
     ... | τ1' , τ2' , match' , prec1' , prec2' = τ2' , SAp wt' match' (graduality-ana precc prec1' prec2 ana) , prec2'
     graduality-syn precc (PTAp {τ2 = τ2} prec prect) (STAp wf syn match subst) rewrite (sym subst) with graduality-syn precc prec syn 
     ... | τ' , syn' , prect' with ⊑t-▸forall match prect'
-    ... | τ'' , match' , prec' = _ , STAp (⊑t-wf wf prect) syn' match' refl , {!   !} -- ⊑t-TTsub prect prec'
+    ... | τ'' , match' , prec' = _ , STAp (⊑t-wf wf prect) syn' match' refl , ⊑t-TTsub prect prec'
 
   graduality1 : 
     ∀{e e' τ} →     
@@ -133,7 +133,7 @@ module debruijn.debruijn-graduality where
     graduality-elab-ana {e' = ·Λ e'} precc prect (PTLam prec) (EATLam neq1 neq2 match ana) | τ' , match' , prect1 | thing , thing2 , ana' , prec' , prect2 with hole-or-not e'
     graduality-elab-ana precc prect (PTLam prec) (EATLam neq1 neq2 match ana) | .⦇-⦈ , MFHole , prect1 | thing , thing2 , ana' , prec' , prect2 | Inl refl =  _ , _ , EASubsume (λ ()) (λ e' ()) (ESTLam ESEHole) MeetHoleL , PIAddCast (PITLam PIEHole) (TATLam {!   !}) {!   !} {!   !} , PTForall PTHole 
     graduality-elab-ana precc prect (PTLam prec) (EATLam neq1 neq2 match ana) | τ' , MFForall , prect1 | thing , thing2 , ana' , prec' , prect2 | Inl refl = {!   !} --_ , _ , EASubsume (λ ()) (λ e' ()) (ESTLam ESEHole) {!   !} , {!   !} , {!   !}
-    ... | Inr (Inl (e' , refl)) = {!   !}
+    ... | Inr (Inl (e' , refl)) = _ , _ , (EASubsume (λ ()) (λ e' ()) (ESTLam (ESNEHole {!   !})) {!   !}) , {!   !} , {!   !}
     ... | Inr (Inr (neq3 , neq4)) = _ , _ , EATLam neq3 neq4 match' ana' , PITLam prec' , PTForall prect2
     
     graduality-elab-ana precc prect (PNEHole prec) (EANEHole syn) with graduality-elab-syn precc prec syn 
@@ -161,9 +161,13 @@ module debruijn.debruijn-graduality where
     ... | τ1' , syn' , prec1' with ⊑t-▸arr match prec1' 
     ... | τ2' , τ' , match' , prec3 , prec4 with graduality-elab-ana precc (PTArr prec3 prec4) prec1 ana1 
     ... | d1' , τ1''' , ana1' , prec5 , prec6 with graduality-elab-ana precc prec3 prec2 ana2 
-    ... | d2' , τ2''' , ana2' , prec7 , prec8 = _ , _ , (ESAp syn' match' ana1' ana2') , prec4 , PIAp (PICast prec5 prec6 (PTArr prec3 prec4)) (PICast prec7 prec8 prec3)
+    ... | d2' , τ2''' , ana2' , prec7 , prec8 = 
+      _ , _ , (ESAp syn' match' ana1' ana2') , prec4 , PIAp (PICast prec5 prec6 (PTArr prec3 prec4)) (PICast prec7 prec8 prec3)
     graduality-elab-syn precc (PTAp prec prect) (ESTAp wf syn match ana sub) with graduality-syn precc prec syn 
     ... | τ4' , syn' , prec1 with ⊑t-▸forall match prec1 
     ... | τ4'' , match' , prec2 with graduality-elab-ana precc (PTForall prec2) prec ana 
-    ... | d' , τ2'' , ana' , prec3 , prec4 rewrite (sym sub) = _ , _ , ESTAp (⊑t-wf wf prect) syn' match' ana' refl , {!   !} , PITAp (PICast prec3 prec4 (PTForall prec2)) prect
+    ... | d' , τ2'' , ana' , prec3 , prec4 rewrite (sym sub) = 
+      _ , _ , ESTAp (⊑t-wf wf prect) syn' match' ana' refl , 
+        ⊑t-TTsub prect (⊑t-▸forall-fun match match' prec1) , 
+        PITAp (PICast prec3 prec4 (PTForall prec2)) prect
    

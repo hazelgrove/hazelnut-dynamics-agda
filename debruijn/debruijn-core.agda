@@ -105,7 +105,7 @@ module debruijn.debruijn-core where
         Θ , Γ ⊢ X n => τ
       SAp : {Θ : typctx} {Γ : ctx} {e1 e2 : hexp} {τ τ1 τ2 : htyp} →
         Θ , Γ ⊢ e1 => τ1 →
-        τ1 ▸arr τ2 ==> τ →
+        τ1 ⊓ (⦇-⦈ ==> ⦇-⦈) == τ2 ==> τ →
         Θ , Γ ⊢ e2 <= τ2 →
         Θ , Γ ⊢ (e1 ∘ e2) => τ
       SEHole  : {Θ : typctx} {Γ : ctx} → 
@@ -123,7 +123,7 @@ module debruijn.debruijn-core where
       STAp : {Θ : typctx} {Γ : ctx} {e : hexp} {τ1 τ2 τ3 τ4 : htyp} → 
         Θ ⊢ τ1 wf →
         Θ , Γ ⊢ e => τ2 →
-        τ2 ▸forall (·∀ τ3) →
+        τ2 ⊓ ·∀ ⦇-⦈ == (·∀ τ3) →
         TTSub τ1 τ3 == τ4 →
         Θ , Γ ⊢ (e < τ1 >) => τ4
 
@@ -134,11 +134,11 @@ module debruijn.debruijn-core where
         τ ~ τ' →
         Θ , Γ ⊢ e <= τ
       ALam : {Θ : typctx} {Γ : ctx} {e : hexp} {τ τ1 τ2 : htyp} →
-        τ ▸arr τ1 ==> τ2 →
+        τ ⊓ (⦇-⦈ ==> ⦇-⦈) == τ1 ==> τ2 →
         Θ , (τ1 , Γ) ⊢ e <= τ2 →
         Θ , Γ ⊢ (·λ e) <= τ
       ATLam : {Θ : typctx} {Γ : ctx} {e : hexp} {τ1 τ2 : htyp} → 
-        τ1 ▸forall (·∀ τ2) → 
+        τ1 ⊓ ·∀ ⦇-⦈ == (·∀ τ2) → 
         (1+ Θ) , Γ ⊢ e <= τ2 → 
         Θ , Γ ⊢ (·Λ e) <= τ1
 
@@ -160,14 +160,14 @@ module debruijn.debruijn-core where
         Θ , Γ ⊢ (·Λ e) ⇒ (·∀ τ) ~> (·Λ d)
       ESAp : ∀{Θ Γ e1 τ τ1 τ1' τ2 τ2' d1  e2 d2 } →
         Θ , Γ ⊢ e1 => τ1 →
-        τ1 ▸arr τ2 ==> τ →
+        τ1 ⊓ (⦇-⦈ ==> ⦇-⦈) == τ2 ==> τ →
         Θ , Γ ⊢ e1 ⇐ (τ2 ==> τ) ~> d1 :: τ1' →
         Θ , Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2' →
         Θ , Γ ⊢ (e1 ∘ e2) ⇒ τ ~> ((d1 ⟨ τ1' ⇒ τ2 ==> τ ⟩) ∘ (d2 ⟨ τ2' ⇒ τ2 ⟩))
       ESTAp : ∀{Θ Γ e τ1 τ2 τ3 τ4 τ2' d} →
         Θ ⊢ τ1 wf →
         Θ , Γ ⊢ e => τ2 →
-        τ2 ▸forall (·∀ τ3) →
+        τ2 ⊓ ·∀ ⦇-⦈ == (·∀ τ3) →
         Θ , Γ ⊢ e ⇐ (·∀ τ3) ~> d :: τ2' →
         TTSub τ1 τ3 == τ4 →
         Θ , Γ ⊢ (e < τ1 >) ⇒ τ4 ~> ((d ⟨ τ2' ⇒ (·∀ τ3)⟩) < τ1 >)
@@ -184,13 +184,13 @@ module debruijn.debruijn-core where
     -- analysis
     data _,_⊢_⇐_~>_::_ : (Θ : typctx) (Γ : ctx) (e : hexp) (τ : htyp) (d : ihexp) (τ' : htyp) → Set where
       EALam : ∀{Θ Γ τ τ1 τ2 e d τ2'} →
-        τ ▸arr τ1 ==> τ2 →
+        τ ⊓ (⦇-⦈ ==> ⦇-⦈) == τ1 ==> τ2 →
         Θ , (τ1 , Γ) ⊢ e ⇐ τ2 ~> d :: τ2' →
         Θ , Γ ⊢ ·λ e ⇐ τ ~> ·λ[ τ1 ] d :: τ1 ==> τ2'
       EATLam : ∀{Θ Γ e τ1 τ2 τ2' d} → 
         (e ≠ ⦇-⦈) →
         ((e' : hexp) → e ≠ ⦇⌜ e' ⌟⦈) →
-        τ1 ▸forall (·∀ τ2) → 
+        τ1 ⊓ ·∀ ⦇-⦈ == (·∀ τ2) → 
         (1+ Θ) , Γ ⊢ e ⇐ τ2 ~> d :: τ2' →
         Θ , Γ ⊢ (·Λ e) ⇐ τ1 ~> (·Λ d) :: (·∀ τ2')
       EASubsume : ∀{e Θ Γ τ1 τ2 τ3 d} →

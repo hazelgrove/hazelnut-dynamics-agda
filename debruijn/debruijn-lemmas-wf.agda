@@ -3,6 +3,7 @@ open import Prelude
 open import debruijn.debruijn-core-type
 open import debruijn.debruijn-core
 open import debruijn.debruijn-lemmas-index
+open import debruijn.debruijn-lemmas-meet
 -- open import debruijn.debruijn-lemmas-prec
 
 module debruijn.debruijn-lemmas-wf where
@@ -43,6 +44,21 @@ module debruijn.debruijn-lemmas-wf where
         h1 eq with (sym eq) 
         ... | refl = neq refl
 
+  wf-⊑t : ∀{Θ τ1 τ2} → Θ ⊢ τ1 wf → τ1 ⊑t τ2 → Θ ⊢ τ2 wf
+  wf-⊑t wf PTBase = wf 
+  wf-⊑t _ PTHole = WFHole
+  wf-⊑t wf PTTVar = wf
+  wf-⊑t (WFArr wf1 wf2) (PTArr prec1 prec2) = WFArr (wf-⊑t wf1 prec1) (wf-⊑t wf2 prec2)
+  wf-⊑t (WFForall wf) (PTForall prec) = WFForall (wf-⊑t wf prec)
+
+  wf-⊓ : ∀{τ1 τ2 τ3 Θ} → τ1 ⊓ τ2 == τ3 → Θ ⊢ τ1 wf → Θ ⊢ τ2 wf → Θ ⊢ τ3 wf
+  wf-⊓ MeetHoleL wf1 wf2 = wf2 
+  wf-⊓ MeetHoleR wf1 wf2 = wf1
+  wf-⊓ MeetBase wf1 wf2 = wf2
+  wf-⊓ MeetVar wf1 wf2 = wf2
+  wf-⊓ (MeetArr meet meet₁) (WFArr wf1 wf2) (WFArr wf3 wf4) = WFArr (wf-⊓ meet wf1 wf3) (wf-⊓ meet₁ wf2 wf4)
+  wf-⊓ (MeetForall meet) (WFForall wf1) (WFForall wf2) = WFForall (wf-⊓ meet wf1 wf2)
+  
   wf-TTSub-helper2 :
     ∀{t n Θ} →
     (t == n → ⊥) →
@@ -97,13 +113,13 @@ module debruijn.debruijn-lemmas-wf where
   wf-TTSub wf1 (WFArr wf2 wf3) = WFArr (wf-TTSub wf1 wf2) (wf-TTSub wf1 wf3)
   wf-TTSub {τ1 = τ1} wf1 (WFForall wf2) rewrite ↑compose Z 1 τ1 = WFForall (wf-TTSub-helper wf1 wf2)
   
-  wf-▸arr : ∀{τ τ1 τ2 Θ} → τ ▸arr (τ1 ==> τ2) → Θ ⊢ τ wf → ((Θ ⊢ τ1 wf) × (Θ ⊢ τ2 wf))
-  wf-▸arr MAHole wf = wf , wf
-  wf-▸arr MAArr (WFArr wf1 wf2) = wf1 , wf2
+  -- wf-▸arr : ∀{τ τ1 τ2 Θ} → τ ▸arr (τ1 ==> τ2) → Θ ⊢ τ wf → ((Θ ⊢ τ1 wf) × (Θ ⊢ τ2 wf))
+  -- wf-▸arr MAHole wf = wf , wf
+  -- wf-▸arr MAArr (WFArr wf1 wf2) = wf1 , wf2
 
-  wf-▸forall : ∀{τ τ' Θ} → τ ▸forall (·∀ τ') → Θ ⊢ τ wf → (1+ Θ ⊢ τ' wf)
-  wf-▸forall MFHole wf = weakening wf 
-  wf-▸forall MFForall (WFForall wf) = wf
+  -- wf-▸forall : ∀{τ τ' Θ} → τ ▸forall (·∀ τ') → Θ ⊢ τ wf → (1+ Θ ⊢ τ' wf)
+  -- wf-▸forall MFHole wf = weakening wf 
+  -- wf-▸forall MFForall (WFForall wf) = wf
   
   wf-syn : ∀{τ e Θ Γ} → 
     (Θ ⊢ Γ ctxwf) → 
@@ -112,12 +128,14 @@ module debruijn.debruijn-lemmas-wf where
   wf-syn ctxwf SConst = WFBase
   wf-syn ctxwf (SAsc x x₁) = x
   wf-syn ctxwf (SVar x) = wf-ctx-var ctxwf x
-  wf-syn ctxwf (SAp syn x x₁) = π2 (wf-▸arr x (wf-syn ctxwf syn)) 
+  wf-syn ctxwf (SAp syn meet _) with wf-⊓ meet (wf-syn ctxwf syn) (WFArr WFHole WFHole)
+  ... | WFArr _ wf = wf
   wf-syn ctxwf SEHole = WFHole
   wf-syn ctxwf (SNEHole syn) = WFHole
   wf-syn ctxwf (SLam x syn) = WFArr x (wf-syn (CtxWFExtend x ctxwf) syn)
   wf-syn ctxwf (STLam syn) = WFForall (wf-syn (weakening-ctx ctxwf) syn)   
-  wf-syn ctxwf (STAp wf syn match subst) rewrite (sym subst) = wf-TTSub wf (wf-▸forall match (wf-syn ctxwf syn)) 
+  wf-syn ctxwf (STAp wf syn meet refl) with wf-⊓ meet (wf-syn ctxwf syn) (WFForall WFHole) 
+  ... | WFForall wf' = wf-TTSub wf wf'
   
   wf-elab-syn : ∀{τ e d Θ Γ} → 
     (Θ ⊢ Γ ctxwf) → 
@@ -127,8 +145,10 @@ module debruijn.debruijn-lemmas-wf where
   wf-elab-syn ctxwf (ESVar x) = wf-ctx-var ctxwf x
   wf-elab-syn ctxwf (ESLam x syn) = WFArr x (wf-elab-syn (CtxWFExtend x ctxwf) syn)
   wf-elab-syn ctxwf (ESTLam syn) = WFForall (wf-elab-syn (weakening-ctx ctxwf) syn)
-  wf-elab-syn ctxwf (ESAp syn match _ _) = π2 (wf-▸arr match (wf-syn ctxwf syn))
-  wf-elab-syn ctxwf (ESTAp wf syn match x₃ refl) = wf-TTSub wf (wf-▸forall match (wf-syn ctxwf syn))
+  wf-elab-syn ctxwf (ESAp syn meet _ _) with wf-⊓ meet (wf-syn ctxwf syn) (WFArr WFHole WFHole)
+  ... | WFArr _ wf = wf
+  wf-elab-syn ctxwf (ESTAp wf syn meet _ refl) with wf-⊓ meet (wf-syn ctxwf syn) (WFForall WFHole) 
+  ... | WFForall wf' = wf-TTSub wf wf'
   wf-elab-syn ctxwf ESEHole = WFHole
   wf-elab-syn ctxwf (ESNEHole syn) = WFHole
   wf-elab-syn ctxwf (ESAsc x x₁) = x

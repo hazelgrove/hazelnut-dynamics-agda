@@ -41,16 +41,6 @@ module debruijn.debruijn-core-type where
     MeetArr : ∀ {τ1 τ2 τ3 τ4 τ5 τ6} → τ1 ⊓ τ3 == τ5 → τ2 ⊓ τ4 == τ6 → τ1 ==> τ2 ⊓ τ3 ==> τ4 == τ5 ==> τ6
     MeetForall : ∀ {τ1 τ2 τ3} → τ1 ⊓ τ2 == τ3 → ·∀ τ1 ⊓ ·∀ τ2 == ·∀ τ3 
   
-  --- matching for arrows
-  data _▸arr_ : htyp → htyp → Set where
-    MAHole : ⦇-⦈ ▸arr ⦇-⦈ ==> ⦇-⦈
-    MAArr  : {τ1 τ2 : htyp} → τ1 ==> τ2 ▸arr τ1 ==> τ2
-
-  --- matching for foralls
-  data _▸forall_ : htyp → htyp → Set where
-    MFHole : ⦇-⦈ ▸forall (·∀ ⦇-⦈)
-    MFForall : ∀{τ} → (·∀ τ) ▸forall (·∀ τ)
-
   -- ground types
   data _ground : (τ : htyp) → Set where
     GBase : b ground
