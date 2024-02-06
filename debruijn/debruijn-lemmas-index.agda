@@ -5,44 +5,43 @@ open import debruijn.debruijn-core
 
 module debruijn.debruijn-lemmas-index where
   
-  ↑10 : (x : Nat) → (↑Nat 1 0 x) == 1+ x
+  ↑10 : (x : Nat) → (↑Nat Z 1 x) == 1+ x
   ↑10 Z = refl 
   ↑10 (1+ x) rewrite (↑10 x) = refl
 
-  ↑NatZ : (m x : Nat) → ↑Nat Z m x == x
+  ↑NatZ : (t x : Nat) → ↑Nat t Z x == x
   ↑NatZ Z x = refl
-  ↑NatZ (1+ m) Z = refl
-  ↑NatZ (1+ m) (1+ x) rewrite ↑NatZ m x = refl
+  ↑NatZ (1+ t) Z = refl
+  ↑NatZ (1+ t) (1+ x) rewrite ↑NatZ t x = refl
 
-  ↑Z : (m : Nat) → (τ : htyp) → ↑ Z m τ == τ
-  ↑Z m b = refl
-  ↑Z m (T x) rewrite ↑NatZ m x = refl
-  ↑Z m ⦇-⦈ = refl
-  ↑Z m (τ ==> τ₁) rewrite ↑Z m τ rewrite ↑Z m τ₁ = refl
-  ↑Z m (·∀ τ) rewrite ↑Z (1+ m) τ = refl
+  ↑Z : (t : Nat) → (τ : htyp) → ↑ t Z τ == τ
+  ↑Z t b = refl
+  ↑Z t (T x) rewrite ↑NatZ t x = refl
+  ↑Z t ⦇-⦈ = refl
+  ↑Z t (τ ==> τ₁) rewrite ↑Z t τ rewrite ↑Z t τ₁ = refl
+  ↑Z t (·∀ τ) rewrite ↑Z (1+ t) τ = refl
   
-  ↑Natcompose : (n m x : Nat) → ↑Nat 1 m (↑Nat n m x) == ↑Nat (1+ n) m x
-  ↑Natcompose n Z x = refl
-  ↑Natcompose Z (1+ m) Z = refl
-  ↑Natcompose (1+ n) (1+ m) Z = refl
-  ↑Natcompose Z (1+ m) (1+ x) rewrite ↑Natcompose Z m x = refl
-  ↑Natcompose (1+ n) (1+ m) (1+ x) rewrite ↑Natcompose (1+ n) m x = refl
+  ↑Natcompose : (t i x : Nat) → ↑Nat t 1 (↑Nat t i x) == ↑Nat t (1+ i) x
+  ↑Natcompose Z Z x = refl
+  ↑Natcompose Z (1+ i) x = refl
+  ↑Natcompose (1+ t) i Z = refl
+  ↑Natcompose (1+ t) i (1+ x) rewrite ↑Natcompose t i x = refl
 
-  ↑compose : (n m : Nat) → (τ : htyp) → ↑ 1 m (↑ n m τ) == (↑ (1+ n) m τ)
+  ↑compose : (t i : Nat) → (τ : htyp) → ↑ t 1 (↑ t i τ) == (↑ t (1+ i) τ)
   ↑compose _ _ b = refl
-  ↑compose n m (T x) rewrite ↑Natcompose n m x = refl
+  ↑compose t i (T x) rewrite ↑Natcompose t i x = refl
   ↑compose _ _ ⦇-⦈ = refl
-  ↑compose n m (τ ==> τ₁) rewrite ↑compose n m τ rewrite ↑compose n m τ₁ = refl
-  ↑compose n m (·∀ τ) rewrite ↑compose n (1+ m) τ = refl
+  ↑compose t i (τ ==> τ₁) rewrite ↑compose t i τ rewrite ↑compose t i τ₁ = refl
+  ↑compose t i (·∀ τ) rewrite ↑compose (1+ t) i τ = refl
 
-  ↓↑Nat-invert : (m x : Nat) →  ↓Nat 1 m (↑Nat 1 m x) == x
+  ↓↑Nat-invert : (t x : Nat) → ↓Nat t 1 (↑Nat t 1 x) == x
   ↓↑Nat-invert Z x = refl
-  ↓↑Nat-invert (1+ m) Z = refl
-  ↓↑Nat-invert (1+ m) (1+ x) rewrite ↓↑Nat-invert m x = refl
+  ↓↑Nat-invert (1+ t) Z = refl
+  ↓↑Nat-invert (1+ t) (1+ x) rewrite ↓↑Nat-invert t x = refl
   
-  ↓↑invert : (m : Nat) → (τ : htyp) → ↓ 1 m (↑ 1 m τ) == τ
-  ↓↑invert m b = refl 
-  ↓↑invert m (T x) rewrite ↓↑Nat-invert m x = refl
-  ↓↑invert m ⦇-⦈ = refl
-  ↓↑invert m (τ ==> τ₁) rewrite ↓↑invert m τ rewrite ↓↑invert m τ₁ = refl
-  ↓↑invert m (·∀ τ) rewrite ↓↑invert (1+ m) τ = refl
+  ↓↑invert : (t : Nat) → (τ : htyp) → ↓ t 1 (↑ t 1 τ) == τ
+  ↓↑invert t b = refl 
+  ↓↑invert t (T x) rewrite ↓↑Nat-invert t x = refl
+  ↓↑invert t ⦇-⦈ = refl
+  ↓↑invert t (τ ==> τ₁) rewrite ↓↑invert t τ rewrite ↓↑invert t τ₁ = refl
+  ↓↑invert t (·∀ τ) rewrite ↓↑invert (1+ t) τ = refl
