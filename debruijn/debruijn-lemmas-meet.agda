@@ -16,7 +16,7 @@ module debruijn.debruijn-lemmas-meet where
   ⊑t-⊓ : ∀{τ1 τ2 τ3 τ1' τ2'} → τ1 ⊑t τ1' → τ2 ⊑t τ2' → τ1 ⊓ τ2 == τ3 → Σ[ τ3' ∈ htyp ] ((τ1' ⊓ τ2' == τ3') × (τ3 ⊑t τ3'))
   ⊑t-⊓ PTHole prec2 MeetHoleL = _ , MeetHoleL , prec2 
   ⊑t-⊓ prec1 PTHole MeetHoleR = _ , MeetHoleR , prec1
-  ⊑t-⊓ PTHole PTHole thing = ⦇-⦈ , MeetHoleL , PTHole
+  ⊑t-⊓ PTHole PTHole _ = ⦇-⦈ , MeetHoleL , PTHole
   ⊑t-⊓ PTBase PTBase MeetBase = _ , MeetBase , PTBase
   ⊑t-⊓ PTBase PTHole MeetBase = _ , MeetHoleR , PTBase
   ⊑t-⊓ PTHole PTBase MeetBase = _ , MeetHoleL , PTBase
@@ -31,6 +31,26 @@ module debruijn.debruijn-lemmas-meet where
   ⊑t-⊓ (PTForall prec1) PTHole (MeetForall meet) = _ , MeetHoleR , PTForall (⊑t-trans (π1 (⊓-lb  meet)) prec1)
   ⊑t-⊓ (PTForall prec1) (PTForall prec2) (MeetForall meet) with ⊑t-⊓ prec1 prec2 meet 
   ... | _ , meet' , prec' = _ , MeetForall meet' , PTForall prec' 
+
+  ⊑t-⊓-fun :  ∀{τ1 τ2 τ3 τ1' τ2' τ3'} → τ1 ⊑t τ1' → τ2 ⊑t τ2' → τ1 ⊓ τ2 == τ3 → τ1' ⊓ τ2' == τ3' → τ3 ⊑t τ3'
+  ⊑t-⊓-fun PTHole prec2 MeetHoleL MeetHoleL = prec2
+  ⊑t-⊓-fun PTHole prec2 MeetHoleL MeetHoleR = prec2
+  ⊑t-⊓-fun prec1 PTHole MeetHoleR MeetHoleL = prec1
+  ⊑t-⊓-fun prec1 PTHole MeetHoleR MeetHoleR = prec1
+  ⊑t-⊓-fun prec1 prec2 MeetBase MeetHoleL = prec2
+  ⊑t-⊓-fun prec1 prec2 MeetBase MeetHoleR = prec1
+  ⊑t-⊓-fun prec1 prec2 MeetBase MeetBase = prec2
+  ⊑t-⊓-fun prec1 prec2 MeetVar MeetHoleL = prec2
+  ⊑t-⊓-fun prec1 prec2 MeetVar MeetHoleR = prec1
+  ⊑t-⊓-fun prec1 prec2 MeetVar MeetVar = prec2
+  ⊑t-⊓-fun PTHole prec2 (MeetArr meet1 meet2) MeetHoleL = ⊑t-trans (PTArr (π2 (⊓-lb meet1)) (π2 (⊓-lb meet2))) prec2
+  ⊑t-⊓-fun prec1 prec2 (MeetArr meet1 meet2) MeetHoleR = ⊑t-trans (PTArr (π1 (⊓-lb meet1)) (π1 (⊓-lb meet2))) prec1
+  ⊑t-⊓-fun (PTArr prec1 prec2) (PTArr prec3 prec4) (MeetArr meet1 meet2) (MeetArr meet3 meet4) = 
+      PTArr (⊑t-⊓-fun prec1 prec3 meet1 meet3) (⊑t-⊓-fun prec2 prec4 meet2 meet4) 
+  ⊑t-⊓-fun PTHole prec2 (MeetForall meet) MeetHoleL = ⊑t-trans (PTForall (π2 (⊓-lb meet))) prec2
+  ⊑t-⊓-fun prec1 prec2 (MeetForall meet) MeetHoleR = ⊑t-trans (PTForall (π1 (⊓-lb meet))) prec1
+  ⊑t-⊓-fun (PTForall prec1) (PTForall prec2) (MeetForall meet) (MeetForall meet2) = PTForall (⊑t-⊓-fun prec1 prec2 meet meet2)
+
 
   module meet-match where 
 
@@ -52,6 +72,6 @@ module debruijn.debruijn-lemmas-meet where
     ⊓-▸arr (MeetArr MeetHoleR MeetHoleR) MAArr = refl
 
     ⊓-▸forall : ∀{τ1 τ2 τ3} → τ1 ⊓ ·∀ ⦇-⦈ == τ2 → τ1 ▸forall τ3 → τ2 == τ3
-    ⊓-▸forall MeetHoleL MFHole = refl 
+    ⊓-▸forall MeetHoleL MFHole = refl     
     ⊓-▸forall (MeetForall MeetHoleL) MFForall = refl 
-    ⊓-▸forall (MeetForall MeetHoleR) MFForall = refl
+    ⊓-▸forall (MeetForall MeetHoleR) MFForall = refl 
