@@ -70,8 +70,11 @@ module debruijn.debruijn-lemmas-wf where
     Θ ⊢ τ wf →
     (n nat+ Θ) ⊢ (↑ n m τ) wf
   wf-index-up {n = Z} {m = m} {τ = τ} wf rewrite ↑Z m τ = wf
-  wf-index-up {n = 1+ n} {m = m} WFVarZ rewrite (sym (↑Natcompose n m Z)) = {!   !}
-  wf-index-up {n = 1+ n} (WFVarS wf) = {!   !}
+  wf-index-up {n = 1+ n} {m = Z} WFVarZ = WFVarS (wf-index-up {n = n} WFVarZ)
+  wf-index-up {n = 1+ n} {m = 1+ m} WFVarZ = WFVarZ
+  wf-index-up {n = 1+ n} {m = Z} (WFVarS wf) = WFVarS (wf-index-up (WFVarS wf))
+  wf-index-up {n = 1+ n} {m = 1+ m} {τ = τ} (WFVarS {n = n'} wf) rewrite nat+1+ n n' with wf-index-inc {n = n} {m = m} {τ' = τ} refl wf
+  ... | result = WFVarS {!   !}
   wf-index-up {n = 1+ n} WFBase = WFBase
   wf-index-up {n = 1+ n} WFHole = WFHole
   wf-index-up {n = 1+ n} (WFArr wf wf₁) = WFArr (wf-index-up wf) (wf-index-up wf₁)
