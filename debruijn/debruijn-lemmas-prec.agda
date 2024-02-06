@@ -3,6 +3,7 @@ open import Prelude
 open import debruijn.debruijn-core-type
 open import debruijn.debruijn-core
 open import debruijn.debruijn-lemmas-consistency
+open import debruijn.debruijn-lemmas-wf
 
 module debruijn.debruijn-lemmas-prec where
 
@@ -37,6 +38,10 @@ module debruijn.debruijn-lemmas-prec where
 
   ⊑t-consist-right : ∀{τ τ' τ''} → τ ~ τ' → τ' ⊑t τ'' → τ ~ τ''
   ⊑t-consist-right consist prec = ~sym (⊑t-consist-left (~sym consist) prec)
+
+  ⊑t-▸arr-simple : ∀{τ τ'} → τ ▸arr τ' → τ' ⊑t τ
+  ⊑t-▸arr-simple MAHole = PTHole
+  ⊑t-▸arr-simple MAArr = ⊑t-refl _
   
   ⊑t-▸arr : ∀{τ τ' τ1 τ2} → τ ▸arr (τ1 ==> τ2) → τ ⊑t τ' → Σ[ τ1' ∈ htyp ] Σ[ τ2' ∈ htyp ] ((τ' ▸arr (τ1' ==> τ2')) × (τ1 ⊑t τ1') × (τ2 ⊑t τ2'))
   ⊑t-▸arr _ PTHole = ⦇-⦈ , ⦇-⦈ , MAHole , PTHole , PTHole
@@ -75,3 +80,4 @@ module debruijn.debruijn-lemmas-prec where
   ⊑c-var InCtxZ (PCExtend prec precc) = _ , InCtxZ , prec
   ⊑c-var (InCtx1+ inctx) (PCExtend prec precc) with ⊑c-var inctx precc
   ... | τ' , inctx' , prec' = τ' , InCtx1+ inctx' , prec'
+  

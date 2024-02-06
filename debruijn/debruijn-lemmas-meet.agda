@@ -31,3 +31,11 @@ module debruijn.debruijn-lemmas-meet where
   ⊑t-⊓ (PTForall prec1) PTHole (MeetForall meet) = _ , MeetHoleR , PTForall (⊑t-trans (π1 (⊓-lb  meet)) prec1)
   ⊑t-⊓ (PTForall prec1) (PTForall prec2) (MeetForall meet) with ⊑t-⊓ prec1 prec2 meet 
   ... | _ , meet' , prec' = _ , MeetForall meet' , PTForall prec' 
+
+  ⊓-wf : ∀{τ1 τ2 τ3 Θ} → τ1 ⊓ τ2 == τ3 → Θ ⊢ τ1 wf → Θ ⊢ τ2 wf → Θ ⊢ τ3 wf
+  ⊓-wf MeetHoleL wf1 wf2 = wf2 
+  ⊓-wf MeetHoleR wf1 wf2 = wf1
+  ⊓-wf MeetBase wf1 wf2 = wf2
+  ⊓-wf MeetVar wf1 wf2 = wf2
+  ⊓-wf (MeetArr meet meet₁) (WFArr wf1 wf2) (WFArr wf3 wf4) = WFArr (⊓-wf meet wf1 wf3) (⊓-wf meet₁ wf2 wf4)
+  ⊓-wf (MeetForall meet) (WFForall wf1) (WFForall wf2) = WFForall (⊓-wf meet wf1 wf2)

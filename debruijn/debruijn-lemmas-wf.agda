@@ -119,6 +119,20 @@ module debruijn.debruijn-lemmas-wf where
   wf-syn ctxwf (STLam syn) = WFForall (wf-syn (weakening-ctx ctxwf) syn)   
   wf-syn ctxwf (STAp wf syn match subst) rewrite (sym subst) = wf-TTSub wf (wf-▸forall match (wf-syn ctxwf syn)) 
   
+  wf-elab-syn : ∀{τ e d Θ Γ} → 
+    (Θ ⊢ Γ ctxwf) → 
+    (Θ , Γ ⊢ e ⇒ τ ~> d) → 
+    Θ ⊢ τ wf
+  wf-elab-syn ctxwf ESConst = WFBase
+  wf-elab-syn ctxwf (ESVar x) = wf-ctx-var ctxwf x
+  wf-elab-syn ctxwf (ESLam x syn) = WFArr x (wf-elab-syn (CtxWFExtend x ctxwf) syn)
+  wf-elab-syn ctxwf (ESTLam syn) = WFForall (wf-elab-syn (weakening-ctx ctxwf) syn)
+  wf-elab-syn ctxwf (ESAp syn match _ _) = π2 (wf-▸arr match (wf-syn ctxwf syn))
+  wf-elab-syn ctxwf (ESTAp wf syn match x₃ refl) = wf-TTSub wf (wf-▸forall match (wf-syn ctxwf syn))
+  wf-elab-syn ctxwf ESEHole = WFHole
+  wf-elab-syn ctxwf (ESNEHole syn) = WFHole
+  wf-elab-syn ctxwf (ESAsc x x₁) = x
+
   -- recycling bin
 
   --   -- wf-TTsub : ∀{Θ τ1 τ2} → (Θ ⊢ τ1 wf) → (1+ Θ ⊢ τ2 wf) → (Θ ⊢ TT[ τ1 / Θ ] τ2 wf)
@@ -226,7 +240,7 @@ module debruijn.debruijn-lemmas-wf where
   -- wf-TTSub-helper1 WFBase = WFBase
   -- wf-TTSub-helper1 WFHole = WFHole
   -- wf-TTSub-helper1 (WFArr wf wf₁) = WFArr (wf-TTSub-helper1 wf) (wf-TTSub-helper1 wf₁)
-  -- wf-TTSub-helper1 (WFForall wf) = WFForall (wf-TTSub-helper1 wf)
+  -- wf-TTSub-helper1 (WFForall wf) = WFForall (wf-TTSub-helper1 wf) 
 
   -- wf-TTSub-helper1 {n = n} {m = Z} WFVarZ = {!   !}
   -- wf-TTSub-helper1 {n = n} {m = Z} (WFVarS wf) = {!   !}
@@ -234,4 +248,4 @@ module debruijn.debruijn-lemmas-wf where
   -- wf-TTSub-helper1 WFBase = WFBase
   -- wf-TTSub-helper1 WFHole = WFHole
   -- wf-TTSub-helper1 (WFArr wf wf₁) = WFArr (wf-TTSub-helper1 wf) (wf-TTSub-helper1 wf₁)
-  -- wf-TTSub-helper1 {n = n} {m = m} (WFForall wf) = WFForall (wf-TTSub-helper1 {n = n} {m = 1+ m}  wf)
+  -- wf-TTSub-helper1 {n = n} {m = m} (WFForall wf) = WFForall (wf-TTSub-helper1 {n = n} {m = 1+ m}  wf) 
