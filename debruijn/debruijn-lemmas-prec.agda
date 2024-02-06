@@ -20,6 +20,13 @@ module debruijn.debruijn-lemmas-prec where
   ⊑t-trans (PTArr prec1 prec2) (PTArr prec3 prec4) = PTArr (⊑t-trans prec1 prec3) (⊑t-trans prec2 prec4)
   ⊑t-trans (PTForall prec1) (PTForall prec2) = PTForall (⊑t-trans prec1 prec2)
 
+  ⊑t-consist : ∀{τ τ'} → τ ⊑t τ' → τ ~ τ'
+  ⊑t-consist PTBase = ConsistBase
+  ⊑t-consist PTHole = ConsistHole1
+  ⊑t-consist PTTVar = ConsistVar
+  ⊑t-consist (PTArr prec prec₁) = ConsistArr
+  ⊑t-consist (PTForall prec) = ConsistForall (⊑t-consist prec)
+
   ⊑t-consist-left : ∀{τ τ' τ''} → τ ~ τ' → τ ⊑t τ'' → τ'' ~ τ'  
   ⊑t-consist-left ConsistHole1 prec = ConsistHole1
   ⊑t-consist-left consist PTBase = consist 
