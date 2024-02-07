@@ -12,6 +12,7 @@ open import debruijn.debruijn-lemmas-meet
 open import debruijn.debruijn-lemmas-wf
 
 open import debruijn.debruijn-typed-elaboration
+open import debruijn.debruijn-type-assignment-unicity
 open import debruijn.debruijn-graduality
 
 module debruijn.debruijn-all where

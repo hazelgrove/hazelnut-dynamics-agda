@@ -9,29 +9,40 @@ open import debruijn.debruijn-lemmas-meet
 
 module debruijn.debruijn-typed-elaboration where
 
-  ⊑t-ana : ∀{Γ e τ τ' d Θ} →
-    Θ ⊢ Γ ctxwf → 
-    Θ ⊢ τ wf → 
-    Θ , Γ ⊢ e ⇐ τ ~> d :: τ' →
-    τ' ⊑t τ
-  ⊑t-ana ctxwf wf (EALam meet ana) with ⊓-lb meet 
+  -- ⊑t-ana : ∀{Γ e τ τ' d Θ} →
+  --   Θ ⊢ Γ ctxwf → 
+  --   Θ ⊢ τ wf → 
+  --   Θ , Γ ⊢ e ⇐ τ ~> d :: τ' →
+  --   τ' ⊑t τ
+  -- ⊑t-ana ctxwf wf (EALam meet ana) with ⊓-lb meet 
+  -- ... | PTHole , _ = PTHole
+  -- ... | PTArr prec1 prec2 , _ with wf-⊓ meet wf (WFArr WFHole WFHole)
+  -- ... | WFArr wf1 wf2 = PTArr prec1 (⊑t-trans (⊑t-ana (CtxWFExtend wf1 ctxwf) wf2 ana) prec2)
+  -- ⊑t-ana ctxwf wf (EATLam neq1 neq2 meet ana) with ⊓-lb meet 
+  -- ... | PTHole , _ = PTHole
+  -- ... | PTForall prec1 , _ with wf-⊓ meet wf (WFForall WFHole)
+  -- ... | WFForall wf1 = PTForall (⊑t-trans (⊑t-ana (weakening-ctx ctxwf) wf1 ana) prec1)
+  -- ⊑t-ana ctxwf wf (EASubsume neq1 neq2 xsyn meet) = π1 (⊓-lb meet)
+  -- ⊑t-ana ctxwf wf EAEHole = ⊑t-refl _
+  -- ⊑t-ana ctxwf wf (EANEHole x) = ⊑t-refl _
+
+  ⊑t-ana : ∀{Θ Γ e τ d τ'} → Θ , Γ ⊢ e ⇐ τ ~> d :: τ' → τ' ⊑t τ
+  ⊑t-ana (EALam meet ana) with ⊓-lb meet 
   ... | PTHole , _ = PTHole
-  ... | PTArr prec1 prec2 , _ with wf-⊓ meet wf (WFArr WFHole WFHole)
-  ... | WFArr wf1 wf2 = PTArr prec1 (⊑t-trans (⊑t-ana (CtxWFExtend wf1 ctxwf) wf2 ana) prec2)
-  ⊑t-ana ctxwf wf (EATLam neq1 neq2 meet ana) with ⊓-lb meet 
+  ... | PTArr prec1 prec2 , _ = PTArr prec1 (⊑t-trans (⊑t-ana ana) prec2)
+  ⊑t-ana (EATLam neq1 neq2 meet ana) with ⊓-lb meet 
   ... | PTHole , _ = PTHole
-  ... | PTForall prec1 , _ with wf-⊓ meet wf (WFForall WFHole)
-  ... | WFForall wf1 = PTForall (⊑t-trans (⊑t-ana (weakening-ctx ctxwf) wf1 ana) prec1)
-  ⊑t-ana ctxwf wf (EASubsume neq1 neq2 xsyn meet) = π1 (⊓-lb meet)
-  ⊑t-ana ctxwf wf EAEHole = ⊑t-refl _
-  ⊑t-ana ctxwf wf (EANEHole x) = ⊑t-refl _
+  ... | PTForall prec , _ = PTForall (⊑t-trans (⊑t-ana ana) prec)
+  ⊑t-ana (EASubsume neq1 neq2 syn meet) = π1 (⊓-lb meet)
+  ⊑t-ana EAEHole = ⊑t-refl _
+  ⊑t-ana (EANEHole _) = ⊑t-refl _
 
   consist-ana : ∀{Γ e τ τ' d Θ} →
     Θ ⊢ Γ ctxwf → 
     Θ ⊢ τ wf → 
     Θ , Γ ⊢ e ⇐ τ ~> d :: τ' →
     τ' ~ τ
-  consist-ana ctxwf wf ana = ⊑t-consist (⊑t-ana ctxwf wf ana)
+  consist-ana ctxwf wf ana = ⊑t-consist (⊑t-ana ana)
 
   mutual 
 

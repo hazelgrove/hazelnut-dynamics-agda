@@ -93,4 +93,3 @@ module debruijn.debruijn-lemmas-prec where
   ⊑c-var InCtxZ (PCExtend prec precc) = _ , InCtxZ , prec
   ⊑c-var (InCtx1+ inctx) (PCExtend prec precc) with ⊑c-var inctx precc
   ... | τ' , inctx' , prec' = τ' , InCtx1+ inctx' , prec'
-  

@@ -249,7 +249,7 @@ module debruijn.debruijn-core where
   data _,_,_⊢_⊑i_ : (Θ : typctx) → (Γ : ctx) → (Γ' : ctx) → (d1 d2 : ihexp) → Set where
     PIConst : ∀{Θ Γ Γ'} → Θ , Γ , Γ' ⊢ c ⊑i c
     PIVar : ∀{Θ Γ Γ' n} → Θ , Γ , Γ' ⊢ (X n) ⊑i (X n) 
-    PIEHole : ∀{Θ Γ Γ' τ d} → Θ , Γ , Γ' ⊢ d ⊑i ⦇-⦈⟨ τ ⟩
+    PIEHole : ∀{Θ Γ Γ' τ1 τ2 d} → (Θ , Γ ⊢ d :: τ1) → (τ1 ⊑t τ2) → Θ , Γ , Γ' ⊢ d ⊑i ⦇-⦈⟨ τ2 ⟩
     PILam : ∀{Θ Γ Γ' d1 d2 τ1 τ2} → Θ , (τ1 , Γ) , (τ2 , Γ') ⊢ d1 ⊑i d2 → τ1 ⊑t τ2 → Θ , Γ , Γ' ⊢ (·λ[ τ1 ] d1) ⊑i (·λ[ τ2 ] d2)
     PITLam : ∀{Θ Γ Γ' d1 d2} → (1+ Θ) , Γ , Γ' ⊢ d1 ⊑i d2 → Θ , Γ , Γ' ⊢ (·Λ d1) ⊑i (·Λ d2)
     PINEHole : ∀{Θ Γ Γ' τ1 τ2 d1 d2} → Θ , Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ2 → Θ , Γ , Γ' ⊢ (⦇⌜ d1 ⌟⦈⟨ τ1 ⟩) ⊑i (⦇⌜ d2 ⌟⦈⟨ τ2 ⟩)
