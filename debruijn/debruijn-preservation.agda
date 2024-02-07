@@ -6,6 +6,7 @@ open import debruijn.debruijn-lemmas-index
 open import debruijn.debruijn-lemmas-consistency
 open import debruijn.debruijn-lemmas-meet
 open import debruijn.debruijn-lemmas-wf
+open import debruijn.debruijn-type-assignment-unicity
 
 module debruijn.debruijn-preservation where
 
@@ -13,7 +14,13 @@ module debruijn.debruijn-preservation where
     Z , Γ ⊢ d :: τ →
     d == ε ⟦ d' ⟧ →
     Σ[ τ' ∈ htyp ] (Z , Γ ⊢ d' :: τ')
-  wt-filling wt fill = {!   !}
+  wt-filling wt FHOuter = _ , wt
+  wt-filling (TAAp wt _) (FHAp1 fill) = wt-filling wt fill 
+  wt-filling (TAAp _ wt) (FHAp2 fill) = wt-filling wt fill
+  wt-filling (TATAp _ wt _) (FHTAp fill) = wt-filling wt fill
+  wt-filling (TANEHole x wt) (FHNEHole fill) = wt-filling wt fill
+  wt-filling (TACast wt x x₁) (FHCast fill) = wt-filling wt fill
+  wt-filling (TAFailedCast wt x x₁ x₂) (FHFailedCast fill) = wt-filling wt fill
 
   wt-different-fill : ∀{ Γ d ε d1 d2 d' τ1 τ2} →
     d == ε ⟦ d1 ⟧ →
@@ -22,7 +29,13 @@ module debruijn.debruijn-preservation where
     Z , Γ ⊢ d1 :: τ2 →
     Z , Γ ⊢ d2 :: τ2 →
     Z , Γ ⊢ d' :: τ1
-  wt-different-fill = {!   !}
+  wt-different-fill FHOuter FHOuter wt wt2 wt3 rewrite type-assignment-unicity wt wt2 = wt3
+  wt-different-fill (FHAp1 fill1) (FHAp1 fill2) (TAAp wt wt1) wt2 wt3 = TAAp (wt-different-fill fill1 fill2 wt wt2 wt3) wt1
+  wt-different-fill (FHAp2 fill1) (FHAp2 fill2) (TAAp wt wt1) wt2 wt3 = TAAp wt (wt-different-fill fill1 fill2 wt1 wt2 wt3)
+  wt-different-fill (FHTAp fill1) (FHTAp fill2) (TATAp x wt sub) wt2 wt3 = TATAp x (wt-different-fill fill1 fill2 wt wt2 wt3) sub
+  wt-different-fill (FHNEHole fill1) (FHNEHole fill2) (TANEHole x wt) wt2 wt3 = TANEHole x (wt-different-fill fill1 fill2 wt wt2 wt3)
+  wt-different-fill (FHCast fill1) (FHCast fill2) (TACast wt x x₁) wt2 wt3 = TACast (wt-different-fill fill1 fill2 wt wt2 wt3) x x₁
+  wt-different-fill (FHFailedCast fill1) (FHFailedCast fill2) (TAFailedCast wt x x₁ x₂) wt2 wt3 = TAFailedCast (wt-different-fill fill1 fill2 wt wt2 wt3) x x₁ x₂
 
   -- note: wf1 assumption might end up unecessary
 
@@ -54,7 +67,7 @@ module debruijn.debruijn-preservation where
   preserve-trans (TATAp x (TACast wt (WFForall wf) (ConsistForall con)) refl) ITTApCast with wf-ta CtxWFEmpty wt 
   ... | WFForall wt2 = TACast (TATAp x wt refl) (wf-TTSub x wf) (~TTSub x wt2 wf con)
   preserve-trans (TAEHole _) () 
-  preserve-trans (TANEHole _) ()
+  preserve-trans (TANEHole _ _) ()
   preserve-trans (TACast wt x x₁) ITCastID = wt
   preserve-trans (TACast (TACast wt x₃ x₄) x x₁) (ITCastSucceed gnd) = wt
   preserve-trans (TACast (TACast wt x₅ x₆) x x₁) (ITCastFail gnd x₃ x₄) = TAFailedCast wt gnd x₃ x₄
@@ -65,10 +78,9 @@ module debruijn.debruijn-preservation where
   preserve-trans (TAFailedCast wt x x₁ x₂) ()
 
   -- evaluation steps preserve type
-  preservation : ∀ { d d' τ } →
-    Z , ∅ ⊢ d :: τ →
+  preservation : ∀ { d d' τ } →  
+    Z , ∅ ⊢ d :: τ → 
     d ↦ d' →
     Z , ∅ ⊢ d' :: τ  
-  
   preservation wt (Step fill1 trans fill2) with wt-filling wt fill1 
   ... | τ' , wt' = wt-different-fill fill1 fill2 wt wt' (preserve-trans wt' trans)

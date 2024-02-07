@@ -166,7 +166,7 @@ module debruijn.debruijn-lemmas-wf where
   wf-ta ctxwf (TATAp x wt refl) with wf-ta ctxwf wt 
   ... | WFForall wf = wf-TTSub x wf
   wf-ta ctxwf (TAEHole wf) = wf
-  wf-ta ctxwf (TANEHole wf) = wf
+  wf-ta ctxwf (TANEHole wf _) = wf
   wf-ta ctxwf (TACast _ wf _) = wf
   wf-ta ctxwf (TAFailedCast wt _ GBase _) = WFBase
   wf-ta ctxwf (TAFailedCast wt _ GArr _) = WFArr WFHole WFHole

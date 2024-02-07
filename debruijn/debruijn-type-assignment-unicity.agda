@@ -14,7 +14,7 @@ module debruijn.debruijn-type-assignment-unicity where
 
   -- type assignment only assigns one type
   type-assignment-unicity : ∀{Γ d τ' τ Θ} →
-    (Θ , Γ ⊢ d :: τ) →
+    Θ , Γ ⊢ d :: τ →
     Θ , Γ ⊢ d :: τ' →
     τ == τ'
   type-assignment-unicity TAConst TAConst = refl
@@ -25,7 +25,7 @@ module debruijn.debruijn-type-assignment-unicity where
   ... | refl = refl
   type-assignment-unicity (TATAp _ wt1 eq1) (TATAp _ wt2 eq2) with type-assignment-unicity wt1 wt2
   ... | refl rewrite eq1 = eq2
-  type-assignment-unicity TAEHole TAEHole = refl
-  type-assignment-unicity TANEHole TANEHole = refl
+  type-assignment-unicity (TAEHole _) (TAEHole _) = refl
+  type-assignment-unicity (TANEHole _ _) (TANEHole _ _) = refl
   type-assignment-unicity (TACast wt1 _ _) (TACast wt2 _ _) rewrite type-assignment-unicity wt1 wt2 = refl
   type-assignment-unicity (TAFailedCast wt1 _ _ _) (TAFailedCast wt2 _ _ _) rewrite type-assignment-unicity wt1 wt2 = refl

@@ -231,8 +231,9 @@ module debruijn.debruijn-core where
     TAEHole : ∀{Θ Γ τ} →
       Θ ⊢ τ wf →
       Θ , Γ ⊢ ⦇-⦈⟨ τ ⟩ :: τ
-    TANEHole : ∀ {Θ Γ d τ} →
+    TANEHole : ∀ {Θ Γ d τ τ'} →
       Θ ⊢ τ wf →
+      Θ , Γ ⊢ d :: τ' →
       Θ , Γ ⊢ ⦇⌜ d ⌟⦈⟨ τ ⟩ :: τ
     TACast : ∀{Θ Γ d τ1 τ2} →
       Θ , Γ ⊢ d :: τ1 →
