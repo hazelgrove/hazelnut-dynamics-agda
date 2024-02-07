@@ -24,7 +24,7 @@ module debruijn.debruijn-lemmas-prec where
   ⊑t-consist PTBase = ConsistBase
   ⊑t-consist PTHole = ConsistHole1
   ⊑t-consist PTTVar = ConsistVar
-  ⊑t-consist (PTArr prec prec₁) = ConsistArr
+  ⊑t-consist (PTArr prec prec₁) = ConsistArr (⊑t-consist prec) (⊑t-consist prec₁)
   ⊑t-consist (PTForall prec) = ConsistForall (⊑t-consist prec)
 
   ⊑t-consist-left : ∀{τ τ' τ''} → τ ~ τ' → τ ⊑t τ'' → τ'' ~ τ'  
@@ -32,7 +32,7 @@ module debruijn.debruijn-lemmas-prec where
   ⊑t-consist-left consist PTBase = consist 
   ⊑t-consist-left consist PTHole = ConsistHole2
   ⊑t-consist-left consist PTTVar = consist
-  ⊑t-consist-left ConsistArr (PTArr _ _) = ConsistArr
+  ⊑t-consist-left (ConsistArr con1 con2) (PTArr prec1 prec2) = ConsistArr (⊑t-consist-left con1 prec1) (⊑t-consist-left con2 prec2)
   ⊑t-consist-left (ConsistForall consist) (PTForall prec) = ConsistForall (⊑t-consist-left consist prec)
 
   ⊑t-consist-right : ∀{τ τ' τ''} → τ ~ τ' → τ' ⊑t τ'' → τ ~ τ''

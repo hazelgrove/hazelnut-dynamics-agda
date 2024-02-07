@@ -229,8 +229,10 @@ module debruijn.debruijn-core where
       TTSub τ1 τ2 == τ3 → 
       Θ , Γ ⊢ (d < τ1 >) :: τ3
     TAEHole : ∀{Θ Γ τ} →
+      Θ ⊢ τ wf →
       Θ , Γ ⊢ ⦇-⦈⟨ τ ⟩ :: τ
     TANEHole : ∀ {Θ Γ d τ} →
+      Θ ⊢ τ wf →
       Θ , Γ ⊢ ⦇⌜ d ⌟⦈⟨ τ ⟩ :: τ
     TACast : ∀{Θ Γ d τ1 τ2} →
       Θ , Γ ⊢ d :: τ1 →
@@ -309,15 +311,15 @@ module debruijn.debruijn-core where
 
   -- -- contextual dynamics
 
-  -- -- evaluation contexts
-  -- data ectx : Set where
-  --   ⊙ : ectx
-  --   _∘₁_ : ectx → ihexp → ectx
-  --   _∘₂_ : ihexp → ectx → ectx
-  --   _<_> : ectx → htyp → ectx
-  --   ⦇⌜_⌟⦈⟨_⟩ : ectx → htyp → ectx
-  --   _⟨_⇒_⟩ : ectx → htyp → htyp → ectx
-  --   _⟨_⇒⦇-⦈⇏_⟩ : ectx → htyp → htyp → ectx
+  -- evaluation contexts
+  data ectx : Set where
+    ⊙ : ectx
+    _∘₁_ : ectx → ihexp → ectx
+    _∘₂_ : ihexp → ectx → ectx
+    _<_> : ectx → htyp → ectx
+    ⦇⌜_⌟⦈⟨_⟩ : ectx → htyp → ectx
+    _⟨_⇒_⟩ : ectx → htyp → htyp → ectx
+    _⟨_⇒⦇-⦈⇏_⟩ : ectx → htyp → htyp → ectx
 
   -- -- note: this judgement is redundant: in the absence of the premises in
   -- -- the red brackets, all syntactically well formed ectxs are valid. with
@@ -349,81 +351,78 @@ module debruijn.debruijn-core where
   --                  ε evalctx →
   --                  ε ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ evalctx
 
-  -- -- d is the result of filling the hole in ε with d'
-  -- data _==_⟦_⟧ : (d : ihexp) (ε : ectx) (d' : ihexp) → Set where
-  --   FHOuter : ∀{d} → d == ⊙ ⟦ d ⟧
-  --   FHAp1 : ∀{d1 d1' d2 ε} →
-  --          d1 == ε ⟦ d1' ⟧ →  
-  --          (d1 ∘ d2) == (ε ∘₁ d2) ⟦ d1' ⟧
-  --   FHAp2 : ∀{d1 d2 d2' ε} →
-  --          -- d1 final → -- red brackets
-  --          d2 == ε ⟦ d2' ⟧ →
-  --          (d1 ∘ d2) == (d1 ∘₂ ε) ⟦ d2' ⟧
-  --   FHTAp : ∀{d d' t ε} →
-  --          d == ε ⟦ d' ⟧ →
-  --          (d < t >) == (ε < t >) ⟦ d' ⟧
-  --   FHNEHole : ∀{ d d' ε τ} →
-  --             d == ε ⟦ d' ⟧ →
-  --             ⦇⌜ d ⌟⦈⟨ τ ⟩ ==  ⦇⌜ ε ⌟⦈⟨ τ ⟩ ⟦ d' ⟧
-  --   FHCast : ∀{ d d' ε τ1 τ2 } →
-  --           d == ε ⟦ d' ⟧ →
-  --           d ⟨ τ1 ⇒ τ2 ⟩ == ε ⟨ τ1 ⇒ τ2 ⟩ ⟦ d' ⟧
-  --   FHFailedCast : ∀{ d d' ε τ1 τ2} →
-  --           d == ε ⟦ d' ⟧ →
-  --           (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) == (ε ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) ⟦ d' ⟧
+  -- d is the result of filling the hole in ε with d'
+  data _==_⟦_⟧ : (d : ihexp) (ε : ectx) (d' : ihexp) → Set where
+    FHOuter : ∀{d} → d == ⊙ ⟦ d ⟧
+    FHAp1 : ∀{d1 d1' d2 ε} →
+           d1 == ε ⟦ d1' ⟧ →  
+           (d1 ∘ d2) == (ε ∘₁ d2) ⟦ d1' ⟧
+    FHAp2 : ∀{d1 d2 d2' ε} →
+           -- d1 final → -- red brackets
+           d2 == ε ⟦ d2' ⟧ →
+           (d1 ∘ d2) == (d1 ∘₂ ε) ⟦ d2' ⟧
+    FHTAp : ∀{d d' t ε} →
+           d == ε ⟦ d' ⟧ →
+           (d < t >) == (ε < t >) ⟦ d' ⟧
+    FHNEHole : ∀{ d d' ε τ} →
+              d == ε ⟦ d' ⟧ →
+              ⦇⌜ d ⌟⦈⟨ τ ⟩ ==  ⦇⌜ ε ⌟⦈⟨ τ ⟩ ⟦ d' ⟧
+    FHCast : ∀{ d d' ε τ1 τ2 } →
+            d == ε ⟦ d' ⟧ →
+            d ⟨ τ1 ⇒ τ2 ⟩ == ε ⟨ τ1 ⇒ τ2 ⟩ ⟦ d' ⟧
+    FHFailedCast : ∀{ d d' ε τ1 τ2} →
+            d == ε ⟦ d' ⟧ →
+            (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) == (ε ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) ⟦ d' ⟧
 
-  -- -- instruction transition judgement
-  -- data _→>_ : (d d' : ihexp) → Set where
-  --   ITLam : ∀{ x τ d1 d2 } →
-  --           -- d2 final → -- red brackets
-  --           ((·λ x [ τ ] d1) ∘ d2) →> ([ d2 / x ] d1)
-  --   ITTLam : ∀{ d t ty } →
-  --             ((·Λ t d) < ty >) →> (Ihexp[ ty / t ] d)
-  --   ITCastID : ∀{d τ1 τ2 } →
-  --              -- d final → -- red brackets
-  --              τ1 =α τ2 →
-  --              (d ⟨ τ1 ⇒ τ2 ⟩) →> d
-  --   ITCastSucceed : ∀{d τ1 τ2 } →
-  --                   -- d final → -- red brackets
-  --                   τ1 ground →
-  --                   τ2 ground →
-  --                   τ1 =α τ2 →
-  --                   (d ⟨ τ1 ⇒ ⦇-⦈ ⇒ τ2 ⟩) →> d
-  --   ITCastFail : ∀{ d τ1 τ2} →
-  --                -- d final → -- red brackets
-  --                τ1 ground →
-  --                τ2 ground →
-  --                τ1 ~̸  τ2 →
-  --                (d ⟨ τ1 ⇒ ⦇-⦈ ⇒ τ2 ⟩) →> (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
-  --   ITApCast : ∀{d1 d2 τ1 τ2 τ1' τ2' } →
-  --              -- d1 final → -- red brackets
-  --              -- d2 final → -- red brackets
-  --              ((d1 ⟨ (τ1 ==> τ2) ⇒ (τ1' ==> τ2')⟩) ∘ d2) →> ((d1 ∘ (d2 ⟨ τ1' ⇒ τ1 ⟩)) ⟨ τ2 ⇒ τ2' ⟩)
-  --   ITTApCast : ∀{d t t' τ τ' ty } →
-  --              -- d final → -- red brackets
-  --              --  ·∀ τ ≠ ·∀ τ' →
-  --                ((d ⟨ (·∀ t τ) ⇒ (·∀ t' τ')⟩) < ty >) →> ((d < ty >)⟨ Typ[ ty / t ] τ ⇒ Typ[ ty / t' ] τ' ⟩)
-  --   ITGround : ∀{ d τ τ'} →
-  --              -- d final → -- red brackets
-  --              τ ▸gnd τ' →
-  --              (d ⟨ τ ⇒ ⦇-⦈ ⟩) →> (d ⟨ τ ⇒ τ' ⇒ ⦇-⦈ ⟩)
-  --   ITExpand : ∀{d τ τ' } →
-  --              -- d final → -- red brackets
-  --              τ ▸gnd τ' →
-  --              (d ⟨ ⦇-⦈ ⇒ τ ⟩) →> (d ⟨ ⦇-⦈ ⇒ τ' ⇒ τ ⟩)
+  -- instruction transition judgement
+  data _→>_ : (d d' : ihexp) → Set where
+    ITLam : ∀{ τ d1 d2 } →
+            -- d2 final → -- red brackets
+            ((·λ[ τ ] d1) ∘ d2) →> ([ d2 / Z ] d1)
+    ITTLam : ∀{ d τ } →
+              ((·Λ d) < τ >) →> (Tt[ τ / Z ] d)
+    ITCastID : ∀{ d τ } →
+               -- d final → -- red brackets
+               (d ⟨ τ ⇒ τ ⟩) →> d
+    ITCastSucceed : ∀{ d τ } →
+                    -- d final → -- red brackets
+                    τ ground →
+                    (d ⟨ τ ⇒ ⦇-⦈ ⇒ τ ⟩) →> d
+    ITCastFail : ∀{ d τ1 τ2} →
+                 -- d final → -- red brackets
+                 τ1 ground →
+                 τ2 ground →
+                 τ1 ~̸  τ2 →
+                 (d ⟨ τ1 ⇒ ⦇-⦈ ⇒ τ2 ⟩) →> (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
+    ITApCast : ∀{d1 d2 τ1 τ2 τ1' τ2' } →
+               -- d1 final → -- red brackets
+               -- d2 final → -- red brackets
+               ((d1 ⟨ (τ1 ==> τ2) ⇒ (τ1' ==> τ2')⟩) ∘ d2) →> ((d1 ∘ (d2 ⟨ τ1' ⇒ τ1 ⟩)) ⟨ τ2 ⇒ τ2' ⟩)
+    ITTApCast : ∀{ d τ1 τ2 τ3 } →
+               -- d final → -- red brackets
+               --  ·∀ τ ≠ ·∀ τ' →
+                 ((d ⟨ (·∀ τ1) ⇒ (·∀ τ2)⟩) < τ3 >) →> ((d < τ3 >)⟨ TTSub τ3 τ1 ⇒ TTSub τ3 τ2 ⟩)
+    ITGround : ∀{ d τ τ'} →
+               -- d final → -- red brackets
+               τ ▸gnd τ' →
+               (d ⟨ τ ⇒ ⦇-⦈ ⟩) →> (d ⟨ τ ⇒ τ' ⇒ ⦇-⦈ ⟩)
+    ITExpand : ∀{ d τ τ' } →
+               -- d final → -- red brackets
+               τ ▸gnd τ' →
+               (d ⟨ ⦇-⦈ ⇒ τ ⟩) →> (d ⟨ ⦇-⦈ ⇒ τ' ⇒ τ ⟩)
 
-  -- -- single step (in contextual evaluation sense)
-  -- data _↦_ : (d d' : ihexp) → Set where
-  --   Step : ∀{ d d0 d' d0' ε} →
-  --          d == ε ⟦ d0 ⟧ →
-  --          d0 →> d0' →
-  --          d' == ε ⟦ d0' ⟧ →
-  --          d ↦ d'
+  -- single step (in contextual evaluation sense)
+  data _↦_ : (d d' : ihexp) → Set where
+    Step : ∀{ d d0 d' d0' ε} →
+           d == ε ⟦ d0 ⟧ →
+           d0 →> d0' →
+           d' == ε ⟦ d0' ⟧ →
+           d ↦ d'
 
-  -- -- reflexive transitive closure of single steps into multi steps
-  -- data _↦*_ : (d d' : ihexp) → Set where
-  --   MSRefl : ∀{d} → d ↦* d
-  --   MSStep : ∀{d d' d''} →
-  --                d ↦ d' →
-  --                d' ↦* d'' →
-  --                d  ↦* d''
+  -- reflexive transitive closure of single steps into multi steps
+  data _↦*_ : (d d' : ihexp) → Set where
+    MSRefl : ∀{d} → d ↦* d
+    MSStep : ∀{d d' d''} →
+                 d ↦ d' →
+                 d' ↦* d'' →
+                 d  ↦* d''

@@ -19,7 +19,7 @@ module debruijn.debruijn-core-type where
     ConsistVar : ∀ {x} → T x ~ T x
     ConsistHole1 : ∀ {τ} → τ ~ ⦇-⦈
     ConsistHole2 : ∀ {τ} → ⦇-⦈ ~ τ
-    ConsistArr : ∀ {τ1 τ2 τ3 τ4} → τ1 ==> τ2 ~ τ3 ==> τ4
+    ConsistArr : ∀ {τ1 τ2 τ3 τ4} → τ1 ~ τ3 → τ2 ~ τ4 → τ1 ==> τ2 ~ τ3 ==> τ4
     ConsistForall : ∀ {τ1 τ2} → τ1 ~ τ2 → ·∀ τ1 ~ ·∀ τ2
 
   -- type inconsistency
