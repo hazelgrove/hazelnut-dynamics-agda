@@ -1,6 +1,7 @@
 open import Nat
 open import Prelude
 open import debruijn.debruijn-core-type
+open import debruijn.debruijn-core-exp
 open import debruijn.debruijn-core
 
 module debruijn.debruijn-lemmas-index where
@@ -34,8 +35,21 @@ module debruijn.debruijn-lemmas-index where
   ↑compose t i (τ ==> τ₁) rewrite ↑compose t i τ rewrite ↑compose t i τ₁ = refl
   ↑compose t i (·∀ τ) rewrite ↑compose (1+ t) i τ = refl
 
+  ↑d-compose : (t i : Nat) → (d : ihexp) → ↑d t 1 (↑d t i d) == (↑d t (1+ i) d)
+  ↑d-compose t i c = refl
+  ↑d-compose t i (X x) rewrite ↑Natcompose t i x = refl
+  ↑d-compose t i (·λ[ x ] d) rewrite ↑d-compose (1+ t) i d = refl
+  ↑d-compose t i (·Λ d) rewrite ↑d-compose t i d = refl
+  ↑d-compose t i ⦇-⦈⟨ x ⟩ = refl
+  ↑d-compose t i ⦇⌜ d ⌟⦈⟨ x ⟩ rewrite ↑d-compose t i d = refl
+  ↑d-compose t i (d ∘ d₁) rewrite ↑d-compose t i d rewrite ↑d-compose t i d₁ = refl
+  ↑d-compose t i (d < x >) rewrite ↑d-compose t i d = refl
+  ↑d-compose t i (d ⟨ x ⇒ x₁ ⟩) rewrite ↑d-compose t i d = refl
+  ↑d-compose t i (d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) rewrite ↑d-compose t i d = refl
+
+
   ↓↑Nat-invert : (t x : Nat) → ↓Nat t 1 (↑Nat t 1 x) == x
-  ↓↑Nat-invert Z x = refl
+  ↓↑Nat-invert Z x = refl 
   ↓↑Nat-invert (1+ t) Z = refl
   ↓↑Nat-invert (1+ t) (1+ x) rewrite ↓↑Nat-invert t x = refl
   

@@ -41,7 +41,7 @@ module debruijn.debruijn-preservation where
 
   ~TTSub-helper : ∀{n τ1 τ2 τ3} → (n ⊢ τ1 wf) → (1+ n ⊢ τ2 wf) → (1+ n ⊢ τ3 wf) → τ2 ~ τ3 → (↓ n 1 (TT[ (↑ Z (1+ n) τ1) / n ] τ2)) ~ (↓ n 1 (TT[ (↑ Z (1+ n) τ1) / n ] τ3))
   ~TTSub-helper wf1 wf2 wf3 ConsistBase = ConsistBase
-  ~TTSub-helper wf1 wf2 wf3 ConsistVar = {!   !}
+  ~TTSub-helper wf1 wf2 wf3 ConsistVar = ~refl
   ~TTSub-helper wf1 wf2 wf3 ConsistHole1 = ConsistHole1
   ~TTSub-helper wf1 wf2 wf3 ConsistHole2 = ConsistHole2 
   ~TTSub-helper wf1 (WFArr wf2 wf3) (WFArr wf4 wf5) (ConsistArr con1 con2) = ConsistArr (~TTSub-helper wf1 wf2 wf4 con1) (~TTSub-helper wf1 wf3 wf5 con2)
@@ -50,6 +50,70 @@ module debruijn.debruijn-preservation where
 
   ~TTSub : {τ1 τ2 τ3 : htyp} → Z ⊢ τ1 wf → 1 ⊢ τ2 wf → 1 ⊢ τ3 wf → τ2 ~ τ3 → TTSub τ1 τ2 ~ TTSub τ1 τ3
   ~TTSub wf1 wf2 wf3 con = ~TTSub-helper {n = Z} wf1 wf2 wf3 con
+
+  -- ~TTSub2 : ∀ {Θ τ1 τ2 τ3} → Θ ⊢ τ1 wf → 1+ Θ ⊢ τ2 wf → 1+ Θ ⊢ τ3 wf → τ2 ~ τ3 → TTSub τ1 τ2 ~ TTSub τ1 τ3
+  -- ~TTSub2 {Θ = Θ} wf1 wf2 wf3 con = ~TTSub-helper {n = Θ} wf1 wf2 wf3 con
+
+  inctx-sub : ∀ {n Γ τ1 τ2} → 
+    (n , τ2 ∈ Γ) → 
+    (n , TTSub τ1 τ2 ∈ TCtxSub τ1 Γ)
+  inctx-sub InCtxZ = InCtxZ
+  inctx-sub (InCtx1+ inctx) = InCtx1+ (inctx-sub inctx)
+
+  wt-TtSub : ∀{Θ Γ d τ1 τ2} →
+    (Θ ⊢ τ1 wf) → 
+    (1+ Θ , Γ ⊢ d :: τ2) → 
+    (Θ , TCtxSub τ1 Γ ⊢ TtSub τ1 d :: TTSub τ1 τ2)
+  wt-TtSub wf TAConst = TAConst
+  wt-TtSub wf (TAVar inctx) = TAVar (inctx-sub inctx)
+  wt-TtSub wf1 (TALam wf2 wt) = TALam (wf-TTSub wf1 wf2) (wt-TtSub wf1 wt)
+  wt-TtSub wf (TATLam wt) = TATLam {!    !}
+  wt-TtSub wf (TAAp wt1 wt2) = TAAp (wt-TtSub wf wt1) (wt-TtSub wf wt2)
+  wt-TtSub wf1 (TATAp wf2 wt refl) = TATAp (wf-TTSub wf1 wf2) (wt-TtSub wf1 wt) {!   !}
+  wt-TtSub wf1 (TAEHole wf2) = TAEHole (wf-TTSub wf1 wf2)
+  wt-TtSub wf1 (TANEHole wf2 wt) = TANEHole (wf-TTSub wf1 wf2) (wt-TtSub wf1 wt)
+  wt-TtSub wf1 (TACast wt wf2 con) = TACast (wt-TtSub wf1 wt) (wf-TTSub wf1 wf2) {!   !}
+  wt-TtSub wf (TAFailedCast wt GBase GBase incon) = abort (incon ConsistBase)
+  wt-TtSub wf (TAFailedCast wt GArr GArr incon) = abort (incon (ConsistArr ConsistHole1 ConsistHole1))
+  wt-TtSub wf (TAFailedCast wt GForall GForall incon) = abort (incon (ConsistForall ConsistHole1))
+  wt-TtSub wf (TAFailedCast wt GBase GArr incon) = TAFailedCast (wt-TtSub wf wt) GBase GArr incon
+  wt-TtSub wf (TAFailedCast wt GBase GForall incon) = TAFailedCast (wt-TtSub wf wt) GBase GForall incon
+  wt-TtSub wf (TAFailedCast wt GArr GBase incon) = TAFailedCast (wt-TtSub wf wt) GArr GBase incon
+  wt-TtSub wf (TAFailedCast wt GArr GForall incon) = TAFailedCast (wt-TtSub wf wt) GArr GForall incon
+  wt-TtSub wf (TAFailedCast wt GForall GBase incon) = TAFailedCast (wt-TtSub wf wt) GForall GBase incon
+  wt-TtSub wf (TAFailedCast wt GForall GArr incon) = TAFailedCast (wt-TtSub wf wt) GForall GArr incon
+
+  shift-helper : ∀{Γ1 Γ2 m τ1 τ2} → (m == ctx-len Γ2 → ⊥) → (m , τ2 ∈ (Γ2 ctx+ (τ1 , Γ1))) → (↓Nat (ctx-len Γ2) 1 m , τ2 ∈ (Γ2 ctx+ Γ1))
+  shift-helper {Γ2 = ∅} {m = Z} neq inctx = abort (neq refl)
+  shift-helper {Γ2 = ∅} {m = 1+ m} neq (InCtx1+ inctx) = inctx
+  shift-helper {Γ2 = x , Γ2} neq InCtxZ = {!   !}
+  shift-helper {Γ2 = x , Γ2} neq (InCtx1+ inctx) = {!   !}
+
+  wt-ttSub-helper : ∀{Θ Γ1 Γ2 n d1 d2 τ1 τ2} →
+    (Θ ⊢ τ1 wf) → 
+    (Θ , Γ1 ⊢ d1 :: τ1) → 
+    (n nat+ Θ) , Γ2 ctx+ (τ1 , Γ1) ⊢ d2 :: τ2 → 
+    (n nat+ Θ) , Γ2 ctx+ Γ1 ⊢ ↓d (ctx-len Γ2) 1 ([ ↑d Z (ctx-len Γ2 nat+ 1) d1 / (ctx-len Γ2) ] d2) :: τ2
+  wt-ttSub-helper wf wt1 TAConst = TAConst
+  wt-ttSub-helper {Γ2 = Γ2} {n = n} wf wt1 (TAVar {n = m} x) with natEQ m (ctx-len Γ2) 
+  ... | Inl refl = {!   !} 
+  ... | Inr neq = TAVar {!   !}
+  wt-ttSub-helper {Γ2 = Γ2} {d1 = d1} wf wt1 (TALam {τ1 = τ1} x wt2) with wt-ttSub-helper {Γ2 = (τ1 , Γ2)} wf wt1 wt2 
+  ... | result rewrite ↑d-compose Z (ctx-len Γ2 nat+ 1) d1 = TALam x result
+  wt-ttSub-helper wf wt1 (TATLam wt2) = TATLam (wt-ttSub-helper wf wt1 wt2)
+  wt-ttSub-helper wf wt1 (TAAp wt2 wt3) = TAAp (wt-ttSub-helper wf wt1 wt2) (wt-ttSub-helper wf wt1 wt3)
+  wt-ttSub-helper wf wt1 (TATAp x wt2 x₁) = TATAp x (wt-ttSub-helper wf wt1 wt2) x₁
+  wt-ttSub-helper wf wt1 (TAEHole x) = TAEHole x
+  wt-ttSub-helper wf wt1 (TANEHole x wt2) = TANEHole x (wt-ttSub-helper wf wt1 wt2)
+  wt-ttSub-helper wf wt1 (TACast wt2 x x₁) = TACast (wt-ttSub-helper wf wt1 wt2) x x₁
+  wt-ttSub-helper wf wt1 (TAFailedCast wt2 x x₁ x₂) = TAFailedCast (wt-ttSub-helper wf wt1 wt2) x x₁ x₂
+
+  wt-ttSub : ∀{Θ d1 d2 τ1 τ2} →
+    (Θ ⊢ τ1 wf) → 
+    (Θ , ∅ ⊢ d1 :: τ1) → 
+    (Θ , (τ1 , ∅) ⊢ d2 :: τ2) → 
+    (Θ , ∅ ⊢ ttSub d1 d2 :: τ2)
+  wt-ttSub wf wt1 wt2 = wt-ttSub-helper wf wt1 wt2
 
   -- instruction transitions preserve type
   preserve-trans : ∀{ d d' τ } →
@@ -63,7 +127,7 @@ module debruijn.debruijn-preservation where
   preserve-trans (TAAp (TALam wf wt1) wt2) ITLam = {!   !}
   preserve-trans (TAAp (TACast wt1 (WFArr wf1 wf2) (ConsistArr con1 con2)) wt2) ITApCast with wf-ta CtxWFEmpty wt1
   ... | WFArr wf3 wf4 = TACast (TAAp wt1 (TACast wt2 wf3 (~sym con1))) wf2 con2
-  preserve-trans (TATAp x (TATLam wt) refl) ITTLam = {!   !}
+  preserve-trans (TATAp wf (TATLam wt) refl) ITTLam = wt-TtSub wf wt
   preserve-trans (TATAp x (TACast wt (WFForall wf) (ConsistForall con)) refl) ITTApCast with wf-ta CtxWFEmpty wt 
   ... | WFForall wt2 = TACast (TATAp x wt refl) (wf-TTSub x wf) (~TTSub x wt2 wf con)
   preserve-trans (TAEHole _) () 
@@ -75,12 +139,12 @@ module debruijn.debruijn-preservation where
   preserve-trans (TACast wt x x₁) (ITGround (MGForall x₂)) = TACast (TACast wt (WFForall WFHole) (ConsistForall ConsistHole1)) x ConsistHole1
   preserve-trans (TACast wt x x₁) (ITExpand (MGArr x₂)) = TACast (TACast wt (WFArr WFHole WFHole) ConsistHole2) x (ConsistArr ConsistHole2 ConsistHole2)
   preserve-trans (TACast wt x x₁) (ITExpand (MGForall x₂)) = TACast (TACast wt (WFForall WFHole) ConsistHole2) x (ConsistForall ConsistHole2)
-  preserve-trans (TAFailedCast wt x x₁ x₂) ()
+  preserve-trans (TAFailedCast wt x x₁ x₂) ()  
 
   -- evaluation steps preserve type
   preservation : ∀ { d d' τ } →  
     Z , ∅ ⊢ d :: τ → 
     d ↦ d' →
-    Z , ∅ ⊢ d' :: τ  
-  preservation wt (Step fill1 trans fill2) with wt-filling wt fill1 
-  ... | τ' , wt' = wt-different-fill fill1 fill2 wt wt' (preserve-trans wt' trans)
+    Z , ∅ ⊢ d' :: τ    
+  preservation wt (Step fill1 trans fill2) with wt-filling wt fill1       
+  ... | τ' , wt' = wt-different-fill fill1 fill2 wt wt' (preserve-trans wt' trans) 

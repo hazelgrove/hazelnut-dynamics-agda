@@ -15,6 +15,13 @@ module debruijn.debruijn-core where
   ↑Nat (1+ t) i Z = Z
   ↑Nat (1+ t) i (1+ n) = 1+ (↑Nat t i n)
 
+  ↓Nat : (t d n : Nat) → Nat
+  ↓Nat Z Z x = x
+  ↓Nat Z (1+ d) Z = Z -- this case shouldn't happen
+  ↓Nat Z (1+ d) (1+ n) = ↓Nat Z d n
+  ↓Nat (1+ t) d Z = Z
+  ↓Nat (1+ t) d (1+ n) = 1+ (↓Nat t d n)
+
   -- [↑ threshold increase tau] equals
   -- [tau] with all variables that are free
   -- by a margin of at least [threshold]
@@ -26,19 +33,36 @@ module debruijn.debruijn-core where
   ↑ t i (τ1 ==> τ2) = (↑ t i τ1) ==> (↑ t i τ2)
   ↑ t i (·∀ τ) = ·∀ (↑ (1+ t) i τ)
 
-  ↓Nat : (t d n : Nat) → Nat
-  ↓Nat Z Z x = x
-  ↓Nat Z (1+ d) Z = Z -- this case shouldn't happen
-  ↓Nat Z (1+ d) (1+ n) = ↓Nat Z d n
-  ↓Nat (1+ t) d Z = Z
-  ↓Nat (1+ t) d (1+ n) = 1+ (↓Nat t d n)
-
   ↓ : Nat → Nat → htyp → htyp 
   ↓ t d (T x) = T (↓Nat t d x)
   ↓ t d b = b
   ↓ t d ⦇-⦈ = ⦇-⦈
   ↓ t d (τ1 ==> τ2) = (↓ t d τ1) ==> (↓ t d τ2)
   ↓ t d (·∀ τ) = ·∀ (↓ (1+ t) d τ)
+
+  ↑d : (t i : Nat) → ihexp → ihexp 
+  ↑d t i c = c
+  ↑d t i (X x) = X (↑Nat t i x)
+  ↑d t i (·λ[ τ ] d) = ·λ[ τ ] (↑d (1+ t) i d)
+  ↑d t i (·Λ d) = ·Λ (↑d t i d)
+  ↑d t i ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ τ ⟩
+  ↑d t i ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ ↑d t i d ⌟⦈⟨ τ ⟩
+  ↑d t i (d1 ∘ d2) = (↑d t i d1) ∘ (↑d t i d2)
+  ↑d t i (d < τ >) = (↑d t i d) < τ >
+  ↑d t i (d ⟨ τ1 ⇒ τ2 ⟩) = (↑d t i d) ⟨ τ1 ⇒ τ2 ⟩
+  ↑d t i (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↑d t i d) ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩
+
+  ↓d : (t i : Nat) → ihexp → ihexp 
+  ↓d t i c = c
+  ↓d t i (X x) = X (↓Nat t i x)
+  ↓d t i (·λ[ τ ] d) = ·λ[ τ ] (↓d (1+ t) i d)
+  ↓d t i (·Λ d) = ·Λ (↓d t i d)
+  ↓d t i ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ τ ⟩
+  ↓d t i ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ ↓d t i d ⌟⦈⟨ τ ⟩
+  ↓d t i (d1 ∘ d2) = (↓d t i d1) ∘ (↓d t i d2)
+  ↓d t i (d < τ >) = (↓d t i d) < τ >
+  ↓d t i (d ⟨ τ1 ⇒ τ2 ⟩) = (↓d t i d) ⟨ τ1 ⇒ τ2 ⟩
+  ↓d t i (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↓d t i d) ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩
 
   -- substitution of types in types
   TT[_/_]_ : htyp → Nat → htyp → htyp 
@@ -62,33 +86,51 @@ module debruijn.debruijn-core where
   ctx[ τ / a ] (τ' , Γ) = (TT[ τ / a ] τ') , (ctx[ τ / a ] Γ) 
   
   -- substitution of types in terms 
-  Tt[_/_]_ : htyp → Nat → ihexp → ihexp
-  Tt[ τ / t ] c = c
-  Tt[ τ / t ] (X x) = X x
-  Tt[ τ / t ] (·λ[ τx ] d) = ·λ[ TT[ τ / t ] τx ] (Tt[ τ / t ] d)
-  Tt[ τ / t ] (·Λ d) = ·Λ (Tt[ τ / t ] d) 
-  Tt[ τ / t ] (⦇-⦈⟨ τ' ⟩) = ⦇-⦈⟨ TT[ τ / t ] τ' ⟩
-  Tt[ τ / t ] (⦇⌜ d ⌟⦈⟨  τ' ⟩) = ⦇⌜ (Tt[ τ / t ] d) ⌟⦈⟨ TT[ τ / t ] τ' ⟩
-  Tt[ τ / t ] (d1 ∘ d2) = (Tt[ τ / t ] d1) ∘ (Tt[ τ / t ] d2)
-  Tt[ τ / t ] (d < τ' >) = (Tt[ τ / t ] d) < TT[ τ / t ] τ' >
-  Tt[ τ / t ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (Tt[ τ / t ] d) ⟨ (TT[ τ / t ] τ1) ⇒ (TT[ τ / t ] τ2) ⟩
-  Tt[ τ / t ] (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = (Tt[ τ / t ] d) ⟨ (TT[ τ / t ] τ1) ⇒⦇-⦈⇏ (TT[ τ / t ] τ2) ⟩
+  -- Tt[_/_]_ : htyp → Nat → ihexp → ihexp
+  -- Tt[ τ / t ] c = c
+  -- Tt[ τ / t ] (X x) = X x
+  -- Tt[ τ / t ] (·λ[ τx ] d) = ·λ[ TT[ τ / t ] τx ] (Tt[ τ / t ] d)
+  -- Tt[ τ / t ] (·Λ d) = ·Λ (Tt[ τ / t ] d) 
+  -- Tt[ τ / t ] (⦇-⦈⟨ τ' ⟩) = ⦇-⦈⟨ TT[ τ / t ] τ' ⟩
+  -- Tt[ τ / t ] (⦇⌜ d ⌟⦈⟨  τ' ⟩) = ⦇⌜ (Tt[ τ / t ] d) ⌟⦈⟨ TT[ τ / t ] τ' ⟩
+  -- Tt[ τ / t ] (d1 ∘ d2) = (Tt[ τ / t ] d1) ∘ (Tt[ τ / t ] d2)
+  -- Tt[ τ / t ] (d < τ' >) = (Tt[ τ / t ] d) < TT[ τ / t ] τ' >
+  -- Tt[ τ / t ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (Tt[ τ / t ] d) ⟨ (TT[ τ / t ] τ1) ⇒ (TT[ τ / t ] τ2) ⟩
+  -- Tt[ τ / t ] (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = (Tt[ τ / t ] d) ⟨ (TT[ τ / t ] τ1) ⇒⦇-⦈⇏ (TT[ τ / t ] τ2) ⟩
+
+  TtSub : htyp → ihexp → ihexp
+  TtSub τ c = c
+  TtSub τ (X x) = X x
+  TtSub τ (·λ[ τ' ] d) = ·λ[ TTSub τ τ' ] (TtSub τ d)
+  TtSub τ (·Λ d) = ·Λ (TtSub τ d) 
+  TtSub τ (⦇-⦈⟨ τ' ⟩) = ⦇-⦈⟨ TTSub τ τ' ⟩
+  TtSub τ (⦇⌜ d ⌟⦈⟨  τ' ⟩) = ⦇⌜ (TtSub τ d) ⌟⦈⟨ TTSub τ τ' ⟩
+  TtSub τ (d1 ∘ d2) = (TtSub τ d1) ∘ (TtSub τ d2)
+  TtSub τ (d < τ' >) = (TtSub τ d) < TTSub τ τ' >
+  TtSub τ (d ⟨ τ1 ⇒ τ2 ⟩ ) = (TtSub τ d) ⟨ (TTSub τ τ1) ⇒ (TTSub τ τ2) ⟩
+  TtSub τ (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = (TtSub τ d) ⟨ (TTSub τ τ1) ⇒⦇-⦈⇏ (TTSub τ τ2) ⟩
     
-  -- Note: the first agument is assumed to have no free variables
   -- substitution of terms in terms
   [_/_]_ : ihexp → Nat → ihexp → ihexp
   [ d / n ] c = c
   [ d / n ] X m with natEQ m n
   ... | Inl refl = d
   ... | Inr neq = X m
-  [ d / n ] (·λ[ τ ] d') = ·λ[ τ ] ([ d / n ] d')
-  [ d / n ] ·Λ d' = ·Λ ([ d / 1+ n ] d')
+  [ d / n ] (·λ[ τ ] d') = ·λ[ τ ] ([ (↑d Z 1 d) / 1+ n ] d')
+  [ d / n ] ·Λ d' = ·Λ ([ d / n ] d')
   [ d / n ] ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ τ ⟩
   [ d / n ] ⦇⌜ d' ⌟⦈⟨ τ ⟩ =  ⦇⌜ [ d / n ] d' ⌟⦈⟨ τ ⟩
   [ d / n ] (d1 ∘ d2) = ([ d / n ] d1) ∘ ([ d / n ] d2)
   [ d / n ] (d' < τ >) = ([ d / n ] d') < τ >
   [ d / n ] (d' ⟨ τ1 ⇒ τ2 ⟩ ) = ([ d / n ] d') ⟨ τ1 ⇒ τ2 ⟩
   [ d / n ] (d' ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = ([ d / n ] d') ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩
+
+  ttSub : ihexp → ihexp → ihexp 
+  ttSub d1 d2 = ↓d Z 1 ([ (↑d Z 1 d1) / Z ] d2)
+
+  TCtxSub : htyp → ctx → ctx 
+  TCtxSub τ ∅ = ∅
+  TCtxSub τ (x , Γ) = TTSub τ x , TCtxSub τ Γ
 
   -- bidirectional type checking judgements for hexp
   mutual
@@ -379,9 +421,9 @@ module debruijn.debruijn-core where
   data _→>_ : (d d' : ihexp) → Set where
     ITLam : ∀{ τ d1 d2 } →
             -- d2 final → -- red brackets
-            ((·λ[ τ ] d1) ∘ d2) →> ([ d2 / Z ] d1)
+            ((·λ[ τ ] d1) ∘ d2) →> (ttSub d2 d1)
     ITTLam : ∀{ d τ } →
-              ((·Λ d) < τ >) →> (Tt[ τ / Z ] d)
+              ((·Λ d) < τ >) →> (TtSub τ d)
     ITCastID : ∀{ d τ } →
                -- d final → -- red brackets
                (d ⟨ τ ⇒ τ ⟩) →> d

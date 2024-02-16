@@ -74,6 +74,14 @@ module debruijn.debruijn-core-type where
     ∅ : ctx
     _,_ : htyp → ctx → ctx
 
+  ctx-len : ctx → Nat 
+  ctx-len ∅ = Z
+  ctx-len (x , Γ) = 1+ (ctx-len Γ)
+
+  _ctx+_ : ctx → ctx → ctx 
+  ∅ ctx+ ctx2 = ctx2
+  (x , ctx1) ctx+ ctx2 = (x , ctx1 ctx+ ctx2)
+
   -- well-formedness of contexts
   data _⊢_ctxwf : typctx → ctx → Set where
     CtxWFEmpty : ∀{Θ} → Θ ⊢ ∅ ctxwf
