@@ -350,6 +350,15 @@ module core where
     DCTAp : ∀{τ d} → τ tcomplete → d dcomplete → (d < τ >) dcomplete
     DCCast : ∀{d τ1 τ2} → d dcomplete → τ1 tcomplete → τ2 tcomplete → (d ⟨ τ1 ⇒ τ2 ⟩) dcomplete
 
+  data _dcompleteid : ihexp → Set where
+    DCVar : ∀{x} → (X x) dcompleteid
+    DCConst : c dcompleteid
+    DCLam : ∀{x τ d} → d dcompleteid → τ tcomplete → (·λ x [ τ ] d) dcompleteid
+    DCTLam : ∀{t d} → d dcompleteid → (·Λ t d) dcompleteid
+    DCAp : ∀{d1 d2} → d1 dcompleteid → d2 dcompleteid → (d1 ∘ d2) dcompleteid
+    DCTAp : ∀{τ d} → τ tcomplete → d dcompleteid → (d < τ >) dcompleteid
+    DCCast : ∀{d τ1 τ2} → d dcompleteid → τ1 tcomplete → τ2 tcomplete → τ1 =α τ2 → (d ⟨ τ1 ⇒ τ2 ⟩) dcompleteid
+
   -- contexts that only produce complete types
   _gcomplete : tctx → Set
   Γ gcomplete = (x : Nat) (τ : htyp) → (x , τ) ∈ Γ → τ tcomplete

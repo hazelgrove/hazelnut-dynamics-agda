@@ -58,13 +58,6 @@ module lemmas-alpha where
   -- Alternatively can prove the below and use:
   -- alpha-closed = alpha-wf
 
-  alpha-wf : ∀{Θ τ τ'} → Θ ⊢ τ wf → τ =α τ' → Θ ⊢ τ' wf
-  alpha-wf wf AlphaBase = wf
-  alpha-wf wf (AlphaVarFree x x₁) = wf
-  alpha-wf wf AlphaHole = wf
-  alpha-wf (WFArr wf wf₁) (AlphaArr alpha alpha₁) = WFArr (alpha-wf wf alpha) (alpha-wf wf₁ alpha₁)
-  alpha-wf (WFForall apt wf) (AlphaForall alpha) = WFForall {!   !} (alpha-wf {! wf  !} {!   !})
-
      -- AlphaForall (prune-pres-alpha2 (alpha-rewrite-gamma (! (comp-lextend-prunel x y y' ΓL1 ΓL2 ΓR1 ΓR2)) (! (comp-lextend-pruner x y y' ΓL1 ΓL2 ΓR1 ΓR2)) (prune-pres-alpha1 (alpha-trans a1 a2)))) -- (alpha-rewrite-gamma (! (comp-lextend x y y' ΓL1 ΓL2)) (! (comp-lextend y' y x ΓR2 ΓR1)) (alpha-trans a1 a2)) -- AlphaForall {!   !}
 
   -- num-sum : Nat + Nat → Nat 
@@ -236,6 +229,56 @@ module lemmas-alpha where
   alpha-trans : ∀{τ1 τ2 τ3} → τ1 =α τ2 → τ2 =α τ3 → τ1 =α τ3
   alpha-trans {τ1} {τ2} {τ3} = alpha-transitive τ1 τ2 τ3
 
+  data _,_⊢_dbwf : Nat → typctx → debruijn-htyp → Set where
+    DBWFVar : ∀{n Θ a} → a < n → _,_⊢_dbwf n Θ (DB-B a)
+    DBWFFree : ∀{n Θ a} → (a , <>) ∈ Θ → n , Θ ⊢ DB-F a dbwf
+    DBWFBase : ∀{n Θ} → n , Θ ⊢ DB-base dbwf
+    DBWFHole : ∀{n Θ} → n , Θ ⊢ DB-⦇-⦈ dbwf
+    DBWFArr : ∀{n Θ t1 t2} → n , Θ ⊢ t1 dbwf → n , Θ ⊢  t2 dbwf → n , Θ ⊢ t1 DB-==> t2 dbwf
+    DBWFForall : ∀{n Θ t} → (1+ n) , Θ ⊢ t dbwf → n , Θ ⊢ DB-∀ t dbwf
+  
+  data ctx-consistwf : (Γ1 : Nat) → (Γ2 Γ3 : ⊤ ctx) → (Γ4 : Nat ctx) → Set where 
+    Empty : ∀{Θ} → ctx-consistwf 0 Θ Θ ∅
+    Extend : ∀{Γ1 Γ2 Γ3 Γ4 x} → ctx-consistwf Γ1 Γ2 Γ3 Γ4 → ((n : Nat) → (n , <>) ∈ Γ3 → (n , <>) ∈ Γ2) →
+      ctx-consistwf (1+ Γ1) (Γ2 ,, (x , <>)) Γ3 (■ (x , Z) ∪ (map (\n → 1+ n) Γ4))
+
+  dbwf-consist-rec : ∀{Θ Θ' Γ n τ} → Θ' ⊢ τ wf → ctx-consistwf n Θ' Θ Γ → n , Θ ⊢ (debruijn-of-type-ctx Γ τ) dbwf
+  dbwf-consist-rec {Θ = Θ} {Γ = Γ} (WFVar {a = a} x) consist = {!   !} {- with Γ a | Θ a
+  ... | Some y | Some y' = DBWFVar {!   !}
+  dbwf-consist-rec {Θ = Θ} {Γ = .∅} (WFVar {a = _} x) Empty | None | None = DBWFFree x
+  dbwf-consist-rec {Θ = Θ} {Γ = .((■ (_ , Z)) ∪ map 1+ _)} (WFVar {a = a} x) (Extend {x = x'} consist x₁) | None | None with natEQ a x'
+  ... | Inl eq = DBWFFree {!   !}
+  ... | Inr neq = {!   !} -}
+  dbwf-consist-rec WFBase consist = DBWFBase
+  dbwf-consist-rec WFHole consist = DBWFHole
+  dbwf-consist-rec (WFArr wf wf₁) consist = DBWFArr (dbwf-consist-rec wf consist) (dbwf-consist-rec wf₁ consist)
+  dbwf-consist-rec (WFForall x wf) consist = DBWFForall (dbwf-consist-rec wf (Extend consist {!   !}))
+
+  dbwf-consist : ∀{Θ τ} → Θ ⊢ τ wf → 0 , Θ ⊢ (debruijn-of-type τ) dbwf
+  dbwf-consist (WFVar x) = DBWFFree x
+  dbwf-consist WFBase = DBWFBase
+  dbwf-consist WFHole = DBWFHole
+  dbwf-consist (WFArr wf wf₁) = DBWFArr (dbwf-consist wf) (dbwf-consist wf₁)
+  dbwf-consist (WFForall x wf) = DBWFForall {!   !}
+
+  equiv-debruijn-wf : ∀{Θ τ τ' } → Θ ⊢ τ wf → debruijn-of-type-ctx ∅ τ == debruijn-of-type-ctx ∅ τ' → Θ ⊢ τ' wf
+  equiv-debruijn-wf {τ = b} {τ' = b} WFBase db = WFBase
+  equiv-debruijn-wf {τ = T x} {τ' = T x₁} (WFVar x₂) db rewrite DB-F-inj db = WFVar x₂
+  equiv-debruijn-wf {τ = ⦇-⦈} {τ' = ⦇-⦈} WFHole db = WFHole
+  equiv-debruijn-wf {τ = τ ==> τ₁} {τ' = τ' ==> τ''} (WFArr wf wf₁) db = {!   !}
+  equiv-debruijn-wf {τ = ·∀ x τ} {τ' = ·∀ x₁ τ'} (WFForall x₂ wf) db = WFForall {!   !} {!   !}
+
+  ⊢alpha-wf : ∀{Θ ΓL ΓR τ τ'} → Θ ⊢ τ wf → ΓL , ΓR ⊢ τ =α τ' → ((x : Nat) → dom ΓL x → dom Θ x) → Θ ⊢ τ' wf
+  ⊢alpha-wf (WFVar x) (AlphaVarBound x₁ x₂) sub = {!   !}
+  ⊢alpha-wf (WFVar x) (AlphaVarFree x₁ x₂) sub = {!   !}
+  ⊢alpha-wf WFBase AlphaBase sub = {!   !}
+  ⊢alpha-wf WFHole AlphaHole sub = {!   !}
+  ⊢alpha-wf (WFArr wf wf₁) (AlphaArr alpha alpha₁) sub = {!   !}
+  ⊢alpha-wf (WFForall x wf) (AlphaForall alpha) sub = {!   !} -- WFForall {!   !} (⊢alpha-wf {!   !} alpha {!   !})
+
+  alpha-wf : ∀{Θ τ τ'} → Θ ⊢ τ wf → τ =α τ' → Θ ⊢ τ' wf
+  alpha-wf {τ = τ} {τ' = τ'} wf alpha with equiv-debruijn1 τ τ' ∅ ∅ ∅ ∅ Empty alpha
+  ... | eq = {! equiv-debruijn2  !}
 
   lemma-alpha-forall-helper : ∀{t τ τ' ΓL ΓR} → ΓL , ΓR ⊢ τ =α τ' → ((■ (t , t)) ∪ ΓL) , ((■ (t , t)) ∪ ΓR) ⊢ τ =α τ'
   lemma-alpha-forall-helper alpha = {!   !}
