@@ -86,8 +86,11 @@ module debruijn.debruijn-preservation where
   shift-helper : ∀{Γ1 Γ2 m τ1 τ2} → (m == ctx-len Γ2 → ⊥) → (m , τ2 ∈ (Γ2 ctx+ (τ1 , Γ1))) → (↓Nat (ctx-len Γ2) 1 m , τ2 ∈ (Γ2 ctx+ Γ1))
   shift-helper {Γ2 = ∅} {m = Z} neq inctx = abort (neq refl)
   shift-helper {Γ2 = ∅} {m = 1+ m} neq (InCtx1+ inctx) = inctx
-  shift-helper {Γ2 = x , Γ2} neq InCtxZ = {!   !}
-  shift-helper {Γ2 = x , Γ2} neq (InCtx1+ inctx) = {!   !}
+  shift-helper {Γ2 = x , Γ2} neq InCtxZ = InCtxZ
+  shift-helper {Γ2 = x , Γ2} neq (InCtx1+ inctx) = InCtx1+ (shift-helper (h1 neq) inctx)
+    where 
+      h1 : {a b : Nat} → (1+ a == 1+ b → ⊥) → (a == b) → ⊥ 
+      h1 neq refl = neq refl
 
   wt-ttSub-helper : ∀{Θ Γ1 Γ2 n d1 d2 τ1 τ2} →
     (Θ ⊢ τ1 wf) → 
@@ -97,7 +100,7 @@ module debruijn.debruijn-preservation where
   wt-ttSub-helper wf wt1 TAConst = TAConst
   wt-ttSub-helper {Γ2 = Γ2} {n = n} wf wt1 (TAVar {n = m} x) with natEQ m (ctx-len Γ2) 
   ... | Inl refl = {!   !} 
-  ... | Inr neq = TAVar {!   !}
+  ... | Inr neq = TAVar (shift-helper neq x)
   wt-ttSub-helper {Γ2 = Γ2} {d1 = d1} wf wt1 (TALam {τ1 = τ1} x wt2) with wt-ttSub-helper {Γ2 = (τ1 , Γ2)} wf wt1 wt2 
   ... | result rewrite ↑d-compose Z (ctx-len Γ2 nat+ 1) d1 = TALam x result
   wt-ttSub-helper wf wt1 (TATLam wt2) = TATLam (wt-ttSub-helper wf wt1 wt2)
