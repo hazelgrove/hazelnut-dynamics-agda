@@ -1,1 +1,4 @@
 *.agdai
+debruijn/no-positivity-core-type.agda
+debruijn/no-positivity-core-exp.agda
+debruijn/no-positivity-core.agda
