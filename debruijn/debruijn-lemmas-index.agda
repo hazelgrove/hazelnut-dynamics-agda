@@ -21,6 +21,18 @@ module debruijn.debruijn-lemmas-index where
   ↑Z t ⦇-⦈ = refl
   ↑Z t (τ ==> τ₁) rewrite ↑Z t τ rewrite ↑Z t τ₁ = refl
   ↑Z t (·∀ τ) rewrite ↑Z (1+ t) τ = refl
+
+  ↑dZ : (t : Nat) → (d : ihexp) → ↑d t Z d == d
+  ↑dZ t c = refl
+  ↑dZ t (X x) rewrite ↑NatZ t x = refl
+  ↑dZ t (·λ[ x ] d) rewrite ↑dZ (1+ t) d = refl
+  ↑dZ t (·Λ d) rewrite ↑dZ t d = refl
+  ↑dZ t ⦇-⦈⟨ x ⟩ = refl
+  ↑dZ t ⦇⌜ d ⌟⦈⟨ x ⟩ rewrite ↑dZ t d = refl
+  ↑dZ t (d1 ∘ d2) rewrite ↑dZ t d1 rewrite ↑dZ t d2 = refl
+  ↑dZ t (d < x >) rewrite ↑dZ t d = refl
+  ↑dZ t (d ⟨ x ⇒ x₁ ⟩) rewrite ↑dZ t d = refl
+  ↑dZ t (d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) rewrite ↑dZ t d = refl
   
   ↑Natcompose : (t i x : Nat) → ↑Nat t 1 (↑Nat t i x) == ↑Nat t (1+ i) x
   ↑Natcompose Z Z x = refl
@@ -59,3 +71,26 @@ module debruijn.debruijn-lemmas-index where
   ↓↑invert t ⦇-⦈ = refl
   ↓↑invert t (τ ==> τ₁) rewrite ↓↑invert t τ rewrite ↓↑invert t τ₁ = refl
   ↓↑invert t (·∀ τ) rewrite ↓↑invert (1+ t) τ = refl
+
+  -- ↓↑d-invert : ∀{n d} → ↓d n 1 (↑d a (b nat+ c nat+ d) d) == ↑d 0 n d
+
+  ↓↑Nat-invert-strong : (n m x : Nat) → ↓Nat (n nat+ m) 1 (↑Nat m (n nat+ 1) x) == ↑Nat m n x
+  ↓↑Nat-invert-strong Z m x rewrite ↑NatZ m x = ↓↑Nat-invert m x
+  ↓↑Nat-invert-strong (1+ n) Z x rewrite nat+Z n with ↓↑Nat-invert-strong n Z x
+  ... | result rewrite nat+Z n rewrite result = refl
+  ↓↑Nat-invert-strong (1+ n) (1+ m) Z = refl
+  ↓↑Nat-invert-strong (1+ n) (1+ m) (1+ x) with ↓↑Nat-invert-strong (1+ n) m x 
+  ... | result rewrite nat+1+ n m rewrite result = refl
+    
+  ↓↑d-invert : ∀{n m d} → ↓d (n nat+ m) 1 (↑d m (n nat+ 1) d) == ↑d m n d
+  ↓↑d-invert {d = c} = refl 
+  ↓↑d-invert {n = n} {m = m} {d = X x} rewrite ↓↑Nat-invert-strong n m x = refl 
+  ↓↑d-invert {n = n} {m = m} {d = ·λ[ x ] d} rewrite nat+comm 1 n with ↓↑d-invert {n = n} {m = 1+ m} {d = d} 
+  ... | result rewrite nat+1+ n m rewrite result = refl
+  ↓↑d-invert {n = n} {m = m} {d = ·Λ d} rewrite ↓↑d-invert {n = n} {m = m} {d = d} = refl
+  ↓↑d-invert {d = ⦇-⦈⟨ x ⟩} = refl
+  ↓↑d-invert {n = n} {m = m} {d = ⦇⌜ d ⌟⦈⟨ x ⟩} rewrite ↓↑d-invert {n = n} {m = m} {d = d} = refl
+  ↓↑d-invert {n = n} {m = m} {d = d1 ∘ d2} rewrite ↓↑d-invert {n = n} {m = m} {d = d1} rewrite ↓↑d-invert {n = n} {m = m} {d = d2} = refl
+  ↓↑d-invert {n = n} {m = m} {d = d < x >} rewrite ↓↑d-invert {n = n} {m = m} {d = d} = refl
+  ↓↑d-invert {n = n} {m = m} {d = d ⟨ x ⇒ x₁ ⟩} rewrite ↓↑d-invert {n = n} {m = m} {d = d} = refl   
+  ↓↑d-invert {n = n} {m = m} {d = d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} rewrite ↓↑d-invert {n = n} {m = m} {d = d} = refl

@@ -131,6 +131,10 @@ module Nat where
   nat+assoc Z m l = refl
   nat+assoc (1+ n) m l rewrite nat+assoc n m l = refl
 
+  nat+comm : (n m : Nat) → n nat+ m == m nat+ n
+  nat+comm Z m rewrite nat+Z m = refl
+  nat+comm (1+ n) m rewrite nat+1+ m n rewrite nat+comm n m = refl
+
   -- double : Nat → Nat
   -- double Z = Z 
   -- double (1+ n) = 1+ (1+ (double n))

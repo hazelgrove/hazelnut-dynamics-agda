@@ -64,6 +64,18 @@ module debruijn.debruijn-core where
   ↓d t i (d ⟨ τ1 ⇒ τ2 ⟩) = (↓d t i d) ⟨ τ1 ⇒ τ2 ⟩
   ↓d t i (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↓d t i d) ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩
 
+  ↓td : (t i : Nat) → ihexp → ihexp 
+  ↓td t i c = c
+  ↓td t i (X x) = X x
+  ↓td t i (·λ[ τ ] d) = ·λ[ ↓ t i τ ] (↓td t i d)
+  ↓td t i (·Λ d) = ·Λ (↓td (1+ t) i d)
+  ↓td t i ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ ↓ t i τ ⟩
+  ↓td t i ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ (↓td t i d) ⌟⦈⟨ ↓ t i τ ⟩
+  ↓td t i (d1 ∘ d2) = (↓td t i d1) ∘ (↓td t i d2)
+  ↓td t i (d < τ >) = (↓td t i d) < ↓ t i τ >  
+  ↓td t i (d ⟨ τ1 ⇒ τ2 ⟩) = (↓td t i d) ⟨ ↓ t i τ1 ⇒ ↓ t i τ2 ⟩
+  ↓td t i (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↓td t i d) ⟨ ↓ t i τ1 ⇒⦇-⦈⇏ ↓ t i τ3 ⟩
+
   -- substitution of types in types
   TT[_/_]_ : htyp → Nat → htyp → htyp 
   TT[ τ / n ] b = b
@@ -74,10 +86,9 @@ module debruijn.debruijn-core where
   TT[ τ / n ] (τ1 ==> τ2) = ((TT[ τ / n ] τ1) ==> (TT[ τ / n ] τ2))
   TT[ τ / n ] (·∀ τ') = ·∀ (TT[ (↑ Z 1 τ) / 1+ n ] τ')
 
-  TTSub : htyp → htyp → htyp 
-  TTSub τ1 τ2 = ↓ Z 1 (TT[ (↑ Z 1 τ1) / Z ] τ2)
+  TTSub : Nat → htyp → htyp → htyp 
+  TTSub n τ1 τ2 = ↓ n 1 (TT[ (↑ Z (1+ n) τ1) / n ] τ2)
 
-  -- Type substitution binds tighter than consistency (20)
   infixl 21 TT[_/_]_
 
   -- substitution of types in contexts
@@ -86,30 +97,33 @@ module debruijn.debruijn-core where
   ctx[ τ / a ] (τ' , Γ) = (TT[ τ / a ] τ') , (ctx[ τ / a ] Γ) 
   
   -- substitution of types in terms 
-  -- Tt[_/_]_ : htyp → Nat → ihexp → ihexp
-  -- Tt[ τ / t ] c = c
-  -- Tt[ τ / t ] (X x) = X x
-  -- Tt[ τ / t ] (·λ[ τx ] d) = ·λ[ TT[ τ / t ] τx ] (Tt[ τ / t ] d)
-  -- Tt[ τ / t ] (·Λ d) = ·Λ (Tt[ τ / t ] d) 
-  -- Tt[ τ / t ] (⦇-⦈⟨ τ' ⟩) = ⦇-⦈⟨ TT[ τ / t ] τ' ⟩
-  -- Tt[ τ / t ] (⦇⌜ d ⌟⦈⟨  τ' ⟩) = ⦇⌜ (Tt[ τ / t ] d) ⌟⦈⟨ TT[ τ / t ] τ' ⟩
-  -- Tt[ τ / t ] (d1 ∘ d2) = (Tt[ τ / t ] d1) ∘ (Tt[ τ / t ] d2)
-  -- Tt[ τ / t ] (d < τ' >) = (Tt[ τ / t ] d) < TT[ τ / t ] τ' >
-  -- Tt[ τ / t ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (Tt[ τ / t ] d) ⟨ (TT[ τ / t ] τ1) ⇒ (TT[ τ / t ] τ2) ⟩
-  -- Tt[ τ / t ] (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = (Tt[ τ / t ] d) ⟨ (TT[ τ / t ] τ1) ⇒⦇-⦈⇏ (TT[ τ / t ] τ2) ⟩
+  Tt[_/_]_ : htyp → Nat → ihexp → ihexp
+  Tt[ τ / t ] c = c
+  Tt[ τ / t ] (X x) = X x
+  Tt[ τ / t ] (·λ[ τx ] d) = ·λ[ TT[ τ / t ] τx ] (Tt[ τ / t ] d)
+  Tt[ τ / t ] (·Λ d) = ·Λ (Tt[ (↑ Z 1 τ) / 1+ t ] d) 
+  Tt[ τ / t ] (⦇-⦈⟨ τ' ⟩) = ⦇-⦈⟨ TT[ τ / t ] τ' ⟩
+  Tt[ τ / t ] (⦇⌜ d ⌟⦈⟨  τ' ⟩) = ⦇⌜ (Tt[ τ / t ] d) ⌟⦈⟨ TT[ τ / t ] τ' ⟩
+  Tt[ τ / t ] (d1 ∘ d2) = (Tt[ τ / t ] d1) ∘ (Tt[ τ / t ] d2)
+  Tt[ τ / t ] (d < τ' >) = (Tt[ τ / t ] d) < TT[ τ / t ] τ' >
+  Tt[ τ / t ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (Tt[ τ / t ] d) ⟨ (TT[ τ / t ] τ1) ⇒ (TT[ τ / t ] τ2) ⟩
+  Tt[ τ / t ] (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = (Tt[ τ / t ] d) ⟨ (TT[ τ / t ] τ1) ⇒⦇-⦈⇏ (TT[ τ / t ] τ2) ⟩
 
-  TtSub : htyp → ihexp → ihexp
-  TtSub τ c = c
-  TtSub τ (X x) = X x
-  TtSub τ (·λ[ τ' ] d) = ·λ[ TTSub τ τ' ] (TtSub τ d)
-  TtSub τ (·Λ d) = ·Λ (TtSub τ d) 
-  TtSub τ (⦇-⦈⟨ τ' ⟩) = ⦇-⦈⟨ TTSub τ τ' ⟩
-  TtSub τ (⦇⌜ d ⌟⦈⟨  τ' ⟩) = ⦇⌜ (TtSub τ d) ⌟⦈⟨ TTSub τ τ' ⟩
-  TtSub τ (d1 ∘ d2) = (TtSub τ d1) ∘ (TtSub τ d2)
-  TtSub τ (d < τ' >) = (TtSub τ d) < TTSub τ τ' >
-  TtSub τ (d ⟨ τ1 ⇒ τ2 ⟩ ) = (TtSub τ d) ⟨ (TTSub τ τ1) ⇒ (TTSub τ τ2) ⟩
-  TtSub τ (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = (TtSub τ d) ⟨ (TTSub τ τ1) ⇒⦇-⦈⇏ (TTSub τ τ2) ⟩
-    
+  -- TtSub : Nat → htyp → ihexp → ihexp
+  -- TtSub n τ c = c
+  -- TtSub n τ (X x) = X x
+  -- TtSub n τ (·λ[ τ' ] d) = ·λ[ TTSub n τ τ' ] (TtSub n τ d)
+  -- TtSub n τ (·Λ d) = ·Λ (TtSub n τ d) 
+  -- TtSub n τ (⦇-⦈⟨ τ' ⟩) = ⦇-⦈⟨ TTSub n τ τ' ⟩
+  -- TtSub n τ (⦇⌜ d ⌟⦈⟨  τ' ⟩) = ⦇⌜ (TtSub n τ d) ⌟⦈⟨ TTSub n τ τ' ⟩
+  -- TtSub n τ (d1 ∘ d2) = (TtSub n τ d1) ∘ (TtSub n τ d2)
+  -- TtSub n τ (d < τ' >) = (TtSub n τ d) < TTSub n τ τ' >
+  -- TtSub n τ (d ⟨ τ1 ⇒ τ2 ⟩ ) = (TtSub n τ d) ⟨ (TTSub n τ τ1) ⇒ (TTSub n τ τ2) ⟩
+  -- TtSub n τ (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = (TtSub n τ d) ⟨ (TTSub n τ τ1) ⇒⦇-⦈⇏ (TTSub n τ τ2) ⟩
+
+  TtSub : Nat → htyp → ihexp → ihexp
+  TtSub n τ d = ↓td n 1 (Tt[ (↑ Z (1+ n) τ) / n ] d)
+
   -- substitution of terms in terms
   [_/_]_ : ihexp → Nat → ihexp → ihexp
   [ d / n ] c = c
@@ -128,9 +142,9 @@ module debruijn.debruijn-core where
   ttSub : ihexp → ihexp → ihexp 
   ttSub d1 d2 = ↓d Z 1 ([ (↑d Z 1 d1) / Z ] d2)
 
-  TCtxSub : htyp → ctx → ctx 
-  TCtxSub τ ∅ = ∅
-  TCtxSub τ (x , Γ) = TTSub τ x , TCtxSub τ Γ
+  TCtxSub : Nat → htyp → ctx → ctx 
+  TCtxSub n τ ∅ = ∅
+  TCtxSub n τ (x , Γ) = ↓ n 1 (TT[ (↑ Z (1+ n) τ) / n ] x) , TCtxSub n τ Γ
 
   -- bidirectional type checking judgements for hexp
   mutual
@@ -166,7 +180,7 @@ module debruijn.debruijn-core where
         Θ ⊢ τ1 wf →
         Θ , Γ ⊢ e => τ2 →
         τ2 ⊓ ·∀ ⦇-⦈ == (·∀ τ3) →
-        TTSub τ1 τ3 == τ4 →
+        TTSub Z τ1 τ3 == τ4 →
         Θ , Γ ⊢ (e < τ1 >) => τ4
 
     -- analysis
@@ -211,7 +225,7 @@ module debruijn.debruijn-core where
         Θ , Γ ⊢ e => τ2 →
         τ2 ⊓ ·∀ ⦇-⦈ == (·∀ τ3) →
         Θ , Γ ⊢ e ⇐ (·∀ τ3) ~> d :: τ2' →
-        TTSub τ1 τ3 == τ4 →
+        TTSub Z τ1 τ3 == τ4 →
         Θ , Γ ⊢ (e < τ1 >) ⇒ τ4 ~> ((d ⟨ τ2' ⇒ (·∀ τ3)⟩) < τ1 >)
       ESEHole : ∀{Θ Γ} →
         Θ , Γ ⊢ ⦇-⦈ ⇒ ⦇-⦈ ~> ⦇-⦈⟨ ⦇-⦈ ⟩
@@ -268,7 +282,7 @@ module debruijn.debruijn-core where
     TATAp : ∀ {Θ Γ d τ1 τ2 τ3} → 
       Θ ⊢ τ1 wf →
       Θ , Γ ⊢ d :: (·∀ τ2) →
-      TTSub τ1 τ2 == τ3 → 
+      TTSub Z τ1 τ2 == τ3 → 
       Θ , Γ ⊢ (d < τ1 >) :: τ3
     TAEHole : ∀{Θ Γ τ} →
       Θ ⊢ τ wf →
@@ -423,7 +437,7 @@ module debruijn.debruijn-core where
             -- d2 final → -- red brackets
             ((·λ[ τ ] d1) ∘ d2) →> (ttSub d2 d1)
     ITTLam : ∀{ d τ } →
-              ((·Λ d) < τ >) →> (TtSub τ d)
+              ((·Λ d) < τ >) →> (TtSub Z τ d)
     ITCastID : ∀{ d τ } →
                -- d final → -- red brackets
                (d ⟨ τ ⇒ τ ⟩) →> d
@@ -444,7 +458,7 @@ module debruijn.debruijn-core where
     ITTApCast : ∀{ d τ1 τ2 τ3 } →
                -- d final → -- red brackets
                --  ·∀ τ ≠ ·∀ τ' →
-                 ((d ⟨ (·∀ τ1) ⇒ (·∀ τ2)⟩) < τ3 >) →> ((d < τ3 >)⟨ TTSub τ3 τ1 ⇒ TTSub τ3 τ2 ⟩)
+                 ((d ⟨ (·∀ τ1) ⇒ (·∀ τ2)⟩) < τ3 >) →> ((d < τ3 >)⟨ TTSub Z τ3 τ1 ⇒ TTSub Z τ3 τ2 ⟩)
     ITGround : ∀{ d τ τ'} →
                -- d final → -- red brackets
                τ ▸gnd τ' →

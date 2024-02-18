@@ -81,7 +81,7 @@ module debruijn.debruijn-lemmas-prec where
   ⊑t-TT prec1 (PTArr prec2 prec3) = PTArr (⊑t-TT prec1 prec2) (⊑t-TT prec1 prec3)
   ⊑t-TT prec1 (PTForall prec2) = PTForall (⊑t-TT (⊑t-↑ prec1) prec2)
 
-  ⊑t-TTsub : ∀{τ1 τ2 τ3 τ4} → (τ1 ⊑t τ3) → (τ2 ⊑t τ4) → TTSub τ1 τ2 ⊑t TTSub τ3 τ4
+  ⊑t-TTsub : ∀{τ1 τ2 τ3 τ4} → (τ1 ⊑t τ3) → (τ2 ⊑t τ4) → TTSub Z τ1 τ2 ⊑t TTSub Z τ3 τ4
   ⊑t-TTsub prec1 PTBase = PTBase
   ⊑t-TTsub prec1 PTHole = PTHole
   ⊑t-TTsub prec1 (PTTVar {n = Z}) = ⊑t-↓ (⊑t-↑ prec1)

@@ -5,6 +5,7 @@ open import debruijn.debruijn-core-type
 open import debruijn.debruijn-core-exp
 open import debruijn.debruijn-core
 
+open import debruijn.debruijn-weakening
 open import debruijn.debruijn-lemmas-index
 open import debruijn.debruijn-lemmas-consistency
 open import debruijn.debruijn-lemmas-prec
