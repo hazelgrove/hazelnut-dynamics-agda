@@ -320,54 +320,6 @@ module debruijn.debruijn-core where
     PIAddCast : ∀{Θ Γ Γ' d1 d2 τ1 τ2 τ} → (Θ , Γ , Γ' ⊢ d1 ⊑i d2) → (Θ , Γ ⊢ d1 :: τ) → (τ ⊑t τ1) → (τ ⊑t τ2) → Θ , Γ , Γ' ⊢ d1 ⊑i (d2 ⟨ τ1 ⇒ τ2 ⟩) 
     PIBlame : ∀{Θ Γ Γ' d1 d2 τ1 τ2 τ} → (Θ , Γ' ⊢ d2 :: τ) → (τ2 ⊑t τ) → (Θ , Γ , Γ' ⊢ d1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ⊑i d2)
 
-
-  -- -- those types without holes
-  -- data _tcomplete : htyp → Set where
-  --   TCBase : b tcomplete
-  --   TCVar : ∀{a} → (T a) tcomplete
-  --   TCArr : ∀{τ1 τ2} → τ1 tcomplete → τ2 tcomplete → (τ1 ==> τ2) tcomplete
-  --   TCForall : ∀{t e} → e tcomplete → (·∀ t e) tcomplete 
-
-  -- -- those external expressions without holes
-  -- data _ecomplete : hexp → Set where
-  --   ECConst : c ecomplete
-  --   ECAsc : ∀{τ e} → τ tcomplete → e ecomplete → (e ·: τ) ecomplete
-  --   ECVar : ∀{x} → (X x) ecomplete
-  --   ECLam1 : ∀{x e} → e ecomplete → (·λ x e) ecomplete
-  --   ECLam2 : ∀{x e τ} → e ecomplete → τ tcomplete → (·λ x [ τ ] e) ecomplete
-  --   ECTLam : ∀{t e} → e ecomplete → (·Λ t e) ecomplete
-  --   ECAp : ∀{e1 e2} → e1 ecomplete → e2 ecomplete → (e1 ∘ e2) ecomplete
-  --   ECTAp : ∀{τ e} → τ tcomplete → e ecomplete → (e < τ >) ecomplete
-
-  -- -- those internal expressions without holes
-  -- data _dcomplete : ihexp → Set where
-  --   DCVar : ∀{x} → (X x) dcomplete
-  --   DCConst : c dcomplete
-  --   DCLam : ∀{x τ d} → d dcomplete → τ tcomplete → (·λ x [ τ ] d) dcomplete
-  --   DCTLam : ∀{t d} → d dcomplete → (·Λ t d) dcomplete
-  --   DCAp : ∀{d1 d2} → d1 dcomplete → d2 dcomplete → (d1 ∘ d2) dcomplete
-  --   DCTAp : ∀{τ d} → τ tcomplete → d dcomplete → (d < τ >) dcomplete
-  --   DCCast : ∀{d τ1 τ2} → d dcomplete → τ1 tcomplete → τ2 tcomplete → (d ⟨ τ1 ⇒ τ2 ⟩) dcomplete
-
-  -- -- contexts that only produce complete types
-  -- _gcomplete : ctx → Set
-  -- Γ gcomplete = (x : Nat) (τ : htyp) → (x , τ) ∈ Γ → τ tcomplete
-
-  -- -- those internal expressions where every cast is the identity cast and
-  -- -- there are no failed casts
-  -- data cast-id : ihexp → Set where
-  --   CIConst  : cast-id c
-  --   CIVar    : ∀{x} → cast-id (X x)
-  --   CILam    : ∀{x τ d} → cast-id d → cast-id (·λ x [ τ ] d)
-  --   CITLam   : ∀{t d} → cast-id d → cast-id (·Λ t d)
-  --   CIHole   : ∀{τ} → cast-id (⦇-⦈⟨ τ ⟩)
-  --   CINEHole : ∀{d τ} → cast-id d → cast-id (⦇⌜ d ⌟⦈⟨ τ ⟩)
-  --   CIAp     : ∀{d1 d2} → cast-id d1 → cast-id d2 → cast-id (d1 ∘ d2)
-  --   CITap    : ∀{τ d} → cast-id d → cast-id (d < τ >)
-  --   CICast   : ∀{d τ} → cast-id d → cast-id (d ⟨ τ ⇒ τ ⟩)
-
-  -- -- contextual dynamics
-
   -- evaluation contexts
   data ectx : Set where
     ⊙ : ectx
@@ -377,36 +329,6 @@ module debruijn.debruijn-core where
     ⦇⌜_⌟⦈⟨_⟩ : ectx → htyp → ectx
     _⟨_⇒_⟩ : ectx → htyp → htyp → ectx
     _⟨_⇒⦇-⦈⇏_⟩ : ectx → htyp → htyp → ectx
-
-  -- -- note: this judgement is redundant: in the absence of the premises in
-  -- -- the red brackets, all syntactically well formed ectxs are valid. with
-  -- -- finality premises, that's not true, and that would propagate through
-  -- -- additions to the calculus. so we leave it here for clarity but note
-  -- -- that, as written, in any use case its either trival to prove or
-  -- -- provides no additional information
-
-  --  --ε is an evaluation context
-  -- data _evalctx : (ε : ectx) → Set where
-  --   ECDot : ⊙ evalctx
-  --   ECAp1 : ∀{d ε} →
-  --           ε evalctx →
-  --           (ε ∘₁ d) evalctx
-  --   ECAp2 : ∀{d ε} →
-  --           -- d final → -- red brackets
-  --           ε evalctx →
-  --           (d ∘₂ ε) evalctx
-  --   ECTAp : ∀{ε t} →
-  --           ε evalctx →
-  --           (ε < t >) evalctx
-  --   ECNEHole : ∀{ε τ} →
-  --              ε evalctx →
-  --              ⦇⌜ ε ⌟⦈⟨ τ ⟩ evalctx
-  --   ECCast : ∀{ ε τ1 τ2} →
-  --            ε evalctx →
-  --            (ε ⟨ τ1 ⇒ τ2 ⟩) evalctx
-  --   ECFailedCast : ∀{ ε τ1 τ2 } →
-  --                  ε evalctx →
-  --                  ε ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ evalctx
 
   -- d is the result of filling the hole in ε with d'
   data _==_⟦_⟧ : (d : ihexp) (ε : ectx) (d' : ihexp) → Set where
@@ -483,3 +405,48 @@ module debruijn.debruijn-core where
                  d ↦ d' →
                  d' ↦* d'' →
                  d  ↦* d''
+
+  -- -- those types without holes
+  -- data _tcomplete : htyp → Set where
+  --   TCBase : b tcomplete
+  --   TCVar : ∀{a} → (T a) tcomplete
+  --   TCArr : ∀{τ1 τ2} → τ1 tcomplete → τ2 tcomplete → (τ1 ==> τ2) tcomplete
+  --   TCForall : ∀{t e} → e tcomplete → (·∀ t e) tcomplete 
+
+  -- -- those external expressions without holes
+  -- data _ecomplete : hexp → Set where
+  --   ECConst : c ecomplete
+  --   ECAsc : ∀{τ e} → τ tcomplete → e ecomplete → (e ·: τ) ecomplete
+  --   ECVar : ∀{x} → (X x) ecomplete
+  --   ECLam1 : ∀{x e} → e ecomplete → (·λ x e) ecomplete
+  --   ECLam2 : ∀{x e τ} → e ecomplete → τ tcomplete → (·λ x [ τ ] e) ecomplete
+  --   ECTLam : ∀{t e} → e ecomplete → (·Λ t e) ecomplete
+  --   ECAp : ∀{e1 e2} → e1 ecomplete → e2 ecomplete → (e1 ∘ e2) ecomplete
+  --   ECTAp : ∀{τ e} → τ tcomplete → e ecomplete → (e < τ >) ecomplete
+
+  -- -- those internal expressions without holes
+  -- data _dcomplete : ihexp → Set where
+  --   DCVar : ∀{x} → (X x) dcomplete
+  --   DCConst : c dcomplete
+  --   DCLam : ∀{x τ d} → d dcomplete → τ tcomplete → (·λ x [ τ ] d) dcomplete
+  --   DCTLam : ∀{t d} → d dcomplete → (·Λ t d) dcomplete
+  --   DCAp : ∀{d1 d2} → d1 dcomplete → d2 dcomplete → (d1 ∘ d2) dcomplete
+  --   DCTAp : ∀{τ d} → τ tcomplete → d dcomplete → (d < τ >) dcomplete
+  --   DCCast : ∀{d τ1 τ2} → d dcomplete → τ1 tcomplete → τ2 tcomplete → (d ⟨ τ1 ⇒ τ2 ⟩) dcomplete
+
+  -- -- contexts that only produce complete types
+  -- _gcomplete : ctx → Set
+  -- Γ gcomplete = (x : Nat) (τ : htyp) → (x , τ) ∈ Γ → τ tcomplete
+
+  -- -- those internal expressions where every cast is the identity cast and
+  -- -- there are no failed casts
+  -- data cast-id : ihexp → Set where
+  --   CIConst  : cast-id c
+  --   CIVar    : ∀{x} → cast-id (X x)
+  --   CILam    : ∀{x τ d} → cast-id d → cast-id (·λ x [ τ ] d)
+  --   CITLam   : ∀{t d} → cast-id d → cast-id (·Λ t d)
+  --   CIHole   : ∀{τ} → cast-id (⦇-⦈⟨ τ ⟩)
+  --   CINEHole : ∀{d τ} → cast-id d → cast-id (⦇⌜ d ⌟⦈⟨ τ ⟩)
+  --   CIAp     : ∀{d1 d2} → cast-id d1 → cast-id d2 → cast-id (d1 ∘ d2)
+  --   CITap    : ∀{τ d} → cast-id d → cast-id (d < τ >)
+  --   CICast   : ∀{d τ} → cast-id d → cast-id (d ⟨ τ ⇒ τ ⟩)

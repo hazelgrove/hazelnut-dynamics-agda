@@ -52,9 +52,9 @@ module debruijn.debruijn-preservation where
   preserve-trans (TAAp (TALam wf wt1) wt2) ITLam = wt-ttSub wf wt2 wt1
   preserve-trans (TAAp (TACast wt1 (WFArr wf1 wf2) (ConsistArr con1 con2)) wt2) ITApCast with wf-ta CtxWFEmpty wt1
   ... | WFArr wf3 wf4 = TACast (TAAp wt1 (TACast wt2 wf3 (~sym con1))) wf2 con2
-  preserve-trans (TATAp wf (TATLam wt) refl) ITTLam = wt-TtSub wf wt
+  preserve-trans (TATAp wf (TATLam wt) refl) ITTLam = wt-TtSub CtxWFEmpty wf wt
   preserve-trans (TATAp x (TACast wt (WFForall wf) (ConsistForall con)) refl) ITTApCast with wf-ta CtxWFEmpty wt 
-  ... | WFForall wt2 = TACast (TATAp x wt refl) (wf-TTSub x wf) (~TTSub x wt2 wf con)
+  ... | WFForall wf2 = TACast (TATAp x wt refl) (wf-TTSub x wf) (~TTSub wf2 wf con)
   preserve-trans (TAEHole _) () 
   preserve-trans (TANEHole _ _) ()
   preserve-trans (TACast wt x x₁) ITCastID = wt
