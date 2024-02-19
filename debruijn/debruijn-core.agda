@@ -27,77 +27,70 @@ module debruijn.debruijn-core where
   -- by a margin of at least [threshold]
   -- increased by [increase]
   ↑ : (t i : Nat) → htyp → htyp 
-  ↑ t Z τ = τ
-  ↑ t (1+ i) (T x) = T (↑Nat t (1+ i) x )
-  ↑ t (1+ i) b = b
-  ↑ t (1+ i) ⦇-⦈ = ⦇-⦈
-  ↑ t (1+ i) (τ1 ==> τ2) = (↑ t (1+ i) τ1) ==> (↑ t (1+ i) τ2)
-  ↑ t (1+ i) (·∀ τ) = ·∀ (↑ (1+ t) (1+ i) τ)
+  ↑ t i (T x) = T (↑Nat t i x )
+  ↑ t i b = b
+  ↑ t i ⦇-⦈ = ⦇-⦈
+  ↑ t i (τ1 ==> τ2) = (↑ t i τ1) ==> (↑ t i τ2)
+  ↑ t i (·∀ τ) = ·∀ (↑ (1+ t) i τ)
 
   ↓ : Nat → Nat → htyp → htyp 
-  ↓ t Z τ = τ
-  ↓ t (1+ d) (T x) = T (↓Nat t (1+ d) x)
-  ↓ t (1+ d) b = b
-  ↓ t (1+ d) ⦇-⦈ = ⦇-⦈
-  ↓ t (1+ d) (τ1 ==> τ2) = (↓ t (1+ d) τ1) ==> (↓ t (1+ d) τ2)
-  ↓ t (1+ d) (·∀ τ) = ·∀ (↓ (1+ t) (1+ d) τ)
+  ↓ t d (T x) = T (↓Nat t d x)
+  ↓ t d b = b
+  ↓ t d ⦇-⦈ = ⦇-⦈
+  ↓ t d (τ1 ==> τ2) = (↓ t d τ1) ==> (↓ t d τ2)
+  ↓ t d (·∀ τ) = ·∀ (↓ (1+ t) d τ)
 
   ↑d : (t i : Nat) → ihexp → ihexp 
-  ↑d t Z d = d
-  ↑d t (1+ i) c = c
-  ↑d t (1+ i) (X x) = X (↑Nat t (1+ i) x)
-  ↑d t (1+ i) (·λ[ τ ] d) = ·λ[ τ ] (↑d (1+ t) (1+ i) d)
-  ↑d t (1+ i) (·Λ d) = ·Λ (↑d t (1+ i) d)
-  ↑d t (1+ i) ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ τ ⟩
-  ↑d t (1+ i) ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ ↑d t (1+ i) d ⌟⦈⟨ τ ⟩
-  ↑d t (1+ i) (d1 ∘ d2) = (↑d t (1+ i) d1) ∘ (↑d t (1+ i) d2)
-  ↑d t (1+ i) (d < τ >) = (↑d t (1+ i) d) < τ >
-  ↑d t (1+ i) (d ⟨ τ1 ⇒ τ2 ⟩) = (↑d t (1+ i) d) ⟨ τ1 ⇒ τ2 ⟩
-  ↑d t (1+ i) (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↑d t (1+ i) d) ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩
+  ↑d t i c = c
+  ↑d t i (X x) = X (↑Nat t i x)
+  ↑d t i (·λ[ τ ] d) = ·λ[ τ ] (↑d (1+ t) i d)
+  ↑d t i (·Λ d) = ·Λ (↑d t i d)
+  ↑d t i ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ τ ⟩
+  ↑d t i ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ ↑d t i d ⌟⦈⟨ τ ⟩
+  ↑d t i (d1 ∘ d2) = (↑d t i d1) ∘ (↑d t i d2)
+  ↑d t i (d < τ >) = (↑d t i d) < τ >
+  ↑d t i (d ⟨ τ1 ⇒ τ2 ⟩) = (↑d t i d) ⟨ τ1 ⇒ τ2 ⟩
+  ↑d t i (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↑d t i d) ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩
 
   ↓d : (t i : Nat) → ihexp → ihexp 
-  ↓d t Z d = d
-  ↓d t (1+ i) c = c
-  ↓d t (1+ i) (X x) = X (↓Nat t (1+ i) x)
-  ↓d t (1+ i) (·λ[ τ ] d) = ·λ[ τ ] (↓d (1+ t) (1+ i) d)
-  ↓d t (1+ i) (·Λ d) = ·Λ (↓d t (1+ i) d)
-  ↓d t (1+ i) ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ τ ⟩
-  ↓d t (1+ i) ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ ↓d t (1+ i) d ⌟⦈⟨ τ ⟩
-  ↓d t (1+ i) (d1 ∘ d2) = (↓d t (1+ i) d1) ∘ (↓d t (1+ i) d2)
-  ↓d t (1+ i) (d < τ >) = (↓d t (1+ i) d) < τ >
-  ↓d t (1+ i) (d ⟨ τ1 ⇒ τ2 ⟩) = (↓d t (1+ i) d) ⟨ τ1 ⇒ τ2 ⟩
-  ↓d t (1+ i) (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↓d t (1+ i) d) ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩
+  ↓d t i c = c
+  ↓d t i (X x) = X (↓Nat t i x)
+  ↓d t i (·λ[ τ ] d) = ·λ[ τ ] (↓d (1+ t) i d)
+  ↓d t i (·Λ d) = ·Λ (↓d t i d)
+  ↓d t i ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ τ ⟩
+  ↓d t i ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ ↓d t i d ⌟⦈⟨ τ ⟩
+  ↓d t i (d1 ∘ d2) = (↓d t i d1) ∘ (↓d t i d2)
+  ↓d t i (d < τ >) = (↓d t i d) < τ >
+  ↓d t i (d ⟨ τ1 ⇒ τ2 ⟩) = (↓d t i d) ⟨ τ1 ⇒ τ2 ⟩
+  ↓d t i (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↓d t i d) ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩
 
   ↑td : (t i : Nat) → ihexp → ihexp 
-  ↑td t Z d = d
-  ↑td t (1+ i) c = c
-  ↑td t (1+ i) (X x) = X x
-  ↑td t (1+ i) (·λ[ τ ] d) = ·λ[ ↑ t (1+ i) τ ] (↑td t (1+ i) d)
-  ↑td t (1+ i) (·Λ d) = ·Λ (↑td (1+ t) (1+ i) d)
-  ↑td t (1+ i) ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ ↑ t (1+ i) τ ⟩
-  ↑td t (1+ i) ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ (↑td t (1+ i) d) ⌟⦈⟨ ↑ t (1+ i) τ ⟩
-  ↑td t (1+ i) (d1 ∘ d2) = (↑td t (1+ i) d1) ∘ (↑td t (1+ i) d2)
-  ↑td t (1+ i) (d < τ >) = (↑td t (1+ i) d) < ↑ t (1+ i) τ >  
-  ↑td t (1+ i) (d ⟨ τ1 ⇒ τ2 ⟩) = (↑td t (1+ i) d) ⟨ ↑ t (1+ i) τ1 ⇒ ↑ t (1+ i) τ2 ⟩
-  ↑td t (1+ i) (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↑td t (1+ i) d) ⟨ ↑ t (1+ i) τ1 ⇒⦇-⦈⇏ ↑ t (1+ i) τ3 ⟩
+  ↑td t i c = c
+  ↑td t i (X x) = X x
+  ↑td t i (·λ[ τ ] d) = ·λ[ ↑ t i τ ] (↑td t i d)
+  ↑td t i (·Λ d) = ·Λ (↑td (1+ t) i d)
+  ↑td t i ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ ↑ t i τ ⟩
+  ↑td t i ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ (↑td t i d) ⌟⦈⟨ ↑ t i τ ⟩
+  ↑td t i (d1 ∘ d2) = (↑td t i d1) ∘ (↑td t i d2)
+  ↑td t i (d < τ >) = (↑td t i d) < ↑ t i τ >  
+  ↑td t i (d ⟨ τ1 ⇒ τ2 ⟩) = (↑td t i d) ⟨ ↑ t i τ1 ⇒ ↑ t i τ2 ⟩
+  ↑td t i (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↑td t i d) ⟨ ↑ t i τ1 ⇒⦇-⦈⇏ ↑ t i τ3 ⟩
 
   ↓td : (t i : Nat) → ihexp → ihexp 
-  ↓td t Z d = d
-  ↓td t (1+ i) c = c
-  ↓td t (1+ i) (X x) = X x
-  ↓td t (1+ i) (·λ[ τ ] d) = ·λ[ ↓ t (1+ i) τ ] (↓td t (1+ i) d)
-  ↓td t (1+ i) (·Λ d) = ·Λ (↓td (1+ t) (1+ i) d)
-  ↓td t (1+ i) ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ ↓ t (1+ i) τ ⟩
-  ↓td t (1+ i) ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ (↓td t (1+ i) d) ⌟⦈⟨ ↓ t (1+ i) τ ⟩
-  ↓td t (1+ i) (d1 ∘ d2) = (↓td t (1+ i) d1) ∘ (↓td t (1+ i) d2)
-  ↓td t (1+ i) (d < τ >) = (↓td t (1+ i) d) < ↓ t (1+ i) τ >  
-  ↓td t (1+ i) (d ⟨ τ1 ⇒ τ2 ⟩) = (↓td t (1+ i) d) ⟨ ↓ t (1+ i) τ1 ⇒ ↓ t (1+ i) τ2 ⟩
-  ↓td t (1+ i) (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↓td t (1+ i) d) ⟨ ↓ t (1+ i) τ1 ⇒⦇-⦈⇏ ↓ t (1+ i) τ3 ⟩
+  ↓td t i c = c
+  ↓td t i (X x) = X x
+  ↓td t i (·λ[ τ ] d) = ·λ[ ↓ t i τ ] (↓td t i d)
+  ↓td t i (·Λ d) = ·Λ (↓td (1+ t) i d)
+  ↓td t i ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ ↓ t i τ ⟩
+  ↓td t i ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ (↓td t i d) ⌟⦈⟨ ↓ t i τ ⟩
+  ↓td t i (d1 ∘ d2) = (↓td t i d1) ∘ (↓td t i d2)
+  ↓td t i (d < τ >) = (↓td t i d) < ↓ t i τ >  
+  ↓td t i (d ⟨ τ1 ⇒ τ2 ⟩) = (↓td t i d) ⟨ ↓ t i τ1 ⇒ ↓ t i τ2 ⟩
+  ↓td t i (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↓td t i d) ⟨ ↓ t i τ1 ⇒⦇-⦈⇏ ↓ t i τ3 ⟩
 
   ↑ctx : (t i : Nat) → ctx → ctx 
-  ↑ctx t Z Γ = Γ
-  ↑ctx t (1+ i) ∅ = ∅
-  ↑ctx t (1+ i) (τ , Γ) = (↑ t (1+ i) τ , ↑ctx t (1+ i) Γ)
+  ↑ctx t i ∅ = ∅
+  ↑ctx t i (τ , ctx) = (↑ t i τ , ↑ctx t i ctx)
 
   -- substitution of types in types
   TT[_/_]_ : htyp → Nat → htyp → htyp 
