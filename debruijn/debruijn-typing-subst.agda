@@ -85,46 +85,161 @@ module debruijn.debruijn-typing-subst where
   ctx-access-shift {Γ3 = x , Γ3} {n = Z} InCtxZ = InCtxZ
   ctx-access-shift {Γ3 = x , Γ3} {n = 1+ n} (InCtx1+ inctx) = InCtx1+ (ctx-access-shift inctx)
 
-  wt-shift : ∀{Θ Γ1 Γ2 Γ3 n d τ} → (Θ , Γ3 ctx+ Γ1 ⊢ d :: τ) → ((n nat+ Θ) , ↑ctx Z n (Γ3 ctx+ (Γ2 ctx+ Γ1)) ⊢ ↑d (ctx-len Γ3) (ctx-len Γ2) d :: ↑ Z n τ)
-  wt-shift TAConst = TAConst
-  wt-shift (TAVar x) = TAVar (ctx-access-shift x)
-  wt-shift {Γ3 = Γ3} (TALam {τ1 = τ1} x wt) = {!  TALam ? ? !} --TALam (weakening-n x) (wt-shift {Γ3 = τ1 , Γ3} wt)
-  wt-shift {Θ = Θ} {n = n} (TATLam wt) = {!   !}
-  -- with wt-shift {n = n} wt 
-  -- ... | result rewrite nat+1+ n Θ = TATLam result
-  wt-shift (TAAp wt wt₁) = TAAp (wt-shift wt) (wt-shift wt₁)
-  wt-shift (TATAp x wt x₁) = {!   !} --TATAp (weakening-n x) (wt-shift wt) x₁
-  wt-shift (TAEHole x) = {!   !} --TAEHole (weakening-n x)
-  wt-shift (TANEHole x wt) = {!   !} --TANEHole (weakening-n x) (wt-shift wt)
-  wt-shift (TACast wt x x₁) = {!   !} --TACast (wt-shift wt) (weakening-n x) x₁
-  wt-shift (TAFailedCast wt x x₁ x₂) = {!   !} --TAFailedCast (wt-shift wt) x x₁ x₂
+  -- wt-shift : ∀{Θ Γ1 Γ2 Γ3 n d τ} → (Θ , Γ3 ctx+ Γ1 ⊢ d :: τ) → ((n nat+ Θ) , ↑ctx Z n (Γ3 ctx+ (Γ2 ctx+ Γ1)) ⊢ ↑d (ctx-len Γ3) (ctx-len Γ2) d :: ↑ Z n τ)
+  -- wt-shift TAConst = TAConst
+  -- wt-shift (TAVar x) = TAVar (ctx-access-shift x)
+  -- wt-shift {Γ3 = Γ3} (TALam {τ1 = τ1} x wt) = {!  TALam ? ? !} --TALam (weakening-n x) (wt-shift {Γ3 = τ1 , Γ3} wt)
+  -- wt-shift {Θ = Θ} {n = n} (TATLam wt) = {!   !}
+  -- -- with wt-shift {n = n} wt 
+  -- -- ... | result rewrite nat+1+ n Θ = TATLam result
+  -- wt-shift (TAAp wt wt₁) = TAAp (wt-shift wt) (wt-shift wt₁)
+  -- wt-shift (TATAp x wt x₁) = {!   !} --TATAp (weakening-n x) (wt-shift wt) x₁
+  -- wt-shift (TAEHole x) = {!   !} --TAEHole (weakening-n x)
+  -- wt-shift (TANEHole x wt) = {!   !} --TANEHole (weakening-n x) (wt-shift wt)
+  -- wt-shift (TACast wt x x₁) = {!   !} --TACast (wt-shift wt) (weakening-n x) x₁
+  -- wt-shift (TAFailedCast wt x x₁ x₂) = {!   !} --TAFailedCast (wt-shift wt) x x₁ x₂
 
-  wt-ttSub-helper : ∀{Θ1 Θ2 Γ1 Γ2 τ1 τ2 d1 d2} →
-    (Θ1 ⊢ τ1 wf) → 
-    (Θ1 ⊢ Γ1 ctxwf) → 
-    (Θ1 , Γ1 ⊢ d1 :: τ1) → 
-    -- [Lam]s extend the context and increase the substitution parameter. Θ1 tracks this
-    -- [TLam]s extend the type context and shift the fv's in the context. Θ2 tracks this
-    (Θ2 nat+ Θ1) , ↑ctx Z Θ2 (Γ2 ctx+ (τ1 , Γ1)) ⊢ d2 :: τ2 → -- ↑td Θ2 Z 
-    (Θ2 nat+ Θ1) , ↑ctx Z Θ2 (Γ2 ctx+ Γ1) ⊢ ttSub (ctx-len Γ2) d1 d2 :: τ2
-  wt-ttSub-helper {d2 = c} wf ctxwf wt1 TAConst = TAConst
-  wt-ttSub-helper {d2 = ⦇-⦈⟨ x ⟩} wf ctxwf wt1 (TAEHole x₁) = TAEHole x₁
-  wt-ttSub-helper {d2 = ⦇⌜ d2 ⌟⦈⟨ x ⟩} wf ctxwf wt1 (TANEHole x₁ wt2) = {!   !}
-  wt-ttSub-helper {d2 = d2 ∘ d3} wf ctxwf wt1 (TAAp wt2 wt3) = {!   !}
-  wt-ttSub-helper {d2 = d2 < x >} wf ctxwf wt1 (TATAp x₁ wt2 x₂) = {!   !}
-  wt-ttSub-helper {d2 = d2 ⟨ x ⇒ x₁ ⟩} wf ctxwf wt1 (TACast wt2 x₂ x₃) = {!   !}
-  wt-ttSub-helper {d2 = d2 ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} wf ctxwf wt1 (TAFailedCast wt2 x₂ x₃ x₄) = {!   !}
-  wt-ttSub-helper {Γ2 = Γ2} {d2 = ·λ[ τ ] d2} wf ctxwf wt1 (TALam x₁ wt2) 
-    with wt-ttSub-helper {Γ2 = (τ , Γ2)} {!   !} {!   !} {!   !} {! wt2  !}
-  ... | result = TALam x₁ {!   !}
-  wt-ttSub-helper {Θ2 = Θ2} {Γ1 = Γ1} {Γ2 = Γ2} {τ1 = τ1} {d2 = ·Λ d2} wf ctxwf wt1 (TATLam wt2) 
-    rewrite ↑ctx-compose Z Θ2 (Γ2 ctx+ (τ1 , Γ1)) 
-    with wt-ttSub-helper {Θ2 = 1+ Θ2} wf ctxwf wt1 wt2
-  ... | result rewrite sym (↑ctx-compose Z Θ2 (Γ2 ctx+ Γ1)) = TATLam result
-  wt-ttSub-helper {Γ2 = Γ2} {d2 = X x} wf ctxwf wt1 (TAVar inctx) with natEQ x (ctx-len Γ2) 
-  wt-ttSub-helper {Γ2 = Γ2} {d1 = d1} wf ctxwf wt1 (TAVar inctx) | Inl refl rewrite ctx-access inctx with ↓↑d-invert {n = ctx-len Γ2} {m = Z} {d = d1} 
-  wt-ttSub-helper {Γ2 = Γ2} {d1 = d1} wf ctxwf wt1 (TAVar inctx) | Inl refl | result rewrite nat+1+ (ctx-len Γ2) Z rewrite nat+Z (ctx-len Γ2) rewrite result = wt-shift wt1
-  wt-ttSub-helper {Γ2 = Γ2} {d1 = d1} wf ctxwf wt1 (TAVar inctx) | Inr neq = TAVar (shift-helper neq inctx)
+  inctx-shift : ∀{n τ Γ} → n , τ ∈ ↑ctx Z 1 Γ → Σ[ τ' ∈ htyp ] (n , τ' ∈ Γ × ↑ Z 1 τ' == τ)
+  inctx-shift {Γ = x , Γ} InCtxZ = x , InCtxZ , refl
+  inctx-shift {Γ = x , Γ} (InCtx1+ inctx) with inctx-shift inctx 
+  ... | τ' , inctx' , eq = τ' , InCtx1+ inctx' , eq
+  
+  other-inctx-shift : ∀{n τ Γ} → n , τ ∈ Γ → n , ↑ 0 1 τ ∈ ↑ctx 0 1 Γ
+  other-inctx-shift InCtxZ = InCtxZ
+  other-inctx-shift (InCtx1+ inctx) = InCtx1+ (other-inctx-shift inctx)
+
+  data consist : (Θ1 Θ2 n m : Nat) → (Γ1 Γ2 Γ3 : ctx) → (τ : htyp) → Set where 
+    ConBase : ∀{Θ τ} → consist Θ Θ Z Z ∅ (τ , ∅) ∅ τ
+    ConLam : ∀{Θ1 Θ2 n m Γ1 Γ2 Γ3 τ1 τ2} → consist Θ1 Θ2 n m Γ1 Γ2 Γ3 τ1 → Θ2 ⊢ τ2 wf → consist Θ1 Θ2 (1+ n) m Γ1 (τ2 , Γ2) (τ2 , Γ3) τ1
+    ConTLam : ∀{Θ1 Θ2 n m Γ1 Γ2 Γ3 τ} → consist Θ1 Θ2 n m Γ1 Γ2 Γ3 τ → consist Θ1 (1+ Θ2) n (1+ m) Γ1 (↑ctx Z 1 Γ2) (↑ctx Z 1 Γ3) τ
+
+  var-hit : ∀{Θ1 Θ2 n m d Γ1 Γ2 Γ3 τ1 τ2} →
+    consist Θ1 Θ2 n m Γ1 Γ2 Γ3 τ1 →
+    n , τ2 ∈ Γ2 →
+    Θ1 , Γ1 ⊢ d :: τ1 →
+    Θ2 , Γ3 ⊢ ↑d 0 n (↑td 0 m d) :: τ2
+  var-hit {n = n} {m = m} {d = d} ConBase InCtxZ wt rewrite ↑tdZ m d rewrite ↑dZ n d = wt
+  var-hit (ConLam con x) (InCtx1+ inctx) wt with var-hit con inctx wt 
+    where
+      wt-inc-t : ∀{Θ n d Γ τ τ'} → Θ , Γ ⊢ ↑d Z n d :: τ → Θ , (τ' , Γ) ⊢ ↑d Z (1+ n) d :: τ
+      wt-inc-t {d = c} TAConst = TAConst
+      wt-inc-t {d = X x} (TAVar x₁) = TAVar (InCtx1+ x₁) 
+      wt-inc-t {d = ·λ[ x ] d} (TALam x₁ wt) = {!   !}
+      wt-inc-t {d = ·Λ d} (TATLam wt) = TATLam (wt-inc-t wt)
+      wt-inc-t {d = ⦇-⦈⟨ x ⟩} (TAEHole x₁) = TAEHole x₁
+      wt-inc-t {d = ⦇⌜ d ⌟⦈⟨ x ⟩} (TANEHole x₁ wt) = TANEHole x₁ (wt-inc-t wt)
+      wt-inc-t {d = d ∘ d₁} (TAAp wt wt₁) = TAAp (wt-inc-t wt) (wt-inc-t wt₁)
+      wt-inc-t {d = d < x >} (TATAp x₁ wt x₂) = TATAp x₁ (wt-inc-t wt) x₂
+      wt-inc-t {d = d ⟨ x ⇒ x₁ ⟩} (TACast wt x₂ x₃) = TACast (wt-inc-t wt) x₂ x₃
+      wt-inc-t {d = d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} (TAFailedCast wt x₂ x₃ x₄) = TAFailedCast (wt-inc-t wt) x₂ x₃ x₄
+    -- where
+    --   wt-inc-t : ∀{Θ Θ' n d Γ Γ' τ τ'} → (Θ' nat+ Θ) , (Γ' ctx+ Γ) ⊢ ↑d (ctx-len Γ') n d :: τ → (Θ' nat+ Θ) , (Γ' ctx+ (τ' , Γ)) ⊢ ↑d (ctx-len Γ') (1+ n) d :: τ
+    --   wt-inc-t {d = c} TAConst = TAConst
+    --   wt-inc-t {d = X x} (TAVar x₁) = TAVar {!   !} -- should be easy
+
+    --   wt-inc-t {d = ·λ[ x ] d} (TALam x₁ wt) = TALam x₁ (wt-inc-t wt)
+    --   -- with wt-inc-t wt 
+    --   -- ... | wt' = TALam x₁ {!  wt-inc-t wt !}
+    --   wt-inc-t {d = ·Λ d} (TATLam wt) = TATLam {!   !} --TATLam (wt-inc-t wt)
+    --   wt-inc-t {d = ⦇-⦈⟨ x ⟩} (TAEHole x₁) = TAEHole x₁
+    --   wt-inc-t {d = ⦇⌜ d ⌟⦈⟨ x ⟩} (TANEHole x₁ wt) = TANEHole x₁ (wt-inc-t wt)
+    --   wt-inc-t {d = d ∘ d₁} (TAAp wt wt₁) = TAAp (wt-inc-t wt) (wt-inc-t wt₁)
+    --   wt-inc-t {d = d < x >} (TATAp x₁ wt x₂) = TATAp x₁ (wt-inc-t wt) x₂
+    --   wt-inc-t {d = d ⟨ x ⇒ x₁ ⟩} (TACast wt x₂ x₃) = TACast (wt-inc-t wt) x₂ x₃
+    --   wt-inc-t {d = d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} (TAFailedCast wt x₂ x₃ x₄) = TAFailedCast (wt-inc-t wt) x₂ x₃ x₄
+    
+  ... | result = {!   !}
+    -- where
+    --   wt-inc-t : Θ , τ' , Γ ⊢ ↑d 0 (1+ n) d :: τ
+  var-hit (ConTLam con) inctx wt = {!   !}
+
+  wt-ttSub-helper : ∀{Θ1 Θ2 Γ1 Γ2 Γ3 n m τ1 τ2 d1 d2} →
+    consist Θ1 Θ2 n m Γ1 Γ2 Γ3 τ1 →
+    Θ1 , Γ1 ⊢ d1 :: τ1 → 
+    Θ2 , Γ2 ⊢ d2 :: τ2 →
+    Θ2 , Γ3 ⊢ ttSub n m d1 d2 :: τ2
+  wt-ttSub-helper con wt1 TAConst = TAConst
+  wt-ttSub-helper con wt1 (TAAp wt2 wt3) = TAAp (wt-ttSub-helper con wt1 wt2) (wt-ttSub-helper con wt1 wt3)
+  wt-ttSub-helper con wt1 (TATAp x wt2 x₁) = TATAp x (wt-ttSub-helper con wt1 wt2) x₁
+  wt-ttSub-helper con wt1 (TAEHole x) = TAEHole x
+  wt-ttSub-helper con wt1 (TANEHole x wt2) = TANEHole x (wt-ttSub-helper con wt1 wt2)
+  wt-ttSub-helper con wt1 (TACast wt2 x x₁) = TACast (wt-ttSub-helper con wt1 wt2) x x₁
+  wt-ttSub-helper con wt1 (TAFailedCast wt2 x x₁ x₂) = TAFailedCast (wt-ttSub-helper con wt1 wt2) x x₁ x₂
+  wt-ttSub-helper {n = n} {m = m} {d1 = d1} con wt1 (TALam x wt2) with wt-ttSub-helper (ConLam con x) wt1 wt2 
+  ... | result rewrite ↑d-↑td-comm {1} {m} {Z} {Z} {d = (↑d 0 (1+ n) d1)} rewrite ↑d-compose Z (1+ n) d1 = TALam x result
+  wt-ttSub-helper {n = n} {m = m} {d1 = d1} con wt1 (TATLam wt2) with wt-ttSub-helper (ConTLam con) wt1 wt2
+  ... | result rewrite ↑td-compose 0 m (↑d 0 (1+ n) d1) = TATLam result 
+  wt-ttSub-helper {n = n} {d1 = d1} con wt1 (TAVar {n = x} inctx) with natEQ x n 
+  wt-ttSub-helper {n = n} {d1 = d1} con wt1 (TAVar {n = x} inctx) | Inl refl with ↓↑d-invert {n} {Z} {d1}
+  wt-ttSub-helper {n = n} {m = m} {d1 = d1} con wt1 (TAVar {n = x} inctx) | Inl refl | result 
+    rewrite sym (↑d-↑td-comm {1+ n} {m} {Z} {Z} {d1}) with ↓↑d-invert {n} {Z} {(↑td 0 m d1)} 
+  ... | eq rewrite nat+1+ n Z rewrite nat+Z n rewrite eq = {!   !}    
+    -- rewrite nat+1+ n Z rewrite nat+Z n rewrite result with var-hit con inctx wt1 = {!   !}
+  --   where 
+  --     var-hit : ∀{Θ1 Θ2 n m d Γ1 Γ2 Γ3 τ1 τ2} →
+  --       consist Θ1 Θ2 n m Γ1 Γ2 Γ3 τ1 →
+  --       n , τ2 ∈ Γ2 →
+  --       Θ1 , Γ1 ⊢ d :: τ1 →
+  --       τ1 == τ2
+  --       -- Θ2 , Γ3 ⊢ ↑d 0 n d :: τ2
+  --     var-hit ConBase InCtxZ wt = refl
+  --     var-hit (ConLam con x) (InCtx1+ inctx) wt = var-hit con inctx wt
+  --     var-hit (ConTLam con) inctx wt with inctx-shift inctx 
+  --     var-hit (ConTLam con) inctx wt | τ' , inctx' , refl with var-hit con inctx' wt
+  --     ... | ose = {!   !}
+  -- ... | refl = {!   !}
+    -- where 
+    --   var-hit-wt : ∀{Θ1 Θ2 n m d Γ1 Γ2 Γ3 τ} →
+    --     consist Θ1 Θ2 n m Γ1 Γ2 Γ3 τ →
+    --     Θ1 , Γ1 ⊢ d :: τ → 
+    --     Θ2 , Γ3 ⊢ ↑d 0 n (↑td 0 m d) :: τ
+    --   var-hit-wt {d = d} ConBase wt rewrite ↑tdZ Z d rewrite ↑dZ Z d = wt
+    --   var-hit-wt (ConLam con x) wt with var-hit-wt con wt 
+    --   ... | result = {!   !}
+    --   var-hit-wt (ConTLam con) wt = {!   !}
+
+  wt-ttSub-helper {n = n} {d1 = d1} con wt1 (TAVar {n = m} inctx) | Inr neq = TAVar (var-miss con inctx neq)
+    where 
+      var-miss : ∀{Θ1 Θ2 n m' Γ1 Γ2 Γ3 m τ τ'} →
+        consist Θ1 Θ2 n m' Γ1 Γ2 Γ3 τ' →
+        m , τ ∈ Γ2 →
+        m ≠ n →
+        ↓Nat n 1 m , τ ∈ Γ3
+      var-miss ConBase InCtxZ neq = abort (neq refl)
+      var-miss (ConLam con x) InCtxZ neq = InCtxZ
+      var-miss (ConLam con x) (InCtx1+ inctx) neq = InCtx1+ (var-miss con inctx λ x₂ → neq (inj x₂))
+        where 
+          inj : ∀{n m} → n == m → 1+ n == 1+ m
+          inj refl = refl
+      var-miss (ConTLam {Γ3 = Γ3} con) inctx neq with inctx-shift inctx 
+      var-miss (ConTLam {Γ3 = Γ3} con) inctx neq | τ' , inctx' , refl = other-inctx-shift (var-miss con inctx' neq)
+
+  -- wt-ttSub-helper : ∀{Θ1 Θ2 Γ1 Γ2 τ1 τ2 d1 d2} →
+  --   (Θ1 ⊢ τ1 wf) → 
+  --   (Θ1 ⊢ Γ1 ctxwf) → 
+  --   (Θ1 , Γ1 ⊢ d1 :: τ1) → 
+  --   -- [Lam]s extend the context and increase the substitution parameter. Γ2 tracks this
+  --   -- [TLam]s extend the type context and shift the fv's in the context. Θ2 tracks this
+  --   (Θ2 nat+ Θ1) , ↑ctx Z Θ2 (Γ2 ctx+ (τ1 , Γ1)) ⊢ d2 :: τ2 → -- ↑td Θ2 Z 
+  --   (Θ2 nat+ Θ1) , ↑ctx Z Θ2 (Γ2 ctx+ Γ1) ⊢ ttSub (ctx-len Γ2) d1 d2 :: τ2
+  -- wt-ttSub-helper {d2 = c} wt1 TAConst = TAConst
+  -- wt-ttSub-helper {d2 = ⦇-⦈⟨ x ⟩} wt1 (TAEHole x₁) = TAEHole x₁
+  -- wt-ttSub-helper {d2 = ⦇⌜ d2 ⌟⦈⟨ x ⟩} wt1 (TANEHole x₁ wt2) = {!   !}
+  -- wt-ttSub-helper {d2 = d2 ∘ d3} wt1 (TAAp wt2 wt3) = {!   !}
+  -- wt-ttSub-helper {d2 = d2 < x >} wt1 (TATAp x₁ wt2 x₂) = {!   !}
+  -- wt-ttSub-helper {d2 = d2 ⟨ x ⇒ x₁ ⟩} wt1 (TACast wt2 x₂ x₃) = {!   !}
+  -- wt-ttSub-helper {d2 = d2 ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} wt1 (TAFailedCast wt2 x₂ x₃ x₄) = {!   !}
+  -- wt-ttSub-helper {Γ2 = Γ2} {d2 = ·λ[ τ ] d2} wt1 (TALam x₁ wt2) 
+  --   with wt-ttSub-helper {Γ2 = (τ , Γ2)} {!   !} {!   !} {!   !} {! wt2  !}
+  -- ... | result = TALam x₁ {!   !}
+  -- wt-ttSub-helper {Θ2 = Θ2} {Γ1 = Γ1} {Γ2 = Γ2} {τ1 = τ1} {d2 = ·Λ d2} wt1 (TATLam wt2) 
+  --   rewrite ↑ctx-compose Z Θ2 (Γ2 ctx+ (τ1 , Γ1)) 
+  --   with wt-ttSub-helper {Θ2 = 1+ Θ2} wt1 wt2
+  -- ... | result rewrite sym (↑ctx-compose Z Θ2 (Γ2 ctx+ Γ1)) = TATLam result
+  -- wt-ttSub-helper {Γ2 = Γ2} {d2 = X x} wt1 (TAVar inctx) with natEQ x (ctx-len Γ2) 
+  -- wt-ttSub-helper {Γ2 = Γ2} {d1 = d1} wt1 (TAVar inctx) | Inl refl rewrite ctx-access inctx with ↓↑d-invert {n = ctx-len Γ2} {m = Z} {d = d1} 
+  -- wt-ttSub-helper {Γ2 = Γ2} {d1 = d1} wt1 (TAVar inctx) | Inl refl | result rewrite nat+1+ (ctx-len Γ2) Z rewrite nat+Z (ctx-len Γ2) rewrite result = wt-shift wt1
+  -- wt-ttSub-helper {Γ2 = Γ2} {d1 = d1} wt1 (TAVar inctx) | Inr neq = TAVar (shift-helper neq inctx)
 
   -- wt-ttSub-helper wf eq wt1 TAConst = ?
   -- wt-ttSub-helper {Γ2 = Γ2} {n = n} {d1 = d1} wf eq wt1 (TAVar {n = m} inctx) with natEQ m (ctx-len Γ2) 
@@ -145,16 +260,13 @@ module debruijn.debruijn-typing-subst where
   -- wt-ttSub-helper wf eq wt1 (TANEHole x wt2) = TANEHole x (wt-ttSub-helper wf wt1 wt2)
   -- wt-ttSub-helper wf eq wt1 (TACast wt2 x x₁) = {!   !} --TACast (wt-ttSub-helper wf wt1 wt2) x x₁
   -- wt-ttSub-helper wf eq wt1 (TAFailedCast wt2 x x₁ x₂) = {!   !} --TAFailedCast (wt-ttSub-helper wf wt1 wt2) x x₁ x₂
-
+  
   wt-ttSub : ∀{Θ d1 d2 τ1 τ2} →
-    (Θ ⊢ τ1 wf) → 
     (Θ , ∅ ⊢ d1 :: τ1) → 
     (Θ , (τ1 , ∅) ⊢ d2 :: τ2) → 
-    (Θ , ∅ ⊢ ttSub Z d1 d2 :: τ2)
-  wt-ttSub {Θ = Θ} {d2 = d2} {τ1 = τ1} {τ2 = τ2} wf wt1 wt2 = wt-ttSub-helper {Γ2 = ∅} wf refl wt1 wt2
-  -- with wt-ttSub-helper {Γ2 = ∅} wf refl wt1 wt2'
-  --   where 
-  --     wt2' : Θ , (↑ Z Z τ1 , ∅) ⊢ d2 :: τ2
-  --     wt2' rewrite ↑Z Z τ1 = wt2
-  -- ... | result rewrite ↑Z Z τ2 rewrite ↑tdZ Z d2 = result
- 
+    (Θ , ∅ ⊢ ttSub Z Z d1 d2 :: τ2)
+  wt-ttSub {Θ = Θ} {d2 = d2} {τ1 = τ1} {τ2 = τ2}  wt1 wt2 = wt-ttSub-helper ConBase wt1 wt2
+    where 
+      wt2' : Θ , (↑ Z Z τ1 , ∅) ⊢ d2 :: τ2
+      wt2' rewrite ↑Z Z τ1 = wt2
+  

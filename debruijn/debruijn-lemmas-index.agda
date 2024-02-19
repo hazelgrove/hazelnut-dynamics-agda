@@ -72,6 +72,18 @@ module debruijn.debruijn-lemmas-index where
   ↑d-compose t i (d ⟨ x ⇒ x₁ ⟩) rewrite ↑d-compose t i d = refl
   ↑d-compose t i (d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) rewrite ↑d-compose t i d = refl
 
+  ↑td-compose : (t i : Nat) → (d : ihexp) → ↑td t 1 (↑td t i d) == (↑td t (1+ i) d)
+  ↑td-compose t i c = refl
+  ↑td-compose t i (X x) rewrite ↑Natcompose t i x = refl
+  ↑td-compose t i (·λ[ x ] d) rewrite ↑td-compose t i d rewrite ↑compose t i x = refl
+  ↑td-compose t i (·Λ d) rewrite ↑td-compose (1+ t) i d = refl
+  ↑td-compose t i ⦇-⦈⟨ x ⟩ rewrite ↑compose t i x = refl
+  ↑td-compose t i ⦇⌜ d ⌟⦈⟨ x ⟩ rewrite ↑td-compose t i d rewrite ↑compose t i x = refl
+  ↑td-compose t i (d ∘ d₁) rewrite ↑td-compose t i d rewrite ↑td-compose t i d₁ = refl
+  ↑td-compose t i (d < x >) rewrite ↑td-compose t i d rewrite ↑compose t i x = refl
+  ↑td-compose t i (d ⟨ x ⇒ x₁ ⟩) rewrite ↑td-compose t i d rewrite ↑compose t i x rewrite ↑compose t i x₁ = refl
+  ↑td-compose t i (d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) rewrite ↑td-compose t i d rewrite ↑compose t i x rewrite ↑compose t i x₁ = refl
+
   ↑ctx-compose : (t i : Nat) → (Γ : ctx) → ↑ctx t 1 (↑ctx t i Γ) == (↑ctx t (1+ i) Γ)
   ↑ctx-compose t i ∅ = refl
   ↑ctx-compose t i (x , Γ) rewrite ↑compose t i x rewrite ↑ctx-compose t i Γ = refl
@@ -110,3 +122,17 @@ module debruijn.debruijn-lemmas-index where
   ↓↑d-invert {n = n} {m = m} {d = d < x >} rewrite ↓↑d-invert {n = n} {m = m} {d = d} = refl
   ↓↑d-invert {n = n} {m = m} {d = d ⟨ x ⇒ x₁ ⟩} rewrite ↓↑d-invert {n = n} {m = m} {d = d} = refl    
   ↓↑d-invert {n = n} {m = m} {d = d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} rewrite ↓↑d-invert {n = n} {m = m} {d = d} = refl 
+
+  ↑d-↑td-comm : ∀{n m t s d} → ↑d t n (↑td s m d) == ↑td s m (↑d t n d)
+  ↑d-↑td-comm {d = c} = refl 
+  ↑d-↑td-comm {d = X x} = refl
+  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = ·λ[ x ] d} rewrite ↑d-↑td-comm {n = n} {m = m} {t = 1+ t} {s = s} {d = d} = refl 
+  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = ·Λ d} rewrite ↑d-↑td-comm {n = n} {m = m} {t = t} {s = 1+ s} {d = d} = refl
+  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = ⦇-⦈⟨ x ⟩} = refl
+  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = ⦇⌜ d ⌟⦈⟨ x ⟩} rewrite ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d} = refl
+  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d ∘ d₁} 
+    rewrite ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d}
+    rewrite ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d₁} = refl
+  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d < x >} rewrite ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d} = refl
+  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d ⟨ x ⇒ x₁ ⟩} rewrite ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d} = refl
+  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} rewrite ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d} = refl

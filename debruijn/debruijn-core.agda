@@ -136,7 +136,7 @@ module debruijn.debruijn-core where
   ... | Inl refl = d
   ... | Inr neq = X m
   [ d / n ] (·λ[ τ ] d') = ·λ[ τ ] ([ (↑d Z 1 d) / 1+ n ] d')
-  [ d / n ] ·Λ d' = ·Λ ([ d / n ] d')
+  [ d / n ] ·Λ d' = ·Λ ([ ↑td Z 1 d / n ] d')
   [ d / n ] ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ τ ⟩
   [ d / n ] ⦇⌜ d' ⌟⦈⟨ τ ⟩ =  ⦇⌜ [ d / n ] d' ⌟⦈⟨ τ ⟩
   [ d / n ] (d1 ∘ d2) = ([ d / n ] d1) ∘ ([ d / n ] d2)
@@ -144,8 +144,8 @@ module debruijn.debruijn-core where
   [ d / n ] (d' ⟨ τ1 ⇒ τ2 ⟩ ) = ([ d / n ] d') ⟨ τ1 ⇒ τ2 ⟩
   [ d / n ] (d' ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = ([ d / n ] d') ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩
 
-  ttSub : Nat → ihexp → ihexp → ihexp 
-  ttSub n d1 d2 = ↓d n 1 ([ (↑d Z (1+ n) d1) / n ] d2)
+  ttSub : Nat → Nat → ihexp → ihexp → ihexp 
+  ttSub n m d1 d2 = ↓d n 1 ([ ↑td Z m (↑d Z (1+ n) d1) / n ] d2)
 
   TCtxSub : Nat → htyp → ctx → ctx 
   TCtxSub n τ ∅ = ∅
@@ -362,7 +362,7 @@ module debruijn.debruijn-core where
   data _→>_ : (d d' : ihexp) → Set where
     ITLam : ∀{ τ d1 d2 } →
             -- d2 final → -- red brackets
-            ((·λ[ τ ] d1) ∘ d2) →> (ttSub Z d2 d1)
+            ((·λ[ τ ] d1) ∘ d2) →> (ttSub Z Z d2 d1)
     ITTLam : ∀{ d τ } →
               ((·Λ d) < τ >) →> (TtSub Z τ d)
     ITCastID : ∀{ d τ } →
