@@ -12,6 +12,9 @@ module debruijn.debruijn-lemmas-consistency where
   ~refl {τ = ⦇-⦈} = ConsistHole1
   ~refl {τ = τ ==> τ₁} = ConsistArr ~refl ~refl
   ~refl {τ = ·∀ τ} = ConsistForall ~refl
+
+  ~refl-convenience : {τ1 τ2 : htyp} → τ1 == τ2 → τ1 ~ τ2
+  ~refl-convenience refl = ~refl
   
   ~sym : {τ1 τ2 : htyp} → τ1 ~ τ2 → τ2 ~ τ1
   ~sym ConsistBase = ConsistBase

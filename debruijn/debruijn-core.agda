@@ -86,6 +86,7 @@ module debruijn.debruijn-core where
   TT[ τ / n ] (τ1 ==> τ2) = ((TT[ τ / n ] τ1) ==> (TT[ τ / n ] τ2))
   TT[ τ / n ] (·∀ τ') = ·∀ (TT[ (↑ Z 1 τ) / 1+ n ] τ')
 
+  -- substitutes for the free variable that is n-steps free
   TTSub : Nat → htyp → htyp → htyp 
   TTSub n τ1 τ2 = ↓ n 1 (TT[ (↑ Z (1+ n) τ1) / n ] τ2)
 
@@ -108,18 +109,6 @@ module debruijn.debruijn-core where
   Tt[ τ / t ] (d < τ' >) = (Tt[ τ / t ] d) < TT[ τ / t ] τ' >
   Tt[ τ / t ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (Tt[ τ / t ] d) ⟨ (TT[ τ / t ] τ1) ⇒ (TT[ τ / t ] τ2) ⟩
   Tt[ τ / t ] (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = (Tt[ τ / t ] d) ⟨ (TT[ τ / t ] τ1) ⇒⦇-⦈⇏ (TT[ τ / t ] τ2) ⟩
-
-  -- TtSub : Nat → htyp → ihexp → ihexp
-  -- TtSub n τ c = c
-  -- TtSub n τ (X x) = X x
-  -- TtSub n τ (·λ[ τ' ] d) = ·λ[ TTSub n τ τ' ] (TtSub n τ d)
-  -- TtSub n τ (·Λ d) = ·Λ (TtSub n τ d) 
-  -- TtSub n τ (⦇-⦈⟨ τ' ⟩) = ⦇-⦈⟨ TTSub n τ τ' ⟩
-  -- TtSub n τ (⦇⌜ d ⌟⦈⟨  τ' ⟩) = ⦇⌜ (TtSub n τ d) ⌟⦈⟨ TTSub n τ τ' ⟩
-  -- TtSub n τ (d1 ∘ d2) = (TtSub n τ d1) ∘ (TtSub n τ d2)
-  -- TtSub n τ (d < τ' >) = (TtSub n τ d) < TTSub n τ τ' >
-  -- TtSub n τ (d ⟨ τ1 ⇒ τ2 ⟩ ) = (TtSub n τ d) ⟨ (TTSub n τ τ1) ⇒ (TTSub n τ τ2) ⟩
-  -- TtSub n τ (d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = (TtSub n τ d) ⟨ (TTSub n τ τ1) ⇒⦇-⦈⇏ (TTSub n τ τ2) ⟩
 
   TtSub : Nat → htyp → ihexp → ihexp
   TtSub n τ d = ↓td n 1 (Tt[ (↑ Z (1+ n) τ) / n ] d)

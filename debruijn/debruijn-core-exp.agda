@@ -100,7 +100,7 @@ module debruijn.debruijn-core-exp where
       ICastGroundHole : ∀{ τ d } →
         τ ground →
         d indet →
-        d ⟨ τ ⇒  ⦇-⦈ ⟩ indet
+        d ⟨ τ ⇒ ⦇-⦈ ⟩ indet
       ICastHoleGround : ∀ { d τ } →
         ((d' : ihexp) (τ' : htyp) → d ≠ (d' ⟨ τ' ⇒ ⦇-⦈ ⟩)) →
         d indet →

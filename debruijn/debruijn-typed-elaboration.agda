@@ -2,6 +2,7 @@ open import Nat
 open import Prelude
 open import debruijn.debruijn-core-type
 open import debruijn.debruijn-core
+open import debruijn.debruijn-weakening
 open import debruijn.debruijn-lemmas-wf
 open import debruijn.debruijn-lemmas-consistency
 open import debruijn.debruijn-lemmas-prec
@@ -61,8 +62,8 @@ module debruijn.debruijn-typed-elaboration where
     typed-elaboration-syn ctxwf (ESTAp wf syn meet ana refl) = 
       let wf' = wf-⊓ meet (wf-syn ctxwf syn) (WFForall WFHole) in 
       TATAp wf (TACast (typed-elaboration-ana ctxwf wf' ana) wf' (consist-ana ctxwf wf' ana)) refl
-    typed-elaboration-syn ctxwf ESEHole = TAEHole
-    typed-elaboration-syn ctxwf (ESNEHole syn) = TANEHole
+    typed-elaboration-syn ctxwf ESEHole = TAEHole WFHole
+    typed-elaboration-syn ctxwf (ESNEHole syn) = TANEHole WFHole (typed-elaboration-syn ctxwf syn)
     typed-elaboration-syn ctxwf (ESAsc wf ana) = TACast (typed-elaboration-ana ctxwf wf ana) wf (consist-ana ctxwf wf ana)
 
     typed-elaboration-ana : ∀{Γ e τ τ' d Θ} →
@@ -70,8 +71,8 @@ module debruijn.debruijn-typed-elaboration where
       Θ ⊢ τ wf → 
       Θ , Γ ⊢ e ⇐ τ ~> d :: τ' →
       Θ , Γ ⊢ d :: τ'
-    typed-elaboration-ana ctxwf wf EAEHole = TAEHole
-    typed-elaboration-ana ctxwf wf (EANEHole x) = TANEHole
+    typed-elaboration-ana ctxwf wf EAEHole = TAEHole wf
+    typed-elaboration-ana ctxwf wf (EANEHole x) = TANEHole wf (typed-elaboration-syn ctxwf x)
     typed-elaboration-ana ctxwf wf (EALam meet ana) with wf-⊓ meet wf (WFArr WFHole WFHole) 
     ... | WFArr wf1 wf2 = TALam wf1 (typed-elaboration-ana (CtxWFExtend wf1 ctxwf) wf2 ana)
     typed-elaboration-ana ctxwf wf (EATLam neq1 neq2 meet ana) with wf-⊓ meet wf (WFForall WFHole) 

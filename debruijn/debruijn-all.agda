@@ -6,10 +6,15 @@ open import debruijn.debruijn-core-exp
 open import debruijn.debruijn-core
 
 open import debruijn.debruijn-weakening
+open import debruijn.debruijn-eq-dec
+open import debruijn.debruijn-ground-dec
+
+
 open import debruijn.debruijn-lemmas-index
 open import debruijn.debruijn-lemmas-consistency
 open import debruijn.debruijn-lemmas-prec
 open import debruijn.debruijn-lemmas-meet
+open import debruijn.debruijn-lemmas-ground
 open import debruijn.debruijn-lemmas-wf
 open import debruijn.debruijn-lemmas-subst
 

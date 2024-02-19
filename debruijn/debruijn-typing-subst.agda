@@ -1,4 +1,4 @@
--- {-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 
 open import Nat
 open import Prelude
@@ -25,24 +25,15 @@ module debruijn.debruijn-typing-subst where
   helper-weaken {Θ = Θ} {n = n} wf with weakening-n {Θ = 1+ Θ} {n = n} wf
   ... | result rewrite nat+1+ n Θ = result
 
-  wf-flip : ∀{Θ n τ} → 1+ (n nat+ Θ) ⊢ τ wf → (n nat+ 1+ Θ) ⊢ τ wf
-  wf-flip {Θ = Θ} {n = n} wf rewrite nat+1+ n Θ = wf
-
-  ctxwf-flip : ∀{Θ n Γ} → (n nat+ 1+ Θ) ⊢ Γ ctxwf → 1+ (n nat+ Θ) ⊢ Γ ctxwf 
-  ctxwf-flip {Θ = Θ} {n = n} ctxwf rewrite nat+1+ n Θ = ctxwf
-
-  -- wt-flip : ∀{Θ n τ Γ d} → 1+ (n nat+ Θ) , Γ ⊢ d :: τ → (n nat+ 1+ Θ) , Γ ⊢ d :: τ
-  -- wt-flip {Θ = Θ} {n = n} wt rewrite nat+1+ n Θ = wt
-
   wt-TtSub-helper : ∀{Θ Γ d n τ1 τ2} →
-    ((n nat+ 1+ Θ) ⊢ Γ ctxwf) → 
-    ((Θ) ⊢ τ1 wf) → 
+    (1+ (n nat+ Θ) ⊢ Γ ctxwf) → 
+    (Θ ⊢ τ1 wf) → 
     (1+ (n nat+ Θ) , Γ ⊢ d :: τ2) → 
     ((n nat+ Θ) , TCtxSub n τ1 Γ ⊢ TtSub n τ1 d :: TTSub n τ1 τ2)
   wt-TtSub-helper ctxwf wf TAConst = TAConst
   wt-TtSub-helper ctxwf wf (TAVar inctx) = TAVar (inctx-sub inctx)
   wt-TtSub-helper {n = Z} ctxwf wf1 (TALam wf2 wt) = TALam (wf-TTSub wf1 wf2) (wt-TtSub-helper (CtxWFExtend wf2 ctxwf) wf1 wt)
-  wt-TtSub-helper {Θ = Θ} {n = n} ctxwf wf1 (TALam wf2 wt) with wt-TtSub-helper {n = n} (CtxWFExtend (wf-flip wf2) ctxwf) wf1 wt
+  wt-TtSub-helper {Θ = Θ} {n = n} ctxwf wf1 (TALam wf2 wt) with wt-TtSub-helper {n = n} (CtxWFExtend wf2 ctxwf) wf1 wt
   ... | wt2 rewrite nat+1+ n Θ = TALam (wf-TTSub-helper wf1 wf2) wt2
   wt-TtSub-helper {Θ = Θ} {n = n} {τ1 = τ1} ctxwf wf (TATLam wt) with wt-TtSub-helper {Θ = Θ} {n = 1+ n} (weakening-ctx ctxwf) wf wt
   ... | result rewrite sym (↑compose Z (1+ n) τ1) rewrite nat+1+ n Θ = TATLam {! result  !}
@@ -51,7 +42,7 @@ module debruijn.debruijn-typing-subst where
   ... | result rewrite sym (↑compose Z (1+ n) τ1) = TATAp (wf-TTSub-helper wf x) (wt-TtSub-helper ctxwf wf wt) (sym result)
   wt-TtSub-helper ctxwf wf (TAEHole x) = TAEHole (wf-TTSub-helper wf x)
   wt-TtSub-helper ctxwf wf (TANEHole x wt) = TANEHole (wf-TTSub-helper wf x) (wt-TtSub-helper ctxwf wf wt)
-  wt-TtSub-helper {n = n} ctxwf wf (TACast wt x x₁) = TACast (wt-TtSub-helper ctxwf wf wt) (wf-TTSub-helper wf x) (~TTSub-helper (weakening-n {n = n} (wf-ta (ctxwf-flip ctxwf) wt)) (weakening-n x) x₁) 
+  wt-TtSub-helper {n = n} ctxwf wf (TACast wt x x₁) = TACast (wt-TtSub-helper ctxwf wf wt) (wf-TTSub-helper wf x) (~TTSub-helper (weakening-n {n = n} (wf-ta ctxwf wt)) (weakening-n x) x₁) 
   wt-TtSub-helper ctxwf wf (TAFailedCast wt GBase GBase incon) = abort (incon ConsistBase)
   wt-TtSub-helper ctxwf wf (TAFailedCast wt GArr GArr incon) = abort (incon (ConsistArr ConsistHole1 ConsistHole1))
   wt-TtSub-helper ctxwf wf (TAFailedCast wt GForall GForall incon) = abort (incon (ConsistForall ConsistHole1))
