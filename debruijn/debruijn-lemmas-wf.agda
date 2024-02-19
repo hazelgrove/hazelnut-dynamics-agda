@@ -16,6 +16,20 @@ module debruijn.debruijn-lemmas-wf where
   wf-ctx-var (CtxWFExtend x ctxwf) InCtxZ = x
   wf-ctx-var (CtxWFExtend x ctxwf) (InCtx1+ inctx) = wf-ctx-var ctxwf inctx
 
+  wf-inc : ∀{Θ τ m} → Θ ⊢ τ wf → 1+ Θ ⊢ ↑ m 1 τ wf
+  wf-inc {m = Z} WFVarZ = WFVarS WFVarZ
+  wf-inc {m = 1+ m} WFVarZ = WFVarZ
+  wf-inc {m = Z} (WFVarS wf) = WFVarS (WFVarS wf)
+  wf-inc {m = 1+ m} (WFVarS wf) = WFVarS (wf-inc wf)
+  wf-inc WFBase = WFBase
+  wf-inc WFHole = WFHole
+  wf-inc (WFArr wf wf₁) = WFArr (wf-inc wf) (wf-inc wf₁)
+  wf-inc (WFForall wf) = WFForall (wf-inc wf)
+
+  wf-ctx-inc : ∀{Θ Γ} → Θ ⊢ Γ ctxwf → 1+ Θ ⊢ ↑ctx Z 1 Γ ctxwf
+  wf-ctx-inc CtxWFEmpty = CtxWFEmpty
+  wf-ctx-inc (CtxWFExtend x ctxwf) = CtxWFExtend (wf-inc x) (wf-ctx-inc ctxwf)
+
   wf-⊑t : ∀{Θ τ1 τ2} → Θ ⊢ τ1 wf → τ1 ⊑t τ2 → Θ ⊢ τ2 wf
   wf-⊑t wf PTBase = wf 
   wf-⊑t _ PTHole = WFHole
@@ -51,7 +65,7 @@ module debruijn.debruijn-lemmas-wf where
   wf-syn ctxwf SEHole = WFHole
   wf-syn ctxwf (SNEHole syn) = WFHole
   wf-syn ctxwf (SLam x syn) = WFArr x (wf-syn (CtxWFExtend x ctxwf) syn)
-  wf-syn ctxwf (STLam syn) = WFForall (wf-syn (weakening-ctx ctxwf) syn)   
+  wf-syn ctxwf (STLam syn) = WFForall (wf-syn (wf-ctx-inc ctxwf) syn)
   wf-syn ctxwf (STAp wf syn meet refl) with wf-⊓ meet (wf-syn ctxwf syn) (WFForall WFHole) 
   ... | WFForall wf' = wf-TTSub wf wf'
   
@@ -62,7 +76,7 @@ module debruijn.debruijn-lemmas-wf where
   wf-elab-syn ctxwf ESConst = WFBase
   wf-elab-syn ctxwf (ESVar x) = wf-ctx-var ctxwf x
   wf-elab-syn ctxwf (ESLam x syn) = WFArr x (wf-elab-syn (CtxWFExtend x ctxwf) syn)
-  wf-elab-syn ctxwf (ESTLam syn) = WFForall (wf-elab-syn (weakening-ctx ctxwf) syn)
+  wf-elab-syn ctxwf (ESTLam syn) = WFForall (wf-elab-syn (wf-ctx-inc ctxwf) syn)
   wf-elab-syn ctxwf (ESAp syn meet _ _) with wf-⊓ meet (wf-syn ctxwf syn) (WFArr WFHole WFHole)
   ... | WFArr _ wf = wf
   wf-elab-syn ctxwf (ESTAp wf syn meet _ refl) with wf-⊓ meet (wf-syn ctxwf syn) (WFForall WFHole) 
@@ -78,7 +92,7 @@ module debruijn.debruijn-lemmas-wf where
   wf-ta ctxwf TAConst = WFBase
   wf-ta ctxwf (TAVar x) = wf-ctx-var ctxwf x
   wf-ta ctxwf (TALam x wt) = WFArr x (wf-ta (CtxWFExtend x ctxwf) wt)
-  wf-ta ctxwf (TATLam wt) = WFForall (wf-ta (weakening-ctx ctxwf) wt)
+  wf-ta ctxwf (TATLam wt) = WFForall (wf-ta (wf-ctx-inc ctxwf) wt)
   wf-ta ctxwf (TAAp wt wt₁) with wf-ta ctxwf wt 
   ... | WFArr _ wf = wf
   wf-ta ctxwf (TATAp x wt refl) with wf-ta ctxwf wt 
@@ -200,9 +214,9 @@ module debruijn.debruijn-lemmas-wf where
   -- wf-TTSub-helper1 (WFForall wf) = WFForall (wf-TTSub-helper1 wf) 
 
   -- wf-TTSub-helper1 {n = n} {m = Z} WFVarZ = {!   !}
-  -- wf-TTSub-helper1 {n = n} {m = Z} (WFVarS wf) = {!   !}
+  -- wf-TTSub-helper1 {n = n} {m = Z} (WFVarS wf) = {!   !} 
   -- wf-TTSub-helper1 {n = n} {m = 1+ m} wf = {!   !}
   -- wf-TTSub-helper1 WFBase = WFBase
   -- wf-TTSub-helper1 WFHole = WFHole 
-  -- wf-TTSub-helper1 (WFArr wf wf₁) = WFArr (wf-TTSub-helper1 wf) (wf-TTSub-helper1 wf₁)
+  -- wf-TTSub-helper1 (WFArr wf wf₁) = WFArr (wf-TTSub-helper1 wf) (wf-TTSub-helper1 wf₁)  
   -- wf-TTSub-helper1 {n = n} {m = m} (WFForall wf) = WFForall (wf-TTSub-helper1 {n = n} {m = 1+ m}  wf) 

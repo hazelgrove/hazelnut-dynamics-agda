@@ -27,54 +27,77 @@ module debruijn.debruijn-core where
   -- by a margin of at least [threshold]
   -- increased by [increase]
   ↑ : (t i : Nat) → htyp → htyp 
-  ↑ t i (T x) = T (↑Nat t i x )
-  ↑ t i b = b
-  ↑ t i ⦇-⦈ = ⦇-⦈
-  ↑ t i (τ1 ==> τ2) = (↑ t i τ1) ==> (↑ t i τ2)
-  ↑ t i (·∀ τ) = ·∀ (↑ (1+ t) i τ)
+  ↑ t Z τ = τ
+  ↑ t (1+ i) (T x) = T (↑Nat t (1+ i) x )
+  ↑ t (1+ i) b = b
+  ↑ t (1+ i) ⦇-⦈ = ⦇-⦈
+  ↑ t (1+ i) (τ1 ==> τ2) = (↑ t (1+ i) τ1) ==> (↑ t (1+ i) τ2)
+  ↑ t (1+ i) (·∀ τ) = ·∀ (↑ (1+ t) (1+ i) τ)
 
   ↓ : Nat → Nat → htyp → htyp 
-  ↓ t d (T x) = T (↓Nat t d x)
-  ↓ t d b = b
-  ↓ t d ⦇-⦈ = ⦇-⦈
-  ↓ t d (τ1 ==> τ2) = (↓ t d τ1) ==> (↓ t d τ2)
-  ↓ t d (·∀ τ) = ·∀ (↓ (1+ t) d τ)
+  ↓ t Z τ = τ
+  ↓ t (1+ d) (T x) = T (↓Nat t (1+ d) x)
+  ↓ t (1+ d) b = b
+  ↓ t (1+ d) ⦇-⦈ = ⦇-⦈
+  ↓ t (1+ d) (τ1 ==> τ2) = (↓ t (1+ d) τ1) ==> (↓ t (1+ d) τ2)
+  ↓ t (1+ d) (·∀ τ) = ·∀ (↓ (1+ t) (1+ d) τ)
 
   ↑d : (t i : Nat) → ihexp → ihexp 
-  ↑d t i c = c
-  ↑d t i (X x) = X (↑Nat t i x)
-  ↑d t i (·λ[ τ ] d) = ·λ[ τ ] (↑d (1+ t) i d)
-  ↑d t i (·Λ d) = ·Λ (↑d t i d)
-  ↑d t i ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ τ ⟩
-  ↑d t i ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ ↑d t i d ⌟⦈⟨ τ ⟩
-  ↑d t i (d1 ∘ d2) = (↑d t i d1) ∘ (↑d t i d2)
-  ↑d t i (d < τ >) = (↑d t i d) < τ >
-  ↑d t i (d ⟨ τ1 ⇒ τ2 ⟩) = (↑d t i d) ⟨ τ1 ⇒ τ2 ⟩
-  ↑d t i (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↑d t i d) ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩
+  ↑d t Z d = d
+  ↑d t (1+ i) c = c
+  ↑d t (1+ i) (X x) = X (↑Nat t (1+ i) x)
+  ↑d t (1+ i) (·λ[ τ ] d) = ·λ[ τ ] (↑d (1+ t) (1+ i) d)
+  ↑d t (1+ i) (·Λ d) = ·Λ (↑d t (1+ i) d)
+  ↑d t (1+ i) ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ τ ⟩
+  ↑d t (1+ i) ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ ↑d t (1+ i) d ⌟⦈⟨ τ ⟩
+  ↑d t (1+ i) (d1 ∘ d2) = (↑d t (1+ i) d1) ∘ (↑d t (1+ i) d2)
+  ↑d t (1+ i) (d < τ >) = (↑d t (1+ i) d) < τ >
+  ↑d t (1+ i) (d ⟨ τ1 ⇒ τ2 ⟩) = (↑d t (1+ i) d) ⟨ τ1 ⇒ τ2 ⟩
+  ↑d t (1+ i) (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↑d t (1+ i) d) ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩
 
   ↓d : (t i : Nat) → ihexp → ihexp 
-  ↓d t i c = c
-  ↓d t i (X x) = X (↓Nat t i x)
-  ↓d t i (·λ[ τ ] d) = ·λ[ τ ] (↓d (1+ t) i d)
-  ↓d t i (·Λ d) = ·Λ (↓d t i d)
-  ↓d t i ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ τ ⟩
-  ↓d t i ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ ↓d t i d ⌟⦈⟨ τ ⟩
-  ↓d t i (d1 ∘ d2) = (↓d t i d1) ∘ (↓d t i d2)
-  ↓d t i (d < τ >) = (↓d t i d) < τ >
-  ↓d t i (d ⟨ τ1 ⇒ τ2 ⟩) = (↓d t i d) ⟨ τ1 ⇒ τ2 ⟩
-  ↓d t i (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↓d t i d) ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩
+  ↓d t Z d = d
+  ↓d t (1+ i) c = c
+  ↓d t (1+ i) (X x) = X (↓Nat t (1+ i) x)
+  ↓d t (1+ i) (·λ[ τ ] d) = ·λ[ τ ] (↓d (1+ t) (1+ i) d)
+  ↓d t (1+ i) (·Λ d) = ·Λ (↓d t (1+ i) d)
+  ↓d t (1+ i) ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ τ ⟩
+  ↓d t (1+ i) ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ ↓d t (1+ i) d ⌟⦈⟨ τ ⟩
+  ↓d t (1+ i) (d1 ∘ d2) = (↓d t (1+ i) d1) ∘ (↓d t (1+ i) d2)
+  ↓d t (1+ i) (d < τ >) = (↓d t (1+ i) d) < τ >
+  ↓d t (1+ i) (d ⟨ τ1 ⇒ τ2 ⟩) = (↓d t (1+ i) d) ⟨ τ1 ⇒ τ2 ⟩
+  ↓d t (1+ i) (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↓d t (1+ i) d) ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩
+
+  ↑td : (t i : Nat) → ihexp → ihexp 
+  ↑td t Z d = d
+  ↑td t (1+ i) c = c
+  ↑td t (1+ i) (X x) = X x
+  ↑td t (1+ i) (·λ[ τ ] d) = ·λ[ ↑ t (1+ i) τ ] (↑td t (1+ i) d)
+  ↑td t (1+ i) (·Λ d) = ·Λ (↑td (1+ t) (1+ i) d)
+  ↑td t (1+ i) ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ ↑ t (1+ i) τ ⟩
+  ↑td t (1+ i) ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ (↑td t (1+ i) d) ⌟⦈⟨ ↑ t (1+ i) τ ⟩
+  ↑td t (1+ i) (d1 ∘ d2) = (↑td t (1+ i) d1) ∘ (↑td t (1+ i) d2)
+  ↑td t (1+ i) (d < τ >) = (↑td t (1+ i) d) < ↑ t (1+ i) τ >  
+  ↑td t (1+ i) (d ⟨ τ1 ⇒ τ2 ⟩) = (↑td t (1+ i) d) ⟨ ↑ t (1+ i) τ1 ⇒ ↑ t (1+ i) τ2 ⟩
+  ↑td t (1+ i) (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↑td t (1+ i) d) ⟨ ↑ t (1+ i) τ1 ⇒⦇-⦈⇏ ↑ t (1+ i) τ3 ⟩
 
   ↓td : (t i : Nat) → ihexp → ihexp 
-  ↓td t i c = c
-  ↓td t i (X x) = X x
-  ↓td t i (·λ[ τ ] d) = ·λ[ ↓ t i τ ] (↓td t i d)
-  ↓td t i (·Λ d) = ·Λ (↓td (1+ t) i d)
-  ↓td t i ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ ↓ t i τ ⟩
-  ↓td t i ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ (↓td t i d) ⌟⦈⟨ ↓ t i τ ⟩
-  ↓td t i (d1 ∘ d2) = (↓td t i d1) ∘ (↓td t i d2)
-  ↓td t i (d < τ >) = (↓td t i d) < ↓ t i τ >  
-  ↓td t i (d ⟨ τ1 ⇒ τ2 ⟩) = (↓td t i d) ⟨ ↓ t i τ1 ⇒ ↓ t i τ2 ⟩
-  ↓td t i (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↓td t i d) ⟨ ↓ t i τ1 ⇒⦇-⦈⇏ ↓ t i τ3 ⟩
+  ↓td t Z d = d
+  ↓td t (1+ i) c = c
+  ↓td t (1+ i) (X x) = X x
+  ↓td t (1+ i) (·λ[ τ ] d) = ·λ[ ↓ t (1+ i) τ ] (↓td t (1+ i) d)
+  ↓td t (1+ i) (·Λ d) = ·Λ (↓td (1+ t) (1+ i) d)
+  ↓td t (1+ i) ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ ↓ t (1+ i) τ ⟩
+  ↓td t (1+ i) ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ (↓td t (1+ i) d) ⌟⦈⟨ ↓ t (1+ i) τ ⟩
+  ↓td t (1+ i) (d1 ∘ d2) = (↓td t (1+ i) d1) ∘ (↓td t (1+ i) d2)
+  ↓td t (1+ i) (d < τ >) = (↓td t (1+ i) d) < ↓ t (1+ i) τ >  
+  ↓td t (1+ i) (d ⟨ τ1 ⇒ τ2 ⟩) = (↓td t (1+ i) d) ⟨ ↓ t (1+ i) τ1 ⇒ ↓ t (1+ i) τ2 ⟩
+  ↓td t (1+ i) (d ⟨ τ1 ⇒⦇-⦈⇏ τ3 ⟩) = (↓td t (1+ i) d) ⟨ ↓ t (1+ i) τ1 ⇒⦇-⦈⇏ ↓ t (1+ i) τ3 ⟩
+
+  ↑ctx : (t i : Nat) → ctx → ctx 
+  ↑ctx t Z Γ = Γ
+  ↑ctx t (1+ i) ∅ = ∅
+  ↑ctx t (1+ i) (τ , Γ) = (↑ t (1+ i) τ , ↑ctx t (1+ i) Γ)
 
   -- substitution of types in types
   TT[_/_]_ : htyp → Nat → htyp → htyp 
@@ -128,8 +151,8 @@ module debruijn.debruijn-core where
   [ d / n ] (d' ⟨ τ1 ⇒ τ2 ⟩ ) = ([ d / n ] d') ⟨ τ1 ⇒ τ2 ⟩
   [ d / n ] (d' ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ) = ([ d / n ] d') ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩
 
-  ttSub : ihexp → ihexp → ihexp 
-  ttSub d1 d2 = ↓d Z 1 ([ (↑d Z 1 d1) / Z ] d2)
+  ttSub : Nat → ihexp → ihexp → ihexp 
+  ttSub n d1 d2 = ↓d n 1 ([ (↑d Z (1+ n) d1) / n ] d2)
 
   TCtxSub : Nat → htyp → ctx → ctx 
   TCtxSub n τ ∅ = ∅
@@ -163,7 +186,7 @@ module debruijn.debruijn-core where
         Θ , (τ1 , Γ) ⊢ e => τ2 →
         Θ , Γ ⊢ ·λ[ τ1 ] e => τ1 ==> τ2
       STLam : {Θ : typctx} {Γ : ctx} {e : hexp} {τ : htyp} → 
-        (1+ Θ) , Γ ⊢ e => τ → 
+        (1+ Θ) , (↑ctx Z 1 Γ) ⊢ e => τ → 
         Θ , Γ ⊢ (·Λ e) => (·∀ τ)
       STAp : {Θ : typctx} {Γ : ctx} {e : hexp} {τ1 τ2 τ3 τ4 : htyp} → 
         Θ ⊢ τ1 wf →
@@ -184,7 +207,7 @@ module debruijn.debruijn-core where
         Θ , Γ ⊢ (·λ e) <= τ
       ATLam : {Θ : typctx} {Γ : ctx} {e : hexp} {τ1 τ2 : htyp} → 
         τ1 ⊓ ·∀ ⦇-⦈ == (·∀ τ2) → 
-        (1+ Θ) , Γ ⊢ e <= τ2 → 
+        (1+ Θ) , (↑ctx Z 1 Γ) ⊢ e <= τ2 → 
         Θ , Γ ⊢ (·Λ e) <= τ1
 
   -- bidirectional elaboration judgements
@@ -201,7 +224,7 @@ module debruijn.debruijn-core where
         Θ , (τ1 , Γ) ⊢ e ⇒ τ2 ~> d →
         Θ , Γ ⊢ (·λ[ τ1 ] e) ⇒ (τ1 ==> τ2) ~> (·λ[ τ1 ] d)
       ESTLam : ∀{Θ Γ e τ d} → 
-        (1+ Θ) , Γ ⊢ e ⇒ τ ~> d → 
+        (1+ Θ) , (↑ctx Z 1 Γ) ⊢ e ⇒ τ ~> d → 
         Θ , Γ ⊢ (·Λ e) ⇒ (·∀ τ) ~> (·Λ d)
       ESAp : ∀{Θ Γ e1 τ τ1 τ1' τ2 τ2' d1  e2 d2 } →
         Θ , Γ ⊢ e1 => τ1 →
@@ -236,7 +259,7 @@ module debruijn.debruijn-core where
         (e ≠ ⦇-⦈) →
         ((e' : hexp) → e ≠ ⦇⌜ e' ⌟⦈) →
         τ1 ⊓ ·∀ ⦇-⦈ == (·∀ τ2) → 
-        (1+ Θ) , Γ ⊢ e ⇐ τ2 ~> d :: τ2' →
+        (1+ Θ) , (↑ctx Z 1 Γ) ⊢ e ⇐ τ2 ~> d :: τ2' →
         Θ , Γ ⊢ (·Λ e) ⇐ τ1 ~> (·Λ d) :: (·∀ τ2')
       EASubsume : ∀{e Θ Γ τ1 τ2 τ3 d} →
         (e ≠ ⦇-⦈) →
@@ -262,7 +285,7 @@ module debruijn.debruijn-core where
       Θ , (τ1 , Γ) ⊢ d :: τ2 →
       Θ , Γ ⊢ ·λ[ τ1 ] d :: (τ1 ==> τ2)
     TATLam : ∀{ Θ Γ d τ} →
-      (1+ Θ) , Γ ⊢ d :: τ →
+      (1+ Θ) , (↑ctx Z 1 Γ) ⊢ d :: τ →
       Θ , Γ ⊢ ·Λ d :: (·∀ τ)
     TAAp : ∀{Θ Γ d1 d2 τ1 τ} →
       Θ , Γ ⊢ d1 :: τ1 ==> τ →
@@ -346,7 +369,7 @@ module debruijn.debruijn-core where
   data _→>_ : (d d' : ihexp) → Set where
     ITLam : ∀{ τ d1 d2 } →
             -- d2 final → -- red brackets
-            ((·λ[ τ ] d1) ∘ d2) →> (ttSub d2 d1)
+            ((·λ[ τ ] d1) ∘ d2) →> (ttSub Z d2 d1)
     ITTLam : ∀{ d τ } →
               ((·Λ d) < τ >) →> (TtSub Z τ d)
     ITCastID : ∀{ d τ } →
