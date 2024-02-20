@@ -91,6 +91,7 @@ module debruijn.debruijn-core where
   ↑ctx : (t i : Nat) → ctx → ctx 
   ↑ctx t i ∅ = ∅
   ↑ctx t i (τ , ctx) = (↑ t i τ , ↑ctx t i ctx)
+  ↑ctx t i (TVar, ctx) = (TVar, ↑ctx (1+ t) i ctx)
 
   -- substitution of types in types
   TT[_/_]_ : htyp → Nat → htyp → htyp 
@@ -112,6 +113,7 @@ module debruijn.debruijn-core where
   ctx[_/_]_ : htyp → Nat → ctx → ctx
   ctx[ τ / a ] ∅ = ∅
   ctx[ τ / a ] (τ' , Γ) = (TT[ τ / a ] τ') , (ctx[ τ / a ] Γ) 
+  ctx[ τ / a ] (TVar, Γ) = (TVar, ctx[ ↑ Z 1 τ / 1+ a ] Γ) 
   
   -- substitution of types in terms 
   Tt[_/_]_ : htyp → Nat → ihexp → ihexp
@@ -150,180 +152,186 @@ module debruijn.debruijn-core where
   TCtxSub : Nat → htyp → ctx → ctx 
   TCtxSub n τ ∅ = ∅
   TCtxSub n τ (x , Γ) = ↓ n 1 (TT[ (↑ Z (1+ n) τ) / n ] x) , TCtxSub n τ Γ
+  TCtxSub n τ (TVar, Γ) = TVar, TCtxSub (1+ n) τ Γ
+  
+  data _,_∈_ : Nat → htyp → ctx → Set where 
+    InCtxSkip : ∀{Γ τ n} → (n , τ ∈ Γ) → (n , ↑ Z 1 τ ∈ (TVar, Γ)) 
+    InCtxZ : ∀{Γ τ} → Z , τ ∈ (τ , Γ)
+    InCtx1+ : ∀{Γ τ τ' n} → (n , τ ∈ Γ) → (1+ n , τ ∈ (τ' , Γ)) 
 
   -- bidirectional type checking judgements for hexp
   mutual
     -- synthesis
-    data _,_⊢_=>_ : (Θ : typctx) (Γ : ctx) (e : hexp) (τ : htyp) → Set where
-      SConst : {Θ : typctx} {Γ : ctx} → 
-        Θ , Γ ⊢ c => b
-      SAsc : {Θ : typctx} {Γ : ctx} {e : hexp} {τ : htyp} →
-        Θ ⊢ τ wf →
-        Θ , Γ ⊢ e <= τ →
-        Θ , Γ ⊢ (e ·: τ) => τ
-      SVar : {Θ : typctx} {Γ : ctx} {τ : htyp} {n : Nat} →
+    data _⊢_=>_ : (Γ : ctx) (e : hexp) (τ : htyp) → Set where
+      SConst : {Γ : ctx} → 
+        Γ ⊢ c => b
+      SAsc : {Γ : ctx} {e : hexp} {τ : htyp} →
+        Γ ⊢ τ wf →
+        Γ ⊢ e <= τ →
+        Γ ⊢ (e ·: τ) => τ
+      SVar : {Γ : ctx} {τ : htyp} {n : Nat} →
         n , τ ∈ Γ →
-        Θ , Γ ⊢ X n => τ
-      SAp : {Θ : typctx} {Γ : ctx} {e1 e2 : hexp} {τ τ1 τ2 : htyp} →
-        Θ , Γ ⊢ e1 => τ1 →
+        Γ ⊢ X n => τ
+      SAp : {Γ : ctx} {e1 e2 : hexp} {τ τ1 τ2 : htyp} →
+        Γ ⊢ e1 => τ1 →
         τ1 ⊓ (⦇-⦈ ==> ⦇-⦈) == τ2 ==> τ →
-        Θ , Γ ⊢ e2 <= τ2 →
-        Θ , Γ ⊢ (e1 ∘ e2) => τ
-      SEHole  : {Θ : typctx} {Γ : ctx} → 
-        Θ , Γ ⊢ ⦇-⦈ => ⦇-⦈
-      SNEHole : {Θ : typctx} {Γ : ctx} {e : hexp} {τ : htyp} →
-        Θ , Γ ⊢ e => τ →
-        Θ , Γ ⊢ ⦇⌜ e ⌟⦈ => ⦇-⦈
-      SLam : {Θ : typctx} {Γ : ctx} {e : hexp} {τ1 τ2 : htyp} →
-        Θ ⊢ τ1 wf →
-        Θ , (τ1 , Γ) ⊢ e => τ2 →
-        Θ , Γ ⊢ ·λ[ τ1 ] e => τ1 ==> τ2
-      STLam : {Θ : typctx} {Γ : ctx} {e : hexp} {τ : htyp} → 
-        (1+ Θ) , (↑ctx Z 1 Γ) ⊢ e => τ → 
-        Θ , Γ ⊢ (·Λ e) => (·∀ τ)
-      STAp : {Θ : typctx} {Γ : ctx} {e : hexp} {τ1 τ2 τ3 τ4 : htyp} → 
-        Θ ⊢ τ1 wf →
-        Θ , Γ ⊢ e => τ2 →
+        Γ ⊢ e2 <= τ2 →
+        Γ ⊢ (e1 ∘ e2) => τ
+      SEHole  : {Γ : ctx} → 
+        Γ ⊢ ⦇-⦈ => ⦇-⦈
+      SNEHole : {Γ : ctx} {e : hexp} {τ : htyp} →
+        Γ ⊢ e => τ →
+        Γ ⊢ ⦇⌜ e ⌟⦈ => ⦇-⦈
+      SLam : {Γ : ctx} {e : hexp} {τ1 τ2 : htyp} →
+        Γ ⊢ τ1 wf →
+        (τ1 , Γ) ⊢ e => τ2 →
+        Γ ⊢ ·λ[ τ1 ] e => τ1 ==> τ2
+      STLam : {Γ : ctx} {e : hexp} {τ : htyp} → 
+        (TVar, Γ) ⊢ e => τ → 
+        Γ ⊢ (·Λ e) => (·∀ τ)
+      STAp : {Γ : ctx} {e : hexp} {τ1 τ2 τ3 τ4 : htyp} → 
+        Γ ⊢ τ1 wf →
+        Γ ⊢ e => τ2 →
         τ2 ⊓ ·∀ ⦇-⦈ == (·∀ τ3) →
         TTSub Z τ1 τ3 == τ4 →
-        Θ , Γ ⊢ (e < τ1 >) => τ4
+        Γ ⊢ (e < τ1 >) => τ4
 
     -- analysis
-    data _,_⊢_<=_ : (Θ : typctx) (Γ : ctx) (e : hexp) (τ : htyp) → Set where
-      ASubsume : {Θ : typctx} {Γ : ctx} {e : hexp} {τ τ' : htyp} →
-        Θ , Γ ⊢ e => τ' →
+    data _⊢_<=_ : (Γ : ctx) (e : hexp) (τ : htyp) → Set where
+      ASubsume : {Γ : ctx} {e : hexp} {τ τ' : htyp} →
+        Γ ⊢ e => τ' →
         τ ~ τ' →
-        Θ , Γ ⊢ e <= τ
-      ALam : {Θ : typctx} {Γ : ctx} {e : hexp} {τ τ1 τ2 : htyp} →
+        Γ ⊢ e <= τ
+      ALam : {Γ : ctx} {e : hexp} {τ τ1 τ2 : htyp} →
         τ ⊓ (⦇-⦈ ==> ⦇-⦈) == τ1 ==> τ2 →
-        Θ , (τ1 , Γ) ⊢ e <= τ2 →
-        Θ , Γ ⊢ (·λ e) <= τ
-      ATLam : {Θ : typctx} {Γ : ctx} {e : hexp} {τ1 τ2 : htyp} → 
+        (τ1 , Γ) ⊢ e <= τ2 →
+        Γ ⊢ (·λ e) <= τ
+      ATLam : {Γ : ctx} {e : hexp} {τ1 τ2 : htyp} → 
         τ1 ⊓ ·∀ ⦇-⦈ == (·∀ τ2) → 
-        (1+ Θ) , (↑ctx Z 1 Γ) ⊢ e <= τ2 → 
-        Θ , Γ ⊢ (·Λ e) <= τ1
+        (TVar, Γ) ⊢ e <= τ2 → 
+        Γ ⊢ (·Λ e) <= τ1
 
   -- bidirectional elaboration judgements
   mutual
     -- synthesis
-    data _,_⊢_⇒_~>_ : (Θ : typctx) (Γ : ctx) (e : hexp) (τ : htyp) (d : ihexp) → Set where
-      ESConst : ∀{Θ Γ} → 
-        Θ , Γ ⊢ c ⇒ b ~> c
-      ESVar : ∀{Θ Γ x τ} → 
+    data _⊢_⇒_~>_ : (Γ : ctx) (e : hexp) (τ : htyp) (d : ihexp) → Set where
+      ESConst : ∀{Γ} → 
+        Γ ⊢ c ⇒ b ~> c
+      ESVar : ∀{Γ x τ} → 
         x , τ ∈ Γ → 
-        Θ , Γ ⊢ X x ⇒ τ ~> X x
-      ESLam : ∀{Θ Γ τ1 τ2 e d} →
-        Θ ⊢ τ1 wf →
-        Θ , (τ1 , Γ) ⊢ e ⇒ τ2 ~> d →
-        Θ , Γ ⊢ (·λ[ τ1 ] e) ⇒ (τ1 ==> τ2) ~> (·λ[ τ1 ] d)
-      ESTLam : ∀{Θ Γ e τ d} → 
-        (1+ Θ) , (↑ctx Z 1 Γ) ⊢ e ⇒ τ ~> d → 
-        Θ , Γ ⊢ (·Λ e) ⇒ (·∀ τ) ~> (·Λ d)
-      ESAp : ∀{Θ Γ e1 τ τ1 τ1' τ2 τ2' d1  e2 d2 } →
-        Θ , Γ ⊢ e1 => τ1 →
+        Γ ⊢ X x ⇒ τ ~> X x
+      ESLam : ∀{Γ τ1 τ2 e d} →
+        Γ ⊢ τ1 wf →
+        (τ1 , Γ) ⊢ e ⇒ τ2 ~> d →
+        Γ ⊢ (·λ[ τ1 ] e) ⇒ (τ1 ==> τ2) ~> (·λ[ τ1 ] d)
+      ESTLam : ∀{Γ e τ d} → 
+        (TVar, Γ) ⊢ e ⇒ τ ~> d → 
+        Γ ⊢ (·Λ e) ⇒ (·∀ τ) ~> (·Λ d)
+      ESAp : ∀{Γ e1 τ τ1 τ1' τ2 τ2' d1  e2 d2 } →
+        Γ ⊢ e1 => τ1 →
         τ1 ⊓ (⦇-⦈ ==> ⦇-⦈) == τ2 ==> τ →
-        Θ , Γ ⊢ e1 ⇐ (τ2 ==> τ) ~> d1 :: τ1' →
-        Θ , Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2' →
-        Θ , Γ ⊢ (e1 ∘ e2) ⇒ τ ~> ((d1 ⟨ τ1' ⇒ τ2 ==> τ ⟩) ∘ (d2 ⟨ τ2' ⇒ τ2 ⟩))
-      ESTAp : ∀{Θ Γ e τ1 τ2 τ3 τ4 τ2' d} →
-        Θ ⊢ τ1 wf →
-        Θ , Γ ⊢ e => τ2 →
+        Γ ⊢ e1 ⇐ (τ2 ==> τ) ~> d1 :: τ1' →
+        Γ ⊢ e2 ⇐ τ2 ~> d2 :: τ2' →
+        Γ ⊢ (e1 ∘ e2) ⇒ τ ~> ((d1 ⟨ τ1' ⇒ τ2 ==> τ ⟩) ∘ (d2 ⟨ τ2' ⇒ τ2 ⟩))
+      ESTAp : ∀{Γ e τ1 τ2 τ3 τ4 τ2' d} →
+        Γ ⊢ τ1 wf →
+        Γ ⊢ e => τ2 →
         τ2 ⊓ ·∀ ⦇-⦈ == (·∀ τ3) →
-        Θ , Γ ⊢ e ⇐ (·∀ τ3) ~> d :: τ2' →
+        Γ ⊢ e ⇐ (·∀ τ3) ~> d :: τ2' →
         TTSub Z τ1 τ3 == τ4 →
-        Θ , Γ ⊢ (e < τ1 >) ⇒ τ4 ~> ((d ⟨ τ2' ⇒ (·∀ τ3)⟩) < τ1 >)
-      ESEHole : ∀{Θ Γ} →
-        Θ , Γ ⊢ ⦇-⦈ ⇒ ⦇-⦈ ~> ⦇-⦈⟨ ⦇-⦈ ⟩
-      ESNEHole : ∀{Θ Γ e τ d} →
-        Θ , Γ ⊢ e ⇒ τ ~> d →
-        Θ , Γ ⊢ ⦇⌜ e ⌟⦈ ⇒ ⦇-⦈ ~> ⦇⌜ d ⌟⦈⟨ ⦇-⦈ ⟩
-      ESAsc : ∀ {Θ Γ e τ d τ'} →
-        Θ ⊢ τ wf →
-        Θ , Γ ⊢ e ⇐ τ ~> d :: τ' →
-        Θ , Γ ⊢ (e ·: τ) ⇒ τ ~> (d ⟨ τ' ⇒ τ ⟩)
+        Γ ⊢ (e < τ1 >) ⇒ τ4 ~> ((d ⟨ τ2' ⇒ (·∀ τ3)⟩) < τ1 >)
+      ESEHole : ∀{Γ} →
+        Γ ⊢ ⦇-⦈ ⇒ ⦇-⦈ ~> ⦇-⦈⟨ ⦇-⦈ ⟩
+      ESNEHole : ∀{Γ e τ d} →
+        Γ ⊢ e ⇒ τ ~> d →
+        Γ ⊢ ⦇⌜ e ⌟⦈ ⇒ ⦇-⦈ ~> ⦇⌜ d ⌟⦈⟨ ⦇-⦈ ⟩
+      ESAsc : ∀ {Γ e τ d τ'} →
+        Γ ⊢ τ wf →
+        Γ ⊢ e ⇐ τ ~> d :: τ' →
+        Γ ⊢ (e ·: τ) ⇒ τ ~> (d ⟨ τ' ⇒ τ ⟩)
 
     -- analysis
-    data _,_⊢_⇐_~>_::_ : (Θ : typctx) (Γ : ctx) (e : hexp) (τ : htyp) (d : ihexp) (τ' : htyp) → Set where
-      EALam : ∀{Θ Γ τ τ1 τ2 e d τ2'} →
+    data _⊢_⇐_~>_::_ : (Γ : ctx) (e : hexp) (τ : htyp) (d : ihexp) (τ' : htyp) → Set where
+      EALam : ∀{Γ τ τ1 τ2 e d τ2'} →
         τ ⊓ (⦇-⦈ ==> ⦇-⦈) == τ1 ==> τ2 →
-        Θ , (τ1 , Γ) ⊢ e ⇐ τ2 ~> d :: τ2' →
-        Θ , Γ ⊢ ·λ e ⇐ τ ~> ·λ[ τ1 ] d :: τ1 ==> τ2'
-      EATLam : ∀{Θ Γ e τ1 τ2 τ2' d} → 
+        (τ1 , Γ) ⊢ e ⇐ τ2 ~> d :: τ2' →
+        Γ ⊢ ·λ e ⇐ τ ~> ·λ[ τ1 ] d :: τ1 ==> τ2'
+      EATLam : ∀{Γ e τ1 τ2 τ2' d} → 
         (e ≠ ⦇-⦈) →
         ((e' : hexp) → e ≠ ⦇⌜ e' ⌟⦈) →
         τ1 ⊓ ·∀ ⦇-⦈ == (·∀ τ2) → 
-        (1+ Θ) , (↑ctx Z 1 Γ) ⊢ e ⇐ τ2 ~> d :: τ2' →
-        Θ , Γ ⊢ (·Λ e) ⇐ τ1 ~> (·Λ d) :: (·∀ τ2')
-      EASubsume : ∀{e Θ Γ τ1 τ2 τ3 d} →
+        (TVar, Γ) ⊢ e ⇐ τ2 ~> d :: τ2' →
+        Γ ⊢ (·Λ e) ⇐ τ1 ~> (·Λ d) :: (·∀ τ2')
+      EASubsume : ∀{e Γ τ1 τ2 τ3 d} →
         (e ≠ ⦇-⦈) →
         ((e' : hexp) → e ≠ ⦇⌜ e' ⌟⦈) →
-        Θ , Γ ⊢ e ⇒ τ2 ~> d →
+        Γ ⊢ e ⇒ τ2 ~> d →
         τ1 ⊓ τ2 == τ3 →
-        Θ , Γ ⊢ e ⇐ τ1 ~> (d ⟨ τ2 ⇒ τ3 ⟩) :: τ3
-      EAEHole : ∀{Θ Γ τ} →
-        Θ , Γ ⊢ ⦇-⦈ ⇐ τ ~> ⦇-⦈⟨ τ ⟩ :: τ
-      EANEHole : ∀{Θ Γ e τ d τ'} →
-        Θ , Γ ⊢ e ⇒ τ' ~> d →
-        Θ , Γ ⊢ ⦇⌜ e ⌟⦈ ⇐ τ ~> ⦇⌜ d ⌟⦈⟨ τ ⟩ :: τ
+        Γ ⊢ e ⇐ τ1 ~> (d ⟨ τ2 ⇒ τ3 ⟩) :: τ3
+      EAEHole : ∀{Γ τ} →
+        Γ ⊢ ⦇-⦈ ⇐ τ ~> ⦇-⦈⟨ τ ⟩ :: τ
+      EANEHole : ∀{Γ e τ d τ'} →
+        Γ ⊢ e ⇒ τ' ~> d →
+        Γ ⊢ ⦇⌜ e ⌟⦈ ⇐ τ ~> ⦇⌜ d ⌟⦈⟨ τ ⟩ :: τ
 
   -- type assignment
-  data _,_⊢_::_ : (Θ : typctx) (Γ : ctx) (d : ihexp) (τ : htyp) → Set where
-    TAConst : ∀{Θ Γ} → 
-      Θ , Γ ⊢ c :: b
-    TAVar : ∀{Θ Γ n τ} → 
+  data _⊢_::_ : (Γ : ctx) (d : ihexp) (τ : htyp) → Set where
+    TAConst : ∀{Γ} → 
+      Γ ⊢ c :: b
+    TAVar : ∀{Γ n τ} → 
       n , τ ∈ Γ → 
-      Θ , Γ ⊢ X n :: τ
-    TALam : ∀{ Θ Γ τ1 d τ2} →
-      Θ ⊢ τ1 wf →
-      Θ , (τ1 , Γ) ⊢ d :: τ2 →
-      Θ , Γ ⊢ ·λ[ τ1 ] d :: (τ1 ==> τ2)
-    TATLam : ∀{ Θ Γ d τ} →
-      (1+ Θ) , (↑ctx Z 1 Γ) ⊢ d :: τ →
-      Θ , Γ ⊢ ·Λ d :: (·∀ τ)
-    TAAp : ∀{Θ Γ d1 d2 τ1 τ} →
-      Θ , Γ ⊢ d1 :: τ1 ==> τ →
-      Θ , Γ ⊢ d2 :: τ1 →
-      Θ , Γ ⊢ d1 ∘ d2 :: τ
-    TATAp : ∀ {Θ Γ d τ1 τ2 τ3} → 
-      Θ ⊢ τ1 wf →
-      Θ , Γ ⊢ d :: (·∀ τ2) →
+      Γ ⊢ X n :: τ
+    TALam : ∀{ Γ τ1 d τ2} →
+      Γ ⊢ τ1 wf →
+      (τ1 , Γ) ⊢ d :: τ2 →
+      Γ ⊢ ·λ[ τ1 ] d :: (τ1 ==> τ2)
+    TATLam : ∀{ Γ d τ} →
+      (TVar, Γ) ⊢ d :: τ →
+      Γ ⊢ ·Λ d :: (·∀ τ)
+    TAAp : ∀{Γ d1 d2 τ1 τ} →
+      Γ ⊢ d1 :: τ1 ==> τ →
+      Γ ⊢ d2 :: τ1 →
+      Γ ⊢ d1 ∘ d2 :: τ
+    TATAp : ∀ {Γ d τ1 τ2 τ3} → 
+      Γ ⊢ τ1 wf →
+      Γ ⊢ d :: (·∀ τ2) →
       TTSub Z τ1 τ2 == τ3 → 
-      Θ , Γ ⊢ (d < τ1 >) :: τ3
-    TAEHole : ∀{Θ Γ τ} →
-      Θ ⊢ τ wf →
-      Θ , Γ ⊢ ⦇-⦈⟨ τ ⟩ :: τ
-    TANEHole : ∀ {Θ Γ d τ τ'} →
-      Θ ⊢ τ wf →
-      Θ , Γ ⊢ d :: τ' →
-      Θ , Γ ⊢ ⦇⌜ d ⌟⦈⟨ τ ⟩ :: τ
-    TACast : ∀{Θ Γ d τ1 τ2} →
-      Θ , Γ ⊢ d :: τ1 →
-      Θ ⊢ τ2 wf →
+      Γ ⊢ (d < τ1 >) :: τ3
+    TAEHole : ∀{Γ τ} →
+      Γ ⊢ τ wf →
+      Γ ⊢ ⦇-⦈⟨ τ ⟩ :: τ
+    TANEHole : ∀ {Γ d τ τ'} →
+      Γ ⊢ τ wf →
+      Γ ⊢ d :: τ' →
+      Γ ⊢ ⦇⌜ d ⌟⦈⟨ τ ⟩ :: τ
+    TACast : ∀{Γ d τ1 τ2} →
+      Γ ⊢ d :: τ1 →
+      Γ ⊢ τ2 wf →
       τ1 ~ τ2 →
-      Θ , Γ ⊢ d ⟨ τ1 ⇒ τ2 ⟩ :: τ2
-    TAFailedCast : ∀{Θ Γ d τ1 τ2} →
-      Θ , Γ ⊢ d :: τ1 →
+      Γ ⊢ d ⟨ τ1 ⇒ τ2 ⟩ :: τ2
+    TAFailedCast : ∀{Γ d τ1 τ2} →
+      Γ ⊢ d :: τ1 →
       τ1 ground →
       τ2 ground →
       τ1 ~̸ τ2 →
-      Θ , Γ ⊢ d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ :: τ2
+      Γ ⊢ d ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ :: τ2
 
   -- precision for internal expressions
   -- see Refined Criteria for Gradual Typing, Figure 9
-  data _,_,_⊢_⊑i_ : (Θ : typctx) → (Γ : ctx) → (Γ' : ctx) → (d1 d2 : ihexp) → Set where
-    PIConst : ∀{Θ Γ Γ'} → Θ , Γ , Γ' ⊢ c ⊑i c
-    PIVar : ∀{Θ Γ Γ' n} → Θ , Γ , Γ' ⊢ (X n) ⊑i (X n) 
-    PIEHole : ∀{Θ Γ Γ' τ1 τ2 d} → (Θ , Γ ⊢ d :: τ1) → (τ1 ⊑t τ2) → Θ , Γ , Γ' ⊢ d ⊑i ⦇-⦈⟨ τ2 ⟩
-    PILam : ∀{Θ Γ Γ' d1 d2 τ1 τ2} → Θ , (τ1 , Γ) , (τ2 , Γ') ⊢ d1 ⊑i d2 → τ1 ⊑t τ2 → Θ , Γ , Γ' ⊢ (·λ[ τ1 ] d1) ⊑i (·λ[ τ2 ] d2)
-    PITLam : ∀{Θ Γ Γ' d1 d2} → (1+ Θ) , Γ , Γ' ⊢ d1 ⊑i d2 → Θ , Γ , Γ' ⊢ (·Λ d1) ⊑i (·Λ d2)
-    PINEHole : ∀{Θ Γ Γ' τ1 τ2 d1 d2} → Θ , Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ2 → Θ , Γ , Γ' ⊢ (⦇⌜ d1 ⌟⦈⟨ τ1 ⟩) ⊑i (⦇⌜ d2 ⌟⦈⟨ τ2 ⟩)
-    PIAp :  ∀{Θ Γ Γ' d1 d2 d3 d4} → Θ , Γ , Γ' ⊢ d1 ⊑i d3 → Θ , Γ , Γ' ⊢ d2 ⊑i d4 → Θ , Γ , Γ' ⊢ (d1 ∘ d2) ⊑i (d3 ∘ d4)
-    PITAp : ∀{Θ Γ Γ' d1 d2 τ1 τ2} → Θ , Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ2 → Θ , Γ , Γ' ⊢ (d1 < τ1 >) ⊑i (d2 < τ2 >)
-    PICast : ∀{Θ Γ Γ' d1 d2 τ1 τ2 τ3 τ4} → Θ , Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ3 → τ2 ⊑t τ4 → Θ , Γ , Γ' ⊢ (d1 ⟨ τ1 ⇒ τ2 ⟩) ⊑i (d2 ⟨ τ3 ⇒ τ4 ⟩)
-    PIFailedCast : ∀{Θ Γ Γ' d1 d2 τ1 τ2 τ3 τ4} → Θ , Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ3 → τ2 ⊑t τ4 → Θ , Γ , Γ' ⊢ (d1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) ⊑i (d2 ⟨ τ3 ⇒⦇-⦈⇏ τ4 ⟩)
-    PIRemoveCast : ∀{Θ Γ Γ' d1 d2 τ1 τ2 τ} → (Θ , Γ , Γ' ⊢ d1 ⊑i d2) → (Θ , Γ' ⊢ d2 :: τ) → (τ1 ⊑t τ) → (τ2 ⊑t τ) → Θ , Γ , Γ' ⊢ (d1 ⟨ τ1 ⇒ τ2 ⟩) ⊑i d2 
-    PIAddCast : ∀{Θ Γ Γ' d1 d2 τ1 τ2 τ} → (Θ , Γ , Γ' ⊢ d1 ⊑i d2) → (Θ , Γ ⊢ d1 :: τ) → (τ ⊑t τ1) → (τ ⊑t τ2) → Θ , Γ , Γ' ⊢ d1 ⊑i (d2 ⟨ τ1 ⇒ τ2 ⟩) 
-    PIBlame : ∀{Θ Γ Γ' d1 d2 τ1 τ2 τ} → (Θ , Γ' ⊢ d2 :: τ) → (τ2 ⊑t τ) → (Θ , Γ , Γ' ⊢ d1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ⊑i d2)
+  data _,_⊢_⊑i_ : (Γ : ctx) → (Γ' : ctx) → (d1 d2 : ihexp) → Set where
+    PIConst : ∀{Γ Γ'} → Γ , Γ' ⊢ c ⊑i c
+    PIVar : ∀{Γ Γ' n} → Γ , Γ' ⊢ (X n) ⊑i (X n) 
+    PIEHole : ∀{Γ Γ' τ1 τ2 d} → (Γ ⊢ d :: τ1) → (τ1 ⊑t τ2) → Γ , Γ' ⊢ d ⊑i ⦇-⦈⟨ τ2 ⟩
+    PILam : ∀{Γ Γ' d1 d2 τ1 τ2} → (τ1 , Γ) , (τ2 , Γ') ⊢ d1 ⊑i d2 → τ1 ⊑t τ2 → Γ , Γ' ⊢ (·λ[ τ1 ] d1) ⊑i (·λ[ τ2 ] d2)
+    PITLam : ∀{Γ Γ' d1 d2} → (TVar, Γ) , Γ' ⊢ d1 ⊑i d2 → Γ , Γ' ⊢ (·Λ d1) ⊑i (·Λ d2)
+    PINEHole : ∀{Γ Γ' τ1 τ2 d1 d2} → Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ2 → Γ , Γ' ⊢ (⦇⌜ d1 ⌟⦈⟨ τ1 ⟩) ⊑i (⦇⌜ d2 ⌟⦈⟨ τ2 ⟩)
+    PIAp :  ∀{Γ Γ' d1 d2 d3 d4} → Γ , Γ' ⊢ d1 ⊑i d3 → Γ , Γ' ⊢ d2 ⊑i d4 → Γ , Γ' ⊢ (d1 ∘ d2) ⊑i (d3 ∘ d4)
+    PITAp : ∀{Γ Γ' d1 d2 τ1 τ2} → Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ2 → Γ , Γ' ⊢ (d1 < τ1 >) ⊑i (d2 < τ2 >)
+    PICast : ∀{Γ Γ' d1 d2 τ1 τ2 τ3 τ4} → Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ3 → τ2 ⊑t τ4 → Γ , Γ' ⊢ (d1 ⟨ τ1 ⇒ τ2 ⟩) ⊑i (d2 ⟨ τ3 ⇒ τ4 ⟩)
+    PIFailedCast : ∀{Γ Γ' d1 d2 τ1 τ2 τ3 τ4} → Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ3 → τ2 ⊑t τ4 → Γ , Γ' ⊢ (d1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) ⊑i (d2 ⟨ τ3 ⇒⦇-⦈⇏ τ4 ⟩)
+    PIRemoveCast : ∀{Γ Γ' d1 d2 τ1 τ2 τ} → (Γ , Γ' ⊢ d1 ⊑i d2) → (Γ' ⊢ d2 :: τ) → (τ1 ⊑t τ) → (τ2 ⊑t τ) → Γ , Γ' ⊢ (d1 ⟨ τ1 ⇒ τ2 ⟩) ⊑i d2 
+    PIAddCast : ∀{Γ Γ' d1 d2 τ1 τ2 τ} → (Γ , Γ' ⊢ d1 ⊑i d2) → (Γ ⊢ d1 :: τ) → (τ ⊑t τ1) → (τ ⊑t τ2) → Γ , Γ' ⊢ d1 ⊑i (d2 ⟨ τ1 ⇒ τ2 ⟩) 
+    PIBlame : ∀{Γ Γ' d1 d2 τ1 τ2 τ} → (Γ' ⊢ d2 :: τ) → (τ2 ⊑t τ) → (Γ , Γ' ⊢ d1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩ ⊑i d2)
 
   -- evaluation contexts
   data ectx : Set where

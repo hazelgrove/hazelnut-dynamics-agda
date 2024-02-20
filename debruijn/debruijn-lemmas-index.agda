@@ -87,6 +87,7 @@ module debruijn.debruijn-lemmas-index where
   ↑ctx-compose : (t i : Nat) → (Γ : ctx) → ↑ctx t 1 (↑ctx t i Γ) == (↑ctx t (1+ i) Γ)
   ↑ctx-compose t i ∅ = refl
   ↑ctx-compose t i (x , Γ) rewrite ↑compose t i x rewrite ↑ctx-compose t i Γ = refl
+  ↑ctx-compose t i (TVar, Γ) rewrite ↑ctx-compose (1+ t) i Γ = refl
 
   ↓↑Nat-invert : (t x : Nat) → ↓Nat t 1 (↑Nat t 1 x) == x
   ↓↑Nat-invert Z x = refl 

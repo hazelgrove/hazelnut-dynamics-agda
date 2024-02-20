@@ -89,7 +89,7 @@ module debruijn.debruijn-lemmas-prec where
   ⊑t-TTsub prec1 (PTArr prec2 prec3) = PTArr (⊑t-TTsub prec1 prec2) (⊑t-TTsub prec1 prec3)
   ⊑t-TTsub {τ3 = τ3} prec1 (PTForall prec2) = PTForall (⊑t-↓ (⊑t-TT (⊑t-↑ (⊑t-↑ prec1)) prec2))
 
-  ⊑c-var : ∀{n τ Γ Γ'} → (n , τ ∈ Γ) → Γ ⊑c Γ' → Σ[ τ' ∈ htyp ] ((n , τ' ∈ Γ') × (τ ⊑t τ'))
-  ⊑c-var InCtxZ (PCExtend prec precc) = _ , InCtxZ , prec
-  ⊑c-var (InCtx1+ inctx) (PCExtend prec precc) with ⊑c-var inctx precc
-  ... | τ' , inctx' , prec' = τ' , InCtx1+ inctx' , prec'
+  -- ⊑c-var : ∀{n τ Γ Γ'} → (n , τ ∈ Γ) → Γ ⊑c Γ' → Σ[ τ' ∈ htyp ] ((n , τ' ∈ Γ') × (τ ⊑t τ'))
+  -- ⊑c-var InCtxZ (PCExtend prec precc) = _ , InCtxZ , prec
+  -- ⊑c-var (InCtx1+ inctx) (PCExtend prec precc) with ⊑c-var inctx precc
+  -- ... | τ' , inctx' , prec' = τ' , InCtx1+ inctx' , prec'

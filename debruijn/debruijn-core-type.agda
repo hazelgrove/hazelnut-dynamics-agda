@@ -56,42 +56,48 @@ module debruijn.debruijn-core-type where
       (·∀ τ ≠ ·∀ ⦇-⦈) →
       (·∀ τ) ▸gnd (·∀ ⦇-⦈)
 
-  -- the type of type contexts i.e. Θs in the judgements below
-  typctx : Set
-  typctx = Nat
-  
-  -- well-formedness of types
-  data _⊢_wf : typctx → htyp → Set where
-    WFVarZ : ∀{Θ} → 1+ Θ ⊢ T Z wf
-    WFVarS : ∀{Θ n} → Θ ⊢ T n wf → 1+ Θ ⊢ T (1+ n) wf
-    WFBase : ∀{Θ} → Θ ⊢ b wf
-    WFHole : ∀{Θ} → Θ ⊢ ⦇-⦈ wf
-    WFArr : ∀{Θ τ1 τ2} → Θ ⊢ τ1 wf → Θ ⊢ τ2 wf → Θ ⊢ τ1 ==> τ2 wf
-    WFForall : ∀{Θ τ} → 1+ Θ ⊢ τ wf → Θ ⊢ ·∀ τ wf
-
   -- the type of term to type contexts, i.e. Γs in the judegments below
   data ctx : Set where 
     ∅ : ctx
     _,_ : htyp → ctx → ctx
+    TVar,_ : ctx → ctx
 
-  ctx-len : ctx → Nat 
-  ctx-len ∅ = Z
-  ctx-len (x , Γ) = 1+ (ctx-len Γ)
+  infixr 18 TVar,_
 
   _ctx+_ : ctx → ctx → ctx 
   ∅ ctx+ ctx2 = ctx2
   (x , ctx1) ctx+ ctx2 = (x , ctx1 ctx+ ctx2)
+  (TVar, ctx1) ctx+ ctx2 = (TVar, ctx1 ctx+ ctx2)
+
+  ctx-extend-tvars : Nat → ctx → ctx 
+  ctx-extend-tvars Z Γ = Γ
+  ctx-extend-tvars (1+ n) Γ = (TVar, ctx-extend-tvars n Γ)
+
+  -- data _⊢_varwf : ctx → Nat → Set where
+  --   WFSkip : ∀{Γ τ} → Γ ⊢ Z varwf → (τ , Γ) ⊢ Z varwf
+  --   WFVarZ : ∀{Γ} → (TVar, Γ) ⊢ Z varwf
+  --   WFVarS : ∀{Γ n} → Γ ⊢ n varwf → (TVar, Γ) ⊢ (1+ n) varwf
+
+  -- well-formedness of types
+  data _⊢_wf : ctx → htyp → Set where
+    -- WFVar : ∀{Γ n} → Γ ⊢ n varwf → Γ ⊢ T n wf
+    WFSkipZ : ∀{Γ τ} → Γ ⊢ T Z wf → (τ , Γ) ⊢ T Z wf
+    WFVarZ : ∀{Γ} → (TVar, Γ) ⊢ T Z wf
+    WFSkipS : ∀{Γ τ n} → Γ ⊢ T (1+ n) wf → (τ , Γ) ⊢ T (1+ n) wf
+    WFVarS : ∀{Γ n} → Γ ⊢ T n wf → (TVar, Γ) ⊢ T (1+ n) wf
+    WFBase : ∀{Γ} → Γ ⊢ b wf
+    WFHole : ∀{Γ} → Γ ⊢ ⦇-⦈ wf
+    WFArr : ∀{Γ τ1 τ2} → Γ ⊢ τ1 wf → Γ ⊢ τ2 wf → Γ ⊢ τ1 ==> τ2 wf
+    WFForall : ∀{Γ τ} → (TVar, Γ) ⊢ τ wf → Γ ⊢ ·∀ τ wf
 
   -- well-formedness of contexts
-  data _⊢_ctxwf : typctx → ctx → Set where
-    CtxWFEmpty : ∀{Θ} → Θ ⊢ ∅ ctxwf
-    CtxWFExtend : ∀{Θ Γ τ} → Θ ⊢ τ wf → Θ ⊢ Γ ctxwf → Θ ⊢ τ , Γ ctxwf
-
-  data _,_∈_ : Nat → htyp → ctx → Set where 
-    InCtxZ : ∀{Γ τ} → Z , τ ∈ (τ , Γ)
-    InCtx1+ : ∀{Γ τ τ' n} → (n , τ ∈ Γ) → (1+ n , τ ∈ (τ' , Γ)) 
+  data ⊢_ctxwf : ctx → Set where
+    CtxWFEmpty : ⊢ ∅ ctxwf
+    CtxWFVar : ∀{Γ τ} → Γ ⊢ τ wf → ⊢ Γ ctxwf → ⊢ τ , Γ ctxwf
+    CtxWFTVar : ∀{Γ} → ⊢ Γ ctxwf → ⊢ (TVar, Γ) ctxwf
 
   data _⊑c_ : ctx → ctx → Set where 
     PCEmpty : ∅ ⊑c ∅ 
-    PCExtend : ∀{τ Γ τ' Γ'} → (τ ⊑t τ') → (Γ ⊑c Γ') → ((τ , Γ) ⊑c (τ' , Γ'))
+    PCVar : ∀{τ Γ τ' Γ'} → (τ ⊑t τ') → (Γ ⊑c Γ') → ((τ , Γ) ⊑c (τ' , Γ'))
+    PCTVar : ∀{Γ Γ'} → (Γ ⊑c Γ') → ((TVar, Γ) ⊑c (TVar, Γ'))
     
