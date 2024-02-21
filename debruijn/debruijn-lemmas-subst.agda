@@ -19,6 +19,9 @@ module debruijn.debruijn-lemmas-subst where
   ttSubTLam : ∀{n m d d'} → (ttSub n m d (·Λ d')) == (·Λ (ttSub n (1+ m) d d'))
   ttSubTLam {n} {m} {d} rewrite ↑td-compose 0 m (↑d 0 (1+ n) d) = refl
 
+  TtSubTLam : ∀{n τ d} → TtSub n τ (·Λ d) == ·Λ (TtSub (1+ n) τ d)
+  TtSubTLam {n} {τ} {d} rewrite ↑compose 0 (1+ n) τ = refl
+
   -- ttSubVar : ∀{n m d} → (ttSub n m d (X n)) == ↑d 0 n (↑td 0 m d)
   -- ttSubVar {n} {m} {d} with natEQ n n 
   -- ... | Inr neq = abort (neq refl)
