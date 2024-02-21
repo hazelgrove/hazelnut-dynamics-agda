@@ -2,6 +2,7 @@ open import Nat
 open import Prelude
 open import debruijn.debruijn-core-type
 open import debruijn.debruijn-core-exp
+open import debruijn.debruijn-core-subst
 open import debruijn.debruijn-core
 open import debruijn.debruijn-lemmas-index
 
@@ -89,7 +90,7 @@ module debruijn.debruijn-lemmas-complete where
 
   ttSub-complete : ∀{n m d1 d2} → d1 dcomplete → d2 dcomplete → ttSub n m d1 d2 dcomplete
   ttSub-complete {n} dc1 (DCVar {x = x}) with natEQ x n 
-  ... | Inl refl = ↓d-complete (↑td-complete (↑d-complete dc1))
+  ... | Inl refl = ↑d-complete (↑td-complete dc1)
   ... | Inr neq = DCVar
   ttSub-complete dc1 DCConst = DCConst
   ttSub-complete {n} {m} {d1} dc1 (DCLam dc2 x) with ttSub-complete {1+ n} {m} dc1 dc2 

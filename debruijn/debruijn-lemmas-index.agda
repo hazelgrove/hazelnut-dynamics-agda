@@ -2,6 +2,7 @@ open import Nat
 open import Prelude
 open import debruijn.debruijn-core-type
 open import debruijn.debruijn-core-exp
+open import debruijn.debruijn-core-subst
 open import debruijn.debruijn-core
 
 module debruijn.debruijn-lemmas-index where

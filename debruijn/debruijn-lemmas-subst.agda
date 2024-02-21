@@ -4,6 +4,7 @@ open import Nat
 open import Prelude
 open import debruijn.debruijn-core-type
 open import debruijn.debruijn-core-exp
+open import debruijn.debruijn-core-subst
 open import debruijn.debruijn-core
 open import debruijn.debruijn-weakening
 open import debruijn.debruijn-lemmas-index
@@ -13,24 +14,54 @@ open import debruijn.debruijn-lemmas-meet
 
 module debruijn.debruijn-lemmas-subst where
 
-  ttSubLam : ∀{n m d d' τ} → (ttSub n m d (·λ[ τ ] d')) == (·λ[ τ ] (ttSub (1+ n) m d d'))
-  ttSubLam {n} {m} {d} rewrite ↑d-↑td-comm {1} {m} {Z} {Z} {d = (↑d 0 (1+ n) d)} rewrite ↑d-compose Z (1+ n) d = refl
+  TTSubCorrect : ∀{n τ1 τ2} → TTSub' n τ1 τ2 == TTSub n τ1 τ2
+  TTSubCorrect {n} {τ1} {b} = refl
+  TTSubCorrect {n} {τ1} {⦇-⦈} = refl
+  TTSubCorrect {n} {τ1} {T x} with natEQ n x 
+  ... | Inl refl = refl 
+  ... | Inr neq = refl
+  TTSubCorrect {n} {τ1} {τ2 ==> τ3} rewrite TTSubCorrect {n} {τ1} {τ2} rewrite TTSubCorrect {n} {τ1} {τ3} = refl
+  TTSubCorrect {n} {τ1} {·∀ τ2} rewrite ↑compose 0 (1+ n) τ1 rewrite TTSubCorrect {1+ n} {τ1} {τ2} = refl
 
-  ttSubTLam : ∀{n m d d'} → (ttSub n m d (·Λ d')) == (·Λ (ttSub n (1+ m) d d'))
-  ttSubTLam {n} {m} {d} rewrite ↑td-compose 0 m (↑d 0 (1+ n) d) = refl
+  TtSubCorrect : ∀{n τ d} → TtSub' n τ d == TtSub n τ d
+  TtSubCorrect {n} {τ} {c} = refl
+  TtSubCorrect {n} {τ} {X x} = refl
+  TtSubCorrect {n} {τ} {⦇-⦈⟨ x ⟩} rewrite TTSubCorrect {n} {τ} {x} = refl
+  TtSubCorrect {n} {τ} {⦇⌜ d ⌟⦈⟨ x ⟩} rewrite TTSubCorrect {n} {τ} {x} rewrite TtSubCorrect {n} {τ} {d} = refl
+  TtSubCorrect {n} {τ} {d ∘ d₁} rewrite TtSubCorrect {n} {τ} {d} rewrite TtSubCorrect {n} {τ} {d₁} = refl
+  TtSubCorrect {n} {τ} {d < x >} rewrite TTSubCorrect {n} {τ} {x} rewrite TtSubCorrect {n} {τ} {d} = refl
+  TtSubCorrect {n} {τ} {d ⟨ x ⇒ x₁ ⟩} rewrite TTSubCorrect {n} {τ} {x} rewrite TTSubCorrect {n} {τ} {x₁} rewrite TtSubCorrect {n} {τ} {d} = refl
+  TtSubCorrect {n} {τ} {d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} rewrite TTSubCorrect {n} {τ} {x} rewrite TTSubCorrect {n} {τ} {x₁} rewrite TtSubCorrect {n} {τ} {d} = refl
+  TtSubCorrect {n} {τ} {·λ[ x ] d} rewrite TTSubCorrect {n} {τ} {x} rewrite TtSubCorrect {n} {τ} {d} = refl
+  TtSubCorrect {n} {τ} {·Λ d} rewrite ↑compose 0 (1+ n) τ rewrite TtSubCorrect {1+ n} {τ} {d} = refl
 
-  TtSubTLam : ∀{n τ d} → TtSub n τ (·Λ d) == ·Λ (TtSub (1+ n) τ d)
-  TtSubTLam {n} {τ} {d} rewrite ↑compose 0 (1+ n) τ = refl
-
-  -- ttSubVar : ∀{n m d} → (ttSub n m d (X n)) == ↑d 0 n (↑td 0 m d)
-  -- ttSubVar {n} {m} {d} with natEQ n n 
-  -- ... | Inr neq = abort (neq refl)
-  -- ... | Inl refl rewrite sym (↑d-↑td-comm {1+ n} {m} {Z} {Z} {d}) with ↓↑d-invert {n} {Z} {↑td 0 m d} 
-  -- ... | eq rewrite nat+1+ n Z rewrite nat+Z n rewrite eq = refl
-
-  ttSubVar : ∀{n m d} → ↓d n 1 (↑td 0 m (↑d 0 (1+ n) d)) == ↑d 0 n (↑td 0 m d)
-  ttSubVar {n} {m} {d} rewrite sym (↑d-↑td-comm {1+ n} {m} {Z} {Z} {d}) with ↓↑d-invert {n} {Z} {↑td 0 m d} 
+  ttSubCorrect : ∀{n m d1 d2} → ttSub' n m d1 d2 == ttSub n m d1 d2
+  ttSubCorrect {n} {m} {d1} {c} = refl
+  ttSubCorrect {n} {m} {d1} {⦇-⦈⟨ x ⟩} = refl
+  ttSubCorrect {n} {m} {d1} {⦇⌜ d2 ⌟⦈⟨ x ⟩} rewrite ttSubCorrect {n} {m} {d1} {d2} = refl
+  ttSubCorrect {n} {m} {d1} {d2 ∘ d3} rewrite ttSubCorrect {n} {m} {d1} {d2} rewrite ttSubCorrect {n} {m} {d1} {d3} = refl
+  ttSubCorrect {n} {m} {d1} {d2 < x >} rewrite ttSubCorrect {n} {m} {d1} {d2} = refl
+  ttSubCorrect {n} {m} {d1} {d2 ⟨ x ⇒ x₁ ⟩} rewrite ttSubCorrect {n} {m} {d1} {d2} = refl
+  ttSubCorrect {n} {m} {d1} {d2 ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} rewrite ttSubCorrect {n} {m} {d1} {d2} = refl
+  ttSubCorrect {n} {m} {d1} {·λ[ x ] d2} 
+    rewrite ↑d-↑td-comm {1} {m} {Z} {Z} {d = (↑d 0 (1+ n) d1)} 
+    rewrite ↑d-compose Z (1+ n) d1
+    rewrite ttSubCorrect {1+ n} {m} {d1} {d2} = refl
+  ttSubCorrect {n} {m} {d1} {·Λ d2} 
+    rewrite ↑td-compose 0 m (↑d 0 (1+ n) d1)
+    rewrite ttSubCorrect {n} {1+ m} {d1} {d2} = refl
+  ttSubCorrect {n} {m} {d1} {X x} with natEQ x n
+  ... | Inr neq = refl
+  ... | Inl refl rewrite sym (↑d-↑td-comm {1+ n} {m} {Z} {Z} {d1}) with ↓↑d-invert {x} {Z} {↑td 0 m d1} 
   ... | eq rewrite nat+1+ n Z rewrite nat+Z n rewrite eq = refl
+
+  -- TTSub-shift : ∀{l n m τ1 τ2} → ↑ n m (TTSub l τ1 τ2) == TTSub l (↑ n m τ1) (↑ (1+ n) m τ2) 
+  -- TTSub-shift {l} {n} {m} {τ1} {b} = refl
+  -- TTSub-shift {l} {n} {m} {τ1} {⦇-⦈} = refl
+  -- TTSub-shift {l} {n} {m} {τ1} {τ2 ==> τ3} rewrite TTSub-shift {l} {n} {m} {τ1} {τ2} rewrite TTSub-shift {l} {n} {m} {τ1} {τ3} = refl
+  -- TTSub-shift {l} {n} {m} {τ1} {·∀ τ2} rewrite TTSub-shift {1+ l} {1+ n} {m} {τ1} {τ2} = {!   !}
+  -- TTSub-shift {l} {n} {m} {τ1} {T x} = {!   !}
+      
 
   wf-TTSub-helper2 :
     ∀{t n Γ} →
@@ -131,13 +162,13 @@ module debruijn.debruijn-lemmas-subst where
   -- SubSub-helper n m τ1 τ2 ⦇-⦈ = refl
   -- SubSub-helper n m τ1 τ2 (τ3 ==> τ4) rewrite SubSub-helper n m τ1 τ2 τ3 rewrite SubSub-helper n m τ1 τ2 τ4 = refl
   -- SubSub-helper n m τ1 τ2 (·∀ τ3) with SubSub-helper n (1+ m) τ1 τ2 τ3 
-  -- ... | result rewrite ↑compose Z (m nat+ 1) τ2 
+  -- ... | result rewrite ↑compose Z (m nat+ 1) τ2   
   --   rewrite ↑compose Z (1+ (m nat+ n)) τ1
   --   rewrite ↑compose Z (1+ m) τ2
   --   rewrite ↑compose Z (1+ m) (↓ n 1 (TT[ ↑ 0 (1+ n) τ1 / n ] τ2)) 
   --   rewrite ↑compose Z (1+ (m nat+ 1+ n)) τ1 rewrite result = refl
-
+ 
   -- SubSub : ∀{n τ1 τ2 τ3} → 
   --   TTSub n τ1 (TTSub Z τ2 τ3) == 
   --   TTSub Z (TTSub n τ1 τ2) (TTSub (1+ n) τ1 τ3)          
-  -- SubSub {n = n} {τ1 = τ1} {τ2 = τ2} {τ3 = τ3} = SubSub-helper n Z τ1 τ2 τ3
+  -- SubSub {n = n} {τ1 = τ1} {τ2 = τ2} {τ3 = τ3} = SubSub-helper n Z τ1 τ2 τ3 

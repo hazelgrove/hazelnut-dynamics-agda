@@ -1,6 +1,7 @@
 open import Nat
 open import Prelude
 open import debruijn.debruijn-core-type
+open import debruijn.debruijn-core-subst
 open import debruijn.debruijn-core
 open import debruijn.debruijn-weakening
 open import debruijn.debruijn-lemmas-index

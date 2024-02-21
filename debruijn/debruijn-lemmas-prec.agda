@@ -1,6 +1,7 @@
 open import Nat
 open import Prelude
 open import debruijn.debruijn-core-type
+open import debruijn.debruijn-core-subst
 open import debruijn.debruijn-core
 open import debruijn.debruijn-lemmas-consistency
 
@@ -65,13 +66,14 @@ module debruijn.debruijn-lemmas-prec where
   ⊑t-TT prec1 (PTArr prec2 prec3) = PTArr (⊑t-TT prec1 prec2) (⊑t-TT prec1 prec3)
   ⊑t-TT prec1 (PTForall prec2) = PTForall (⊑t-TT (⊑t-↑ prec1) prec2)
 
-  ⊑t-TTsub : ∀{τ1 τ2 τ3 τ4} → (τ1 ⊑t τ3) → (τ2 ⊑t τ4) → TTSub Z τ1 τ2 ⊑t TTSub Z τ3 τ4
+  ⊑t-TTsub : ∀{n τ1 τ2 τ3 τ4} → (τ1 ⊑t τ3) → (τ2 ⊑t τ4) → TTSub n τ1 τ2 ⊑t TTSub n τ3 τ4
   ⊑t-TTsub prec1 PTBase = PTBase
   ⊑t-TTsub prec1 PTHole = PTHole
-  ⊑t-TTsub prec1 (PTTVar {n = Z}) = ⊑t-↓ (⊑t-↑ prec1)
-  ⊑t-TTsub prec1 (PTTVar {n = 1+ n}) = PTTVar
+  ⊑t-TTsub {n = n} prec1 (PTTVar {n = m}) with natEQ n m 
+  ... | Inl refl = ⊑t-↓ (⊑t-↑ prec1) 
+  ... | Inr neq = PTTVar
   ⊑t-TTsub prec1 (PTArr prec2 prec3) = PTArr (⊑t-TTsub prec1 prec2) (⊑t-TTsub prec1 prec3)
-  ⊑t-TTsub {τ3 = τ3} prec1 (PTForall prec2) = PTForall (⊑t-↓ (⊑t-TT (⊑t-↑ (⊑t-↑ prec1)) prec2))
+  ⊑t-TTsub {τ3 = τ3} prec1 (PTForall prec2) = PTForall (⊑t-TTsub prec1 prec2) 
 
   ⊑c-var : ∀{n τ Γ Γ'} → (n , τ ∈ Γ) → Γ ⊑c Γ' → Σ[ τ' ∈ htyp ] ((n , τ' ∈ Γ') × (τ ⊑t τ'))
   ⊑c-var (InCtxSkip inctx) (PCTVar precc) with ⊑c-var inctx precc

@@ -4,6 +4,7 @@ open import Nat
 open import Prelude
 open import debruijn.debruijn-core-type
 open import debruijn.debruijn-core-exp
+open import debruijn.debruijn-core-subst
 open import debruijn.debruijn-core
 open import debruijn.debruijn-weakening
 open import debruijn.debruijn-lemmas-index
@@ -219,7 +220,7 @@ module debruijn.debruijn-typing-subst where
   wt-count-helper {Γ2 = Γ2} {n2 = n2} {m2 = m2} {d = d} {τ = τ} CtxCtEmpty ctxct2 wt rewrite ↑tdZ m2 d rewrite ↑dZ n2 d rewrite ↑Z m2 τ rewrite ctx+∅ Γ2 = wt
   wt-count-helper ctxct1 ctxct2 TAConst = TAConst
   wt-count-helper ctxct1 ctxct2 (TAAp wt wt₁) = TAAp (wt-count-helper ctxct1 ctxct2 wt) (wt-count-helper ctxct1 ctxct2 wt₁)
-  wt-count-helper ctxct1 ctxct2 (TATAp x wt x₁) = TATAp (wf-count ctxct1 ctxct2 x) (wt-count-helper ctxct1 ctxct2 wt) {!   !}
+  wt-count-helper ctxct1 ctxct2 (TATAp x wt refl) = TATAp (wf-count ctxct1 ctxct2 x) (wt-count-helper ctxct1 ctxct2 wt) {!   !}
   wt-count-helper ctxct1 ctxct2 (TAEHole x) = TAEHole (wf-count ctxct1 ctxct2 x)
   wt-count-helper ctxct1 ctxct2 (TANEHole x wt) = TANEHole (wf-count ctxct1 ctxct2 x) (wt-count-helper ctxct1 ctxct2 wt)
   wt-count-helper ctxct1 ctxct2 (TACast wt x x₁) = TACast (wt-count-helper ctxct1 ctxct2 wt) (wf-count ctxct1 ctxct2 x) {!   !}
@@ -245,11 +246,11 @@ module debruijn.debruijn-typing-subst where
   wt-ttSub-helper ctxct wt1 (TANEHole x wt2) = TANEHole (strengthen-wf-var-reverse x) (wt-ttSub-helper ctxct wt1 wt2)
   wt-ttSub-helper ctxct wt1 (TACast wt2 x x₁) = TACast (wt-ttSub-helper ctxct wt1 wt2) (strengthen-wf-var-reverse x) x₁
   wt-ttSub-helper ctxct wt1 (TAFailedCast wt2 x x₁ x₂) = TAFailedCast (wt-ttSub-helper ctxct wt1 wt2) x x₁ x₂
-  wt-ttSub-helper {Γ} {n} {m} {d1} ctxct wt1 (TALam {τ1 = τ} {d = d} x wt2) rewrite ttSubLam {n} {m} {d1} {d} {τ} = TALam (strengthen-wf-var-reverse x) (wt-ttSub-helper {Γ = (τ , Γ)} (CtxCtVar ctxct) wt1 wt2)
-  wt-ttSub-helper {Γ} {n} {m} {d1} ctxct wt1 (TATLam {d = d} wt2) rewrite ttSubTLam {n} {m} {d1} {d} = TATLam (wt-ttSub-helper {Γ = (TVar, Γ)} (CtxCtTVar ctxct) wt1 wt2)
+  wt-ttSub-helper {Γ} {n} {m} {d1} ctxct wt1 (TALam {τ1 = τ} {d = d} x wt2) = TALam (strengthen-wf-var-reverse x) (wt-ttSub-helper {Γ = (τ , Γ)} (CtxCtVar ctxct) wt1 wt2)
+  wt-ttSub-helper {Γ} {n} {m} {d1} ctxct wt1 (TATLam {d = d} wt2) = TATLam (wt-ttSub-helper {Γ = (TVar, Γ)} (CtxCtTVar ctxct) wt1 wt2)
   wt-ttSub-helper {Γ} {n} {m} ctxct wt1 (TAVar {n = x} inctx) with natEQ x n 
-  wt-ttSub-helper {Γ} {n} {m} {d1} ctxct wt1 (TAVar inctx) | Inl refl rewrite ttSubVar {n} {m} {d1} rewrite inctx-count ctxct inctx = wt-count ctxct wt1
-  wt-ttSub-helper {Γ} {n} {m} ctxct wt1 (TAVar {n = x} inctx) | Inr neq = {!   !}
+  wt-ttSub-helper {Γ} {n} {m} {d1} ctxct wt1 (TAVar inctx) | Inl refl = {!   !} --rewrite inctx-count ctxct inctx = wt-count ctxct wt1
+  wt-ttSub-helper {Γ} {n} {m} ctxct wt1 (TAVar {n = x} inctx) | Inr neq = TAVar {!   !}
  
   wt-ttSub : ∀{d1 d2 τ1 τ2} →
     (∅ ⊢ d1 :: τ1) → 
