@@ -39,7 +39,7 @@ module complete-preservation where
              d ↦ d' →
              d' dcomplete
   cp-rhs dc TAConst (Step FHOuter () FHOuter)
-  cp-rhs dc (TAVar x₁) stp = abort (somenotnone (! x₁))
+  cp-rhs dc (TAVar x₁) (Step FHOuter () x₃)
   cp-rhs dc (TALam _ _ wt) (Step FHOuter () FHOuter)
   -- this case is a little more complicated than it feels like it ought to
   -- be, just from horsing around with agda implicit variables.
