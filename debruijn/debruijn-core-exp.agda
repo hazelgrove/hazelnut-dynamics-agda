@@ -47,6 +47,9 @@ module debruijn.debruijn-core-exp where
     PAp :  ∀{e1 e2 e3 e4} → e1 ⊑ e3 → e2 ⊑ e4 → (e1 ∘ e2) ⊑ (e3 ∘ e4)
     PTAp : ∀{e1 e2 τ1 τ2} → e1 ⊑ e2 → τ1 ⊑t τ2 → (e1 < τ1 >) ⊑ (e2 < τ2 >)
 
+  data _subsumable : (e : hexp) → Set where 
+    Subsumable : ∀{e} → (e ≠ ⦇-⦈) → ((e' : hexp) → e ≠ ⦇⌜ e' ⌟⦈) → ((e' : hexp) → e ≠ ·Λ e') → e subsumable
+
   -- values
   data _val : (d : ihexp) → Set where
     VConst : c val

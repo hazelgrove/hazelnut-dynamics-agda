@@ -5,25 +5,75 @@ open import debruijn.debruijn-core
 
 module debruijn.debruijn-weakening where
 
+  weakening-wf-var-n : ∀{Γ n τ τ'} →
+    ctx-extend-tvars n Γ ⊢ τ wf →
+    ctx-extend-tvars n (τ' , Γ) ⊢ τ wf
+  weakening-wf-var-n {n = Z} (WFSkip wf) = WFSkip (WFSkip wf)
+  weakening-wf-var-n {n = Z} WFVarZ = WFSkip WFVarZ
+  weakening-wf-var-n {n = Z} (WFVarS wf) = WFSkip (WFVarS wf)
+  weakening-wf-var-n {n = Z} WFBase = WFBase
+  weakening-wf-var-n {n = Z} WFHole = WFHole
+  weakening-wf-var-n {n = Z} (WFArr wf wf₁) = WFArr (weakening-wf-var-n wf) (weakening-wf-var-n wf₁)
+  weakening-wf-var-n {n = Z} (WFForall wf) = WFForall (weakening-wf-var-n wf)
+  weakening-wf-var-n {n = 1+ n} WFVarZ = WFVarZ
+  weakening-wf-var-n {n = 1+ n} (WFVarS wf) = WFVarS (weakening-wf-var-n wf)
+  weakening-wf-var-n {n = 1+ n} WFBase = WFBase
+  weakening-wf-var-n {n = 1+ n} WFHole = WFHole
+  weakening-wf-var-n {n = 1+ n} (WFArr wf wf₁) = WFArr (weakening-wf-var-n wf) (weakening-wf-var-n wf₁)
+  weakening-wf-var-n {n = 1+ n} (WFForall wf) = WFForall (weakening-wf-var-n wf)
+
   weakening-wf-var : ∀{Γ τ τ'} →
     Γ ⊢ τ wf →
     (τ' , Γ) ⊢ τ wf
-  weakening-wf-var (WFSkipZ wf) = WFSkipZ (weakening-wf-var wf)
-  weakening-wf-var WFVarZ = WFSkipZ WFVarZ
-  weakening-wf-var (WFSkipS wf) = WFSkipS (weakening-wf-var wf)
-  weakening-wf-var (WFVarS wf) = WFSkipS (WFVarS wf)
-  weakening-wf-var WFBase = WFBase
-  weakening-wf-var WFHole = WFHole
-  weakening-wf-var (WFArr wf wf₁) = WFArr (weakening-wf-var wf) (weakening-wf-var wf₁)
-  weakening-wf-var (WFForall wf) = {!   !}
+  weakening-wf-var = weakening-wf-var-n 
 
+  strengthen-wf-var-n : ∀{Γ n τ τ'} →
+    ctx-extend-tvars n (τ' , Γ) ⊢ τ wf →
+    ctx-extend-tvars n Γ ⊢ τ wf
+  strengthen-wf-var-n {n = Z} (WFSkip wf) = wf
+  strengthen-wf-var-n {n = Z} WFBase = WFBase
+  strengthen-wf-var-n {n = Z} WFHole = WFHole
+  strengthen-wf-var-n {n = Z} (WFArr wf wf₁) = WFArr (strengthen-wf-var-n wf) (strengthen-wf-var-n wf₁)
+  strengthen-wf-var-n {n = Z} (WFForall wf) = WFForall (strengthen-wf-var-n wf)
+  strengthen-wf-var-n {n = 1+ n} WFVarZ = WFVarZ
+  strengthen-wf-var-n {n = 1+ n} (WFVarS wf) = WFVarS (strengthen-wf-var-n wf)
+  strengthen-wf-var-n {n = 1+ n} WFBase = WFBase
+  strengthen-wf-var-n {n = 1+ n} WFHole = WFHole
+  strengthen-wf-var-n {n = 1+ n} (WFArr wf wf₁) = WFArr (strengthen-wf-var-n wf) (strengthen-wf-var-n wf₁)
+  strengthen-wf-var-n {n = 1+ n} (WFForall wf) = WFForall (strengthen-wf-var-n wf)
+
+  strengthen-wf-var : ∀{Γ τ τ'} →
+    (τ' , Γ) ⊢ τ wf →
+    Γ ⊢ τ wf
+  strengthen-wf-var = strengthen-wf-var-n 
+
+  strengthen-wf-var-reverse-n : ∀{Γ n τ τ'} →
+    ctx-extend-tvars n (Γ ctx+ (τ' , ∅)) ⊢ τ wf →
+    ctx-extend-tvars n Γ ⊢ τ wf
+  strengthen-wf-var-reverse-n {Γ = x , Γ} {n = Z} (WFSkip wf) = WFSkip (strengthen-wf-var-reverse-n {n = Z} wf)
+  strengthen-wf-var-reverse-n {Γ = TVar, Γ} {n = Z} (WFVarS wf) = WFVarS (strengthen-wf-var-reverse-n {n = Z} wf)
+  strengthen-wf-var-reverse-n {Γ = Γ} {n = 1+ n} (WFVarS wf) = WFVarS (strengthen-wf-var-reverse-n {n = n} wf)
+  strengthen-wf-var-reverse-n {n = 1+ n} WFVarZ = WFVarZ
+  strengthen-wf-var-reverse-n {Γ = TVar, Γ} {n = Z} WFVarZ = WFVarZ
+  strengthen-wf-var-reverse-n WFBase = WFBase
+  strengthen-wf-var-reverse-n WFHole = WFHole
+  strengthen-wf-var-reverse-n {n = n} (WFArr wf wf₁) = WFArr (strengthen-wf-var-reverse-n {n = n} wf) (strengthen-wf-var-reverse-n {n = n} wf₁)
+  strengthen-wf-var-reverse-n {n = n} (WFForall wf) = WFForall (strengthen-wf-var-reverse-n {n = 1+ n} wf)
+
+  strengthen-wf-var-reverse : ∀{Γ τ τ'} →
+    (Γ ctx+ (τ' , ∅)) ⊢ τ wf →
+    Γ ⊢ τ wf
+  strengthen-wf-var-reverse wf = strengthen-wf-var-reverse-n {n = Z} wf
+  
   weakening-wf : ∀{Γ τ} →
     Γ ⊢ τ wf →
     (TVar, Γ) ⊢ τ wf
-  weakening-wf (WFSkipZ wf) = WFVarZ
+  weakening-wf (WFSkip {n = Z} wf) = WFVarZ
+  weakening-wf (WFSkip {x , Γ} {n = 1+ n} (WFSkip wf)) with weakening-wf wf 
+  ... | WFVarS wf' = WFVarS (WFSkip (WFSkip wf'))
+  weakening-wf (WFSkip {TVar, Γ} {n = 1+ n} wf)  with weakening-wf wf 
+  ... | WFVarS wf' = WFVarS (WFSkip wf')
   weakening-wf WFVarZ = WFVarZ
-  weakening-wf (WFSkipS (WFSkipS wf)) = {!   !}
-  weakening-wf (WFSkipS (WFVarS wf)) = WFVarS {! WFSkipS ?  !}
   weakening-wf (WFVarS wf) = WFVarS (weakening-wf wf)
   weakening-wf WFBase = WFBase
   weakening-wf WFHole = WFHole
@@ -90,3 +140,4 @@ module debruijn.debruijn-weakening where
   --       h1 : 1+ Θ ≠ 1+ n
   --       h1 eq with (sym eq) 
   --       ... | refl = neq refl
+ 

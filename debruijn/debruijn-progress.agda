@@ -19,7 +19,7 @@ module debruijn.debruijn-progress where
     BV : ∀{d} → d boxedval → ok d
 
   progress : {d : ihexp} {τ : htyp} →
-    Z , ∅ ⊢ d :: τ →
+    ∅ ⊢ d :: τ →
     ok d
   progress TAConst = BV (BVVal VConst) 
   progress (TALam x wt) = BV (BVVal VLam)

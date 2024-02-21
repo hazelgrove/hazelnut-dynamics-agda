@@ -81,9 +81,8 @@ module debruijn.debruijn-core-type where
   -- well-formedness of types
   data _⊢_wf : ctx → htyp → Set where
     -- WFVar : ∀{Γ n} → Γ ⊢ n varwf → Γ ⊢ T n wf
-    WFSkipZ : ∀{Γ τ} → Γ ⊢ T Z wf → (τ , Γ) ⊢ T Z wf
+    WFSkip : ∀{Γ n τ} → Γ ⊢ T n wf → (τ , Γ) ⊢ T n wf
     WFVarZ : ∀{Γ} → (TVar, Γ) ⊢ T Z wf
-    WFSkipS : ∀{Γ τ n} → Γ ⊢ T (1+ n) wf → (τ , Γ) ⊢ T (1+ n) wf
     WFVarS : ∀{Γ n} → Γ ⊢ T n wf → (TVar, Γ) ⊢ T (1+ n) wf
     WFBase : ∀{Γ} → Γ ⊢ b wf
     WFHole : ∀{Γ} → Γ ⊢ ⦇-⦈ wf

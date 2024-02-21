@@ -9,13 +9,14 @@ module debruijn.debruijn-type-assignment-unicity where
     n , τ ∈ Γ → 
     n , τ' ∈ Γ → 
     τ == τ'
+  context-unicity (InCtxSkip inctx1) (InCtxSkip inctx2) rewrite context-unicity inctx1 inctx2 = refl
   context-unicity InCtxZ InCtxZ = refl
   context-unicity (InCtx1+ inctx1) (InCtx1+ inctx2) = context-unicity inctx1 inctx2
 
   -- type assignment only assigns one type
-  type-assignment-unicity : ∀{Γ d τ' τ Θ} →
-    Θ , Γ ⊢ d :: τ →
-    Θ , Γ ⊢ d :: τ' →
+  type-assignment-unicity : ∀{Γ d τ' τ} →
+    Γ ⊢ d :: τ →
+    Γ ⊢ d :: τ' →
     τ == τ'
   type-assignment-unicity TAConst TAConst = refl
   type-assignment-unicity (TAVar inctx1) (TAVar inctx2) = context-unicity inctx1 inctx2

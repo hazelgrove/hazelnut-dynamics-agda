@@ -27,34 +27,34 @@ module debruijn.debruijn-typed-elaboration where
   -- ⊑t-ana ctxwf wf EAEHole = ⊑t-refl _
   -- ⊑t-ana ctxwf wf (EANEHole x) = ⊑t-refl _
 
-  ⊑t-ana : ∀{Θ Γ e τ d τ'} → Θ , Γ ⊢ e ⇐ τ ~> d :: τ' → τ' ⊑t τ
+  ⊑t-ana : ∀{Γ e τ d τ'} → Γ ⊢ e ⇐ τ ~> d :: τ' → τ' ⊑t τ
   ⊑t-ana (EALam meet ana) with ⊓-lb meet 
   ... | PTHole , _ = PTHole
   ... | PTArr prec1 prec2 , _ = PTArr prec1 (⊑t-trans (⊑t-ana ana) prec2)
   ⊑t-ana (EATLam neq1 neq2 meet ana) with ⊓-lb meet 
   ... | PTHole , _ = PTHole
   ... | PTForall prec , _ = PTForall (⊑t-trans (⊑t-ana ana) prec)
-  ⊑t-ana (EASubsume neq1 neq2 syn meet) = π1 (⊓-lb meet)
+  ⊑t-ana (EASubsume neq syn meet) = π1 (⊓-lb meet)
   ⊑t-ana EAEHole = ⊑t-refl _
   ⊑t-ana (EANEHole _) = ⊑t-refl _
 
-  consist-ana : ∀{Γ e τ τ' d Θ} →
-    Θ ⊢ Γ ctxwf → 
-    Θ ⊢ τ wf → 
-    Θ , Γ ⊢ e ⇐ τ ~> d :: τ' →
+  consist-ana : ∀{Γ e τ τ' d} →
+    ⊢ Γ ctxwf → 
+    Γ ⊢ τ wf → 
+    Γ ⊢ e ⇐ τ ~> d :: τ' →
     τ' ~ τ
   consist-ana ctxwf wf ana = ⊑t-consist (⊑t-ana ana)
 
   mutual 
 
-    typed-elaboration-syn : ∀{Γ e τ d Θ} →
-      (Θ ⊢ Γ ctxwf) → 
-      (Θ , Γ ⊢ e ⇒ τ ~> d) →
-      (Θ , Γ ⊢ d :: τ)
+    typed-elaboration-syn : ∀{Γ e τ d} →
+      (⊢ Γ ctxwf) → 
+      (Γ ⊢ e ⇒ τ ~> d) →
+      ( Γ ⊢ d :: τ)
     typed-elaboration-syn ctxwf ESConst = TAConst
     typed-elaboration-syn ctxwf (ESVar x) = TAVar x
-    typed-elaboration-syn ctxwf (ESLam x syn) = TALam x (typed-elaboration-syn (CtxWFExtend x ctxwf) syn)
-    typed-elaboration-syn ctxwf (ESTLam syn) = TATLam (typed-elaboration-syn (weakening-ctx ctxwf) syn)
+    typed-elaboration-syn ctxwf (ESLam x syn) = TALam x (typed-elaboration-syn (CtxWFVar x ctxwf) syn)
+    typed-elaboration-syn ctxwf (ESTLam syn) = TATLam (typed-elaboration-syn (CtxWFTVar ctxwf) syn)
     typed-elaboration-syn ctxwf (ESAp syn meet ana1 ana2) with ⊓-lb meet | wf-⊓ meet (wf-syn ctxwf syn) (WFArr WFHole WFHole)
     ... | prec1 , prec2 | WFArr wf1 wf2 = 
       TAAp (TACast (typed-elaboration-ana ctxwf (WFArr wf1 wf2) ana1) (WFArr wf1 wf2) (consist-ana ctxwf (WFArr wf1 wf2) ana1)) 
@@ -66,17 +66,17 @@ module debruijn.debruijn-typed-elaboration where
     typed-elaboration-syn ctxwf (ESNEHole syn) = TANEHole WFHole (typed-elaboration-syn ctxwf syn)
     typed-elaboration-syn ctxwf (ESAsc wf ana) = TACast (typed-elaboration-ana ctxwf wf ana) wf (consist-ana ctxwf wf ana)
 
-    typed-elaboration-ana : ∀{Γ e τ τ' d Θ} →
-      Θ ⊢ Γ ctxwf → 
-      Θ ⊢ τ wf → 
-      Θ , Γ ⊢ e ⇐ τ ~> d :: τ' →
-      Θ , Γ ⊢ d :: τ'
+    typed-elaboration-ana : ∀{Γ e τ τ' d} →
+      ⊢ Γ ctxwf → 
+      Γ ⊢ τ wf → 
+      Γ ⊢ e ⇐ τ ~> d :: τ' →
+      Γ ⊢ d :: τ'
     typed-elaboration-ana ctxwf wf EAEHole = TAEHole wf
     typed-elaboration-ana ctxwf wf (EANEHole x) = TANEHole wf (typed-elaboration-syn ctxwf x)
     typed-elaboration-ana ctxwf wf (EALam meet ana) with wf-⊓ meet wf (WFArr WFHole WFHole) 
-    ... | WFArr wf1 wf2 = TALam wf1 (typed-elaboration-ana (CtxWFExtend wf1 ctxwf) wf2 ana)
+    ... | WFArr wf1 wf2 = TALam wf1 (typed-elaboration-ana (CtxWFVar wf1 ctxwf) (weakening-wf-var wf2) ana)
     typed-elaboration-ana ctxwf wf (EATLam neq1 neq2 meet ana) with wf-⊓ meet wf (WFForall WFHole) 
-    ... | WFForall wf' = TATLam (typed-elaboration-ana (weakening-ctx ctxwf) wf' ana)
-    typed-elaboration-ana ctxwf wf (EASubsume neq1 neq2 syn meet) = 
+    ... | WFForall wf' = TATLam (typed-elaboration-ana (CtxWFTVar ctxwf) wf' ana)
+    typed-elaboration-ana ctxwf wf (EASubsume neq syn meet) = 
         TACast (typed-elaboration-syn ctxwf syn) (wf-⊓ meet wf (wf-elab-syn ctxwf syn)) (~sym (⊑t-consist (π2 (⊓-lb meet))))
     

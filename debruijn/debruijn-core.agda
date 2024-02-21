@@ -263,8 +263,7 @@ module debruijn.debruijn-core where
         (TVar, Γ) ⊢ e ⇐ τ2 ~> d :: τ2' →
         Γ ⊢ (·Λ e) ⇐ τ1 ~> (·Λ d) :: (·∀ τ2')
       EASubsume : ∀{e Γ τ1 τ2 τ3 d} →
-        (e ≠ ⦇-⦈) →
-        ((e' : hexp) → e ≠ ⦇⌜ e' ⌟⦈) →
+        e subsumable →
         Γ ⊢ e ⇒ τ2 ~> d →
         τ1 ⊓ τ2 == τ3 →
         Γ ⊢ e ⇐ τ1 ~> (d ⟨ τ2 ⇒ τ3 ⟩) :: τ3
@@ -419,37 +418,48 @@ module debruijn.debruijn-core where
                  d' ↦* d'' →
                  d  ↦* d''
 
-  -- -- those types without holes
-  -- data _tcomplete : htyp → Set where
-  --   TCBase : b tcomplete
-  --   TCVar : ∀{a} → (T a) tcomplete
-  --   TCArr : ∀{τ1 τ2} → τ1 tcomplete → τ2 tcomplete → (τ1 ==> τ2) tcomplete
-  --   TCForall : ∀{t e} → e tcomplete → (·∀ t e) tcomplete 
+  -- those types without holes
+  data _tcomplete : htyp → Set where
+    TCBase : b tcomplete
+    TCVar : ∀{n} → (T n) tcomplete
+    TCArr : ∀{τ1 τ2} → τ1 tcomplete → τ2 tcomplete → (τ1 ==> τ2) tcomplete
+    TCForall : ∀{e} → e tcomplete → (·∀ e) tcomplete 
 
-  -- -- those external expressions without holes
-  -- data _ecomplete : hexp → Set where
-  --   ECConst : c ecomplete
-  --   ECAsc : ∀{τ e} → τ tcomplete → e ecomplete → (e ·: τ) ecomplete
-  --   ECVar : ∀{x} → (X x) ecomplete
-  --   ECLam1 : ∀{x e} → e ecomplete → (·λ x e) ecomplete
-  --   ECLam2 : ∀{x e τ} → e ecomplete → τ tcomplete → (·λ x [ τ ] e) ecomplete
-  --   ECTLam : ∀{t e} → e ecomplete → (·Λ t e) ecomplete
-  --   ECAp : ∀{e1 e2} → e1 ecomplete → e2 ecomplete → (e1 ∘ e2) ecomplete
-  --   ECTAp : ∀{τ e} → τ tcomplete → e ecomplete → (e < τ >) ecomplete
+  -- those external expressions without holes
+  data _ecomplete : hexp → Set where
+    ECConst : c ecomplete
+    ECAsc : ∀{τ e} → τ tcomplete → e ecomplete → (e ·: τ) ecomplete
+    ECVar : ∀{x} → (X x) ecomplete
+    ECLam1 : ∀{e} → e ecomplete → (·λ e) ecomplete
+    ECLam2 : ∀{e τ} → e ecomplete → τ tcomplete → (·λ[ τ ] e) ecomplete
+    ECTLam : ∀{e} → e ecomplete → (·Λ e) ecomplete
+    ECAp : ∀{e1 e2} → e1 ecomplete → e2 ecomplete → (e1 ∘ e2) ecomplete
+    ECTAp : ∀{τ e} → τ tcomplete → e ecomplete → (e < τ >) ecomplete
 
-  -- -- those internal expressions without holes
-  -- data _dcomplete : ihexp → Set where
-  --   DCVar : ∀{x} → (X x) dcomplete
-  --   DCConst : c dcomplete
-  --   DCLam : ∀{x τ d} → d dcomplete → τ tcomplete → (·λ x [ τ ] d) dcomplete
-  --   DCTLam : ∀{t d} → d dcomplete → (·Λ t d) dcomplete
-  --   DCAp : ∀{d1 d2} → d1 dcomplete → d2 dcomplete → (d1 ∘ d2) dcomplete
-  --   DCTAp : ∀{τ d} → τ tcomplete → d dcomplete → (d < τ >) dcomplete
-  --   DCCast : ∀{d τ1 τ2} → d dcomplete → τ1 tcomplete → τ2 tcomplete → (d ⟨ τ1 ⇒ τ2 ⟩) dcomplete
+  -- those internal expressions without holes
+  data _dcomplete : ihexp → Set where
+    DCVar : ∀{x} → (X x) dcomplete
+    DCConst : c dcomplete
+    DCLam : ∀{τ d} → d dcomplete → τ tcomplete → (·λ[ τ ] d) dcomplete
+    DCTLam : ∀{d} → d dcomplete → (·Λ d) dcomplete
+    DCAp : ∀{d1 d2} → d1 dcomplete → d2 dcomplete → (d1 ∘ d2) dcomplete
+    DCTAp : ∀{τ d} → τ tcomplete → d dcomplete → (d < τ >) dcomplete
+    DCCast : ∀{d τ1 τ2} → d dcomplete → τ1 tcomplete → τ2 tcomplete → (d ⟨ τ1 ⇒ τ2 ⟩) dcomplete
 
-  -- -- contexts that only produce complete types
-  -- _gcomplete : ctx → Set
-  -- Γ gcomplete = (x : Nat) (τ : htyp) → (x , τ) ∈ Γ → τ tcomplete
+  data _dcompleteid : ihexp → Set where
+    DCVar : ∀{x} → (X x) dcompleteid
+    DCConst : c dcompleteid
+    DCLam : ∀{τ d} → d dcompleteid → τ tcomplete → (·λ[ τ ] d) dcompleteid
+    DCTLam : ∀{d} → d dcompleteid → (·Λ d) dcompleteid
+    DCAp : ∀{d1 d2} → d1 dcompleteid → d2 dcompleteid → (d1 ∘ d2) dcompleteid
+    DCTAp : ∀{τ d} → τ tcomplete → d dcompleteid → (d < τ >) dcompleteid
+    DCCast : ∀{d τ} → d dcompleteid → τ tcomplete → (d ⟨ τ ⇒ τ ⟩) dcompleteid
+
+  -- contexts that only produce complete types
+  data _gcomplete : ctx → Set where
+    GCEmpty : ∅ gcomplete
+    GCVar : ∀{Γ τ} → Γ gcomplete → τ tcomplete → (τ , Γ) gcomplete
+    GCTVar : ∀{Γ} → Γ gcomplete → (TVar, Γ) gcomplete
 
   -- -- those internal expressions where every cast is the identity cast and
   -- -- there are no failed casts
@@ -463,3 +473,4 @@ module debruijn.debruijn-core where
   --   CIAp     : ∀{d1 d2} → cast-id d1 → cast-id d2 → cast-id (d1 ∘ d2)
   --   CITap    : ∀{τ d} → cast-id d → cast-id (d < τ >)
   --   CICast   : ∀{d τ} → cast-id d → cast-id (d ⟨ τ ⇒ τ ⟩)
+ 
