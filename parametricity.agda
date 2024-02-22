@@ -719,7 +719,9 @@ module parametricity where
     d val →
     d' val →
     d =0 d'
-  eq0''-val-eq0 eq0 v v' = {!   !}
+  eq0''-val-eq0 (Eq0NoLeft (Eq0NoCasts Eq0Const)) v v' = Eq0Const
+  eq0''-val-eq0 (Eq0NoLeft (Eq0NoCasts (Eq0Lam x))) v v' = Eq0Lam x
+  eq0''-val-eq0 (Eq0NoLeft (Eq0NoCasts (Eq0TLam x))) v v' = Eq0TLam x
 
   mutual
     eq0''n-sym : ∀{d d'} →
@@ -737,7 +739,7 @@ module parametricity where
     eq0''r-sym : ∀{d d'} →
       d =0''r d' →
       d' =0'' d
-    eq0''r-sym (Eq0NoCasts x) = {!   !} -- Eq0NoCasts (eq0''n-sym x)
+    eq0''r-sym (Eq0NoCasts x) = Eq0NoLeft (Eq0NoCasts (eq0''n-sym x))
     eq0''r-sym (Eq0CastR eq0) = Eq0CastL (eq0''r-sym eq0)
     eq0''r-sym (Eq0FailedCastR eq0) = Eq0FailedCastL (eq0''r-sym eq0)
     
@@ -773,7 +775,7 @@ module parametricity where
   eq0''-step-pres wt wt' (Eq0CastR eq0) step step' = {!   !}
   eq0''-step-pres wt wt' (Eq0FailedCastL eq0) (MSStep (Step x step x') ms) step' = {!   !}
   eq0''-step-pres wt wt' (Eq0FailedCastR eq0) step (MSStep (Step x step' x') ms) = {!   !}
--}
+
   eq0-ctxin-lemma : 
     ∀ {d1 d2 d1' ε1} →
     d1 =0 d2 →
@@ -792,56 +794,67 @@ module parametricity where
   ... | d2' , ε2 , eq1 , eq2 , eq3 = _ , _ , FHCast eq1 , eq2 , Eq0CastL (Eq0CastR eq3)
   eq0-ctxin-lemma (Eq0FailedCast eq) (FHFailedCast ctxin) with eq0-ctxin-lemma eq ctxin
   ... | d2' , ε2 , eq1 , eq2 , eq3 =  _ , _ , FHFailedCast eq1 , eq2 , Eq0FailedCastL (Eq0FailedCastR eq3)
+-}
+
+  -- As written in the Agda, this is not currently true. This is because e.g. we can evaluate both on the left and right side of a function application.
+  -- If we uncomment the "red brackets" premises in core, I think we can prove this.
+  -- determinism : ∀{d d' d''} →
+  --   d 
 
   mutual
 {-
-    eq0-ctxin''n :
-      ∀ {d1 d2 d1' ε1} →
-      d1 =0''n d2 →
+    eq0-ctxin-lemma : 
+      ∀ {d1 d2 d1' d2' d1'' d2'' ε1 ε2} →
+      d1 =0 d2 →
       d1 == ε1 ⟦ d1' ⟧ →
-      Σ[ d2' ∈ ihexp ] Σ[ ε2 ∈ ectx ] ((d2 == ε2 ⟦ d2' ⟧) × (d1' =0'' d2') × (ε1 =0ε'' ε2))
-    eq0-ctxin''n {d2 = d2} eq0 FHOuter = d2 , ⊙ , FHOuter , Eq0NoLeft (Eq0NoCasts eq0) , Eq0Dot
-    eq0-ctxin''n (Eq0Ap {d4 = d4} x x₁) (FHAp1 ctxeq) with eq0-ctxin-lemma x ctxeq
-    ... | (d2' , ε2' , ctxeq' , eq0' , ceq0') = d2' , (ε2' ∘₁ d4) , FHAp1 ctxeq' , eq0-eq0'' eq0' , Eq0Ap1 ceq0' (eq0-eq0'' x₁)
-    eq0-ctxin''n (Eq0Ap {d3 = d3} x x₁) (FHAp2 ctxeq) with eq0-ctxin-lemma x₁ ctxeq
-    ... | (d2' , ε2' , ctxeq' , eq0' , ceq0') = d2' , (d3 ∘₂ ε2') , FHAp2 ctxeq' , eq0-eq0'' eq0' , Eq0Ap2 ceq0' (eq0-eq0'' x)
-    eq0-ctxin''n (Eq0TAp {τ2 = τ2} x) (FHTAp ctxeq) with eq0-ctxin-lemma x ctxeq
-    ... | (d2' , ε2' , ctxeq' , eq0' , ceq0') = d2' , (ε2' < τ2 >) , FHTAp ctxeq' , eq0-eq0'' eq0' , Eq0TAp ceq0'
-    eq0-ctxin''n (Eq0NEHole x) (FHNEHole ctxeq) with eq0-ctxin-lemma x ctxeq
-    ... | (d2' , ε2' , ctxeq' , eq0' , ceq0') = d2' , _ , FHNEHole ctxeq' , eq0-eq0'' eq0' , Eq0NEHole ceq0'
-
-    eq0-ctxin''r : 
-      ∀ {d1 d2 d1' ε1} →
-      d1 =0''r d2 →
-      d1 == ε1 ⟦ d1' ⟧ →
-      Σ[ d2' ∈ ihexp ] Σ[ ε2 ∈ ectx ] ((d2 == ε2 ⟦ d2' ⟧) × (d1' =0'' d2') × (ε1 =0ε'' ε2))
-    eq0-ctxin''r {d2 = d2} eq0 FHOuter = d2 , ⊙ , FHOuter , Eq0NoLeft eq0 , Eq0Dot
-    eq0-ctxin''r (Eq0CastR {τ1 = τ1} {τ2 = τ2} eq0) ctxeq with eq0-ctxin''r eq0 ctxeq
-    ... | (d2' , ε2' , ctxeq' , eq0' , ceq0') = d2' , (ε2' ⟨ τ1 ⇒ τ2 ⟩) , FHCast ctxeq' , eq0' , Eq0CastR ceq0'
-    eq0-ctxin''r (Eq0FailedCastR {τ1 = τ1} {τ2 = τ2} eq0) ctxeq with eq0-ctxin''r eq0 ctxeq
-    ... | (d2' , ε2' , ctxeq' , eq0' , ceq0') = d2' , (ε2' ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) , FHFailedCast ctxeq' , eq0' , Eq0FailedCastR ceq0'
-    eq0-ctxin''r (Eq0NoCasts x) ctxeq = eq0-ctxin''n x ctxeq
-
-    eq0-ctxin'' : 
-      ∀ {d1 d2 d1' ε1} →
-      d1 =0'' d2 →
-      d1 == ε1 ⟦ d1' ⟧ →
-      Σ[ d2' ∈ ihexp ] Σ[ ε2 ∈ ectx ] ((d2 == ε2 ⟦ d2' ⟧) × (d1' =0'' d2') × (ε1 =0ε'' ε2))
-    eq0-ctxin'' {d2 = d2} eq0 FHOuter = d2 , ⊙ , FHOuter , eq0 , Eq0Dot
-    eq0-ctxin'' (Eq0CastL eq0) (FHCast ctxeq) with eq0-ctxin'' eq0 ctxeq
-    ... | (d2' , ε2' , ctxeq' , eq0' , ceq0') = d2' , ε2' , ctxeq' , eq0' , Eq0CastL ceq0'
-    eq0-ctxin'' (Eq0NoLeft x) ctxeq with eq0-ctxin''r x  ctxeq
-    ... | (d2' , ε2' , ctxeq' , eq0' , ceq0') = d2' , ε2' , ctxeq' , eq0' , ceq0'
-    eq0-ctxin'' (Eq0FailedCastL eq0) (FHFailedCast ctxeq) with eq0-ctxin'' eq0 ctxeq
-    ... | (d2' , ε2' , ctxeq' , eq0' , ceq0') = d2' , ε2' , ctxeq' , eq0' , Eq0FailedCastL ceq0'
+      d2 == ε2 ⟦ d2' ⟧ →
+      ε1 evalctx → 
+      ε2 evalctx →
+      d1' →> d1'' →
+      d2' →> d2'' →
+      (d1' =0 d2') × (ε1 =0ε'' ε2)
+    eq0-ctxin-lemma eq0 FHOuter FHOuter _ _ step step'  = eq0 , Eq0Dot
+    eq0-ctxin-lemma (Eq0NEHole eq0) FHOuter (FHNEHole ctxeq') _ _ () step'
+    eq0-ctxin-lemma (Eq0NEHole eq0) (FHNEHole ctxeq) FHOuter _ _ step ()
+    eq0-ctxin-lemma (Eq0NEHole eq0) (FHNEHole ctxeq) (FHNEHole ctxeq') _ _ step step' with eq0-ctxin-lemma eq0 ctxeq ctxeq' {!   !} {!   !} step step'
+    ... | (eq0' , ceq0') = eq0' , Eq0NEHole ceq0'
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) FHOuter (FHAp1 ctxeq') ECDot (ECAp1 ectx') step step' = {!   !}
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) FHOuter (FHAp2 ctxeq') step step' = {!   !}
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) (FHAp1 ctxeq) FHOuter step step' = {!   !}
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) (FHAp1 ctxeq) (FHAp1 ctxeq') step step' = {!   !}
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) (FHAp1 ctxeq) (FHAp2 ctxeq') step step' = {!  step' !}
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) (FHAp2 ctxeq) FHOuter step step' = {!   !}
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) (FHAp2 ctxeq) (FHAp1 ctxeq') step step' = {!   !}
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) (FHAp2 ctxeq) (FHAp2 ctxeq') step step' = {!   !}
+    eq0-ctxin-lemma (Eq0TAp eq0) ctxeq ctxeq' step step' = {!   !}
+    eq0-ctxin-lemma (Eq0Cast eq0) ctxeq ctxeq' step step' = {!   !}
+    eq0-ctxin-lemma (Eq0FailedCast eq0) ctxeq ctxeq' step step' = {!   !}
 -}
+
     eq0-ctxin''n : 
       ∀ {d1 d2 d1' d2' ε1 ε2} →
       d1 =0''n d2 →
       d1 == ε1 ⟦ d1' ⟧ →
       d2 == ε2 ⟦ d2' ⟧ →
       (d1' =0'' d2') × (ε1 =0ε'' ε2)
-    eq0-ctxin''n eq0 ctxeq ctxeq' = {!   !}
+    eq0-ctxin''n eq0 FHOuter FHOuter = Eq0NoLeft (Eq0NoCasts eq0) , Eq0Dot
+    eq0-ctxin''n eq0 eqctx eqctx' = {!   !}
+
+    eq0-ctxin''r : 
+      ∀ {d1 d2 d1' d2' ε1 ε2} →
+      d1 =0''r d2 →
+      d1 == ε1 ⟦ d1' ⟧ →
+      d2 == ε2 ⟦ d2' ⟧ →
+      (d1' =0'' d2') × (ε1 =0ε'' ε2)
+    eq0-ctxin''r (Eq0CastR eq0) ctxeq FHOuter with eq0-ctxin''r eq0 ctxeq FHOuter
+    ... | (eq0' , ctxeq0') = (eq0castr-lemma eq0') , ctxeq0'
+    eq0-ctxin''r (Eq0CastR eq0) ctxeq (FHCast ctxeq') with eq0-ctxin''r eq0 ctxeq ctxeq'
+    ... | (eq0' , ctxeq0') = eq0' , Eq0CastR ctxeq0'
+    eq0-ctxin''r (Eq0FailedCastR eq0) ctxeq (FHFailedCast ctxeq') with eq0-ctxin''r eq0 ctxeq ctxeq'
+    ... | (eq0' , ctxeq0') = eq0' , Eq0FailedCastR ctxeq0'
+    eq0-ctxin''r (Eq0FailedCastR eq0) ctxeq FHOuter with eq0-ctxin''r eq0 ctxeq FHOuter
+    ... | (eq0' , ctxeq0') = (eq0failedcastr-lemma eq0') , ctxeq0'
+    eq0-ctxin''r (Eq0NoCasts x) ctxeq ctxeq' = eq0-ctxin''n x ctxeq ctxeq'
 
     eq0-ctxin'' : 
       ∀ {d1 d2 d1' d2' ε1 ε2} →
@@ -849,8 +862,43 @@ module parametricity where
       d1 == ε1 ⟦ d1' ⟧ →
       d2 == ε2 ⟦ d2' ⟧ →
       (d1' =0'' d2') × (ε1 =0ε'' ε2)
-    eq0-ctxin'' eq0 ctxeq ctxeq' = {!   !}
+    eq0-ctxin'' (Eq0CastL eq0) FHOuter ctxeq' with eq0-ctxin'' eq0 FHOuter ctxeq'
+    ... | (eq0' , ctxeq0') = Eq0CastL eq0' , ctxeq0'
+    eq0-ctxin'' (Eq0CastL eq0) (FHCast ctxeq) ctxeq' with eq0-ctxin'' eq0 ctxeq ctxeq'
+    ... | (eq0' , ctxeq0') = eq0' , Eq0CastL ctxeq0'
+    eq0-ctxin'' (Eq0FailedCastL eq0) FHOuter ctxeq' with eq0-ctxin'' eq0 FHOuter ctxeq'
+    ... | (eq0' , ctxeq0') = Eq0FailedCastL eq0' , ctxeq0'
+    eq0-ctxin'' (Eq0FailedCastL eq0) (FHFailedCast ctxeq) ctxeq' with eq0-ctxin'' eq0 ctxeq ctxeq'
+    ... | (eq0' , ctxeq0') = eq0' , Eq0FailedCastL ctxeq0'
+    eq0-ctxin'' (Eq0NoLeft x) ctxeq ctxeq' = eq0-ctxin''r x ctxeq ctxeq'
+  
+{-
+  eq0-ctxout''n : 
+    ∀ {d1 d1' d2 d2' ε1 ε2} →
+    d1' =0''n d2' →
+    ε1 =0ε'' ε2 →
+    d1 == ε1 ⟦ d1' ⟧ →
+    d2 == ε2 ⟦ d2' ⟧ →
+    d1 =0'' d2
+  eq0-ctxout''n Eq0Const ceq0 ctxeq ctxeq' = {! Eq0NoLeft (Eq0NoCasts Eq0Const)  !}
+  eq0-ctxout''n Eq0Var ceq0 ctxeq ctxeq' = {!   !}
+  eq0-ctxout''n Eq0EHole ceq0 ctxeq ctxeq' = {!   !}
+  eq0-ctxout''n (Eq0Lam x) ceq0 ctxeq ctxeq' = {!   !}
+  eq0-ctxout''n (Eq0TLam x) ceq0 ctxeq ctxeq' = {!   !}
+  eq0-ctxout''n (Eq0NEHole x) ceq0 ctxeq ctxeq' = {!   !}
+  eq0-ctxout''n (Eq0Ap x x₁) ceq0 ctxeq ctxeq' = {!   !}
+  eq0-ctxout''n (Eq0TAp x) ceq0 ctxeq ctxeq' = {!   !}
 
+  eq0-ctxout''r : 
+    ∀ {d1 d1' d2 d2' ε1 ε2} →
+    d1' =0''r d2' →
+    ε1 =0ε'' ε2 →
+    d1 == ε1 ⟦ d1' ⟧ →
+    d2 == ε2 ⟦ d2' ⟧ →
+    d1 =0'' d2
+  eq0-ctxout''r eq0 ceq0 ctxeq ctxeq' = {!   !}
+-}
+  -- Probably have to define =ε''r and n just like with '' for recursion reasons.
   eq0-ctxout'' : 
     ∀ {d1 d1' d2 d2' ε1 ε2} →
     d1' =0'' d2' →
@@ -858,8 +906,14 @@ module parametricity where
     d1 == ε1 ⟦ d1' ⟧ →
     d2 == ε2 ⟦ d2' ⟧ →
     d1 =0'' d2
-  eq0-ctxout'' eq0 ceq0 ctxeq ctxeq' = {!  ctxeq !}
-
+  eq0-ctxout'' = {!   !}
+{-  eq0-ctxout'' (Eq0CastL eq0) ceq0 (FHCast ctxeq) ctxeq' with eq0-ctxout'' eq0 ceq0 ctxeq ctxeq'
+  ... | eq0' = {!   !}
+  eq0-ctxout'' (Eq0CastL eq0) ceq0 FHOuter ctxeq' with eq0-ctxout'' eq0 ceq0 FHOuter ctxeq'
+  ... | eq0' = {!   !}
+  eq0-ctxout'' (Eq0FailedCastL eq0) ceq0 ctxeq ctxeq' = {!   !}
+  eq0-ctxout'' (Eq0NoLeft x) ceq0 ctxeq ctxeq' = {!   !}
+-}
 {-
   mutual
     eq0-subst''n : 
@@ -934,6 +988,10 @@ module parametricity where
     parametricity22-lemma (Eq0NoLeft (Eq0CastR x)) step (ITExpand x₁) = Inr (Inl (Eq0NoLeft (Eq0CastR (Eq0CastR x))))
     parametricity22-lemma (Eq0NoLeft (Eq0NoCasts x)) step step' = Inl (eq0-eq0'' (parametricity22-lemma-nocasts x step step'))
 
+  -- As written this is not true, as d1 and d2 can step in different places.
+  -- However, if we restructure so that evaluation is deterministic, we have good credence that this should hold;
+  -- We can only get different evaluation contexts is we're stepping on a cast,
+  -- and all of those cases we simply preserve stepping on one side.
   parametricity22-lemma-ctx : ∀{d1 d2 d1' d2'} →
       d1 =0'' d2 →
       d1 ↦ d1' →
@@ -946,22 +1004,6 @@ module parametricity where
   ... | Inl both = Inl (eq0-ctxout'' both ctxeq' x2 x2')
   ... | Inr (Inl left) = Inr (Inl (eq0-ctxout'' left ctxeq' x1 x2'))
   ... | Inr (Inr right) = Inr (Inr (eq0-ctxout'' right ctxeq' x2 x1'))
---    with eq0-ctxout'' eq4 eq3 x2
---  ... | d5 , eq5 , eq6 = ?
-
-{-
-  failedcast-never-boxedval : ∀{d τ τ' v} →
-    v boxedval →
-    ¬ ((d ⟨ τ ⇒⦇-⦈⇏ τ' ⟩) ↦* v)
-  failedcast-never-boxedval (BVVal ()) MSRefl
-  failedcast-never-boxedval bv (MSStep (Step (FHFailedCast x) x₁ (FHFailedCast x₂)) step) = failedcast-never-boxedval bv step
-
-  gnd-wf : ∀{Θ τ τ'} →
-    Θ ⊢ τ wf →
-    τ ▸gnd τ' →
-    Θ ⊢ τ' wf
-  gnd-wf wf gnd = {!   !}
--}
 
 
   mutual
@@ -1007,28 +1049,6 @@ module parametricity where
     parametricity22-onesided (Eq0NoLeft (Eq0CastR x)) bv step = parametricity22-onesidedr (Eq0CastR x) bv step
     parametricity22-onesided (Eq0NoLeft (Eq0NoCasts x)) bv step = parametricity22-onesidedn x bv step
 
-{-
-  parametricity22-incast : ∀{d1 d1' d1in d1in' d1out d1out' τ τ' v2 ε} →
-    d1 == ε ⟨ τ ⇒ τ' ⟩ ⟦ d1in ⟧ →
-    d1' == ε ⟨ τ ⇒ τ' ⟩ ⟦ d1in' ⟧ →
-    d1 =0'' v2 →
-    v2 boxedval →
-    d1in →> d1in' →
-    d1' =0'' v2
-  parametricity22-incast (FHCast out) (FHCast out') (Eq0CastL eq0) bv ITLam = {!   !}
-  parametricity22-incast (FHCast out) (FHCast out') (Eq0CastL eq0) bv ITTLam = {!   !}
-  parametricity22-incast (FHCast out) (FHCast out') (Eq0CastL eq0) bv (ITCastID x) = {!   !}
-  parametricity22-incast (FHCast out) (FHCast out') (Eq0CastL eq0) bv (ITCastSucceed x x₁ x₂) = {!   !}
-  parametricity22-incast (FHCast out) (FHCast out') (Eq0CastL eq0) bv (ITCastFail x x₁ x₂) = {!   !}
-  parametricity22-incast (FHCast out) (FHCast out') (Eq0CastL eq0) bv ITApCast = {!   !}
-  parametricity22-incast (FHCast out) (FHCast out') (Eq0CastL eq0) bv ITTApCast = {!   !}
-  parametricity22-incast (FHCast out) (FHCast out') (Eq0CastL eq0) bv (ITGround x) = {!   !}
-  parametricity22-incast (FHCast out) (FHCast out') (Eq0CastL eq0) bv (ITExpand x) = {!   !}
-  parametricity22-incast (FHCast out) (FHCast out') (Eq0NoLeft x) bv step = abort (π1 (eq0castr-meaning x) refl)
-  parametricity22-incast (FHCast out) (FHCast out') (Eq0FailedCastR x) bv step = abort (π1 (eq0castr-meaning x) refl)
---  parametricity22-incast (FHCast out) (FHCast out') (Eq0CastL eq0) bv (FHCast inn) (FHCast inn') step = Eq0CastL (parametricity22-incast out out' eq0 bv inn inn' step)
--}
-
   -- We have to do some fiddling to make the termination checker happy.
   tracelength : ∀{d d'} →
     d ↦* d' → Nat
@@ -1068,6 +1088,21 @@ module parametricity where
     v2 boxedval →
     v1 =0'' v2
   parametricity22 eq0 ms ms' bv bv' = parametricity22-gas eq0 ms ms' bv bv' (1+ ((tracelength ms) nat+ (tracelength ms'))) lt-1+
+
+{-
+  test-lemma : ∀{d v} →
+    d =0'' v →
+    v boxedval →
+    Σ[ v' ∈ ihexp ] ( d ↦* v' × v' boxedval )
+  test-lemma (Eq0CastL eq0) (BVVal VConst) = ?
+  test-lemma (Eq0FailedCastL eq0) (BVVal VConst) = ?
+  test-lemma (Eq0NoLeft x) (BVVal VConst) = ?
+  test-lemma eq0 (BVVal VLam) = {!   !}
+  test-lemma eq0 (BVVal VTLam) = {!   !}
+  test-lemma eq0 (BVArrCast x bv) = {!   !}
+  test-lemma eq0 (BVForallCast x bv) = {!   !}
+  test-lemma eq0 (BVHoleCast x bv) = {!   !}
+-}
 
 {-  parametricity11 complete wt eq MSRefl bv = _ , MSRefl , {! eq0-boxedval' eq bv !} , eq 
   parametricity11 complete wt eq (MSStep step steps) bv 
