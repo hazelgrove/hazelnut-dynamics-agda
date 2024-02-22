@@ -248,12 +248,14 @@ module lemmas-well-formed where
     tbd-ta-tbdt tbdd tbdg TBDTConst TAConst = BDTBase
     tbd-ta-tbdt tbdd (TBDΓ x₁) TBDTVar (TAVar {x = x₂} {τ = τ'} x) = x₁ x₂ τ' x
     tbd-ta-tbdt tbdd tbdg (TBDTLam tbd x₂) (TALam x x₁ ta) = BDTArr (tbinderstt-disjoint-sym x₂) (tbd-ta-tbdt {!   !} (TBDΓ {!   !}) tbd ta)
-    tbd-ta-tbdt tbdd tbdg (TBDTTLam tbd x₁) (TATLam x ta) = BDTForall (tbd-ta-tbdt {!   !} tbdg tbd ta) x₁
-    tbd-ta-tbdt tbdd tbdg (TBDTAp tbd tbd₁) (TAAp ta ta₁ x) with tbd-ta-tbdt {!   !} tbdg tbd ta
+    tbd-ta-tbdt tbdd tbdg (TBDTTLam tbd x₁) (TATLam x ta) = BDTForall (tbd-ta-tbdt tbdd tbdg tbd ta) x₁
+    tbd-ta-tbdt tbdd tbdg (TBDTAp tbd tbd₁) (TAAp ta ta₁ x) with tbd-ta-tbdt tbdd tbdg tbd ta
     ... | BDTArr y y₁ = y₁
     tbd-ta-tbdt tbdd tbdg (TBDTTAp tbd x₂) (TATAp x ta x₁) with tbd-ta-tbdt {!   !} tbdg tbd ta
     ... | BDTForall y x₃ rewrite ! x₁ = tbd-typ-subst y (tbinderstt-disjoint-sym x₂)
-    tbd-ta-tbdt tbdd tbdg (TBDTHole x₄) (TAEHole x x₁ x₂ x₃) = {!   !}
+    tbd-ta-tbdt tbdd tbdg (TBDTHole x₄) (TAEHole x (STAIdId x₁ x₅) x₂ x₃) = {!   !}
+    tbd-ta-tbdt tbdd tbdg (TBDTHole x₄) (TAEHole x (STAIdSubst x₁ x₅ x₆) x₂ x₃) = {!   !}
+    tbd-ta-tbdt tbdd tbdg (TBDTHole x₄) (TAEHole x (STASubst x₁ x₅) x₂ x₃) = {!   !}
     tbd-ta-tbdt tbdd tbdg (TBDTNEHole x₄ tbd) (TANEHole x ta x₁ x₂ x₃) = {!   !}
     tbd-ta-tbdt tbdd tbdg (TBDTCast tbd x₃ x₄) (TACast ta x x₁ x₂) = {!   !}
     tbd-ta-tbdt tbdd tbdg (TBDTFailedCast tbd x₄ x₅) (TAFailedCast ta x x₁ x₂ x₃) = {!   !}

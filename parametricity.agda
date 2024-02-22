@@ -9,6 +9,7 @@ open import lemmas-consistency
 open import complete-preservation
 open import typed-elaboration
 open import complete-elaboration
+open import preservation
 
 open import contexts
 
@@ -128,7 +129,7 @@ module parametricity where
   eq0-boxedval' (Eq0TAp eq) (BVVal ())
   eq0-boxedval' (Eq0FailedCast x₁) (BVVal ())
 
-{-
+
   eq0-subst : 
     ∀ {x d1 d2} →
     (d3 d4 : ihexp) →
@@ -145,39 +146,36 @@ module parametricity where
   ... | Inr x = Eq0Lam (eq0-subst d3 d4 eq1 eq2)
   eq0-subst (·Λ x d3) (·Λ x d4) eq1 (Eq0TLam eq2) with eq0-subst d3 d4 eq1 eq2 
   ... | eq3 = Eq0TLam eq3
-  eq0-subst ⦇-⦈⟨ x ⟩ ⦇-⦈⟨ x ⟩ eq1 Eq0EHole = {!  !}
-  eq0-subst ⦇⌜ d3 ⌟⦈⟨ x ⟩ ⦇⌜ d4 ⌟⦈⟨ x ⟩ eq1 (Eq0NEHole eq2) with eq0-subst d3 d4 eq1 eq2 
-  ... | eq3 = {!  !}
+  eq0-subst ⦇-⦈⟨ x ⟩ ⦇-⦈⟨ x' ⟩ eq1 Eq0EHole = Eq0EHole
+  eq0-subst ⦇⌜ d3 ⌟⦈⟨ x ⟩ ⦇⌜ d4 ⌟⦈⟨ x' ⟩ eq1 (Eq0NEHole eq2) with eq0-subst d3 d4 eq1 eq2 
+  ... | eq3 = Eq0NEHole (eq0-subst d3 d4 eq1 eq2)
   eq0-subst (d3 ∘ d3') (d4 ∘ d4') eq1 (Eq0Ap eq2 eq3) with eq0-subst d3 d4 eq1 eq2 | eq0-subst d3' d4' eq1 eq3
   ... | eq4 | eq5 = Eq0Ap eq4 eq5
   eq0-subst (d3 < τ1 >) (d4 < τ2 >) eq1 (Eq0TAp eq2) with eq0-subst d3 d4 eq1 eq2
   ... | eq3 = Eq0TAp eq3
-  eq0-subst (d3 ⟨ x ⇒ x₁ ⟩) (d4 ⟨ x ⇒ x₁ ⟩) eq1 (Eq0Cast eq2) with eq0-subst d3 d4 eq1 eq2 
+  eq0-subst (d3 ⟨ x ⇒ x₁ ⟩) (d4 ⟨ x' ⇒ x₁' ⟩) eq1 (Eq0Cast eq2) with eq0-subst d3 d4 eq1 eq2 
   ... | eq3 = Eq0Cast eq3
-  eq0-subst (d3 ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) (d4 ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) eq1 (Eq0FailedCast eq2) with eq0-subst d3 d4 eq1 eq2 
+  eq0-subst (d3 ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) (d4 ⟨ x' ⇒⦇-⦈⇏ x₁' ⟩) eq1 (Eq0FailedCast eq2) with eq0-subst d3 d4 eq1 eq2 
   ... | eq3 = Eq0FailedCast eq3
--}
 
-{-
+
   eq0-typsubst : 
     ∀ {t τ1 τ2} →
     (d1 d2 : ihexp) →
-    d1 dcompleteid →
     d1 =0 d2 →
     (Ihexp[ τ1 / t ] d1) =0 (Ihexp[ τ2 / t ] d2)
-  eq0-typsubst .c .c _ Eq0Const = Eq0Const
-  eq0-typsubst .(X _) .(X _) _ Eq0Var = Eq0Var
-  eq0-typsubst .(⦇-⦈⟨ _ ⟩) .(⦇-⦈⟨ _ ⟩) _ Eq0EHole = Eq0EHole
-  eq0-typsubst (·λ _ [ _ ] d1) (·λ _ [ _ ] d2) compl (Eq0Lam eq) = Eq0Lam (eq0-typsubst d1 d2 {!   !} eq)
-  eq0-typsubst {t = t} (·Λ t' d1) (·Λ t' d2) _ (Eq0TLam eq) with natEQ t t' 
+  eq0-typsubst .c .c Eq0Const = Eq0Const
+  eq0-typsubst .(X _) .(X _) Eq0Var = Eq0Var
+  eq0-typsubst .(⦇-⦈⟨ _ ⟩) .(⦇-⦈⟨ _ ⟩) Eq0EHole = Eq0EHole
+  eq0-typsubst (·λ _ [ _ ] d1) (·λ _ [ _ ] d2) (Eq0Lam eq) = Eq0Lam (eq0-typsubst d1 d2 eq)
+  eq0-typsubst {t = t} (·Λ t' d1) (·Λ t' d2) (Eq0TLam eq) with natEQ t t' 
   ... | Inl refl = Eq0TLam eq
-  ... | Inr x = Eq0TLam (eq0-typsubst d1 d2 {!   !} eq)
-  eq0-typsubst .(⦇⌜ _ ⌟⦈⟨ _ ⟩) .(⦇⌜ _ ⌟⦈⟨ _ ⟩) _ (Eq0NEHole eq) = {!   !}
-  eq0-typsubst (d1 ∘ d2) (d3 ∘ d4) _ (Eq0Ap eq eq₁) = Eq0Ap (eq0-typsubst d1 d3 {!   !} eq) (eq0-typsubst d2 d4 {!   !} eq₁)
-  eq0-typsubst (d1 < _ >) (d2 < _ >) _ (Eq0TAp eq) = Eq0TAp (eq0-typsubst d1 d2 {!   !} eq)
-  eq0-typsubst (d1 ⟨ _ ⇒ _ ⟩) (d2 ⟨ _ ⇒ _ ⟩) _ (Eq0Cast eq) = {!  Eq0Cast (eq0-typsubst d1 d2 ? eq) !}
-  eq0-typsubst (d1 ⟨ _ ⇒⦇-⦈⇏ _ ⟩) (d2 ⟨ _ ⇒⦇-⦈⇏ _ ⟩) _ (Eq0FailedCast eq) = {!   !}
--}
+  ... | Inr x = Eq0TLam (eq0-typsubst d1 d2 eq)
+  eq0-typsubst (⦇⌜ d1 ⌟⦈⟨ _ ⟩) (⦇⌜ d2 ⌟⦈⟨ _ ⟩) (Eq0NEHole eq) = Eq0NEHole (eq0-typsubst d1 d2 eq)
+  eq0-typsubst (d1 ∘ d2) (d3 ∘ d4) (Eq0Ap eq eq₁) = Eq0Ap (eq0-typsubst d1 d3 eq) (eq0-typsubst d2 d4 eq₁)
+  eq0-typsubst (d1 < _ >) (d2 < _ >) (Eq0TAp eq) = Eq0TAp (eq0-typsubst d1 d2 eq)
+  eq0-typsubst (d1 ⟨ _ ⇒ _ ⟩) (d2 ⟨ _ ⇒ _ ⟩) (Eq0Cast eq) = Eq0Cast (eq0-typsubst d1 d2 eq)
+  eq0-typsubst (d1 ⟨ _ ⇒⦇-⦈⇏ _ ⟩) (d2 ⟨ _ ⇒⦇-⦈⇏ _ ⟩) (Eq0FailedCast eq) = Eq0FailedCast (eq0-typsubst d1 d2 eq)
 
   eq0-subst' : 
     ∀ {x d1 d2} →
@@ -189,7 +187,7 @@ module parametricity where
   eq0-subst' {x = x} (X y) .(X y) eq0 Eq0Var with natEQ y x
   ... | Inl refl = eq0
   ... | Inr neq rewrite natEQneq neq = Eq0Var
-  eq0-subst' (⦇-⦈⟨ u3 ⟩) (⦇-⦈⟨ u5 ⟩) eq0 Eq0EHole = Eq0EHole -- Eq0NEHole (eq0-subst' ? ? eq0 ?)
+  eq0-subst' (⦇-⦈⟨ u3 ⟩) (⦇-⦈⟨ u5 ⟩) eq0 Eq0EHole = Eq0EHole
   eq0-subst' {x} (·λ x3 [ t3 ] d3) (·λ x4 [ t4 ] d4) eq0 (Eq0Lam eq0') with natEQ x3 x 
   ... | Inl refl = Eq0Lam eq0'
   ... | Inr neq = Eq0Lam (eq0-subst' d3 d4 eq0 eq0')
@@ -365,9 +363,9 @@ module parametricity where
   dcompleteid-elab : ∀{e τ Δ d} →
             e ecomplete →
             ∅ , ∅ ⊢ e ⇒ τ ~> d ⊣ Δ →
-            d dcompleteid
+            d dcompleteid × Δ == ∅
   dcompleteid-elab ec elab with complete-elaboration-synth empty-ctx-gcomplete ec elab | typed-elaboration-synth wf-empty-tctx elab
-  ... | (dc , tc , dempty) | wt = compl-wt-complid dc wt
+  ... | (dc , tc , dempty) | wt = compl-wt-complid dc wt , dempty
 
   
   eq0-ctxin' : 
@@ -429,16 +427,13 @@ module parametricity where
   eq0-instep {d2 = (d2 ⟨ ⦇-⦈ ⇒ τ1 ⟩)} (Eq0Cast eq) (ITExpand {τ' = τ'} x) = ((d2 ⟨ ⦇-⦈ ⇒ τ' ⟩) ⟨ τ' ⇒ τ1 ⟩) , ITExpand x , Eq0Cast (Eq0Cast eq)
 -}
 
-  consist-wf : ∀{Θ τ τ'} → Θ ⊢ τ wf → τ ~ τ' → Θ ⊢ τ' wf
-  consist-wf wf consist = {!   !}
-
   eq0-instep' : 
-    ∀ {d1 d2 d1' Δ τ τ'} →
+    ∀ {d1 d2 d1' τ τ'} →
     d1 =0' d2 →
     d1 →> d1' →
     d1 dcompleteid →
-    Δ , ∅ , ∅ ⊢ d1 :: τ →
-    Δ , ∅ , ∅ ⊢ d2 :: τ' →
+    ∅ , ∅ , ∅ ⊢ d1 :: τ →
+    ∅ , ∅ , ∅ ⊢ d2 :: τ' →
     Σ[ d2' ∈ ihexp ] ((d2 →> d2') × (d1' =0' d2'))
   eq0-instep' {d1 = (·λ x1 [ τ1 ] d1) ∘ d1'} {d2 = (·λ x1 [ τ2 ] d2) ∘ d2'} (Eq0Ap (Eq0Lam eq0) eq1) ITLam compl wt1 wt2 = ([ d2' / x1 ] d2) , ITLam , eq0-subst' d1 d2 eq1 eq0
   eq0-instep' {d1 = (d1' ⟨ τ1 ==> τ3 ⇒ τ1' ==> τ3' ⟩) ∘ d5} {d2 = (d2' ⟨ τ2 ==> τ ⇒ τ2' ==> τ' ⟩) ∘ d4}
@@ -448,8 +443,8 @@ module parametricity where
   eq0-instep' {d1 = (d1 ⟨ ·∀ t τ ⇒ ·∀ t' τ' ⟩) < τ1 >} {d2 = (d2 ⟨ ·∀ t2 τ2 ⇒ ·∀ t2' τ2' ⟩) < τ3 >} 
     (Eq0TAp (Eq0Cast eq0 alphal alphar)) ITTApCast compl (TATAp x₅ (TACast wt1 x₇ x₈ x₉) x₆) (TATAp x (TACast wt x₂ x₃ x₄) x₁) = 
       (d2 < τ3 >) ⟨ Typ[ τ3 / t2 ] τ2 ⇒ Typ[ τ3 / t2' ] τ2' ⟩ , ITTApCast , Eq0Cast (Eq0TAp eq0) 
-      (alpha-sub2 x₅ (alpha-wf (wf-ta {!   !} wf-empty-tctx {!   !} wt1)  (alpha-sym x₉)) x₇ alphal) 
-      (alpha-sub2 x (consist-wf x₂ (~sym x₃)) x₂ alphar)
+      (alpha-sub2 x₅ (alpha-wf (wf-ta {!   !} wf-empty-tctx (HCtx (λ ())) wt1)  (alpha-sym x₉)) x₇ alphal) 
+      (alpha-sub2 x (alpha-wf (wf-ta {!   !} wf-empty-tctx (HCtx (λ ())) wt) (alpha-sym x₄)) x₂ alphar)
   eq0-instep' {d2 = d2 ⟨ τ2 ⇒ τ2' ⟩} (Eq0Cast eq0 alphal alphar) (ITCastID x) compl wt1 wt = d2 , ITCastID alphar , eq0
   eq0-instep' (Eq0Cast x₂ x₃ x₄) (ITCastSucceed x₅ x₆ x₇) (DCCast x () x₉ x₁₀) wt1 x₁
   eq0-instep' (Eq0Cast x₂ x₃ x₄) (ITCastFail x₅ x₆ x₇) (DCCast x () x₉ x₁₀) wt1 x₁
@@ -482,10 +477,10 @@ module parametricity where
   inst (x , y) = y
 
   eq0-step' : 
-    ∀ {d1 d2 d1' τ τ' Δ} →
+    ∀ {d1 d2 d1' τ τ'} →
     d1 dcompleteid →
-    Δ , ∅ , ∅ ⊢ d1 :: τ →
-    Δ , ∅ , ∅ ⊢ d2 :: τ' →
+    ∅ , ∅ , ∅ ⊢ d1 :: τ →
+    ∅ , ∅ , ∅ ⊢ d2 :: τ' →
     d1 =0' d2 →
     d1 ↦ d1' →
     Σ[ d2' ∈ ihexp ] ((d2 ↦ d2') × (d1' =0' d2'))
@@ -499,20 +494,90 @@ module parametricity where
     with eq0-ctxout' eq4 eq3 ctx2 
   ... | d5 , eq5 , eq6 =  d5 , Step ctx3 step2 eq5 , eq6 
 
-  compl-complid-pres : ∀{d d' τ Δ} →
+{-
+  -- This was an attempt to remove the necessity of being well-typed, but we get stuck in showing the alpha equivalence for dcompleteid.
+  -- It's probably avoidable but probably need to reformulate a few things for it to be so.
+
+  -- This is a stronger version of the complete preservation theorem that doesn't require well-typing.
+  -- These lemmas are mostly copy-pasted from complete-preservation
+  lem-proj' : {x : Nat} {d : ihexp} { τ : htyp} → (·λ_[_]_ x τ d) dcompleteid → Σ[ y ∈ Nat ] (y == x)
+  lem-proj' {x} (DCLam dc x₁) = x , refl
+
+  cp-subst' : ∀ {x d1 d2} →
+           d1 dcompleteid →
+           d2 dcompleteid →
+           ([ d2 / x ] d1) dcompleteid
+  cp-subst' {x = y} (DCVar {x = x}) dc2 with natEQ x y
+  cp-subst' DCVar dc2 | Inl refl = dc2
+  cp-subst' DCVar dc2 | Inr x₂ = DCVar
+  cp-subst' DCConst dc2 = DCConst
+  cp-subst' {x = x} (DCLam {x = y} dc1 x₂) dc2 with natEQ y x
+  cp-subst' (DCLam dc1 x₃) dc2 | Inl refl = DCLam dc1 x₃
+  cp-subst' (DCLam dc1 x₃) dc2 | Inr x₂ = DCLam (cp-subst' dc1 dc2) x₃
+  cp-subst' (DCAp dc1 dc2) dc3 = DCAp (cp-subst' dc1 dc3) (cp-subst' dc2 dc3)
+  cp-subst' (DCCast dc1 x₁ x₂ x₃) dc2 = DCCast (cp-subst' dc1 dc2) x₁ x₂ x₃
+  cp-subst' {d1 = ·Λ x₁ d1} (DCTLam x₂) x = DCTLam (cp-subst' x₂ x)
+  cp-subst' {d1 = d1 < x₁ >} (DCTAp x₂ x₃) x = DCTAp x₂ (cp-subst' x₃ x)
+
+  cp-typsubst' : ∀ {d t τ} →
+           d dcompleteid →
+           τ tcomplete →
+           (Ihexp[ τ / t ] d) dcompleteid
+  cp-typsubst' dc tc = {!   !}
+
+  tcomplete-subst : ∀{τ t τ'} →
+    τ tcomplete →
+    τ' tcomplete →
+    Typ[ τ' / t ] τ tcomplete
+  tcomplete-subst TCBase tc' = TCBase
+  tcomplete-subst {t = t} (TCVar {a = t'}) tc' with natEQ t t'
+  ... | Inl refl = tc'
+  ... | Inr neq = TCVar
+  tcomplete-subst (TCArr tc tc₁) tc' = TCArr (tcomplete-subst tc tc') (tcomplete-subst tc₁ tc')
+  tcomplete-subst {t = t} (TCForall {t = t'} tc) tc' with natEQ t t'
+  ... | Inl refl = TCForall tc
+  ... | Inr neq = TCForall (tcomplete-subst tc tc')
+
+  -- Being able to prove this weakens the condition from well-typing to just type binder disjointness
+  alpha-sub' : ∀{τ t1 τ1 t2 τ2} → τ τ1 tbinderstt-disjoint → τ τ2 tbinderstt-disjoint → ·∀ t1 τ1 =α ·∀ t2 τ2 → (Typ[ τ / t1 ] τ1) =α (Typ[ τ / t2 ] τ2)
+  alpha-sub' = ?
+
+  compl-complid-pres : ∀{d d'} →
+    d tbinders-unique →
     d dcompleteid → 
-    Δ , ∅ , ∅ ⊢ d :: τ → 
     d ↦ d' →
     d' dcompleteid
-  compl-complid-pres compl wt step with complete-preservation {!   !} (complid-compl compl) wt step
-  ... | (wt' , compl') = compl-wt-complid compl' wt' 
+  compl-complid-pres DCConst (Step FHOuter () FHOuter)
+  compl-complid-pres DCVar (Step FHOuter () x₃)
+  compl-complid-pres (DCLam _ _) (Step FHOuter () FHOuter)
+  -- this case is a little more complicated than it feels like it ought to
+  -- be, just from horsing around with agda implicit variables.
+  compl-complid-pres (DCAp dc dc₁) (Step FHOuter ITLam FHOuter) with lem-proj' dc
+  compl-complid-pres (DCAp dc dc₁) (Step FHOuter ITLam FHOuter) | x , refl with cp-subst' {x = x} dc dc₁
+  ... | qq with natEQ x x
+  compl-complid-pres (DCAp dc dc₁) (Step FHOuter ITLam FHOuter) | x , refl | DCLam qq x₁ | Inl refl = cp-subst' qq dc₁
+  compl-complid-pres (DCAp dc dc₁) (Step FHOuter ITLam FHOuter) | x , refl | qq | Inr x₁ = abort (x₁ refl)
+  compl-complid-pres (DCAp (DCCast dc (TCArr ll lr) (TCArr rl rr) (AlphaArr alphal alphar)) dc₁) (Step FHOuter ITApCast FHOuter) = DCCast (DCAp dc (DCCast dc₁ rl ll (alpha-sym alphal))) lr rr alphar
+  compl-complid-pres (DCAp dc dc₁) (Step (FHAp1 x) x₁ (FHAp1 x₂)) = DCAp (compl-complid-pres dc (Step x x₁ x₂)) dc₁
+  compl-complid-pres (DCAp dc dc₁) (Step (FHAp2 x) x₁ (FHAp2 x₂)) = DCAp dc (compl-complid-pres dc₁ (Step x x₁ x₂))
+  compl-complid-pres (DCCast dc x x₁ alpha) (Step FHOuter (ITCastID alpha') FHOuter) = dc
+  compl-complid-pres (DCCast dc () x₁ alpha) (Step FHOuter (ITCastSucceed g1 g2 alpha') FHOuter)
+  compl-complid-pres (DCCast dc () x₁ alpha) (Step FHOuter (ITCastFail x₃ x₄ x₅) FHOuter)
+  compl-complid-pres (DCCast dc x () alpha) (Step FHOuter (ITGround x₃) FHOuter)
+  compl-complid-pres (DCCast dc () x₁ alpha) (Step FHOuter (ITExpand x₃) FHOuter)
+  compl-complid-pres (DCCast dc x x₁ alpha) (Step (FHCast x₃) x₄ (FHCast x₅)) = DCCast (compl-complid-pres dc (Step x₃ x₄ x₅)) x x₁ alpha
+  compl-complid-pres (DCTLam dc) (Step FHOuter () FHOuter)
+  compl-complid-pres (DCTAp dc (DCTLam x)) (Step FHOuter ITTLam FHOuter) = cp-typsubst' x dc
+  compl-complid-pres (DCTAp dc (DCCast x (TCForall x₁) (TCForall x₂) (AlphaForall x₃))) (Step FHOuter ITTApCast FHOuter) = DCCast (DCTAp dc x) (tcomplete-subst x₁ dc) (tcomplete-subst x₂ dc) {!   !}
+  compl-complid-pres (DCTAp dc x) (Step (FHTAp x₁) x₂ (FHTAp x₃)) = DCTAp dc (compl-complid-pres x (Step x₁ x₂ x₃))
+-}
 
   parametricity11_rec : 
-    ∀ {τ τ' d1 Δ d2 v1 } →
+    ∀ {τ τ' d1 d2 v1 } →
     d1 dcompleteid →
     d2 dcompleteid →
-    Δ , ∅ , ∅ ⊢ d1 :: τ → 
-    Δ , ∅ , ∅ ⊢ d2 :: τ' → 
+    ∅ , ∅ , ∅ ⊢ d1 :: τ → 
+    ∅ , ∅ , ∅ ⊢ d2 :: τ' → 
     d1 =0' d2 →
     d1 ↦* v1 →
     v1 boxedval →
@@ -529,20 +594,516 @@ module parametricity where
 
 
   parametricity11 : 
-    ∀ {e e' τ τ' d1 Δ d2 v1 } →
+    ∀ {e e' τ τ' d1 Δ Δ' d2 v1 } →
     e ecomplete →
     e' ecomplete →
     e =0e e' →
     ∅ , ∅ ⊢ e ⇒ τ ~> d1 ⊣ Δ →
-    ∅ , ∅ ⊢ e' ⇒ τ' ~> d2 ⊣ Δ →
+    ∅ , ∅ ⊢ e' ⇒ τ' ~> d2 ⊣ Δ' →
     d1 ↦* v1 →
     v1 boxedval →
     Σ[ v2 ∈ ihexp ] ((d2 ↦* v2) × (v2 boxedval) × (v1 =0 v2))
-  parametricity11 ec ec' eeq elab1 elab2 eval bv =
-    let d1c = (dcompleteid-elab ec elab1) in
-    let d2c = (dcompleteid-elab ec' elab2) in
+  parametricity11 ec ec' eeq elab1 elab2 eval bv with dcompleteid-elab ec elab1 | dcompleteid-elab ec' elab2
+  ... | (d1c , deltaempty) | (d2c , deltaempty') rewrite deltaempty rewrite deltaempty' =
     let (v2 , v2eval , v2bv , eq0') = parametricity11_rec d1c d2c (typed-elaboration-synth wf-empty-tctx elab1) (typed-elaboration-synth wf-empty-tctx elab2) (eq0-eq0' d1c d2c (eq0-elab-syn eeq elab1 elab2)) eval bv in
     (v2 , v2eval , v2bv , eq0'-eq0 eq0')
+
+
+
+  -- parametricity22-lemma : 
+
+--  p22_lemma1 : 
+--    d1 ∘ d1' ↦ 
+
+  -- =0 but we ignore casts when checking equality.
+  mutual
+    data _=0''_ : (d1 d2 : ihexp) → Set where 
+      Eq0CastL : ∀{d1 d2 τ1 τ2} → d1 =0'' d2 → (d1 ⟨ τ1 ⇒ τ2 ⟩) =0'' d2
+      Eq0FailedCastL : ∀{d1 d2 τ1 τ2} → d1 =0'' d2 → (d1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) =0'' d2
+      Eq0NoLeft : ∀{d1 d2} → d1 =0''r d2 → d1 =0'' d2
+    
+    data _=0''r_ : (d1 d2 : ihexp) → Set where
+      Eq0CastR : ∀{d1 d2 τ1 τ2} → d1 =0''r d2 → d1 =0''r (d2 ⟨ τ1 ⇒ τ2 ⟩)
+      Eq0FailedCastR : ∀{d1 d2 τ1 τ2} → d1 =0''r d2 → d1 =0''r (d2 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
+      Eq0NoCasts : ∀{d1 d2} → d1 =0''n d2 → d1 =0''r d2
+
+    data _=0''n_ : (d1 d2 : ihexp) → Set where
+      Eq0Const : c =0''n c
+      Eq0Var : ∀{x} → (X x) =0''n (X x) 
+      Eq0EHole : ∀{u θ θ' σ σ'} → ⦇-⦈⟨ u , θ , σ ⟩ =0''n ⦇-⦈⟨ u , θ' , σ' ⟩
+      Eq0Lam : ∀{x d1 d2 τ1 τ2} → d1 =0 d2 → (·λ x [ τ1 ] d1) =0''n (·λ x [ τ2 ] d2)
+      Eq0TLam : ∀{t d1 d2} → d1 =0 d2 → (·Λ t d1) =0''n (·Λ t d2)
+      Eq0NEHole : ∀{u d1 d2 θ θ' σ σ'} → d1 =0 d2 →  (⦇⌜ d1 ⌟⦈⟨ u , θ , σ ⟩) =0''n (⦇⌜ d2 ⌟⦈⟨ u , θ' , σ' ⟩)
+      Eq0Ap :  ∀{d1 d2 d3 d4} → d1 =0 d3 →  d2 =0 d4 →  (d1 ∘ d2) =0''n (d3 ∘ d4)
+      Eq0TAp : ∀{d1 d2 τ1 τ2} → d1 =0 d2 → (d1 < τ1 >) =0''n (d2 < τ2 >)
+
+
+  data _=0ε''_ : (ε1 ε2 : ectx) → Set where 
+    Eq0Dot : ⊙ =0ε'' ⊙
+    Eq0Ap1 : ∀{ε1 ε2 d1 d2} → (ε1 =0ε'' ε2) → (d1 =0'' d2) → (ε1 ∘₁ d1) =0ε'' (ε2 ∘₁ d2)
+    Eq0Ap2 : ∀{ε1 ε2 d1 d2} → (ε1 =0ε'' ε2) → (d1 =0'' d2) → (d1 ∘₂ ε1) =0ε'' (d2 ∘₂ ε2)
+    Eq0TAp : ∀{ε1 ε2 τ1 τ2} → (ε1 =0ε'' ε2) → (ε1 < τ1 >) =0ε'' (ε2 < τ2 >)
+    Eq0NEHole : ∀{ε1 ε2 u θ θ' σ σ'} → (ε1 =0ε'' ε2) → (⦇⌜ ε1 ⌟⦈⟨ u , θ , σ ⟩) =0ε'' (⦇⌜ ε2 ⌟⦈⟨ u , θ' , σ' ⟩)
+    Eq0CastL : ∀{ε1 ε2 τ1 τ2} → (ε1 =0ε'' ε2) → (ε1 ⟨ τ1 ⇒ τ2 ⟩) =0ε'' ε2
+    Eq0CastR : ∀{ε1 ε2 τ1 τ2} → (ε1 =0ε'' ε2) → ε1 =0ε'' (ε2 ⟨ τ1 ⇒ τ2 ⟩)
+    Eq0FailedCastL : ∀{ε1 ε2 τ1 τ2} → (ε1 =0ε'' ε2) → (ε1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) =0ε'' ε2
+    Eq0FailedCastR : ∀{ε1 ε2 τ1 τ2} → (ε1 =0ε'' ε2) → ε1 =0ε'' (ε2 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
+
+
+  eq0castl-lemma : ∀{d τ τ' d'} → 
+    d =0'' d' →
+    (d ⟨ τ ⇒ τ' ⟩) =0'' d'
+  eq0castl-lemma (Eq0CastL eq0) = Eq0CastL (eq0castl-lemma eq0)
+  eq0castl-lemma (Eq0NoLeft x) = Eq0CastL (Eq0NoLeft x)
+  eq0castl-lemma (Eq0FailedCastL eq0) = Eq0CastL (Eq0FailedCastL eq0)
+
+  eq0castr-lemma : ∀{d τ τ' d'} → 
+    d =0'' d' →
+    d =0'' (d' ⟨ τ ⇒ τ' ⟩)
+  eq0castr-lemma (Eq0CastL eq0) = Eq0CastL (eq0castr-lemma eq0)
+  eq0castr-lemma (Eq0NoLeft x) = Eq0NoLeft (Eq0CastR x)
+  eq0castr-lemma (Eq0FailedCastL eq0) = Eq0FailedCastL (eq0castr-lemma eq0)
+
+
+  eq0failedcastr-lemma : ∀{d τ τ' d'} → 
+    d =0'' d' →
+    d =0'' (d' ⟨ τ ⇒⦇-⦈⇏ τ' ⟩)
+  eq0failedcastr-lemma (Eq0CastL eq0) = Eq0CastL (eq0failedcastr-lemma eq0)
+  eq0failedcastr-lemma (Eq0NoLeft x) = Eq0NoLeft (Eq0FailedCastR x)
+  eq0failedcastr-lemma (Eq0FailedCastL eq0) = Eq0FailedCastL (eq0failedcastr-lemma eq0)
+
+  eq0castr-meaning : ∀{d d' d₀ τ τ'} →
+    d =0''r d' →
+    d ≠ (d₀ ⟨ τ ⇒ τ' ⟩) × d ≠ (d₀ ⟨ τ ⇒⦇-⦈⇏ τ' ⟩)
+  eq0castr-meaning (Eq0NoCasts Eq0Const) = (λ ()) , (λ ())
+  eq0castr-meaning (Eq0NoCasts Eq0Var) = (λ ()) , (λ ())
+  eq0castr-meaning (Eq0NoCasts Eq0EHole) = (λ ()) , (λ ())
+  eq0castr-meaning (Eq0NoCasts (Eq0Lam x)) = (λ ()) , (λ ())
+  eq0castr-meaning (Eq0NoCasts (Eq0TLam x)) = (λ ()) , (λ ())
+  eq0castr-meaning (Eq0NoCasts (Eq0NEHole x)) = (λ ()) , (λ ())
+  eq0castr-meaning (Eq0NoCasts (Eq0Ap x x₁)) = (λ ()) , (λ ())
+  eq0castr-meaning (Eq0NoCasts (Eq0TAp x)) = (λ ()) , (λ ())
+  eq0castr-meaning (Eq0CastR eq0) = eq0castr-meaning eq0
+  eq0castr-meaning (Eq0FailedCastR eq0) = eq0castr-meaning eq0
+
+  eq0castl-inverse : ∀{d τ τ' d'} → 
+    (d ⟨ τ ⇒ τ' ⟩) =0'' d' →
+    d =0'' d'
+  eq0castl-inverse (Eq0CastL eq0) = eq0
+  eq0castl-inverse (Eq0NoLeft x) = abort (π1 (eq0castr-meaning x) refl)
+
+  eq0castr-inverse : ∀{d τ τ' d'} →
+    d =0'' (d' ⟨ τ ⇒ τ' ⟩) →
+    d =0'' d'
+  eq0castr-inverse (Eq0CastL eq0) = Eq0CastL (eq0castr-inverse eq0)
+  eq0castr-inverse (Eq0NoLeft (Eq0CastR x)) = Eq0NoLeft x
+  eq0castr-inverse (Eq0FailedCastL eq0) = Eq0FailedCastL (eq0castr-inverse eq0)
+  
+
+  eq0-eq0'' : ∀{d d'} →
+    d =0 d' →
+    d =0'' d'
+  eq0-eq0'' Eq0Const = Eq0NoLeft (Eq0NoCasts Eq0Const)
+  eq0-eq0'' Eq0Var = Eq0NoLeft (Eq0NoCasts Eq0Var)
+  eq0-eq0'' Eq0EHole = Eq0NoLeft (Eq0NoCasts Eq0EHole)
+  eq0-eq0'' (Eq0Lam eq0) = Eq0NoLeft (Eq0NoCasts (Eq0Lam eq0))
+  eq0-eq0'' (Eq0TLam eq0) = Eq0NoLeft (Eq0NoCasts (Eq0TLam eq0))
+  eq0-eq0'' (Eq0NEHole eq0) = Eq0NoLeft (Eq0NoCasts (Eq0NEHole eq0))
+  eq0-eq0'' (Eq0Ap eq0 eq1) = Eq0NoLeft (Eq0NoCasts (Eq0Ap eq0 eq1))
+  eq0-eq0'' (Eq0TAp eq0) = Eq0NoLeft (Eq0NoCasts (Eq0TAp eq0))
+  eq0-eq0'' (Eq0Cast eq0) = eq0castl-lemma (eq0castr-lemma (eq0-eq0'' eq0))
+  eq0-eq0'' (Eq0FailedCast eq0) = Eq0FailedCastL (eq0failedcastr-lemma (eq0-eq0'' eq0))
+
+  eq0''-val-eq0 : ∀{d d'} →
+    d =0'' d' →
+    d val →
+    d' val →
+    d =0 d'
+  eq0''-val-eq0 (Eq0NoLeft (Eq0NoCasts Eq0Const)) v v' = Eq0Const
+  eq0''-val-eq0 (Eq0NoLeft (Eq0NoCasts (Eq0Lam x))) v v' = Eq0Lam x
+  eq0''-val-eq0 (Eq0NoLeft (Eq0NoCasts (Eq0TLam x))) v v' = Eq0TLam x
+
+  mutual
+    eq0''n-sym : ∀{d d'} →
+      d =0''n d' →
+      d' =0''n d
+    eq0''n-sym Eq0Const = Eq0Const
+    eq0''n-sym Eq0Var = Eq0Var
+    eq0''n-sym Eq0EHole = Eq0EHole
+    eq0''n-sym (Eq0Lam x) = Eq0Lam (eq0-sym x)
+    eq0''n-sym (Eq0TLam x) = Eq0TLam (eq0-sym x)
+    eq0''n-sym (Eq0NEHole x) = Eq0NEHole (eq0-sym x)
+    eq0''n-sym (Eq0Ap x x₁) = Eq0Ap (eq0-sym x) (eq0-sym x₁)
+    eq0''n-sym (Eq0TAp x) = Eq0TAp (eq0-sym x)
+
+    eq0''r-sym : ∀{d d'} →
+      d =0''r d' →
+      d' =0'' d
+    eq0''r-sym (Eq0NoCasts x) = Eq0NoLeft (Eq0NoCasts (eq0''n-sym x))
+    eq0''r-sym (Eq0CastR eq0) = Eq0CastL (eq0''r-sym eq0)
+    eq0''r-sym (Eq0FailedCastR eq0) = Eq0FailedCastL (eq0''r-sym eq0)
+    
+    eq0''-sym : ∀{d d'} →
+      d =0'' d' →
+      d' =0'' d
+    eq0''-sym (Eq0CastL eq0) = eq0castr-lemma (eq0''-sym eq0)
+    eq0''-sym (Eq0FailedCastL eq0) = eq0failedcastr-lemma (eq0''-sym eq0)
+    eq0''-sym (Eq0NoLeft x) = eq0''r-sym x
+{-
+  eq0''-step-pres : ∀{d1 d2 τ τ' Δ d1' d2'} →
+    Δ , ∅ , ∅ ⊢ d1 :: τ →
+    Δ , ∅ , ∅ ⊢ d2 :: τ' →
+    d1 =0'' d2 →
+    d1 ↦* d1' →
+    d2 ↦* d2' →
+    d1' =0'' d2'
+  eq0''-step-pres wt wt' Eq0Const (MSStep (Step FHOuter () _) _) step'
+  eq0''-step-pres wt wt' Eq0Var (MSStep (Step FHOuter () _) _) step'
+  eq0''-step-pres wt wt' Eq0EHole (MSStep (Step FHOuter () _) _) step'
+  eq0''-step-pres wt wt' (Eq0Lam x) (MSStep (Step FHOuter () _) _) step'
+  eq0''-step-pres wt wt' (Eq0TLam x) (MSStep (Step FHOuter () _) _) step'
+  eq0''-step-pres (TANEHole x₆ wt x₇ x₈ x₉) (TANEHole x₁₀ wt' x₁₁ x₁₂ x₁₃) (Eq0NEHole eq0) (MSStep (Step (FHNEHole x) x₁ (FHNEHole x₂)) ms) (MSStep (Step (FHNEHole x₃) x₄ (FHNEHole x₅)) ms') = 
+    eq0''-step-pres wt wt' eq0 {!   !} {!   !}
+  eq0''-step-pres wt wt' (Eq0Ap eq0 x) step step' = {!   !}
+  eq0''-step-pres wt wt' (Eq0TAp eq0) step step' = {!   !}
+  eq0''-step-pres (TACast wt x₁ x₂ x₃) wt' (Eq0CastL eq0) (MSStep (Step FHOuter (ITCastID x) FHOuter) ms) step' = {! eq0  !}
+  eq0''-step-pres (TACast wt wx₁ wx₂ wx₃) wt' (Eq0CastL eq0) (MSStep (Step FHOuter (ITCastSucceed x x₁ x₂) FHOuter) ms) step' = {!   !}
+  eq0''-step-pres (TACast wt wx₁ wx₂ wx₃) wt' (Eq0CastL eq0) (MSStep (Step FHOuter (ITCastFail x x₁ x₂) FHOuter) ms) step' = {!   !}
+  eq0''-step-pres (TACast wt wx₁ wx₂ wx₃) wt' (Eq0CastL eq0) (MSStep (Step FHOuter (ITGround x) FHOuter) ms) step' = {!   !}
+  eq0''-step-pres (TACast wt wx₁ wx₂ wx₃) wt' (Eq0CastL eq0) (MSStep (Step FHOuter (ITExpand x) FHOuter) ms) step' = {!   !}
+  eq0''-step-pres (TACast wt wx₁ wx₂ wx₃) wt' (Eq0CastL eq0) (MSStep (Step (FHCast x) x₁ (FHCast x₂)) ms) step' = {!   !}
+  eq0''-step-pres wt wt' (Eq0CastR eq0) step step' = {!   !}
+  eq0''-step-pres wt wt' (Eq0FailedCastL eq0) (MSStep (Step x step x') ms) step' = {!   !}
+  eq0''-step-pres wt wt' (Eq0FailedCastR eq0) step (MSStep (Step x step' x') ms) = {!   !}
+
+  eq0-ctxin-lemma : 
+    ∀ {d1 d2 d1' ε1} →
+    d1 =0 d2 →
+    d1 == ε1 ⟦ d1' ⟧ →
+    Σ[ d2' ∈ ihexp ] Σ[ ε2 ∈ ectx ] ((d2 == ε2 ⟦ d2' ⟧) × (d1' =0 d2') × (ε1 =0ε'' ε2))
+  eq0-ctxin-lemma eq FHOuter = _ , ⊙ , FHOuter , eq , Eq0Dot
+  eq0-ctxin-lemma (Eq0NEHole eq) (FHNEHole ctxin) with eq0-ctxin-lemma eq ctxin 
+  ... | d2' , ε2 , eq1 , eq2 , eq3 = _ , _ , FHNEHole eq1 , eq2 , Eq0NEHole eq3
+  eq0-ctxin-lemma (Eq0Ap eq eq₁) (FHAp1 ctxin) with eq0-ctxin-lemma eq ctxin 
+  ... | d2' , ε2 , eq1 , eq2 , eq3 = _ , _ , FHAp1 eq1 , eq2 , Eq0Ap1 eq3 (eq0-eq0'' eq₁)
+  eq0-ctxin-lemma (Eq0Ap eq eq₁) (FHAp2 ctxin) with eq0-ctxin-lemma eq₁ ctxin 
+  ... | d2' , ε2 , eq1 , eq2 , eq3 = _ , _ , FHAp2 eq1 , eq2 , Eq0Ap2 eq3 (eq0-eq0'' eq)
+  eq0-ctxin-lemma (Eq0TAp eq) (FHTAp ctxin) with eq0-ctxin-lemma eq ctxin 
+  ... | d2' , ε2 , eq1 , eq2 , eq3 =  _ , _ , FHTAp eq1 , eq2 , Eq0TAp eq3
+  eq0-ctxin-lemma (Eq0Cast eq) (FHCast ctxin) with eq0-ctxin-lemma eq ctxin 
+  ... | d2' , ε2 , eq1 , eq2 , eq3 = _ , _ , FHCast eq1 , eq2 , Eq0CastL (Eq0CastR eq3)
+  eq0-ctxin-lemma (Eq0FailedCast eq) (FHFailedCast ctxin) with eq0-ctxin-lemma eq ctxin
+  ... | d2' , ε2 , eq1 , eq2 , eq3 =  _ , _ , FHFailedCast eq1 , eq2 , Eq0FailedCastL (Eq0FailedCastR eq3)
+-}
+
+  -- As written in the Agda, this is not currently true. This is because e.g. we can evaluate both on the left and right side of a function application.
+  -- If we uncomment the "red brackets" premises in core, I think we can prove this.
+  -- determinism : ∀{d d' d''} →
+  --   d 
+
+  mutual
+{-
+    eq0-ctxin-lemma : 
+      ∀ {d1 d2 d1' d2' d1'' d2'' ε1 ε2} →
+      d1 =0 d2 →
+      d1 == ε1 ⟦ d1' ⟧ →
+      d2 == ε2 ⟦ d2' ⟧ →
+      ε1 evalctx → 
+      ε2 evalctx →
+      d1' →> d1'' →
+      d2' →> d2'' →
+      (d1' =0 d2') × (ε1 =0ε'' ε2)
+    eq0-ctxin-lemma eq0 FHOuter FHOuter _ _ step step'  = eq0 , Eq0Dot
+    eq0-ctxin-lemma (Eq0NEHole eq0) FHOuter (FHNEHole ctxeq') _ _ () step'
+    eq0-ctxin-lemma (Eq0NEHole eq0) (FHNEHole ctxeq) FHOuter _ _ step ()
+    eq0-ctxin-lemma (Eq0NEHole eq0) (FHNEHole ctxeq) (FHNEHole ctxeq') _ _ step step' with eq0-ctxin-lemma eq0 ctxeq ctxeq' {!   !} {!   !} step step'
+    ... | (eq0' , ceq0') = eq0' , Eq0NEHole ceq0'
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) FHOuter (FHAp1 ctxeq') ECDot (ECAp1 ectx') step step' = {!   !}
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) FHOuter (FHAp2 ctxeq') step step' = {!   !}
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) (FHAp1 ctxeq) FHOuter step step' = {!   !}
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) (FHAp1 ctxeq) (FHAp1 ctxeq') step step' = {!   !}
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) (FHAp1 ctxeq) (FHAp2 ctxeq') step step' = {!  step' !}
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) (FHAp2 ctxeq) FHOuter step step' = {!   !}
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) (FHAp2 ctxeq) (FHAp1 ctxeq') step step' = {!   !}
+    eq0-ctxin-lemma (Eq0Ap eq0 eq1) (FHAp2 ctxeq) (FHAp2 ctxeq') step step' = {!   !}
+    eq0-ctxin-lemma (Eq0TAp eq0) ctxeq ctxeq' step step' = {!   !}
+    eq0-ctxin-lemma (Eq0Cast eq0) ctxeq ctxeq' step step' = {!   !}
+    eq0-ctxin-lemma (Eq0FailedCast eq0) ctxeq ctxeq' step step' = {!   !}
+-}
+
+    eq0-ctxin''n : 
+      ∀ {d1 d2 d1' d2' ε1 ε2} →
+      d1 =0''n d2 →
+      d1 == ε1 ⟦ d1' ⟧ →
+      d2 == ε2 ⟦ d2' ⟧ →
+      (d1' =0'' d2') × (ε1 =0ε'' ε2)
+    eq0-ctxin''n eq0 FHOuter FHOuter = Eq0NoLeft (Eq0NoCasts eq0) , Eq0Dot
+    eq0-ctxin''n eq0 eqctx eqctx' = {!   !}
+
+    eq0-ctxin''r : 
+      ∀ {d1 d2 d1' d2' ε1 ε2} →
+      d1 =0''r d2 →
+      d1 == ε1 ⟦ d1' ⟧ →
+      d2 == ε2 ⟦ d2' ⟧ →
+      (d1' =0'' d2') × (ε1 =0ε'' ε2)
+    eq0-ctxin''r (Eq0CastR eq0) ctxeq FHOuter with eq0-ctxin''r eq0 ctxeq FHOuter
+    ... | (eq0' , ctxeq0') = (eq0castr-lemma eq0') , ctxeq0'
+    eq0-ctxin''r (Eq0CastR eq0) ctxeq (FHCast ctxeq') with eq0-ctxin''r eq0 ctxeq ctxeq'
+    ... | (eq0' , ctxeq0') = eq0' , Eq0CastR ctxeq0'
+    eq0-ctxin''r (Eq0FailedCastR eq0) ctxeq (FHFailedCast ctxeq') with eq0-ctxin''r eq0 ctxeq ctxeq'
+    ... | (eq0' , ctxeq0') = eq0' , Eq0FailedCastR ctxeq0'
+    eq0-ctxin''r (Eq0FailedCastR eq0) ctxeq FHOuter with eq0-ctxin''r eq0 ctxeq FHOuter
+    ... | (eq0' , ctxeq0') = (eq0failedcastr-lemma eq0') , ctxeq0'
+    eq0-ctxin''r (Eq0NoCasts x) ctxeq ctxeq' = eq0-ctxin''n x ctxeq ctxeq'
+
+    eq0-ctxin'' : 
+      ∀ {d1 d2 d1' d2' ε1 ε2} →
+      d1 =0'' d2 →
+      d1 == ε1 ⟦ d1' ⟧ →
+      d2 == ε2 ⟦ d2' ⟧ →
+      (d1' =0'' d2') × (ε1 =0ε'' ε2)
+    eq0-ctxin'' (Eq0CastL eq0) FHOuter ctxeq' with eq0-ctxin'' eq0 FHOuter ctxeq'
+    ... | (eq0' , ctxeq0') = Eq0CastL eq0' , ctxeq0'
+    eq0-ctxin'' (Eq0CastL eq0) (FHCast ctxeq) ctxeq' with eq0-ctxin'' eq0 ctxeq ctxeq'
+    ... | (eq0' , ctxeq0') = eq0' , Eq0CastL ctxeq0'
+    eq0-ctxin'' (Eq0FailedCastL eq0) FHOuter ctxeq' with eq0-ctxin'' eq0 FHOuter ctxeq'
+    ... | (eq0' , ctxeq0') = Eq0FailedCastL eq0' , ctxeq0'
+    eq0-ctxin'' (Eq0FailedCastL eq0) (FHFailedCast ctxeq) ctxeq' with eq0-ctxin'' eq0 ctxeq ctxeq'
+    ... | (eq0' , ctxeq0') = eq0' , Eq0FailedCastL ctxeq0'
+    eq0-ctxin'' (Eq0NoLeft x) ctxeq ctxeq' = eq0-ctxin''r x ctxeq ctxeq'
+  
+{-
+  eq0-ctxout''n : 
+    ∀ {d1 d1' d2 d2' ε1 ε2} →
+    d1' =0''n d2' →
+    ε1 =0ε'' ε2 →
+    d1 == ε1 ⟦ d1' ⟧ →
+    d2 == ε2 ⟦ d2' ⟧ →
+    d1 =0'' d2
+  eq0-ctxout''n Eq0Const ceq0 ctxeq ctxeq' = {! Eq0NoLeft (Eq0NoCasts Eq0Const)  !}
+  eq0-ctxout''n Eq0Var ceq0 ctxeq ctxeq' = {!   !}
+  eq0-ctxout''n Eq0EHole ceq0 ctxeq ctxeq' = {!   !}
+  eq0-ctxout''n (Eq0Lam x) ceq0 ctxeq ctxeq' = {!   !}
+  eq0-ctxout''n (Eq0TLam x) ceq0 ctxeq ctxeq' = {!   !}
+  eq0-ctxout''n (Eq0NEHole x) ceq0 ctxeq ctxeq' = {!   !}
+  eq0-ctxout''n (Eq0Ap x x₁) ceq0 ctxeq ctxeq' = {!   !}
+  eq0-ctxout''n (Eq0TAp x) ceq0 ctxeq ctxeq' = {!   !}
+
+  eq0-ctxout''r : 
+    ∀ {d1 d1' d2 d2' ε1 ε2} →
+    d1' =0''r d2' →
+    ε1 =0ε'' ε2 →
+    d1 == ε1 ⟦ d1' ⟧ →
+    d2 == ε2 ⟦ d2' ⟧ →
+    d1 =0'' d2
+  eq0-ctxout''r eq0 ceq0 ctxeq ctxeq' = {!   !}
+-}
+  -- Probably have to define =ε''r and n just like with '' for recursion reasons.
+  eq0-ctxout'' : 
+    ∀ {d1 d1' d2 d2' ε1 ε2} →
+    d1' =0'' d2' →
+    ε1 =0ε'' ε2 →
+    d1 == ε1 ⟦ d1' ⟧ →
+    d2 == ε2 ⟦ d2' ⟧ →
+    d1 =0'' d2
+  eq0-ctxout'' = {!   !}
+{-  eq0-ctxout'' (Eq0CastL eq0) ceq0 (FHCast ctxeq) ctxeq' with eq0-ctxout'' eq0 ceq0 ctxeq ctxeq'
+  ... | eq0' = {!   !}
+  eq0-ctxout'' (Eq0CastL eq0) ceq0 FHOuter ctxeq' with eq0-ctxout'' eq0 ceq0 FHOuter ctxeq'
+  ... | eq0' = {!   !}
+  eq0-ctxout'' (Eq0FailedCastL eq0) ceq0 ctxeq ctxeq' = {!   !}
+  eq0-ctxout'' (Eq0NoLeft x) ceq0 ctxeq ctxeq' = {!   !}
+-}
+{-
+  mutual
+    eq0-subst''n : 
+      ∀ {x d1 d2} →
+      (d3 d4 : ihexp) →
+      d1 =0'' d2 →
+      d3 =0''n d4 →
+      ([ d1 / x ] d3) =0'' ([ d2 / x ] d4)
+    eq0-subst''n .c .c eq0 Eq0Const = Eq0NoLeft (Eq0NoCasts Eq0Const)
+    eq0-subst''n {x = x} (X a) (X a) eq0 Eq0Var with natEQ a x
+    ... | Inl refl = eq0
+    ... | Inr neq = Eq0NoLeft (Eq0NoCasts Eq0Var)
+    eq0-subst''n .(⦇-⦈⟨ _ , _ , _ ⟩) .(⦇-⦈⟨ _ , _ , _ ⟩) eq0 Eq0EHole = Eq0NoLeft (Eq0NoCasts Eq0EHole)
+    eq0-subst''n {x = x} (·λ a [ _ ] d3) (·λ a [ _ ] d4) eq0 (Eq0Lam eq0') with natEQ a x
+    ... | Inl refl = Eq0NoLeft (Eq0NoCasts (Eq0Lam eq0'))
+    ... | Inr neq = Eq0NoLeft (Eq0NoCasts (Eq0Lam {! (eq0-subst d3 d4 ? ?) !}))
+    eq0-subst''n (·Λ _ d3) (·Λ _ d4) eq0 (Eq0TLam x) = {!   !}
+    eq0-subst''n (⦇⌜ d3 ⌟⦈⟨ _ , _ , _ ⟩) (⦇⌜ d4 ⌟⦈⟨ _ , _ , _ ⟩) eq0 (Eq0NEHole x) = {!   !}
+    eq0-subst''n (d3 ∘ d3') (d4 ∘ d4') eq0 (Eq0Ap x x₁) = {!   !}
+    eq0-subst''n (d3 < _ >) (d4 < _ >) eq0 (Eq0TAp x) = {!   !}
+    
+    eq0-subst''r : 
+      ∀ {x d1 d2} →
+      (d3 d4 : ihexp) →
+      d1 =0'' d2 →
+      d3 =0''r d4 →
+      ([ d1 / x ] d3) =0'' ([ d2 / x ] d4)
+    eq0-subst''r d3 (d4 ⟨ _ ⇒ _ ⟩) eq0 (Eq0CastR eq0') = eq0castr-lemma (eq0-subst''r d3 d4 eq0 eq0')
+    eq0-subst''r d3 (d4 ⟨ _ ⇒⦇-⦈⇏ _ ⟩) eq0 (Eq0FailedCastR eq0') = eq0failedcastr-lemma (eq0-subst''r d3 d4 eq0 eq0')
+    eq0-subst''r d3 d4 eq0 (Eq0NoCasts x) = eq0-subst''n d3 d4 eq0 x
+    
+    eq0-subst'' : 
+      ∀ {x d1 d2} →
+      (d3 d4 : ihexp) →
+      d1 =0'' d2 →
+      d3 =0'' d4 →
+      ([ d1 / x ] d3) =0'' ([ d2 / x ] d4)
+    eq0-subst'' (d3 ⟨ _ ⇒ _ ⟩) d4 eq0 (Eq0CastL eq0') = Eq0CastL (eq0-subst'' d3 d4 eq0 eq0')
+    eq0-subst'' (d3 ⟨ _ ⇒⦇-⦈⇏ _ ⟩) d4 eq0 (Eq0FailedCastL eq0') = Eq0FailedCastL (eq0-subst'' d3 d4 eq0 eq0')
+    eq0-subst'' d3 d4 eq0 (Eq0NoLeft x) = eq0-subst''r d3 d4 eq0 x
+-}
+
+
+  mutual
+    parametricity22-lemma-nocasts : ∀{d1 d2 d1' d2'} →
+      d1 =0''n d2 →
+      d1 →> d1' →
+      d2 →> d2' →
+      d1' =0 d2'
+    parametricity22-lemma-nocasts (Eq0Ap {d1 = ·λ _ [ _ ] d1} {d2 = d2} {d3 = ·λ _ [ _ ] d3} {d4 = d4} (Eq0Lam x) x₁) ITLam ITLam = eq0-subst d1 d3 x₁ x
+    parametricity22-lemma-nocasts (Eq0Ap (Eq0Cast x) x₁) ITApCast ITApCast = (Eq0Cast (Eq0Ap x (Eq0Cast x₁)))
+    parametricity22-lemma-nocasts (Eq0TAp {d1 = ·Λ _ d1} {d2 = ·Λ _ d2} (Eq0TLam x)) ITTLam ITTLam = eq0-typsubst d1 d2 x
+    parametricity22-lemma-nocasts (Eq0TAp (Eq0Cast x)) ITTApCast ITTApCast = (Eq0Cast (Eq0TAp x))
+
+    parametricity22-lemma : ∀{d1 d2 d1' d2'} →
+      d1 =0'' d2 →
+      d1 →> d1' →
+      d2 →> d2' →
+      d1' =0'' d2' + d1 =0'' d2' + d1' =0'' d2
+    parametricity22-lemma (Eq0CastL eq0) (ITCastID x) step' = Inr (Inr eq0)
+    parametricity22-lemma (Eq0CastL (Eq0CastL eq0)) (ITCastSucceed x x₁ x₂) step' = Inr (Inr eq0)
+    parametricity22-lemma (Eq0CastL (Eq0NoLeft x₃)) (ITCastSucceed x x₁ x₂) step' = abort (π1 (eq0castr-meaning x₃) refl)
+    parametricity22-lemma (Eq0CastL (Eq0CastL eq0)) (ITCastFail x x₁ x₂) step' = Inr (Inr (Eq0FailedCastL eq0))
+    parametricity22-lemma (Eq0CastL (Eq0NoLeft eq0)) (ITCastFail x x₁ x₂) step' = abort (π1 (eq0castr-meaning eq0) refl)
+    parametricity22-lemma (Eq0CastL eq0) (ITGround x) step' = Inr (Inr (Eq0CastL (Eq0CastL eq0)))
+    parametricity22-lemma (Eq0CastL eq0) (ITExpand x) step' = Inr (Inr (Eq0CastL (Eq0CastL eq0)))
+    parametricity22-lemma (Eq0NoLeft (Eq0CastR x)) step (ITCastID x₁) = Inr (Inl (Eq0NoLeft x))
+    parametricity22-lemma (Eq0NoLeft (Eq0CastR (Eq0CastR x))) step (ITCastSucceed x₁ x₂ x₃) = Inr (Inl (Eq0NoLeft x))
+    parametricity22-lemma (Eq0NoLeft (Eq0CastR (Eq0CastR x))) step (ITCastFail x₁ x₂ x₃) = Inr (Inl (Eq0NoLeft (Eq0FailedCastR x)))
+    parametricity22-lemma (Eq0NoLeft (Eq0CastR (Eq0NoCasts ()))) step (ITCastFail x₁ x₂ x₃)
+    parametricity22-lemma (Eq0NoLeft (Eq0CastR x)) step (ITGround x₁) = Inr (Inl (Eq0NoLeft (Eq0CastR (Eq0CastR x))))
+    parametricity22-lemma (Eq0NoLeft (Eq0CastR x)) step (ITExpand x₁) = Inr (Inl (Eq0NoLeft (Eq0CastR (Eq0CastR x))))
+    parametricity22-lemma (Eq0NoLeft (Eq0NoCasts x)) step step' = Inl (eq0-eq0'' (parametricity22-lemma-nocasts x step step'))
+
+  -- As written this is not true, as d1 and d2 can step in different places.
+  -- However, if we restructure so that evaluation is deterministic, we have good credence that this should hold;
+  -- We can only get different evaluation contexts is we're stepping on a cast,
+  -- and all of those cases we simply preserve stepping on one side.
+  parametricity22-lemma-ctx : ∀{d1 d2 d1' d2'} →
+      d1 =0'' d2 →
+      d1 ↦ d1' →
+      d2 ↦ d2' →
+      d1' =0'' d2' + d1 =0'' d2' + d1' =0'' d2
+  parametricity22-lemma-ctx eq0 (Step x1 step x2) (Step x1' step' x2') 
+    with eq0-ctxin'' eq0 x1 x1'
+  ... | ( eq0' , ctxeq' )
+    with parametricity22-lemma eq0' step step'
+  ... | Inl both = Inl (eq0-ctxout'' both ctxeq' x2 x2')
+  ... | Inr (Inl left) = Inr (Inl (eq0-ctxout'' left ctxeq' x1 x2'))
+  ... | Inr (Inr right) = Inr (Inr (eq0-ctxout'' right ctxeq' x2 x1'))
+
+
+  mutual
+    parametricity22-onesidedn : ∀{d1 v2 d1'} → 
+      d1 =0''n v2 →
+      v2 boxedval →
+      d1 ↦ d1' →
+      d1' =0'' v2
+    parametricity22-onesidedn (Eq0NEHole x) (BVVal ()) (Step (FHNEHole x₂) x₁ (FHNEHole x₃))
+    parametricity22-onesidedn (Eq0Ap x x₂) (BVVal ()) (Step FHOuter x₁ FHOuter)
+    parametricity22-onesidedn (Eq0Ap x x₂) (BVVal ()) (Step (FHAp1 x₃) x₁ (FHAp1 x₄))
+    parametricity22-onesidedn (Eq0Ap x x₂) (BVVal ()) (Step (FHAp2 x₃) x₁ (FHAp2 x₄))
+    parametricity22-onesidedn (Eq0TAp x) (BVVal ()) (Step FHOuter x₁ FHOuter)
+    parametricity22-onesidedn (Eq0TAp x) (BVVal ()) (Step (FHTAp x₂) x₁ (FHTAp x₃))
+
+    parametricity22-onesidedr : ∀{d1 v2 d1'} → 
+      d1 =0''r v2 →
+      v2 boxedval →
+      d1 ↦ d1' →
+      d1' =0'' v2
+    parametricity22-onesidedr (Eq0NoCasts x) bv step = parametricity22-onesidedn x bv step
+    parametricity22-onesidedr (Eq0CastR eq0) (BVArrCast x bv) step = eq0castr-lemma (parametricity22-onesidedr eq0 bv step)
+    parametricity22-onesidedr (Eq0CastR eq0) (BVForallCast x bv) step = eq0castr-lemma (parametricity22-onesidedr eq0 bv step)
+    parametricity22-onesidedr (Eq0CastR eq0) (BVHoleCast x bv) step = eq0castr-lemma (parametricity22-onesidedr eq0 bv step)
+    parametricity22-onesidedr (Eq0FailedCastR eq0) (BVVal ()) step
+
+    parametricity22-onesided : ∀{d1 v2 d1'} → 
+      d1 =0'' v2 →
+      v2 boxedval →
+      d1 ↦ d1' →
+      d1' =0'' v2
+    parametricity22-onesided (Eq0CastL eq0) bv (Step FHOuter (ITCastID x) FHOuter) = eq0
+    parametricity22-onesided (Eq0CastL (Eq0CastL eq0)) bv (Step FHOuter (ITCastSucceed x x₁ x₂) FHOuter) = eq0
+    parametricity22-onesided (Eq0CastL (Eq0NoLeft x₃)) bv (Step FHOuter (ITCastSucceed x x₁ x₂) FHOuter) = abort (π1 (eq0castr-meaning x₃) refl)
+    parametricity22-onesided (Eq0CastL (Eq0CastL eq0)) bv (Step FHOuter (ITCastFail x x₁ x₂) FHOuter) = Eq0FailedCastL eq0
+    parametricity22-onesided (Eq0CastL (Eq0NoLeft x₃)) bv (Step FHOuter (ITCastFail x x₁ x₂) FHOuter) = abort (π1 (eq0castr-meaning x₃) refl)
+    parametricity22-onesided (Eq0CastL eq0) bv (Step FHOuter (ITGround x) FHOuter) = Eq0CastL (Eq0CastL eq0)
+    parametricity22-onesided (Eq0CastL eq0) bv (Step FHOuter (ITExpand x) FHOuter) = Eq0CastL (Eq0CastL eq0)
+    parametricity22-onesided (Eq0CastL eq0) bv (Step (FHCast x) x₁ (FHCast x₂)) =
+      Eq0CastL (parametricity22-onesided eq0 bv (Step x x₁ x₂))
+    parametricity22-onesided (Eq0FailedCastL eq0) bv (Step (FHFailedCast x) x₁ (FHFailedCast x₂)) = Eq0FailedCastL (parametricity22-onesided eq0 bv (Step x x₁ x₂))
+    parametricity22-onesided {v2 = v2 ⟨ x₂ ⇒⦇-⦈⇏ x₃ ⟩} (Eq0NoLeft (Eq0FailedCastR x₄)) (BVVal ()) step
+    parametricity22-onesided (Eq0NoLeft (Eq0CastR x)) bv step = parametricity22-onesidedr (Eq0CastR x) bv step
+    parametricity22-onesided (Eq0NoLeft (Eq0NoCasts x)) bv step = parametricity22-onesidedn x bv step
+
+  -- We have to do some fiddling to make the termination checker happy.
+  tracelength : ∀{d d'} →
+    d ↦* d' → Nat
+  tracelength MSRefl = 0
+  tracelength (MSStep _ ms) = 1+ (tracelength ms)
+
+  parametricity22-gas :
+    ∀{d1 d2 v1 v2} →
+    d1 =0'' d2 →
+    (ms : d1 ↦* v1) →
+    (ms' : d2 ↦* v2) →
+    v1 boxedval →
+    v2 boxedval →
+    (n : Nat) →
+    ((tracelength ms) nat+ (tracelength ms')) < n →
+    v1 =0'' v2
+  parametricity22-gas _ _ _ _ _ 0 ()
+  parametricity22-gas eq0 MSRefl MSRefl bv bv' n term = eq0
+  parametricity22-gas eq0 MSRefl (MSStep step' ms') bv bv' (1+ n) (LTS term) rewrite ! (nat+Z (tracelength ms')) = eq0''-sym (parametricity22-gas (parametricity22-onesided (eq0''-sym eq0) bv step') ms' MSRefl bv' bv n term)
+  parametricity22-gas eq0 (MSStep step ms) MSRefl bv bv' (1+ n) (LTS term) = 
+    parametricity22-gas (parametricity22-onesided eq0 bv' step) ms MSRefl bv bv' n term
+  parametricity22-gas eq0 (MSStep step ms) (MSStep step' ms') bv bv' (1+ n) (LTS term) with parametricity22-lemma-ctx eq0 step step'
+  ... | Inr (Inl left) rewrite nat+1+ (tracelength ms) (tracelength ms') = parametricity22-gas left (MSStep step ms) ms' bv bv' n term
+  ... | Inr (Inr right) = parametricity22-gas right ms (MSStep step' ms') bv bv' n term
+  ... | Inl both with n
+  ...   | 1+ n' rewrite nat+1+ (tracelength ms) (tracelength ms') = parametricity22-gas both ms ms' bv bv' n' (lt-1+-inj term)
+  ...   | Z with term
+  ...     | ()
+
+  -- The version without the termination structure.
+  parametricity22 :
+    ∀{d1 d2 v1 v2} →
+    d1 =0'' d2 →
+    (ms : d1 ↦* v1) →
+    (ms' : d2 ↦* v2) →
+    v1 boxedval →
+    v2 boxedval →
+    v1 =0'' v2
+  parametricity22 eq0 ms ms' bv bv' = parametricity22-gas eq0 ms ms' bv bv' (1+ ((tracelength ms) nat+ (tracelength ms'))) lt-1+
+
+{-
+  test-lemma : ∀{d v} →
+    d =0'' v →
+    v boxedval →
+    Σ[ v' ∈ ihexp ] ( d ↦* v' × v' boxedval )
+  test-lemma (Eq0CastL eq0) (BVVal VConst) = ?
+  test-lemma (Eq0FailedCastL eq0) (BVVal VConst) = ?
+  test-lemma (Eq0NoLeft x) (BVVal VConst) = ?
+  test-lemma eq0 (BVVal VLam) = {!   !}
+  test-lemma eq0 (BVVal VTLam) = {!   !}
+  test-lemma eq0 (BVArrCast x bv) = {!   !}
+  test-lemma eq0 (BVForallCast x bv) = {!   !}
+  test-lemma eq0 (BVHoleCast x bv) = {!   !}
+-}
+
 {-  parametricity11 complete wt eq MSRefl bv = _ , MSRefl , {! eq0-boxedval' eq bv !} , eq 
   parametricity11 complete wt eq (MSStep step steps) bv 
     with eq0-step eq step 
@@ -571,4 +1132,4 @@ module parametricity where
   -- fill-hole-function : (d : ihexp) (ε : ectx) → ihexp
   -- fill-hole-function d ε with fill-hole d ε
   -- ... | d' , _ = d'
-       
+               
