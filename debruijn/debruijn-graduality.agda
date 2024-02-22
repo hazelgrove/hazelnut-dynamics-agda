@@ -8,8 +8,6 @@ open import debruijn.debruijn-lemmas-consistency
 open import debruijn.debruijn-lemmas-prec
 open import debruijn.debruijn-lemmas-meet
 open import debruijn.debruijn-lemmas-wf
--- open import debruijn.debruijn-typed-elaboration
--- open import debruijn.debruijn-type-assignment-unicity
 
 module debruijn.debruijn-graduality where
 
@@ -78,14 +76,14 @@ module debruijn.debruijn-graduality where
   -- mutual 
       
   --   graduality-elab-ana : 
-  --     ∀{e e' τ1 τ2 τ1' Γ Γ' Θ d} →     
-  --     (Θ ⊢ Γ ctxwf) → 
-  --     (Θ ⊢ τ1 wf) → 
+  --     ∀{e e' τ1 τ2 τ1' Γ Γ' d} →     
+  --     (⊢ Γ ctxwf) → 
+  --     (Γ ⊢ τ1 wf) → 
   --     (Γ ⊑c Γ') →
   --     (τ1 ⊑t τ1') →
   --     (e ⊑ e') →
-  --     (Θ , Γ ⊢ e ⇐ τ1 ~> d :: τ2) →
-  --     Σ[ d' ∈ ihexp ] Σ[ τ2' ∈ htyp ] ((Θ , Γ' ⊢ e' ⇐ τ1' ~> d' :: τ2') × (Θ , Γ , Γ' ⊢ d ⊑i d') × (τ2 ⊑t τ2'))
+  --     (Γ ⊢ e ⇐ τ1 ~> d :: τ2) →
+  --     Σ[ d' ∈ ihexp ] Σ[ τ2' ∈ htyp ] ((Γ' ⊢ e' ⇐ τ1' ~> d' :: τ2') × (Γ , Γ' ⊢ d ⊑i d') × (τ2 ⊑t τ2'))
   --   graduality-elab-ana {e' = e'} ctxwf wf precc prect prec (EASubsume neq1 neq2 syn meet) with hole-or-not e' | ⊓-lb meet
   --   graduality-elab-ana ctxwf wf precc prect prec (EASubsume neq1 neq2 syn meet) | Inl refl | prect1 , prect2 = 
   --     _ , _ , EAEHole , PIEHole (TACast (typed-elaboration-syn ctxwf syn) (wf-⊓ meet wf (wf-elab-syn ctxwf syn)) (~sym (⊑t-consist prect2))) (⊑t-trans prect1 prect) , ⊑t-trans prect1 prect
@@ -119,11 +117,11 @@ module debruijn.debruijn-graduality where
 
   --   graduality-elab-syn : 
   --     ∀{e e' Γ Γ' Θ τ d} →     
-  --     (Θ ⊢ Γ ctxwf) → 
+  --     (⊢ Γ ctxwf) → 
   --     (Γ ⊑c Γ') →
   --     (e ⊑ e') →
-  --     (Θ , Γ ⊢ e ⇒ τ ~> d) →
-  --     Σ[ τ' ∈ htyp ] Σ[ d' ∈ ihexp ] ((Θ , Γ' ⊢ e' ⇒ τ' ~> d') × (τ ⊑t τ') × (Θ , Γ , Γ' ⊢ d ⊑i d'))
+  --     (Γ ⊢ e ⇒ τ ~> d) →
+  --     Σ[ τ' ∈ htyp ] Σ[ d' ∈ ihexp ] ((Γ' ⊢ e' ⇒ τ' ~> d') × (τ ⊑t τ') × (Γ , Γ' ⊢ d ⊑i d'))
   --   graduality-elab-syn ctxwf precc PEHole elab = ⦇-⦈ , ⦇-⦈⟨ ⦇-⦈ ⟩ , ESEHole , PTHole , PIEHole (typed-elaboration-syn ctxwf elab) PTHole
   --   graduality-elab-syn ctxwf precc PConst ESConst = b , c , ESConst , PTBase , PIConst
   --   graduality-elab-syn ctxwf precc PVar (ESVar inctx) with ⊑c-var inctx precc
@@ -149,25 +147,25 @@ module debruijn.debruijn-graduality where
   --   ... | PTForall prec5 = _ , _ , ESTAp (wf-⊑t wf prect) syn' meet' ana' refl , 
   --     ⊑t-TTsub prect prec5 , PITAp (PICast prec3 prec4 (PTForall prec2)) prect
    
-    -- graduality-type-assign : 
-    --   ∀{d d' Γ Γ' Θ τ} →     
-    --   (Θ ⊢ Γ ctxwf) → 
-    --   (Γ ⊑c Γ') →
-    --   (Θ , Γ , Γ' ⊢ d ⊑i d') →
-    --   (Θ , Γ ⊢ d :: τ) →
-    --   Σ[ τ' ∈ htyp ] ((Θ , Γ' ⊢ d' :: τ') × (τ ⊑t τ'))
-    -- graduality-type-assign ctxwf precc PIConst TAConst = b , TAConst , PTBase 
-    -- graduality-type-assign ctxwf precc PIVar (TAVar inctx) with ⊑c-var inctx precc 
-    -- ... | τ , inctx' , prec = τ , TAVar inctx' , prec
-    -- graduality-type-assign ctxwf precc (PIEHole wt1 prec) wt2 rewrite type-assignment-unicity wt1 wt2 = _ , TAEHole , prec
-    -- graduality-type-assign ctxwf precc (PILam prec x) (TALam x₁ wt) = {!   !}
-    -- graduality-type-assign ctxwf precc (PITLam prec) (TATLam wt) = {!   !}
-    -- graduality-type-assign ctxwf precc (PINEHole prec x) TANEHole = {!   !}
-    -- graduality-type-assign ctxwf precc (PIAp prec prec₁) (TAAp wt wt₁) = {!   !}
-    -- graduality-type-assign ctxwf precc (PITAp prec x) (TATAp x₁ wt x₂) = {!   !}
-    -- graduality-type-assign ctxwf precc (PICast prec x x₁) (TACast wt x₂ x₃) = {!   !}
-    -- graduality-type-assign ctxwf precc (PIFailedCast prec x x₁) (TAFailedCast wt x₂ x₃ x₄) = {!   !}
-    -- graduality-type-assign ctxwf precc (PIRemoveCast prec x x₁ x₂) (TACast wt x₃ x₄) = {!   !}
-    -- graduality-type-assign ctxwf precc (PIAddCast prec wt1 prec1 prec2) wt2 with graduality-type-assign ctxwf precc prec wt2 
-    -- ... | τ , wt3 , prec3 = _ , {!   !} , {!   !}
-    -- graduality-type-assign ctxwf precc (PIBlame wt1 prect) (TAFailedCast wt2 gnd1 gnd2 neq) = _ , wt1 , prect
+  --   graduality-type-assign : 
+  --     ∀{d d' Γ Γ' Θ τ} →     
+  --     (Θ ⊢ Γ ctxwf) → 
+  --     (Γ ⊑c Γ') →
+  --     (Θ , Γ , Γ' ⊢ d ⊑i d') →
+  --     (Θ , Γ ⊢ d :: τ) →
+  --     Σ[ τ' ∈ htyp ] ((Θ , Γ' ⊢ d' :: τ') × (τ ⊑t τ'))
+  --   graduality-type-assign ctxwf precc PIConst TAConst = b , TAConst , PTBase 
+  --   graduality-type-assign ctxwf precc PIVar (TAVar inctx) with ⊑c-var inctx precc 
+  --   ... | τ , inctx' , prec = τ , TAVar inctx' , prec
+  --   graduality-type-assign ctxwf precc (PIEHole wt1 prec) wt2 rewrite type-assignment-unicity wt1 wt2 = _ , TAEHole , prec
+  --   graduality-type-assign ctxwf precc (PILam prec x) (TALam x₁ wt) = {!   !}
+  --   graduality-type-assign ctxwf precc (PITLam prec) (TATLam wt) = {!   !}
+  --   graduality-type-assign ctxwf precc (PINEHole prec x) TANEHole = {!   !}
+  --   graduality-type-assign ctxwf precc (PIAp prec prec₁) (TAAp wt wt₁) = {!   !}
+  --   graduality-type-assign ctxwf precc (PITAp prec x) (TATAp x₁ wt x₂) = {!   !}
+  --   graduality-type-assign ctxwf precc (PICast prec x x₁) (TACast wt x₂ x₃) = {!   !}
+  --   graduality-type-assign ctxwf precc (PIFailedCast prec x x₁) (TAFailedCast wt x₂ x₃ x₄) = {!   !}
+  --   graduality-type-assign ctxwf precc (PIRemoveCast prec x x₁ x₂) (TACast wt x₃ x₄) = {!   !}
+  --   graduality-type-assign ctxwf precc (PIAddCast prec wt1 prec1 prec2) wt2 with graduality-type-assign ctxwf precc prec wt2 
+  --   ... | τ , wt3 , prec3 = _ , {!   !} , {!   !}
+  --   graduality-type-assign ctxwf precc (PIBlame wt1 prect) (TAFailedCast wt2 gnd1 gnd2 neq) = _ , wt1 , prect

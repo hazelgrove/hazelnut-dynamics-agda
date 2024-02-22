@@ -65,20 +65,57 @@ module debruijn.debruijn-weakening where
     Γ ⊢ τ wf
   strengthen-wf-var-reverse wf = strengthen-wf-var-reverse-n {n = Z} wf
   
-  weakening-wf : ∀{Γ τ} →
+  weakening-wf-tvar : ∀{Γ τ} →
     Γ ⊢ τ wf →
     (TVar, Γ) ⊢ τ wf
-  weakening-wf (WFSkip {n = Z} wf) = WFVarZ
-  weakening-wf (WFSkip {x , Γ} {n = 1+ n} (WFSkip wf)) with weakening-wf wf 
+  weakening-wf-tvar (WFSkip {n = Z} wf) = WFVarZ
+  weakening-wf-tvar (WFSkip {x , Γ} {n = 1+ n} (WFSkip wf)) with weakening-wf-tvar wf 
   ... | WFVarS wf' = WFVarS (WFSkip (WFSkip wf'))
-  weakening-wf (WFSkip {TVar, Γ} {n = 1+ n} wf)  with weakening-wf wf 
+  weakening-wf-tvar (WFSkip {TVar, Γ} {n = 1+ n} wf)  with weakening-wf-tvar wf 
   ... | WFVarS wf' = WFVarS (WFSkip wf')
+  weakening-wf-tvar WFVarZ = WFVarZ
+  weakening-wf-tvar (WFVarS wf) = WFVarS (weakening-wf-tvar wf)
+  weakening-wf-tvar WFBase = WFBase
+  weakening-wf-tvar WFHole = WFHole
+  weakening-wf-tvar (WFArr wf wf₁) = WFArr (weakening-wf-tvar wf) (weakening-wf-tvar wf₁)
+  weakening-wf-tvar (WFForall wf) = WFForall (weakening-wf-tvar wf)
+
+  wf-swap-tvar : ∀{Γ τ} → (Γ ctx+ (TVar, ∅)) ⊢ τ wf → (TVar, Γ) ⊢ τ wf
+  wf-swap-tvar {∅} WFVarZ = WFVarZ
+  wf-swap-tvar WFBase = WFBase
+  wf-swap-tvar WFHole = WFHole
+  wf-swap-tvar (WFArr wf wf₁) = WFArr (wf-swap-tvar wf) (wf-swap-tvar wf₁)
+  wf-swap-tvar (WFForall wf) = WFForall (wf-swap-tvar wf)
+  wf-swap-tvar {x , Γ} (WFSkip wf) with wf-swap-tvar wf
+  ... | wf' = weakening-wf-var-n wf'
+  wf-swap-tvar {TVar, Γ} WFVarZ = WFVarZ
+  wf-swap-tvar {TVar, Γ} (WFVarS wf) =  WFVarS (wf-swap-tvar wf)
+
+  weakening-wf : ∀{Γ1 Γ2 τ} → Γ1 ⊢ τ wf → (Γ1 ctx+ Γ2) ⊢ τ wf
+  weakening-wf (WFSkip wf) = WFSkip (weakening-wf wf)
   weakening-wf WFVarZ = WFVarZ
   weakening-wf (WFVarS wf) = WFVarS (weakening-wf wf)
   weakening-wf WFBase = WFBase
   weakening-wf WFHole = WFHole
   weakening-wf (WFArr wf wf₁) = WFArr (weakening-wf wf) (weakening-wf wf₁)
   weakening-wf (WFForall wf) = WFForall (weakening-wf wf)
+
+  weakening-inctx : ∀{Γ1 Γ2 n τ} → n , τ ∈ Γ1 → n , τ ∈ (Γ1 ctx+ Γ2)
+  weakening-inctx (InCtxSkip inctx) = InCtxSkip (weakening-inctx inctx)
+  weakening-inctx InCtxZ = InCtxZ
+  weakening-inctx (InCtx1+ inctx) = InCtx1+ (weakening-inctx inctx)
+
+  weakening-wt : ∀{Γ1 Γ2 d τ} → Γ1 ⊢ d :: τ → (Γ1 ctx+ Γ2) ⊢ d :: τ
+  weakening-wt TAConst = TAConst
+  weakening-wt (TAVar x) = TAVar (weakening-inctx x)
+  weakening-wt (TALam x wt) = TALam (weakening-wf x) (weakening-wt wt)
+  weakening-wt (TATLam wt) = TATLam (weakening-wt wt)
+  weakening-wt (TAAp wt wt₁) = TAAp (weakening-wt wt) (weakening-wt wt₁)
+  weakening-wt (TATAp x wt x₁) = TATAp (weakening-wf x) (weakening-wt wt) x₁
+  weakening-wt (TAEHole x) = TAEHole (weakening-wf x)
+  weakening-wt (TANEHole x wt) = TANEHole (weakening-wf x) (weakening-wt wt)
+  weakening-wt (TACast wt x x₁) = TACast (weakening-wt wt) (weakening-wf x) x₁
+  weakening-wt (TAFailedCast wt x x₁ x₂) = TAFailedCast (weakening-wt wt) x x₁ x₂
 
   -- weakening-varwf : ∀{Γ n} →
   --   Γ ⊢ n varwf →
@@ -87,14 +124,14 @@ module debruijn.debruijn-weakening where
   -- weakening-varwf WFVarZ = WFVarZ
   -- weakening-varwf (WFVarS varwf) = WFVarS (weakening-varwf varwf)
 
-  -- weakening-wf : ∀{Γ τ} →
+  -- weakening-wf-tvar : ∀{Γ τ} →
   --   Γ ⊢ τ wf →
   --   (TVar, Γ) ⊢ τ wf
-  -- weakening-wf (WFVar varwf) = WFVar (weakening-varwf varwf)
-  -- weakening-wf WFBase = WFBase
-  -- weakening-wf WFHole = WFHole
-  -- weakening-wf (WFArr wf wf₁) = WFArr (weakening-wf wf) (weakening-wf wf₁)
-  -- weakening-wf (WFForall wf) = WFForall (weakening-wf wf)
+  -- weakening-wf-tvar (WFVar varwf) = WFVar (weakening-varwf varwf)
+  -- weakening-wf-tvar WFBase = WFBase
+  -- weakening-wf-tvar WFHole = WFHole
+  -- weakening-wf-tvar (WFArr wf wf₁) = WFArr (weakening-wf-tvar wf) (weakening-wf-tvar wf₁)
+  -- weakening-wf-tvar (WFForall wf) = WFForall (weakening-wf-tvar wf)
 
   -- weakening-n : ∀{Θ τ n} →
   --   Θ ⊢ τ wf →
@@ -113,13 +150,13 @@ module debruijn.debruijn-weakening where
   --   (TVar, Γ) ⊢ d :: τ
   -- weakening-wt TAConst = TAConst
   -- weakening-wt (TAVar x) =  TAVar (InCtxSkip x)
-  -- weakening-wt (TALam x wt) = TALam (weakening-wf x) {!   !}
+  -- weakening-wt (TALam x wt) = TALam (weakening-wf-tvar x) {!   !}
   -- weakening-wt (TATLam wt) = TATLam (weakening-wt wt)
   -- weakening-wt (TAAp wt wt₁) = TAAp (weakening-wt wt) (weakening-wt wt₁)
-  -- weakening-wt (TATAp x wt x₁) = TATAp (weakening-wf x) (weakening-wt wt) x₁
-  -- weakening-wt (TAEHole x) = TAEHole (weakening-wf x)
-  -- weakening-wt (TANEHole x wt) = TANEHole (weakening-wf x) (weakening-wt wt)
-  -- weakening-wt (TACast wt x x₁) = TACast (weakening-wt wt) (weakening-wf x) x₁
+  -- weakening-wt (TATAp x wt x₁) = TATAp (weakening-wf-tvar x) (weakening-wt wt) x₁
+  -- weakening-wt (TAEHole x) = TAEHole (weakening-wf-tvar x)
+  -- weakening-wt (TANEHole x wt) = TANEHole (weakening-wf-tvar x) (weakening-wt wt)
+  -- weakening-wt (TACast wt x x₁) = TACast (weakening-wt wt) (weakening-wf-tvar x) x₁
   -- weakening-wt (TAFailedCast wt x x₁ x₂) = TAFailedCast (weakening-wt wt) x x₁ x₂
 
   -- weakening-wt-n : ∀{Θ Γ d τ n} →

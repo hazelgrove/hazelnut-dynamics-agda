@@ -2,7 +2,9 @@ open import Nat
 open import Prelude
 open import debruijn.debruijn-core-type
 open import debruijn.debruijn-core-exp
+open import debruijn.debruijn-core-subst
 open import debruijn.debruijn-core
+
 open import debruijn.debruijn-lemmas-index
 open import debruijn.debruijn-lemmas-consistency
 open import debruijn.debruijn-lemmas-prec
@@ -10,6 +12,7 @@ open import debruijn.debruijn-lemmas-meet
 open import debruijn.debruijn-lemmas-subst
 open import debruijn.debruijn-lemmas-wf
 open import debruijn.debruijn-lemmas-complete
+
 open import debruijn.debruijn-typed-elaboration
 open import debruijn.debruijn-complete-elaboration
 -- open import debruijn.debruijn-preservation
@@ -28,7 +31,6 @@ module debruijn.debruijn-parametricity where
     Eq0Const : c =0 c
     Eq0Var : ∀{x} → (X x) =0 (X x) 
     Eq0EHole : ∀{τ τ'} → ⦇-⦈⟨ τ ⟩ =0 ⦇-⦈⟨ τ' ⟩
-    -- TODO: We ignore the subsitution stuff, but this should be addressible with something like recursiing into sigma while allowing variation in theta
     Eq0Lam : ∀{d1 d2 τ1 τ2} → d1 =0 d2 → (·λ[ τ1 ] d1) =0 (·λ[ τ2 ] d2)
     Eq0TLam : ∀{d1 d2} → d1 =0 d2 → (·Λ d1) =0 (·Λ d2)
     Eq0NEHole : ∀{d1 d2 τ τ'} → d1 =0 d2 →  (⦇⌜ d1 ⌟⦈⟨ τ ⟩) =0 (⦇⌜ d2 ⌟⦈⟨ τ' ⟩)
@@ -124,7 +126,7 @@ module debruijn.debruijn-parametricity where
   eq0-boxedval' (Eq0TAp eq) (BVVal ())
   eq0-boxedval' (Eq0FailedCast x₁) (BVVal ())
 
-  eq0-↑d : ∀{n m d d'} → d =0' d' → ↑d n m d =0' ↑d n m d'
+  eq0-↑d : ∀{t1 n t2 m d d'} → d =0' d' → ↑d t1 n t2 m d =0' ↑d t1 n t2 m d'
   eq0-↑d Eq0Const = Eq0Const
   eq0-↑d Eq0Var = Eq0Var
   eq0-↑d Eq0EHole = Eq0EHole
@@ -136,18 +138,6 @@ module debruijn.debruijn-parametricity where
   eq0-↑d (Eq0Cast eq) = Eq0Cast (eq0-↑d eq)
   eq0-↑d (Eq0FailedCast eq) = Eq0FailedCast (eq0-↑d eq)
 
-  eq0-↑td : ∀{n m d d'} → d =0' d' → ↑td n m d =0' ↑td n m d'
-  eq0-↑td Eq0Const = Eq0Const
-  eq0-↑td Eq0Var = Eq0Var
-  eq0-↑td Eq0EHole = Eq0EHole
-  eq0-↑td (Eq0Lam eq) = Eq0Lam (eq0-↑td eq)
-  eq0-↑td (Eq0TLam eq) = Eq0TLam (eq0-↑td eq)
-  eq0-↑td (Eq0NEHole eq) = Eq0NEHole (eq0-↑td eq)
-  eq0-↑td (Eq0Ap eq eq₁) = Eq0Ap (eq0-↑td eq) (eq0-↑td eq₁)
-  eq0-↑td (Eq0TAp eq) = Eq0TAp (eq0-↑td eq)
-  eq0-↑td (Eq0Cast eq) = Eq0Cast (eq0-↑td eq)
-  eq0-↑td (Eq0FailedCast eq) = Eq0FailedCast (eq0-↑td eq)
-
   eq0-ttSub : ∀{n m d1 d2 d1' d2'} → d1 =0' d1' → d2 =0' d2' → ttSub n m d1 d2 =0' ttSub n m d1' d2'
   eq0-ttSub eq1 Eq0Const = Eq0Const
   eq0-ttSub eq1 Eq0EHole = Eq0EHole
@@ -156,12 +146,10 @@ module debruijn.debruijn-parametricity where
   eq0-ttSub eq1 (Eq0TAp eq2) = Eq0TAp (eq0-ttSub eq1 eq2)
   eq0-ttSub eq1 (Eq0Cast eq2) = Eq0Cast (eq0-ttSub eq1 eq2)
   eq0-ttSub eq1 (Eq0FailedCast eq2) = Eq0FailedCast (eq0-ttSub eq1 eq2)
-  eq0-ttSub {n} {m} {d1} {d1'} {d2} {d2'} eq1 (Eq0Lam {d3} {d4} {τ1} {τ2} eq2)
-    rewrite ttSubLam {n} {m} {d1} {d3} {τ1} rewrite ttSubLam {n} {m} {d2} {d4} {τ2} = Eq0Lam (eq0-ttSub eq1 eq2)
-  eq0-ttSub {n} {m} {d1} {d2} {d1'} {d2'} eq1 (Eq0TLam {d3} {d4} eq2) 
-    rewrite ttSubTLam {n} {m} {d1} {d3} rewrite ttSubTLam {n} {m} {d1'} {d4} = Eq0TLam (eq0-ttSub eq1 eq2)
+  eq0-ttSub {n} {m} {d1} {d1'} {d2} {d2'} eq1 (Eq0Lam {d3} {d4} {τ1} {τ2} eq2) = Eq0Lam (eq0-ttSub eq1 eq2)
+  eq0-ttSub {n} {m} {d1} {d2} {d1'} {d2'} eq1 (Eq0TLam {d3} {d4} eq2) = Eq0TLam (eq0-ttSub eq1 eq2)
   eq0-ttSub {n} {m} {d1} {_} {d1'} eq1 (Eq0Var {x = x}) with natEQ x n 
-  ... | Inl refl rewrite ttSubVar {n} {m} {d1} rewrite ttSubVar {n} {m} {d1'} = eq0-↑d (eq0-↑td eq1) 
+  ... | Inl refl = eq0-↑d eq1  
   ... | Inr neq = Eq0Var
 
   eq0-TtSub : ∀{n τ1 τ2 d1 d2} → d1 dcompleteid → d1 =0' d2 → TtSub n τ1 d1 =0' TtSub n τ2 d2
@@ -169,8 +157,7 @@ module debruijn.debruijn-parametricity where
   eq0-TtSub dc Eq0Var = Eq0Var
   eq0-TtSub dc Eq0EHole = Eq0EHole
   eq0-TtSub (DCLam dc x) (Eq0Lam eq) = Eq0Lam (eq0-TtSub dc eq) 
-  eq0-TtSub {n} {τ1} {τ2} (DCTLam dc) (Eq0TLam {d1 = d1} {d2 = d2} eq) 
-    rewrite TtSubTLam {n} {τ1} {d1} rewrite TtSubTLam {n} {τ2} {d2} = Eq0TLam (eq0-TtSub dc eq)
+  eq0-TtSub {n} {τ1} {τ2} (DCTLam dc) (Eq0TLam {d1 = d1} {d2 = d2} eq) = Eq0TLam (eq0-TtSub dc eq)
   eq0-TtSub () (Eq0NEHole eq)
   eq0-TtSub (DCAp dc dc₁) (Eq0Ap eq eq₁) = Eq0Ap (eq0-TtSub dc eq) (eq0-TtSub dc₁ eq₁) 
   eq0-TtSub (DCTAp x dc) (Eq0TAp eq) = Eq0TAp (eq0-TtSub dc eq) 
@@ -360,9 +347,6 @@ module debruijn.debruijn-parametricity where
   wt-env {τ = τ} (TANEHole x wt) (FHNEHole env₁) = wt-env wt env₁
   wt-env {τ = τ} (TACast wt x x₁) (FHCast env₁) = wt-env wt env₁
   wt-env {τ = τ} (TAFailedCast wt x x₁ x₂) (FHFailedCast env₁) = wt-env wt env₁
-
-  -- inst : ∀{A B : Set} → Σ[ a ∈ A ] (B) → B
-  -- inst (x , y) = y
 
   eq0-step' : 
     ∀ {d1 d2 d1' τ τ'} →

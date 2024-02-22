@@ -1,12 +1,12 @@
-open import Nat
 open import Prelude
 open import debruijn.debruijn-core-type
 open import debruijn.debruijn-core
+
 open import debruijn.debruijn-lemmas-consistency
 open import debruijn.debruijn-lemmas-wf
 open import debruijn.debruijn-lemmas-subst
-open import debruijn.debruijn-lemmas-complete
 -- open import debruijn.debruijn-typing-subst
+
 open import debruijn.debruijn-type-assignment-unicity
 
 module debruijn.debruijn-preservation where
@@ -47,10 +47,10 @@ module debruijn.debruijn-preservation where
   preserve-trans (TAVar x) ()
   preserve-trans (TALam x wt) ()
   preserve-trans (TATLam wt) ()
-  preserve-trans (TAAp (TALam wf wt1) wt2) ITLam = {! subst-complete ? ?  !} --wt-ttSub wf wt2 wt1
+  preserve-trans (TAAp (TALam wf wt1) wt2) ITLam = {!   !} --wt-ttSub wt2 wt1
   preserve-trans (TAAp (TACast wt1 (WFArr wf1 wf2) (ConsistArr con1 con2)) wt2) ITApCast with wf-ta CtxWFEmpty wt1
   ... | WFArr wf3 wf4 = TACast (TAAp wt1 (TACast wt2 wf3 (~sym con1))) wf2 con2
-  preserve-trans (TATAp wf (TATLam wt) refl) ITTLam = {!   !} --wt-TtSub CtxWFEmpty wf wt
+  preserve-trans (TATAp wf (TATLam wt) refl) ITTLam = {!   !} --wt-TtSub wf wt
   preserve-trans (TATAp x (TACast wt (WFForall wf) (ConsistForall con)) refl) ITTApCast with wf-ta CtxWFEmpty wt 
   ... | WFForall wf2 = TACast (TATAp x wt refl) (wf-TTSub x wf) (~TTSub wf2 wf con)
   preserve-trans (TAEHole _) () 

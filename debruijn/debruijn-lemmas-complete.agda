@@ -20,41 +20,14 @@ module debruijn.debruijn-lemmas-complete where
   ↓-complete (TCArr tc tc₁) = TCArr (↓-complete tc) (↓-complete tc₁)
   ↓-complete (TCForall tc) = TCForall (↓-complete tc)
 
-  ↑d-complete : ∀{n m d} → d dcomplete → ↑d n m d dcomplete
+  ↑d-complete : ∀{t1 n t2 m d} → d dcomplete → ↑d t1 n t2 m d dcomplete
   ↑d-complete DCVar = DCVar
   ↑d-complete DCConst = DCConst
-  ↑d-complete (DCLam dc x) = DCLam (↑d-complete dc) x
+  ↑d-complete (DCLam dc x) = DCLam (↑d-complete dc) (↑-complete x)
   ↑d-complete (DCTLam dc) = DCTLam (↑d-complete dc)
   ↑d-complete (DCAp dc dc₁) = DCAp (↑d-complete dc) (↑d-complete dc₁)
-  ↑d-complete (DCTAp x dc) = DCTAp x (↑d-complete dc)
-  ↑d-complete (DCCast dc x x₁) = DCCast (↑d-complete dc) x x₁
-
-  ↓d-complete : ∀{n m d} → d dcomplete → ↓d n m d dcomplete
-  ↓d-complete DCVar = DCVar
-  ↓d-complete DCConst = DCConst
-  ↓d-complete (DCLam dc x) = DCLam (↓d-complete dc) x
-  ↓d-complete (DCTLam dc) = DCTLam (↓d-complete dc)
-  ↓d-complete (DCAp dc dc₁) = DCAp (↓d-complete dc) (↓d-complete dc₁)
-  ↓d-complete (DCTAp x dc) = DCTAp x (↓d-complete dc)
-  ↓d-complete (DCCast dc x x₁) = DCCast (↓d-complete dc) x x₁
-
-  ↑td-complete : ∀{n m d} → d dcomplete → ↑td n m d dcomplete
-  ↑td-complete DCVar = DCVar
-  ↑td-complete DCConst = DCConst
-  ↑td-complete (DCLam dc x) = DCLam (↑td-complete dc) (↑-complete x)
-  ↑td-complete (DCTLam dc) = DCTLam (↑td-complete dc)
-  ↑td-complete (DCAp dc dc₁) = DCAp (↑td-complete dc) (↑td-complete dc₁)
-  ↑td-complete (DCTAp x dc) = DCTAp (↑-complete x) (↑td-complete dc)
-  ↑td-complete (DCCast dc x x₁) = DCCast (↑td-complete dc) (↑-complete x) (↑-complete x₁)
-
-  ↓td-complete : ∀{n m d} → d dcomplete → ↓td n m d dcomplete
-  ↓td-complete DCVar = DCVar
-  ↓td-complete DCConst = DCConst
-  ↓td-complete (DCLam dc x) = DCLam (↓td-complete dc) (↓-complete x)
-  ↓td-complete (DCTLam dc) = DCTLam (↓td-complete dc)
-  ↓td-complete (DCAp dc dc₁) = DCAp (↓td-complete dc) (↓td-complete dc₁)
-  ↓td-complete (DCTAp x dc) = DCTAp (↓-complete x) (↓td-complete dc)
-  ↓td-complete (DCCast dc x x₁) = DCCast (↓td-complete dc) (↓-complete x) (↓-complete x₁)
+  ↑d-complete (DCTAp x dc) = DCTAp (↑-complete x) (↑d-complete dc)
+  ↑d-complete (DCCast dc x x₁) = DCCast (↑d-complete dc) (↑-complete x) (↑-complete x₁)
 
   inctx-complete : ∀{x τ Γ} → Γ gcomplete → x , τ ∈ Γ → τ tcomplete
   inctx-complete GCEmpty ()
@@ -90,13 +63,13 @@ module debruijn.debruijn-lemmas-complete where
 
   ttSub-complete : ∀{n m d1 d2} → d1 dcomplete → d2 dcomplete → ttSub n m d1 d2 dcomplete
   ttSub-complete {n} dc1 (DCVar {x = x}) with natEQ x n 
-  ... | Inl refl = ↑d-complete (↑td-complete dc1)
+  ... | Inl refl = ↑d-complete dc1
   ... | Inr neq = DCVar
   ttSub-complete dc1 DCConst = DCConst
   ttSub-complete {n} {m} {d1} dc1 (DCLam dc2 x) with ttSub-complete {1+ n} {m} dc1 dc2 
-  ... | dc3 rewrite (↑d-↑td-comm {1} {m} {Z} {Z} {↑d 0 (1+ n) d1}) rewrite ↑d-compose Z (1+ n) d1 = DCLam dc3 x
+  ... | dc3 = DCLam dc3 x
   ttSub-complete {n} {m} {d1} dc1 (DCTLam dc2) with ttSub-complete {n} {1+ m} dc1 dc2 
-  ... | dc3 rewrite sym (↑td-compose Z m (↑d 0 (1+ n) d1)) = DCTLam dc3
+  ... | dc3 = DCTLam dc3
   ttSub-complete dc1 (DCAp dc2 dc3) = DCAp (ttSub-complete dc1 dc2) (ttSub-complete dc1 dc3)
   ttSub-complete dc1 (DCTAp x dc2) = DCTAp x (ttSub-complete dc1 dc2)
   ttSub-complete dc1 (DCCast dc2 x x₁) = DCCast (ttSub-complete dc1 dc2) x x₁

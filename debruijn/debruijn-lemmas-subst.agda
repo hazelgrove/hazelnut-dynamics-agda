@@ -35,6 +35,18 @@ module debruijn.debruijn-lemmas-subst where
   TtSubCorrect {n} {τ} {·λ[ x ] d} rewrite TTSubCorrect {n} {τ} {x} rewrite TtSubCorrect {n} {τ} {d} = refl
   TtSubCorrect {n} {τ} {·Λ d} rewrite ↑compose 0 (1+ n) τ rewrite TtSubCorrect {1+ n} {τ} {d} = refl
 
+  ↑d'-correct : ∀{t1 n t2 m d} → ↑d' t1 n (↑td t2 m d) == ↑d t1 n t2 m d
+  ↑d'-correct {t1} {n} {t2} {m} {c} = refl
+  ↑d'-correct {t1} {n} {t2} {m} {⦇-⦈⟨ x ⟩} = refl
+  ↑d'-correct {t1} {n} {t2} {m} {⦇⌜ d ⌟⦈⟨ x ⟩} rewrite ↑d'-correct {t1} {n} {t2} {m} {d} = refl
+  ↑d'-correct {t1} {n} {t2} {m} {d ∘ d₁} rewrite ↑d'-correct {t1} {n} {t2} {m} {d} rewrite ↑d'-correct {t1} {n} {t2} {m} {d₁} = refl
+  ↑d'-correct {t1} {n} {t2} {m} {d < x >} rewrite ↑d'-correct {t1} {n} {t2} {m} {d} = refl
+  ↑d'-correct {t1} {n} {t2} {m} {d ⟨ x ⇒ x₁ ⟩} rewrite ↑d'-correct {t1} {n} {t2} {m} {d} = refl
+  ↑d'-correct {t1} {n} {t2} {m} {d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} rewrite ↑d'-correct {t1} {n} {t2} {m} {d} = refl
+  ↑d'-correct {t1} {n} {t2} {m} {·λ[ x ] d} rewrite ↑d'-correct {1+ t1} {n} {t2} {m} {d} = refl
+  ↑d'-correct {t1} {n} {t2} {m} {·Λ d} rewrite ↑d'-correct {t1} {n} {1+ t2} {m} {d} = refl
+  ↑d'-correct {t1} {n} {t2} {m} {X x} = refl
+
   ttSubCorrect : ∀{n m d1 d2} → ttSub' n m d1 d2 == ttSub n m d1 d2
   ttSubCorrect {n} {m} {d1} {c} = refl
   ttSubCorrect {n} {m} {d1} {⦇-⦈⟨ x ⟩} = refl
@@ -44,16 +56,16 @@ module debruijn.debruijn-lemmas-subst where
   ttSubCorrect {n} {m} {d1} {d2 ⟨ x ⇒ x₁ ⟩} rewrite ttSubCorrect {n} {m} {d1} {d2} = refl
   ttSubCorrect {n} {m} {d1} {d2 ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} rewrite ttSubCorrect {n} {m} {d1} {d2} = refl
   ttSubCorrect {n} {m} {d1} {·λ[ x ] d2} 
-    rewrite ↑d-↑td-comm {1} {m} {Z} {Z} {d = (↑d 0 (1+ n) d1)} 
-    rewrite ↑d-compose Z (1+ n) d1
+    rewrite ↑d'-↑td-comm {1} {m} {Z} {Z} {d = (↑d' 0 (1+ n) d1)} 
+    rewrite ↑d'-compose Z (1+ n) d1
     rewrite ttSubCorrect {1+ n} {m} {d1} {d2} = refl
   ttSubCorrect {n} {m} {d1} {·Λ d2} 
-    rewrite ↑td-compose 0 m (↑d 0 (1+ n) d1)
+    rewrite ↑td-compose 0 m (↑d' 0 (1+ n) d1)
     rewrite ttSubCorrect {n} {1+ m} {d1} {d2} = refl
   ttSubCorrect {n} {m} {d1} {X x} with natEQ x n
   ... | Inr neq = refl
-  ... | Inl refl rewrite sym (↑d-↑td-comm {1+ n} {m} {Z} {Z} {d1}) with ↓↑d-invert {x} {Z} {↑td 0 m d1} 
-  ... | eq rewrite nat+1+ n Z rewrite nat+Z n rewrite eq = refl
+  ... | Inl refl rewrite sym (↑d'-↑td-comm {1+ n} {m} {Z} {Z} {d1}) with ↓↑d'-invert {x} {Z} {↑td 0 m d1} 
+  ... | eq rewrite nat+1+ n Z rewrite nat+Z n rewrite eq = ↑d'-correct
 
   -- TTSub-shift : ∀{l n m τ1 τ2} → ↑ n m (TTSub l τ1 τ2) == TTSub l (↑ n m τ1) (↑ (1+ n) m τ2) 
   -- TTSub-shift {l} {n} {m} {τ1} {b} = refl
@@ -62,6 +74,16 @@ module debruijn.debruijn-lemmas-subst where
   -- TTSub-shift {l} {n} {m} {τ1} {·∀ τ2} rewrite TTSub-shift {1+ l} {1+ n} {m} {τ1} {τ2} = {!   !}
   -- TTSub-shift {l} {n} {m} {τ1} {T x} = {!   !}
       
+  wf-TCtxSub : ∀{m Γ τ τ1} → Γ ⊢ τ wf → TCtxSub m τ1 Γ ⊢ τ wf
+  wf-TCtxSub (WFSkip wf) = WFSkip (wf-TCtxSub wf)
+  wf-TCtxSub {Z} WFVarZ = WFVarZ
+  wf-TCtxSub {1+ m} WFVarZ = WFVarZ
+  wf-TCtxSub {Z} (WFVarS wf) = WFVarS wf
+  wf-TCtxSub {1+ m} (WFVarS wf) = WFVarS (wf-TCtxSub wf)
+  wf-TCtxSub WFBase = WFBase
+  wf-TCtxSub WFHole = WFHole
+  wf-TCtxSub (WFArr wf wf₁) = WFArr (wf-TCtxSub wf) (wf-TCtxSub wf₁)
+  wf-TCtxSub {m} (WFForall wf) = WFForall (wf-TCtxSub {1+ m} wf)
 
   wf-TTSub-helper2 :
     ∀{t n Γ} →
@@ -119,6 +141,18 @@ module debruijn.debruijn-lemmas-subst where
   wf-TTSub wf1 (WFArr wf2 wf3) = WFArr (wf-TTSub wf1 wf2) (wf-TTSub wf1 wf3)
   wf-TTSub {τ1 = τ1} wf1 (WFForall wf2) rewrite ↑compose Z 1 τ1 = WFForall (wf-TTSub-helper wf1 wf2)
 
+  -- wf-TTSub : ∀{Γ m τ1 τ2 n} → context-counter Γ n m → (∅ ⊢ τ1 wf) → (Γ ctx+ (TVar, ∅)) ⊢ τ2 wf → TCtxSub m τ1 Γ ⊢ TTSub m τ1 τ2 wf
+  -- wf-TTSub {∅} {m} {τ1} CtxCtEmpty wf1 WFVarZ rewrite ↓↑-invert {Z} {Z} {τ1} rewrite ↑Z Z τ1 = wf1
+  -- wf-TTSub ctxct wf1 WFBase = WFBase
+  -- wf-TTSub ctxct wf1 WFHole = WFHole
+  -- wf-TTSub ctxct wf1 (WFArr wf2 wf3) = WFArr (wf-TTSub ctxct wf1 wf2) (wf-TTSub ctxct wf1 wf3)
+  -- wf-TTSub ctxct wf1 (WFForall wf2) = WFForall (wf-TTSub (CtxCtTVar ctxct) wf1 wf2)
+  -- wf-TTSub {x , Γ} (CtxCtVar ctxct) wf1 wf2 = weakening-wf-var (wf-TTSub ctxct wf1 (strengthen-wf-var wf2))
+  -- wf-TTSub {TVar, Γ} (CtxCtTVar ctxct) wf1 WFVarZ = WFVarZ
+  -- wf-TTSub {TVar, Γ} (CtxCtTVar ctxct) wf1 (WFVarS wf2) = {!   !}
+  -- -- with wf-TTSub ctxct wf1 {!   !}
+  -- -- ... | thing = {!   !}
+
   ~TTSub-helper : ∀{n Γ τ1 τ2 τ3} → (ctx-extend-tvars (1+ n) Γ) ⊢ τ2 wf → (ctx-extend-tvars (1+ n) Γ) ⊢ τ3 wf → τ2 ~ τ3 → TTSub n τ1 τ2 ~ TTSub n τ1 τ3
   ~TTSub-helper wf2 wf3 ConsistBase = ConsistBase
   ~TTSub-helper wf2 wf3 ConsistVar = ~refl
@@ -162,13 +196,13 @@ module debruijn.debruijn-lemmas-subst where
   -- SubSub-helper n m τ1 τ2 ⦇-⦈ = refl
   -- SubSub-helper n m τ1 τ2 (τ3 ==> τ4) rewrite SubSub-helper n m τ1 τ2 τ3 rewrite SubSub-helper n m τ1 τ2 τ4 = refl
   -- SubSub-helper n m τ1 τ2 (·∀ τ3) with SubSub-helper n (1+ m) τ1 τ2 τ3 
-  -- ... | result rewrite ↑compose Z (m nat+ 1) τ2   
+  -- ... | result rewrite ↑compose Z (m nat+ 1) τ2    
   --   rewrite ↑compose Z (1+ (m nat+ n)) τ1
   --   rewrite ↑compose Z (1+ m) τ2
-  --   rewrite ↑compose Z (1+ m) (↓ n 1 (TT[ ↑ 0 (1+ n) τ1 / n ] τ2)) 
+  --   rewrite ↑compose Z (1+ m) (↓ n 1 (TT[ ↑ 0 (1+ n) τ1 / n ] τ2))  
   --   rewrite ↑compose Z (1+ (m nat+ 1+ n)) τ1 rewrite result = refl
- 
+  
   -- SubSub : ∀{n τ1 τ2 τ3} → 
-  --   TTSub n τ1 (TTSub Z τ2 τ3) == 
-  --   TTSub Z (TTSub n τ1 τ2) (TTSub (1+ n) τ1 τ3)          
-  -- SubSub {n = n} {τ1 = τ1} {τ2 = τ2} {τ3 = τ3} = SubSub-helper n Z τ1 τ2 τ3 
+  --   TTSub n τ1 (TTSub Z τ2 τ3) ==  
+  --   TTSub Z (TTSub n τ1 τ2) (TTSub (1+ n) τ1 τ3)            
+  -- SubSub {n = n} {τ1 = τ1} {τ2 = τ2} {τ3 = τ3} = SubSub-helper n Z τ1 τ2 τ3  

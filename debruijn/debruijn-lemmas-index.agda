@@ -23,30 +23,17 @@ module debruijn.debruijn-lemmas-index where
   ↑Z t (τ ==> τ₁) rewrite ↑Z t τ rewrite ↑Z t τ₁ = refl
   ↑Z t (·∀ τ) rewrite ↑Z (1+ t) τ = refl
 
-  ↑dZ : (t : Nat) → (d : ihexp) → ↑d t Z d == d
-  ↑dZ t c = refl
-  ↑dZ t (X x) rewrite ↑NatZ t x = refl
-  ↑dZ t (·λ[ x ] d) rewrite ↑dZ (1+ t) d = refl
-  ↑dZ t (·Λ d) rewrite ↑dZ t d = refl
-  ↑dZ t ⦇-⦈⟨ x ⟩ = refl
-  ↑dZ t ⦇⌜ d ⌟⦈⟨ x ⟩ rewrite ↑dZ t d = refl
-  ↑dZ t (d1 ∘ d2) rewrite ↑dZ t d1 rewrite ↑dZ t d2 = refl
-  ↑dZ t (d < x >) rewrite ↑dZ t d = refl
-  ↑dZ t (d ⟨ x ⇒ x₁ ⟩) rewrite ↑dZ t d = refl
-  ↑dZ t (d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) rewrite ↑dZ t d = refl
-
-  ↑tdZ : (t : Nat) → (d : ihexp) → ↑td t Z d == d
-  ↑tdZ t c = refl
-  ↑tdZ t (X x) = refl
-  ↑tdZ t (·λ[ x ] d) rewrite ↑Z t x rewrite ↑tdZ t d = refl
-  ↑tdZ t (·Λ d) rewrite ↑tdZ (1+ t) d = refl
-  ↑tdZ t ⦇-⦈⟨ x ⟩ rewrite ↑Z t x = refl
-  ↑tdZ t ⦇⌜ d ⌟⦈⟨ x ⟩ rewrite ↑Z t x rewrite ↑tdZ t d = refl
-  ↑tdZ t (d1 ∘ d2) rewrite ↑tdZ t d1 rewrite ↑tdZ t d2 = refl
-  ↑tdZ t (d < x >) rewrite ↑Z t x rewrite ↑tdZ t d = refl
-  ↑tdZ t (d ⟨ x1 ⇒ x2 ⟩) rewrite ↑Z t x1 rewrite ↑Z t x2 rewrite ↑tdZ t d = refl
-  ↑tdZ t (d ⟨ x1 ⇒⦇-⦈⇏ x2 ⟩) rewrite ↑Z t x1 rewrite ↑Z t x2 rewrite ↑tdZ t d = refl
-
+  ↑dZ : (t1 t2 : Nat) → (d : ihexp) → ↑d t1 Z t2 Z d == d
+  ↑dZ t1 t2 c = refl
+  ↑dZ t1 t2 ⦇-⦈⟨ x ⟩ rewrite ↑Z t2 x = refl
+  ↑dZ t1 t2 ⦇⌜ d ⌟⦈⟨ x ⟩ rewrite ↑Z t2 x rewrite ↑dZ t1 t2 d = refl
+  ↑dZ t1 t2 (d ∘ d₁) rewrite ↑dZ t1 t2 d rewrite ↑dZ t1 t2 d₁ = refl
+  ↑dZ t1 t2 (d < x >) rewrite ↑Z t2 x rewrite ↑dZ t1 t2 d = refl
+  ↑dZ t1 t2 (d ⟨ x ⇒ x₁ ⟩) rewrite ↑Z t2 x rewrite ↑Z t2 x₁ rewrite ↑dZ t1 t2 d = refl
+  ↑dZ t1 t2 (d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) rewrite ↑Z t2 x rewrite ↑Z t2 x₁ rewrite ↑dZ t1 t2 d = refl
+  ↑dZ t1 t2 (·λ[ x ] d) rewrite ↑Z t2 x rewrite ↑dZ (1+ t1) t2 d = refl
+  ↑dZ t1 t2 (·Λ d) rewrite ↑dZ t1 (1+ t2) d = refl
+  ↑dZ t1 t2 (X x) rewrite ↑NatZ t1 x = refl
   
   ↑Natcompose : (t i x : Nat) → ↑Nat t 1 (↑Nat t i x) == ↑Nat t (1+ i) x
   ↑Natcompose Z Z x = refl
@@ -60,30 +47,6 @@ module debruijn.debruijn-lemmas-index where
   ↑compose _ _ ⦇-⦈ = refl
   ↑compose t i (τ ==> τ₁) rewrite ↑compose t i τ rewrite ↑compose t i τ₁ = refl
   ↑compose t i (·∀ τ) rewrite ↑compose (1+ t) i τ = refl
-
-  ↑d-compose : (t i : Nat) → (d : ihexp) → ↑d t 1 (↑d t i d) == (↑d t (1+ i) d)
-  ↑d-compose t i c = refl
-  ↑d-compose t i (X x) rewrite ↑Natcompose t i x = refl
-  ↑d-compose t i (·λ[ x ] d) rewrite ↑d-compose (1+ t) i d = refl
-  ↑d-compose t i (·Λ d) rewrite ↑d-compose t i d = refl
-  ↑d-compose t i ⦇-⦈⟨ x ⟩ = refl
-  ↑d-compose t i ⦇⌜ d ⌟⦈⟨ x ⟩ rewrite ↑d-compose t i d = refl
-  ↑d-compose t i (d ∘ d₁) rewrite ↑d-compose t i d rewrite ↑d-compose t i d₁ = refl
-  ↑d-compose t i (d < x >) rewrite ↑d-compose t i d = refl
-  ↑d-compose t i (d ⟨ x ⇒ x₁ ⟩) rewrite ↑d-compose t i d = refl
-  ↑d-compose t i (d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) rewrite ↑d-compose t i d = refl
-
-  ↑td-compose : (t i : Nat) → (d : ihexp) → ↑td t 1 (↑td t i d) == (↑td t (1+ i) d)
-  ↑td-compose t i c = refl
-  ↑td-compose t i (X x) rewrite ↑Natcompose t i x = refl
-  ↑td-compose t i (·λ[ x ] d) rewrite ↑td-compose t i d rewrite ↑compose t i x = refl
-  ↑td-compose t i (·Λ d) rewrite ↑td-compose (1+ t) i d = refl
-  ↑td-compose t i ⦇-⦈⟨ x ⟩ rewrite ↑compose t i x = refl
-  ↑td-compose t i ⦇⌜ d ⌟⦈⟨ x ⟩ rewrite ↑td-compose t i d rewrite ↑compose t i x = refl
-  ↑td-compose t i (d ∘ d₁) rewrite ↑td-compose t i d rewrite ↑td-compose t i d₁ = refl
-  ↑td-compose t i (d < x >) rewrite ↑td-compose t i d rewrite ↑compose t i x = refl
-  ↑td-compose t i (d ⟨ x ⇒ x₁ ⟩) rewrite ↑td-compose t i d rewrite ↑compose t i x rewrite ↑compose t i x₁ = refl
-  ↑td-compose t i (d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) rewrite ↑td-compose t i d rewrite ↑compose t i x rewrite ↑compose t i x₁ = refl
 
   ↑ctx-compose : (t i : Nat) → (Γ : ctx) → ↑ctx t 1 (↑ctx t i Γ) == (↑ctx t (1+ i) Γ)
   ↑ctx-compose t i ∅ = refl
@@ -120,20 +83,68 @@ module debruijn.debruijn-lemmas-index where
   ↓↑-invert {n} {m} {·∀ τ} with ↓↑-invert {n} {1+ m} {τ} 
   ... | result rewrite nat+1+ n m rewrite result = refl
 
-  -- ↓d (1+ n) 1 (↑td 0 m (↑d 0 (1+ (1+ n)) d1))
+  -- Only used to proof correctness w.r.t old implementation:
 
-  ↓↑d-invert : ∀{n m d} → ↓d (n nat+ m) 1 (↑d m (n nat+ 1) d) == ↑d m n d
-  ↓↑d-invert {d = c} = refl 
-  ↓↑d-invert {n = n} {m = m} {d = X x} rewrite ↓↑Nat-invert n m x = refl  
-  ↓↑d-invert {n = n} {m = m} {d = ·λ[ x ] d} rewrite nat+comm 1 n with ↓↑d-invert {n = n} {m = 1+ m} {d = d} 
+  ↑d'Z : (t : Nat) → (d : ihexp) → ↑d' t Z d == d
+  ↑d'Z t c = refl
+  ↑d'Z t (X x) rewrite ↑NatZ t x = refl
+  ↑d'Z t (·λ[ x ] d) rewrite ↑d'Z (1+ t) d = refl
+  ↑d'Z t (·Λ d) rewrite ↑d'Z t d = refl
+  ↑d'Z t ⦇-⦈⟨ x ⟩ = refl
+  ↑d'Z t ⦇⌜ d ⌟⦈⟨ x ⟩ rewrite ↑d'Z t d = refl
+  ↑d'Z t (d1 ∘ d2) rewrite ↑d'Z t d1 rewrite ↑d'Z t d2 = refl
+  ↑d'Z t (d < x >) rewrite ↑d'Z t d = refl
+  ↑d'Z t (d ⟨ x ⇒ x₁ ⟩) rewrite ↑d'Z t d = refl
+  ↑d'Z t (d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) rewrite ↑d'Z t d = refl
+
+  ↑tdZ : (t : Nat) → (d : ihexp) → ↑td t Z d == d
+  ↑tdZ t c = refl
+  ↑tdZ t (X x) = refl
+  ↑tdZ t (·λ[ x ] d) rewrite ↑Z t x rewrite ↑tdZ t d = refl
+  ↑tdZ t (·Λ d) rewrite ↑tdZ (1+ t) d = refl
+  ↑tdZ t ⦇-⦈⟨ x ⟩ rewrite ↑Z t x = refl
+  ↑tdZ t ⦇⌜ d ⌟⦈⟨ x ⟩ rewrite ↑Z t x rewrite ↑tdZ t d = refl
+  ↑tdZ t (d1 ∘ d2) rewrite ↑tdZ t d1 rewrite ↑tdZ t d2 = refl
+  ↑tdZ t (d < x >) rewrite ↑Z t x rewrite ↑tdZ t d = refl
+  ↑tdZ t (d ⟨ x1 ⇒ x2 ⟩) rewrite ↑Z t x1 rewrite ↑Z t x2 rewrite ↑tdZ t d = refl
+  ↑tdZ t (d ⟨ x1 ⇒⦇-⦈⇏ x2 ⟩) rewrite ↑Z t x1 rewrite ↑Z t x2 rewrite ↑tdZ t d = refl
+
+  ↑d'-compose : (t i : Nat) → (d : ihexp) → ↑d' t 1 (↑d' t i d) == (↑d' t (1+ i) d)
+  ↑d'-compose t i c = refl
+  ↑d'-compose t i (X x) rewrite ↑Natcompose t i x = refl
+  ↑d'-compose t i (·λ[ x ] d) rewrite ↑d'-compose (1+ t) i d = refl
+  ↑d'-compose t i (·Λ d) rewrite ↑d'-compose t i d = refl
+  ↑d'-compose t i ⦇-⦈⟨ x ⟩ = refl
+  ↑d'-compose t i ⦇⌜ d ⌟⦈⟨ x ⟩ rewrite ↑d'-compose t i d = refl
+  ↑d'-compose t i (d ∘ d₁) rewrite ↑d'-compose t i d rewrite ↑d'-compose t i d₁ = refl
+  ↑d'-compose t i (d < x >) rewrite ↑d'-compose t i d = refl
+  ↑d'-compose t i (d ⟨ x ⇒ x₁ ⟩) rewrite ↑d'-compose t i d = refl
+  ↑d'-compose t i (d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) rewrite ↑d'-compose t i d = refl
+
+  ↑td-compose : (t i : Nat) → (d : ihexp) → ↑td t 1 (↑td t i d) == (↑td t (1+ i) d)
+  ↑td-compose t i c = refl
+  ↑td-compose t i (X x) rewrite ↑Natcompose t i x = refl
+  ↑td-compose t i (·λ[ x ] d) rewrite ↑td-compose t i d rewrite ↑compose t i x = refl
+  ↑td-compose t i (·Λ d) rewrite ↑td-compose (1+ t) i d = refl
+  ↑td-compose t i ⦇-⦈⟨ x ⟩ rewrite ↑compose t i x = refl
+  ↑td-compose t i ⦇⌜ d ⌟⦈⟨ x ⟩ rewrite ↑td-compose t i d rewrite ↑compose t i x = refl
+  ↑td-compose t i (d ∘ d₁) rewrite ↑td-compose t i d rewrite ↑td-compose t i d₁ = refl
+  ↑td-compose t i (d < x >) rewrite ↑td-compose t i d rewrite ↑compose t i x = refl
+  ↑td-compose t i (d ⟨ x ⇒ x₁ ⟩) rewrite ↑td-compose t i d rewrite ↑compose t i x rewrite ↑compose t i x₁ = refl
+  ↑td-compose t i (d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩) rewrite ↑td-compose t i d rewrite ↑compose t i x rewrite ↑compose t i x₁ = refl
+
+  ↓↑d'-invert : ∀{n m d} → ↓d' (n nat+ m) 1 (↑d' m (n nat+ 1) d) == ↑d' m n d
+  ↓↑d'-invert {d = c} = refl 
+  ↓↑d'-invert {n = n} {m = m} {d = X x} rewrite ↓↑Nat-invert n m x = refl  
+  ↓↑d'-invert {n = n} {m = m} {d = ·λ[ x ] d} rewrite nat+comm 1 n with ↓↑d'-invert {n = n} {m = 1+ m} {d = d} 
   ... | result rewrite nat+1+ n m rewrite result = refl
-  ↓↑d-invert {n = n} {m = m} {d = ·Λ d} rewrite ↓↑d-invert {n = n} {m = m} {d = d} = refl
-  ↓↑d-invert {d = ⦇-⦈⟨ x ⟩} = refl
-  ↓↑d-invert {n = n} {m = m} {d = ⦇⌜ d ⌟⦈⟨ x ⟩} rewrite ↓↑d-invert {n = n} {m = m} {d = d} = refl
-  ↓↑d-invert {n = n} {m = m} {d = d1 ∘ d2} rewrite ↓↑d-invert {n = n} {m = m} {d = d1} rewrite ↓↑d-invert {n = n} {m = m} {d = d2} = refl
-  ↓↑d-invert {n = n} {m = m} {d = d < x >} rewrite ↓↑d-invert {n = n} {m = m} {d = d} = refl
-  ↓↑d-invert {n = n} {m = m} {d = d ⟨ x ⇒ x₁ ⟩} rewrite ↓↑d-invert {n = n} {m = m} {d = d} = refl    
-  ↓↑d-invert {n = n} {m = m} {d = d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} rewrite ↓↑d-invert {n = n} {m = m} {d = d} = refl 
+  ↓↑d'-invert {n = n} {m = m} {d = ·Λ d} rewrite ↓↑d'-invert {n = n} {m = m} {d = d} = refl
+  ↓↑d'-invert {d = ⦇-⦈⟨ x ⟩} = refl
+  ↓↑d'-invert {n = n} {m = m} {d = ⦇⌜ d ⌟⦈⟨ x ⟩} rewrite ↓↑d'-invert {n = n} {m = m} {d = d} = refl
+  ↓↑d'-invert {n = n} {m = m} {d = d1 ∘ d2} rewrite ↓↑d'-invert {n = n} {m = m} {d = d1} rewrite ↓↑d'-invert {n = n} {m = m} {d = d2} = refl
+  ↓↑d'-invert {n = n} {m = m} {d = d < x >} rewrite ↓↑d'-invert {n = n} {m = m} {d = d} = refl
+  ↓↑d'-invert {n = n} {m = m} {d = d ⟨ x ⇒ x₁ ⟩} rewrite ↓↑d'-invert {n = n} {m = m} {d = d} = refl    
+  ↓↑d'-invert {n = n} {m = m} {d = d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} rewrite ↓↑d'-invert {n = n} {m = m} {d = d} = refl 
 
   ↓↑td-invert : ∀{n m d} → ↓td (n nat+ m) 1 (↑td m (n nat+ 1) d) == ↑td m n d
   ↓↑td-invert {d = c} = refl
@@ -148,16 +159,16 @@ module debruijn.debruijn-lemmas-index where
   ↓↑td-invert {n} {m} {d ⟨ x ⇒ x₁ ⟩} rewrite ↓↑td-invert {n} {m} {d} rewrite ↓↑-invert {n} {m} {x} rewrite ↓↑-invert {n} {m} {x₁} = refl
   ↓↑td-invert {n} {m} {d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} rewrite ↓↑td-invert {n} {m} {d} rewrite ↓↑-invert {n} {m} {x} rewrite ↓↑-invert {n} {m} {x₁} = refl
 
-  ↑d-↑td-comm : ∀{n m t s d} → ↑d t n (↑td s m d) == ↑td s m (↑d t n d)
-  ↑d-↑td-comm {d = c} = refl 
-  ↑d-↑td-comm {d = X x} = refl
-  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = ·λ[ x ] d} rewrite ↑d-↑td-comm {n = n} {m = m} {t = 1+ t} {s = s} {d = d} = refl  
-  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = ·Λ d} rewrite ↑d-↑td-comm {n = n} {m = m} {t = t} {s = 1+ s} {d = d} = refl
-  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = ⦇-⦈⟨ x ⟩} = refl
-  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = ⦇⌜ d ⌟⦈⟨ x ⟩} rewrite ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d} = refl
-  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d ∘ d₁} 
-    rewrite ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d} 
-    rewrite ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d₁} = refl
-  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d < x >} rewrite ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d} = refl
-  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d ⟨ x ⇒ x₁ ⟩} rewrite ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d} = refl  
-  ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} rewrite ↑d-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d} = refl
+  ↑d'-↑td-comm : ∀{n m t s d} → ↑d' t n (↑td s m d) == ↑td s m (↑d' t n d)
+  ↑d'-↑td-comm {d = c} = refl 
+  ↑d'-↑td-comm {d = X x} = refl
+  ↑d'-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = ·λ[ x ] d} rewrite ↑d'-↑td-comm {n = n} {m = m} {t = 1+ t} {s = s} {d = d} = refl   
+  ↑d'-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = ·Λ d} rewrite ↑d'-↑td-comm {n = n} {m = m} {t = t} {s = 1+ s} {d = d} = refl
+  ↑d'-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = ⦇-⦈⟨ x ⟩} = refl
+  ↑d'-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = ⦇⌜ d ⌟⦈⟨ x ⟩} rewrite ↑d'-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d} = refl
+  ↑d'-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d ∘ d₁} 
+    rewrite ↑d'-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d} 
+    rewrite ↑d'-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d₁} = refl
+  ↑d'-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d < x >} rewrite ↑d'-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d} = refl
+  ↑d'-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d ⟨ x ⇒ x₁ ⟩} rewrite ↑d'-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d} = refl  
+  ↑d'-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} rewrite ↑d'-↑td-comm {n = n} {m = m} {t = t} {s = s} {d = d} = refl

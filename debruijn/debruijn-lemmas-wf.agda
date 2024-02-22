@@ -47,6 +47,11 @@ module debruijn.debruijn-lemmas-wf where
   wf-⊓ (MeetArr meet meet₁) (WFArr wf1 wf2) (WFArr wf3 wf4) = WFArr (wf-⊓ meet wf1 wf3) (wf-⊓ meet₁ wf2 wf4)
   wf-⊓ (MeetForall meet) (WFForall wf1) (WFForall wf2) = WFForall (wf-⊓ meet wf1 wf2)
 
+  wf-gnd : ∀{Γ τ} → τ ground → Γ ⊢ τ wf
+  wf-gnd GBase = WFBase
+  wf-gnd GArr = WFArr WFHole WFHole
+  wf-gnd GForall = WFForall WFHole
+
   wf-syn : ∀{τ e Γ} → 
     ⊢ Γ ctxwf → 
     Γ ⊢ e => τ → 
@@ -94,6 +99,6 @@ module debruijn.debruijn-lemmas-wf where
   wf-ta ctxwf (TAEHole wf) = wf 
   wf-ta ctxwf (TANEHole wf _) = wf
   wf-ta ctxwf (TACast _ wf _) = wf 
-  wf-ta ctxwf (TAFailedCast wt _ GBase _) = WFBase   
+  wf-ta ctxwf (TAFailedCast wt _ GBase _) = WFBase    
   wf-ta ctxwf (TAFailedCast wt _ GArr _) = WFArr WFHole WFHole
   wf-ta ctxwf (TAFailedCast wt _ GForall _) = WFForall WFHole

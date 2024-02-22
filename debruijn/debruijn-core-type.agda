@@ -99,4 +99,8 @@ module debruijn.debruijn-core-type where
     PCEmpty : ∅ ⊑c ∅ 
     PCVar : ∀{τ Γ τ' Γ'} → (τ ⊑t τ') → (Γ ⊑c Γ') → ((τ , Γ) ⊑c (τ' , Γ'))
     PCTVar : ∀{Γ Γ'} → (Γ ⊑c Γ') → ((TVar, Γ) ⊑c (TVar, Γ'))
-    
+  
+  data context-counter : ctx → Nat → Nat → Set where 
+    CtxCtEmpty : context-counter ∅ Z Z 
+    CtxCtVar : ∀{Γ n m τ} → context-counter Γ n m → context-counter (τ , Γ) (1+ n) m 
+    CtxCtTVar : ∀{Γ n m} → context-counter Γ n m → context-counter (TVar, Γ) n (1+ m) 
