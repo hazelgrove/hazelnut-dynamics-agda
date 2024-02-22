@@ -22,8 +22,35 @@ module complete-preservation where
   cp-subst (DCLam dc1 x₃) dc2 | Inr x₂ = DCLam (cp-subst dc1 dc2) x₃
   cp-subst (DCAp dc1 dc2) dc3 = DCAp (cp-subst dc1 dc3) (cp-subst dc2 dc3)
   cp-subst (DCCast dc1 x₁ x₂) dc2 = DCCast (cp-subst dc1 dc2) x₁ x₂
-  cp-subst {d1 = ·Λ x₁ d1} (DCTLam x₂) x = {!   !}
-  cp-subst {d1 = d1 < x₁ >} (DCTAp x₂ x₃) x = {!   !}
+  cp-subst {d1 = ·Λ x₁ d1} (DCTLam x₂) x = DCTLam (cp-subst x₂ x)
+  cp-subst {d1 = d1 < x₁ >} (DCTAp x₂ x₃) x = DCTAp x₂ (cp-subst x₃ x)
+
+  tcomplete-subst : ∀{τ t τ'} →
+    τ tcomplete →
+    τ' tcomplete →
+    Typ[ τ' / t ] τ tcomplete
+  tcomplete-subst TCBase tc' = TCBase
+  tcomplete-subst {t = t} (TCVar {a = t'}) tc' with natEQ t t'
+  ... | Inl refl = tc'
+  ... | Inr neq = TCVar
+  tcomplete-subst (TCArr tc tc₁) tc' = TCArr (tcomplete-subst tc tc') (tcomplete-subst tc₁ tc')
+  tcomplete-subst {t = t} (TCForall {t = t'} tc) tc' with natEQ t t'
+  ... | Inl refl = TCForall tc
+  ... | Inr neq = TCForall (tcomplete-subst tc tc')
+
+  cp-typsubst : ∀ {d t τ} →
+           d dcomplete →
+           τ tcomplete →
+           (Ihexp[ τ / t ] d) dcomplete
+  cp-typsubst DCVar tc = DCVar
+  cp-typsubst DCConst tc = DCConst
+  cp-typsubst (DCLam dc x) tc = DCLam (cp-typsubst dc tc) (tcomplete-subst x tc)
+  cp-typsubst {t = t} (DCTLam {t = t'} dc) tc with natEQ t t'
+  ... | Inl refl = DCTLam dc
+  ... | Inr neq = DCTLam (cp-typsubst dc tc)
+  cp-typsubst (DCAp dc dc₁) tc = DCAp (cp-typsubst dc tc) (cp-typsubst dc₁ tc)
+  cp-typsubst (DCTAp x dc) tc = DCTAp (tcomplete-subst x tc) (cp-typsubst dc tc)
+  cp-typsubst (DCCast dc x x₁) tc = DCCast (cp-typsubst dc tc) (tcomplete-subst x tc) (tcomplete-subst x₁ tc)
 
   -- this just lets me pull the particular x out of a derivation; it's not
   -- bound in any of the constructors explicitly since it's only in the
@@ -60,15 +87,32 @@ module complete-preservation where
   cp-rhs (DCCast dc () x₁) (TACast wt x₂ _ _) (Step FHOuter (ITExpand x₃) FHOuter)
   cp-rhs (DCCast dc x x₁) (TACast wt x₂ _ _) (Step (FHCast x₃) x₄ (FHCast x₅)) = DCCast (cp-rhs dc wt (Step x₃ x₄ x₅)) x x₁
   cp-rhs () (TAFailedCast wt x x₁ x₂ alpha) stp
-  cp-rhs x (TATAp x₁ x₂ x₃) (Step FHOuter x₄ FHOuter) = {!   !}
-  cp-rhs x x₁ (Step (FHTAp x₂) x₃ x₄) = {!   !}
-  cp-rhs x (TATLam x₂ x₃) x₁ = {!   !}
+  cp-rhs (DCTAp tc (DCTLam dc)) (TATAp x₁ x₂ x₃) (Step FHOuter ITTLam FHOuter) = cp-typsubst dc tc
+  cp-rhs (DCTAp tc (DCCast dc (TCForall tc1) (TCForall tc2))) (TATAp x₁ x₂ x₃) (Step FHOuter ITTApCast FHOuter) = DCCast (DCTAp tc dc) (tcomplete-subst tc1 tc) (tcomplete-subst tc2 tc)
+  cp-rhs (DCTAp x x₅) (TATAp x₁ wt x₆) (Step (FHTAp x₂) x₃ (FHTAp x₄)) = DCTAp x (cp-rhs x₅ wt (Step x₂ x₃ x₄))
+  cp-rhs (DCTLam x) wt (Step FHOuter () x₅)
+
+  ectx-disjoint : ∀{d} → tbinders-disjoint-Γ ∅ d
+  ectx-disjoint {c} = TBDΓConst
+  ectx-disjoint {X x} = TBDΓVar
+  ectx-disjoint {·λ x [ x₁ ] d} = TBDΓLam ectx-disjoint (TBDΓ (λ x τ' ()))
+  ectx-disjoint {·Λ x d} = TBDΓTLam ectx-disjoint (UBΓ (λ x y ()))
+  ectx-disjoint {⦇-⦈⟨ x ⟩} = BDΓHole
+  ectx-disjoint {⦇⌜ d ⌟⦈⟨ x ⟩} = TBDΓNEHole ectx-disjoint
+  ectx-disjoint {d ∘ d₁} = TBDΓAp ectx-disjoint ectx-disjoint
+  ectx-disjoint {d < x >} = TBDΓTAp ectx-disjoint (TBDΓ (λ x τ' ()))
+  ectx-disjoint {d ⟨ x ⇒ x₁ ⟩} = TBDΓCast ectx-disjoint (TBDΓ (λ x τ' ())) (TBDΓ (λ x τ' ()))
+  ectx-disjoint {d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} = TBDΓFailedCast ectx-disjoint (TBDΓ (λ x τ' ())) (TBDΓ (λ x τ' ()))
 
   -- this is the main result of this file.
   complete-preservation : ∀{d τ d' Δ} →
              binders-unique d →
+             tbinders-unique d →
+             tbinders-disjoint-Δ Δ d →
+             Δ hctxwf →
              d dcomplete →
              Δ , ∅ , ∅ ⊢ d :: τ →
              d ↦ d' →
-             (Δ , ∅ , ∅ ⊢ d' :: τ) × (d' dcomplete)
-  complete-preservation bd dc wt stp = {! preservation bd wt stp !} , cp-rhs dc wt stp
+             Σ[ τ' ∈ htyp ] (τ' =α τ × (Δ , ∅ , ∅ ⊢ d' :: τ') × (d' dcomplete))
+  complete-preservation bd tu td hwf dc wt stp with preservation bd tu td ectx-disjoint (CCtx (λ ())) hwf wt stp
+  ... | (τ' , alpha , pres) = τ' , alpha , pres , cp-rhs dc wt stp
