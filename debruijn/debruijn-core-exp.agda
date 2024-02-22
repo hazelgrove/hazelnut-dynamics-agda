@@ -21,10 +21,10 @@ module debruijn.debruijn-core-exp where
   data ihexp : Set where
     c         : ihexp
     X         : Nat → ihexp
-    ·λ[_]_   : htyp → ihexp → ihexp
+    ·λ[_]_    : htyp → ihexp → ihexp
     ·Λ        : ihexp → ihexp
-    ⦇-⦈⟨_⟩     : htyp → ihexp
-    ⦇⌜_⌟⦈⟨_⟩    : ihexp → htyp → ihexp
+    ⦇-⦈       : ihexp
+    ⦇⌜_⌟⦈     : ihexp → ihexp
     _∘_       : ihexp → ihexp → ihexp
     _<_>      : ihexp → htyp → ihexp
     _⟨_⇒_⟩    : ihexp → htyp → htyp → ihexp
@@ -48,7 +48,7 @@ module debruijn.debruijn-core-exp where
     PTAp : ∀{e1 e2 τ1 τ2} → e1 ⊑ e2 → τ1 ⊑t τ2 → (e1 < τ1 >) ⊑ (e2 < τ2 >)
 
   data _subsumable : (e : hexp) → Set where 
-    Subsumable : ∀{e} → (e ≠ ⦇-⦈) → ((e' : hexp) → e ≠ ⦇⌜ e' ⌟⦈) → ((e' : hexp) → e ≠ ·Λ e') → e subsumable
+    Subsumable : ∀{e} → ((e' : hexp) → e ≠ ·Λ e') → e subsumable
 
   -- values
   data _val : (d : ihexp) → Set where
@@ -77,11 +77,10 @@ module debruijn.debruijn-core-exp where
   mutual
     -- indeterminate forms
     data _indet : (d : ihexp) → Set where
-      IEHole : ∀{τ} → 
-        ⦇-⦈⟨ τ ⟩ indet
-      INEHole : ∀{d τ} → 
+      IEHole : ⦇-⦈ indet
+      INEHole : ∀{d} → 
         d final → 
-        ⦇⌜ d ⌟⦈⟨ τ ⟩ indet
+        ⦇⌜ d ⌟⦈ indet
       IAp : ∀{d1 d2} → 
         ((τ1 τ2 τ3 τ4 : htyp) (d1' : ihexp) →
         d1 ≠ (d1' ⟨(τ1 ==> τ2) ⇒ (τ3 ==> τ4)⟩)) →

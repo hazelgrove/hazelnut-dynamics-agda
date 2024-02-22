@@ -96,10 +96,10 @@ module debruijn.debruijn-core where
         TTSub Z τ1 τ3 == τ4 →
         Γ ⊢ (e < τ1 >) ⇒ τ4 ~> ((d ⟨ τ2' ⇒ (·∀ τ3)⟩) < τ1 >)
       ESEHole : ∀{Γ} →
-        Γ ⊢ ⦇-⦈ ⇒ ⦇-⦈ ~> ⦇-⦈⟨ ⦇-⦈ ⟩
+        Γ ⊢ ⦇-⦈ ⇒ ⦇-⦈ ~> ⦇-⦈
       ESNEHole : ∀{Γ e τ d} →
         Γ ⊢ e ⇒ τ ~> d →
-        Γ ⊢ ⦇⌜ e ⌟⦈ ⇒ ⦇-⦈ ~> ⦇⌜ d ⌟⦈⟨ ⦇-⦈ ⟩
+        Γ ⊢ ⦇⌜ e ⌟⦈ ⇒ ⦇-⦈ ~> ⦇⌜ d ⌟⦈
       ESAsc : ∀ {Γ e τ d τ'} →
         Γ ⊢ τ wf →
         Γ ⊢ e ⇐ τ ~> d :: τ' →
@@ -120,11 +120,6 @@ module debruijn.debruijn-core where
         Γ ⊢ e ⇒ τ2 ~> d →
         τ1 ⊓ τ2 == τ3 →
         Γ ⊢ e ⇐ τ1 ~> (d ⟨ τ2 ⇒ τ3 ⟩) :: τ3
-      EAEHole : ∀{Γ τ} →
-        Γ ⊢ ⦇-⦈ ⇐ τ ~> ⦇-⦈⟨ τ ⟩ :: τ
-      EANEHole : ∀{Γ e τ d τ'} →
-        Γ ⊢ e ⇒ τ' ~> d →
-        Γ ⊢ ⦇⌜ e ⌟⦈ ⇐ τ ~> ⦇⌜ d ⌟⦈⟨ τ ⟩ :: τ
 
   -- type assignment
   data _⊢_::_ : (Γ : ctx) (d : ihexp) (τ : htyp) → Set where
@@ -149,13 +144,11 @@ module debruijn.debruijn-core where
       Γ ⊢ d :: (·∀ τ2) →
       TTSub Z τ1 τ2 == τ3 → 
       Γ ⊢ (d < τ1 >) :: τ3
-    TAEHole : ∀{Γ τ} →
-      Γ ⊢ τ wf →
-      Γ ⊢ ⦇-⦈⟨ τ ⟩ :: τ
-    TANEHole : ∀ {Γ d τ τ'} →
-      Γ ⊢ τ wf →
-      Γ ⊢ d :: τ' →
-      Γ ⊢ ⦇⌜ d ⌟⦈⟨ τ ⟩ :: τ
+    TAEHole : ∀{Γ} →
+      Γ ⊢ ⦇-⦈ :: ⦇-⦈
+    TANEHole : ∀ {Γ d τ} →
+      Γ ⊢ d :: τ →
+      Γ ⊢ ⦇⌜ d ⌟⦈ :: ⦇-⦈
     TACast : ∀{Γ d τ1 τ2} →
       Γ ⊢ d :: τ1 →
       Γ ⊢ τ2 wf →
@@ -173,10 +166,10 @@ module debruijn.debruijn-core where
   data _,_⊢_⊑i_ : (Γ : ctx) → (Γ' : ctx) → (d1 d2 : ihexp) → Set where
     PIConst : ∀{Γ Γ'} → Γ , Γ' ⊢ c ⊑i c
     PIVar : ∀{Γ Γ' n} → Γ , Γ' ⊢ (X n) ⊑i (X n) 
-    PIEHole : ∀{Γ Γ' τ1 τ2 d} → (Γ ⊢ d :: τ1) → (τ1 ⊑t τ2) → Γ , Γ' ⊢ d ⊑i ⦇-⦈⟨ τ2 ⟩
+    PIEHole : ∀{Γ Γ' d} → Γ , Γ' ⊢ d ⊑i ⦇-⦈
     PILam : ∀{Γ Γ' d1 d2 τ1 τ2} → (τ1 , Γ) , (τ2 , Γ') ⊢ d1 ⊑i d2 → τ1 ⊑t τ2 → Γ , Γ' ⊢ (·λ[ τ1 ] d1) ⊑i (·λ[ τ2 ] d2)
     PITLam : ∀{Γ Γ' d1 d2} → (TVar, Γ) , Γ' ⊢ d1 ⊑i d2 → Γ , Γ' ⊢ (·Λ d1) ⊑i (·Λ d2)
-    PINEHole : ∀{Γ Γ' τ1 τ2 d1 d2} → Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ2 → Γ , Γ' ⊢ (⦇⌜ d1 ⌟⦈⟨ τ1 ⟩) ⊑i (⦇⌜ d2 ⌟⦈⟨ τ2 ⟩)
+    PINEHole : ∀{Γ Γ' d1 d2} → Γ , Γ' ⊢ d1 ⊑i d2 → Γ , Γ' ⊢ ⦇⌜ d1 ⌟⦈ ⊑i ⦇⌜ d2 ⌟⦈
     PIAp :  ∀{Γ Γ' d1 d2 d3 d4} → Γ , Γ' ⊢ d1 ⊑i d3 → Γ , Γ' ⊢ d2 ⊑i d4 → Γ , Γ' ⊢ (d1 ∘ d2) ⊑i (d3 ∘ d4)
     PITAp : ∀{Γ Γ' d1 d2 τ1 τ2} → Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ2 → Γ , Γ' ⊢ (d1 < τ1 >) ⊑i (d2 < τ2 >)
     PICast : ∀{Γ Γ' d1 d2 τ1 τ2 τ3 τ4} → Γ , Γ' ⊢ d1 ⊑i d2 → τ1 ⊑t τ3 → τ2 ⊑t τ4 → Γ , Γ' ⊢ (d1 ⟨ τ1 ⇒ τ2 ⟩) ⊑i (d2 ⟨ τ3 ⇒ τ4 ⟩)
@@ -191,7 +184,7 @@ module debruijn.debruijn-core where
     _∘₁_ : ectx → ihexp → ectx
     _∘₂_ : ihexp → ectx → ectx
     _<_> : ectx → htyp → ectx
-    ⦇⌜_⌟⦈⟨_⟩ : ectx → htyp → ectx
+    ⦇⌜_⌟⦈ : ectx → ectx
     _⟨_⇒_⟩ : ectx → htyp → htyp → ectx
     _⟨_⇒⦇-⦈⇏_⟩ : ectx → htyp → htyp → ectx
 
@@ -208,9 +201,9 @@ module debruijn.debruijn-core where
     FHTAp : ∀{d d' t ε} →
            d == ε ⟦ d' ⟧ →
            (d < t >) == (ε < t >) ⟦ d' ⟧
-    FHNEHole : ∀{ d d' ε τ} →
+    FHNEHole : ∀{ d d' ε} →
               d == ε ⟦ d' ⟧ →
-              ⦇⌜ d ⌟⦈⟨ τ ⟩ ==  ⦇⌜ ε ⌟⦈⟨ τ ⟩ ⟦ d' ⟧
+              ⦇⌜ d ⌟⦈ ==  ⦇⌜ ε ⌟⦈ ⟦ d' ⟧
     FHCast : ∀{ d d' ε τ1 τ2 } →
             d == ε ⟦ d' ⟧ →
             d ⟨ τ1 ⇒ τ2 ⟩ == ε ⟨ τ1 ⇒ τ2 ⟩ ⟦ d' ⟧

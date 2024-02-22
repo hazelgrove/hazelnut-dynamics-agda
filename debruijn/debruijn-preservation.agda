@@ -19,7 +19,7 @@ module debruijn.debruijn-preservation where
   wt-filling (TAAp wt _) (FHAp1 fill) = wt-filling wt fill 
   wt-filling (TAAp _ wt) (FHAp2 fill) = wt-filling wt fill
   wt-filling (TATAp _ wt _) (FHTAp fill) = wt-filling wt fill
-  wt-filling (TANEHole x wt) (FHNEHole fill) = wt-filling wt fill
+  wt-filling (TANEHole wt) (FHNEHole fill) = wt-filling wt fill
   wt-filling (TACast wt x x₁) (FHCast fill) = wt-filling wt fill
   wt-filling (TAFailedCast wt x x₁ x₂) (FHFailedCast fill) = wt-filling wt fill
 
@@ -34,7 +34,7 @@ module debruijn.debruijn-preservation where
   wt-different-fill (FHAp1 fill1) (FHAp1 fill2) (TAAp wt wt1) wt2 wt3 = TAAp (wt-different-fill fill1 fill2 wt wt2 wt3) wt1
   wt-different-fill (FHAp2 fill1) (FHAp2 fill2) (TAAp wt wt1) wt2 wt3 = TAAp wt (wt-different-fill fill1 fill2 wt1 wt2 wt3)
   wt-different-fill (FHTAp fill1) (FHTAp fill2) (TATAp x wt sub) wt2 wt3 = TATAp x (wt-different-fill fill1 fill2 wt wt2 wt3) sub
-  wt-different-fill (FHNEHole fill1) (FHNEHole fill2) (TANEHole x wt) wt2 wt3 = TANEHole x (wt-different-fill fill1 fill2 wt wt2 wt3)
+  wt-different-fill (FHNEHole fill1) (FHNEHole fill2) (TANEHole wt) wt2 wt3 = TANEHole (wt-different-fill fill1 fill2 wt wt2 wt3)
   wt-different-fill (FHCast fill1) (FHCast fill2) (TACast wt x x₁) wt2 wt3 = TACast (wt-different-fill fill1 fill2 wt wt2 wt3) x x₁
   wt-different-fill (FHFailedCast fill1) (FHFailedCast fill2) (TAFailedCast wt x x₁ x₂) wt2 wt3 = TAFailedCast (wt-different-fill fill1 fill2 wt wt2 wt3) x x₁ x₂
 
@@ -53,8 +53,8 @@ module debruijn.debruijn-preservation where
   preserve-trans (TATAp wf (TATLam wt) refl) ITTLam = {!   !} --wt-TtSub wf wt
   preserve-trans (TATAp x (TACast wt (WFForall wf) (ConsistForall con)) refl) ITTApCast with wf-ta CtxWFEmpty wt 
   ... | WFForall wf2 = TACast (TATAp x wt refl) (wf-TTSub x wf) (~TTSub wf2 wf con)
-  preserve-trans (TAEHole _) () 
-  preserve-trans (TANEHole _ _) ()
+  preserve-trans TAEHole () 
+  preserve-trans (TANEHole _) ()
   preserve-trans (TACast wt x x₁) ITCastID = wt
   preserve-trans (TACast (TACast wt x₃ x₄) x x₁) (ITCastSucceed gnd) = wt
   preserve-trans (TACast (TACast wt x₅ x₆) x x₁) (ITCastFail gnd x₃ x₄) = TAFailedCast wt gnd x₃ x₄

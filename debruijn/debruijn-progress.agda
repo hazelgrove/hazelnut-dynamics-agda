@@ -23,8 +23,8 @@ module debruijn.debruijn-progress where
   progress TAConst = BV (BVVal VConst) 
   progress (TALam x wt) = BV (BVVal VLam)
   progress (TATLam wt) = BV (BVVal VTLam)
-  progress (TAEHole x) = I IEHole
-  progress (TANEHole x wt) with progress wt 
+  progress TAEHole = I IEHole
+  progress (TANEHole wt) with progress wt 
   ... | S (_ , Step x y z) = S (_ , (Step (FHNEHole x) y (FHNEHole z)))
   ... | I x = I (INEHole (FIndet x))
   ... | BV x = I (INEHole (FBoxedVal x))

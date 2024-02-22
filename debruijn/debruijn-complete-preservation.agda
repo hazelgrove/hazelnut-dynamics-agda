@@ -45,8 +45,8 @@ module debruijn.debruijn-complete-preservation where
   complete-preservation-trans (DCAp (DCCast dc (TCArr x x₃) (TCArr x₁ x₂)) dc₁) (TAAp (TACast ta (WFArr x₄ x₇) (ConsistArr x₅ x₆)) ta₁) ITApCast = DCCast (DCAp dc (DCCast dc₁ x₁ x)) x₃ x₂
   complete-preservation-trans (DCTAp x₂ (DCTLam dc)) (TATAp x (TATLam ta) x₁) ITTLam = TtSub-complete x₂ dc
   complete-preservation-trans (DCTAp x₂ (DCCast dc (TCForall tc) (TCForall tc'))) (TATAp x (TACast ta (WFForall x₅) (ConsistForall x₆)) x₁) ITTApCast = DCCast (DCTAp x₂ dc) (TTSub-complete x₂ tc) (TTSub-complete x₂ tc')
-  complete-preservation-trans dc (TAEHole x) ()
-  complete-preservation-trans dc (TANEHole x ta) ()
+  complete-preservation-trans dc TAEHole ()
+  complete-preservation-trans dc (TANEHole ta) ()
   complete-preservation-trans (DCCast dc x₂ x₃) (TACast ta x x₁) ITCastID = dc
   complete-preservation-trans (DCCast _ () _) (TACast ta x x₁) (ITCastSucceed x₂)
   complete-preservation-trans (DCCast _ () _) (TACast ta x x₁) (ITCastFail x₂ x₃ x₄) 

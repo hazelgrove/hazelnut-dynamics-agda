@@ -30,10 +30,10 @@ module debruijn.debruijn-parametricity where
   data _=0_ : (d1 d2 : ihexp) → Set where 
     Eq0Const : c =0 c
     Eq0Var : ∀{x} → (X x) =0 (X x) 
-    Eq0EHole : ∀{τ τ'} → ⦇-⦈⟨ τ ⟩ =0 ⦇-⦈⟨ τ' ⟩
+    Eq0EHole : ⦇-⦈ =0 ⦇-⦈
     Eq0Lam : ∀{d1 d2 τ1 τ2} → d1 =0 d2 → (·λ[ τ1 ] d1) =0 (·λ[ τ2 ] d2)
     Eq0TLam : ∀{d1 d2} → d1 =0 d2 → (·Λ d1) =0 (·Λ d2)
-    Eq0NEHole : ∀{d1 d2 τ τ'} → d1 =0 d2 →  (⦇⌜ d1 ⌟⦈⟨ τ ⟩) =0 (⦇⌜ d2 ⌟⦈⟨ τ' ⟩)
+    Eq0NEHole : ∀{d1 d2} → d1 =0 d2 → ⦇⌜ d1 ⌟⦈ =0 ⦇⌜ d2 ⌟⦈
     Eq0Ap :  ∀{d1 d2 d3 d4} → d1 =0 d3 →  d2 =0 d4 →  (d1 ∘ d2) =0 (d3 ∘ d4)
     Eq0TAp : ∀{d1 d2 τ1 τ2} → d1 =0 d2 → (d1 < τ1 >) =0 (d2 < τ2 >)
     Eq0Cast : ∀{d1 d2 τ1 τ2 τ3 τ4} → d1 =0 d2 → (d1 ⟨ τ1 ⇒ τ2 ⟩) =0 (d2 ⟨ τ3 ⇒ τ4 ⟩)
@@ -42,10 +42,10 @@ module debruijn.debruijn-parametricity where
   data _=0'_ : (d1 d2 : ihexp) → Set where 
     Eq0Const : c =0' c
     Eq0Var : ∀{x} → (X x) =0' (X x) 
-    Eq0EHole : ∀{τ τ'} → ⦇-⦈⟨ τ ⟩ =0' ⦇-⦈⟨ τ' ⟩
+    Eq0EHole : ⦇-⦈ =0' ⦇-⦈
     Eq0Lam : ∀{d1 d2 τ1 τ2} → d1 =0' d2 → (·λ[ τ1 ] d1) =0' (·λ[ τ2 ] d2)
     Eq0TLam : ∀{d1 d2} → d1 =0' d2 → (·Λ d1) =0' (·Λ d2)
-    Eq0NEHole : ∀{d1 d2 τ τ'} → d1 =0' d2 →  (⦇⌜ d1 ⌟⦈⟨ τ ⟩) =0' (⦇⌜ d2 ⌟⦈⟨ τ' ⟩)
+    Eq0NEHole : ∀{d1 d2} → d1 =0' d2 →  ⦇⌜ d1 ⌟⦈ =0' ⦇⌜ d2 ⌟⦈
     Eq0Ap :  ∀{d1 d2 d3 d4} → d1 =0' d3 →  d2 =0' d4 →  (d1 ∘ d2) =0' (d3 ∘ d4)
     Eq0TAp : ∀{d1 d2 τ1 τ2} → d1 =0' d2 → (d1 < τ1 >) =0' (d2 < τ2 >)
     Eq0Cast : ∀{d1 d2 τ1 τ2} → d1 =0' d2 → (d1 ⟨ τ1 ⇒ τ1 ⟩) =0' (d2 ⟨ τ2 ⇒ τ2 ⟩)
@@ -68,7 +68,7 @@ module debruijn.debruijn-parametricity where
     Eq0Ap1 : ∀{ε1 ε2 d1 d2} → (ε1 =0ε' ε2) → (d1 =0' d2) → (ε1 ∘₁ d1) =0ε' (ε2 ∘₁ d2)
     Eq0Ap2 : ∀{ε1 ε2 d1 d2} → (ε1 =0ε' ε2) → (d1 =0' d2) → (d1 ∘₂ ε1) =0ε' (d2 ∘₂ ε2)
     Eq0TAp : ∀{ε1 ε2 τ1 τ2} → (ε1 =0ε' ε2) → (ε1 < τ1 >) =0ε' (ε2 < τ2 >)
-    Eq0NEHole : ∀{ε1 ε2 τ τ'} → (ε1 =0ε' ε2) → (⦇⌜ ε1 ⌟⦈⟨ τ ⟩) =0ε' (⦇⌜ ε2 ⌟⦈⟨ τ' ⟩)
+    Eq0NEHole : ∀{ε1 ε2} → (ε1 =0ε' ε2) → ⦇⌜ ε1 ⌟⦈ =0ε' ⦇⌜ ε2 ⌟⦈
     Eq0Cast : ∀{ε1 ε2 τ1 τ2} → (ε1 =0ε' ε2) → (ε1 ⟨ τ1 ⇒ τ1 ⟩) =0ε' (ε2 ⟨ τ2 ⇒ τ2 ⟩)
     Eq0FailedCast : ∀{ε1 ε2 τ1 τ2} → (ε1 =0ε' ε2) → (ε1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) =0ε' (ε2 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
 
@@ -77,8 +77,8 @@ module debruijn.debruijn-parametricity where
   eq0-refl {d = X x} = Eq0Var
   eq0-refl {d = ·λ[ x₁ ] d} = Eq0Lam eq0-refl
   eq0-refl {d = ·Λ d} = Eq0TLam eq0-refl
-  eq0-refl {d = ⦇-⦈⟨ x ⟩} = Eq0EHole
-  eq0-refl {d = ⦇⌜ d ⌟⦈⟨ x ⟩} = Eq0NEHole eq0-refl
+  eq0-refl {d = ⦇-⦈} = Eq0EHole
+  eq0-refl {d = ⦇⌜ d ⌟⦈} = Eq0NEHole eq0-refl
   eq0-refl {d = d ∘ d₁} = Eq0Ap eq0-refl eq0-refl
   eq0-refl {d = d < x >} = Eq0TAp eq0-refl
   eq0-refl {d = d ⟨ x ⇒ x₁ ⟩} = Eq0Cast eq0-refl
@@ -214,16 +214,10 @@ module debruijn.debruijn-parametricity where
       Γ ⊢ e ⇐ τ1 ~> d1 :: τ1' →
       Γ' ⊢ e' ⇐ τ2 ~> d2 :: τ2'' →
       d1 =0 d2
-    eq0-elab-ana Eq0EHole EAEHole EAEHole = Eq0EHole
     eq0-elab-ana (Eq0ULam eq0) (EALam x elab1) (EALam x₂ elab2) = Eq0Lam (eq0-elab-ana eq0 elab1 elab2)
     eq0-elab-ana (Eq0TLam eq0) (EATLam x₂ elab1) (EATLam x₅ elab2) = Eq0TLam (eq0-elab-ana eq0 elab1 elab2)
-    eq0-elab-ana (Eq0NEHole eq0) (EANEHole x) (EANEHole x₂) = Eq0NEHole (eq0-elab-syn eq0 x x₂)
     eq0-elab-ana eq0 (EASubsume x x₂ x₃) (EASubsume x₅ x₆ x₇) = Eq0Cast (eq0-elab-syn eq0 x₂ x₆)
-    eq0-elab-ana Eq0EHole (EASubsume (Subsumable neq _ _) x₂ x₃) EAEHole = abort (neq refl)
-    eq0-elab-ana (Eq0NEHole eq0) (EASubsume (Subsumable _ neq _) x₂ x₃) (EANEHole x₅) = abort (neq _ refl)
     eq0-elab-ana (Eq0TLam eq0) (EASubsume (Subsumable _ _ neq) x₂ x₃) (EATLam x₇ ana) = abort (neq _ refl)
-    eq0-elab-ana Eq0EHole EAEHole (EASubsume (Subsumable neq _ _) x₂ x₃) = abort (neq refl)
-    eq0-elab-ana (Eq0NEHole eq0) (EANEHole x₁) (EASubsume (Subsumable _ neq _) x₂ x₃) = abort (neq _ refl)
     eq0-elab-ana (Eq0TLam eq0) (EATLam x₅ ana) (EASubsume (Subsumable _ _ neq) x₂ x₃) = abort (neq _ refl)
 
   consist-complete-eq : ∀{τ τ'} →
@@ -344,7 +338,7 @@ module debruijn.debruijn-parametricity where
   wt-env {τ = τ} (TAAp {τ1 = τ1} wt wt₁) (FHAp1 env₁) = wt-env wt env₁
   wt-env {τ = τ} (TAAp wt wt₁) (FHAp2 env₁) = wt-env wt₁ env₁
   wt-env {τ = τ} (TATAp x wt x₁) (FHTAp env₁) = wt-env wt env₁
-  wt-env {τ = τ} (TANEHole x wt) (FHNEHole env₁) = wt-env wt env₁
+  wt-env {τ = τ} (TANEHole wt) (FHNEHole env₁) = wt-env wt env₁
   wt-env {τ = τ} (TACast wt x x₁) (FHCast env₁) = wt-env wt env₁
   wt-env {τ = τ} (TAFailedCast wt x x₁ x₂) (FHFailedCast env₁) = wt-env wt env₁
 

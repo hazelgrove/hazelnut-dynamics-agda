@@ -50,8 +50,8 @@ module debruijn.debruijn-core-subst where
   ↑d t1 n t2 m (X x) = X (↑Nat t1 n x)
   ↑d t1 n t2 m (·λ[ τ ] d) = ·λ[ ↑ t2 m τ ] (↑d (1+ t1) n t2 m d)
   ↑d t1 n t2 m (·Λ d) = ·Λ (↑d t1 n (1+ t2) m d)
-  ↑d t1 n t2 m ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ ↑ t2 m τ ⟩
-  ↑d t1 n t2 m ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ ↑d t1 n t2 m d ⌟⦈⟨ ↑ t2 m τ ⟩
+  ↑d t1 n t2 m ⦇-⦈ = ⦇-⦈
+  ↑d t1 n t2 m ⦇⌜ d ⌟⦈ = ⦇⌜ ↑d t1 n t2 m d ⌟⦈
   ↑d t1 n t2 m (d1 ∘ d2) = (↑d t1 n t2 m d1) ∘ (↑d t1 n t2 m d2)
   ↑d t1 n t2 m (d < τ >) = (↑d t1 n t2 m d) < ↑ t2 m τ >
   ↑d t1 n t2 m (d ⟨ τ1 ⇒ τ2 ⟩) = (↑d t1 n t2 m d) ⟨ (↑ t2 m τ1) ⇒ (↑ t2 m τ2) ⟩
@@ -71,8 +71,8 @@ module debruijn.debruijn-core-subst where
   TtSub n τ (X x) = X x
   TtSub n τ (·λ[ x ] d) = ·λ[ TTSub n τ x ] (TtSub n τ d)
   TtSub n τ (·Λ d) = ·Λ (TtSub (1+ n) τ d)
-  TtSub n τ ⦇-⦈⟨ x ⟩ = ⦇-⦈⟨ TTSub n τ x ⟩
-  TtSub n τ ⦇⌜ d ⌟⦈⟨ x ⟩ = ⦇⌜ TtSub n τ d ⌟⦈⟨ TTSub n τ x ⟩
+  TtSub n τ ⦇-⦈ = ⦇-⦈
+  TtSub n τ ⦇⌜ d ⌟⦈ = ⦇⌜ TtSub n τ d ⌟⦈
   TtSub n τ (d ∘ d₁) = (TtSub n τ d) ∘ (TtSub n τ d₁)
   TtSub n τ (d < x >) = (TtSub n τ d) < TTSub n τ x >
   TtSub n τ (d ⟨ x ⇒ x₁ ⟩) = (TtSub n τ d) ⟨ TTSub n τ x ⇒ TTSub n τ x₁ ⟩
@@ -80,8 +80,8 @@ module debruijn.debruijn-core-subst where
 
   ttSub : Nat → Nat → ihexp → ihexp → ihexp 
   ttSub n m d1 c = c
-  ttSub n m d1 ⦇-⦈⟨ x ⟩ = ⦇-⦈⟨ x ⟩
-  ttSub n m d1 ⦇⌜ d2 ⌟⦈⟨ x ⟩ = ⦇⌜ ttSub n m d1 d2 ⌟⦈⟨ x ⟩
+  ttSub n m d1 ⦇-⦈ = ⦇-⦈
+  ttSub n m d1 ⦇⌜ d2 ⌟⦈ = ⦇⌜ ttSub n m d1 d2 ⌟⦈
   ttSub n m d1 (d2 ∘ d3) = (ttSub n m d1 d2) ∘ (ttSub n m d1 d3)
   ttSub n m d1 (d2 < x >) = (ttSub n m d1 d2) < x >
   ttSub n m d1 (d2 ⟨ x ⇒ x₁ ⟩) = (ttSub n m d1 d2) ⟨ x ⇒ x₁ ⟩
@@ -107,8 +107,8 @@ module debruijn.debruijn-core-subst where
   ↑d' t i (X x) = X (↑Nat t i x)
   ↑d' t i (·λ[ τ ] d) = ·λ[ τ ] (↑d' (1+ t) i d)
   ↑d' t i (·Λ d) = ·Λ (↑d' t i d)
-  ↑d' t i ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ τ ⟩
-  ↑d' t i ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ ↑d' t i d ⌟⦈⟨ τ ⟩
+  ↑d' t i ⦇-⦈ = ⦇-⦈
+  ↑d' t i ⦇⌜ d ⌟⦈ = ⦇⌜ ↑d' t i d ⌟⦈
   ↑d' t i (d1 ∘ d2) = (↑d' t i d1) ∘ (↑d' t i d2)
   ↑d' t i (d < τ >) = (↑d' t i d) < τ >
   ↑d' t i (d ⟨ τ1 ⇒ τ2 ⟩) = (↑d' t i d) ⟨ τ1 ⇒ τ2 ⟩
@@ -119,8 +119,8 @@ module debruijn.debruijn-core-subst where
   ↓d' t i (X x) = X (↓Nat t i x)
   ↓d' t i (·λ[ τ ] d) = ·λ[ τ ] (↓d' (1+ t) i d)
   ↓d' t i (·Λ d) = ·Λ (↓d' t i d)
-  ↓d' t i ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ τ ⟩
-  ↓d' t i ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ ↓d' t i d ⌟⦈⟨ τ ⟩
+  ↓d' t i ⦇-⦈ = ⦇-⦈
+  ↓d' t i ⦇⌜ d ⌟⦈ = ⦇⌜ ↓d' t i d ⌟⦈
   ↓d' t i (d1 ∘ d2) = (↓d' t i d1) ∘ (↓d' t i d2)
   ↓d' t i (d < τ >) = (↓d' t i d) < τ >
   ↓d' t i (d ⟨ τ1 ⇒ τ2 ⟩) = (↓d' t i d) ⟨ τ1 ⇒ τ2 ⟩
@@ -131,8 +131,8 @@ module debruijn.debruijn-core-subst where
   ↑td t i (X x) = X x
   ↑td t i (·λ[ τ ] d) = ·λ[ ↑ t i τ ] (↑td t i d)
   ↑td t i (·Λ d) = ·Λ (↑td (1+ t) i d)
-  ↑td t i ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ ↑ t i τ ⟩
-  ↑td t i ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ (↑td t i d) ⌟⦈⟨ ↑ t i τ ⟩
+  ↑td t i ⦇-⦈ = ⦇-⦈
+  ↑td t i ⦇⌜ d ⌟⦈ = ⦇⌜ (↑td t i d) ⌟⦈
   ↑td t i (d1 ∘ d2) = (↑td t i d1) ∘ (↑td t i d2)
   ↑td t i (d < τ >) = (↑td t i d) < ↑ t i τ >  
   ↑td t i (d ⟨ τ1 ⇒ τ2 ⟩) = (↑td t i d) ⟨ ↑ t i τ1 ⇒ ↑ t i τ2 ⟩
@@ -143,8 +143,8 @@ module debruijn.debruijn-core-subst where
   ↓td t i (X x) = X x
   ↓td t i (·λ[ τ ] d) = ·λ[ ↓ t i τ ] (↓td t i d)
   ↓td t i (·Λ d) = ·Λ (↓td (1+ t) i d)
-  ↓td t i ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ ↓ t i τ ⟩
-  ↓td t i ⦇⌜ d ⌟⦈⟨ τ ⟩ = ⦇⌜ (↓td t i d) ⌟⦈⟨ ↓ t i τ ⟩
+  ↓td t i ⦇-⦈ = ⦇-⦈
+  ↓td t i ⦇⌜ d ⌟⦈ = ⦇⌜ (↓td t i d) ⌟⦈
   ↓td t i (d1 ∘ d2) = (↓td t i d1) ∘ (↓td t i d2)
   ↓td t i (d < τ >) = (↓td t i d) < ↓ t i τ >  
   ↓td t i (d ⟨ τ1 ⇒ τ2 ⟩) = (↓td t i d) ⟨ ↓ t i τ1 ⇒ ↓ t i τ2 ⟩
@@ -170,8 +170,8 @@ module debruijn.debruijn-core-subst where
   Tt[ τ / t ] (X x) = X x
   Tt[ τ / t ] (·λ[ τx ] d) = ·λ[ TT[ τ / t ] τx ] (Tt[ τ / t ] d)
   Tt[ τ / t ] (·Λ d) = ·Λ (Tt[ (↑ Z 1 τ) / 1+ t ] d) 
-  Tt[ τ / t ] (⦇-⦈⟨ τ' ⟩) = ⦇-⦈⟨ TT[ τ / t ] τ' ⟩
-  Tt[ τ / t ] (⦇⌜ d ⌟⦈⟨  τ' ⟩) = ⦇⌜ (Tt[ τ / t ] d) ⌟⦈⟨ TT[ τ / t ] τ' ⟩
+  Tt[ τ / t ] (⦇-⦈) = ⦇-⦈
+  Tt[ τ / t ] (⦇⌜ d ⌟⦈) = ⦇⌜ (Tt[ τ / t ] d) ⌟⦈
   Tt[ τ / t ] (d1 ∘ d2) = (Tt[ τ / t ] d1) ∘ (Tt[ τ / t ] d2)
   Tt[ τ / t ] (d < τ' >) = (Tt[ τ / t ] d) < TT[ τ / t ] τ' >
   Tt[ τ / t ] (d ⟨ τ1 ⇒ τ2 ⟩ ) = (Tt[ τ / t ] d) ⟨ (TT[ τ / t ] τ1) ⇒ (TT[ τ / t ] τ2) ⟩
@@ -188,8 +188,8 @@ module debruijn.debruijn-core-subst where
   ... | Inr neq = X m
   [ d / n ] (·λ[ τ ] d') = ·λ[ τ ] ([ (↑d' Z 1 d) / 1+ n ] d')
   [ d / n ] ·Λ d' = ·Λ ([ ↑td Z 1 d / n ] d')
-  [ d / n ] ⦇-⦈⟨ τ ⟩ = ⦇-⦈⟨ τ ⟩
-  [ d / n ] ⦇⌜ d' ⌟⦈⟨ τ ⟩ =  ⦇⌜ [ d / n ] d' ⌟⦈⟨ τ ⟩
+  [ d / n ] ⦇-⦈ = ⦇-⦈
+  [ d / n ] ⦇⌜ d' ⌟⦈ =  ⦇⌜ [ d / n ] d' ⌟⦈
   [ d / n ] (d1 ∘ d2) = ([ d / n ] d1) ∘ ([ d / n ] d2)
   [ d / n ] (d' < τ >) = ([ d / n ] d') < τ >
   [ d / n ] (d' ⟨ τ1 ⇒ τ2 ⟩ ) = ([ d / n ] d') ⟨ τ1 ⇒ τ2 ⟩

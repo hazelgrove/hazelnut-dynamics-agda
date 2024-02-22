@@ -35,8 +35,6 @@ module debruijn.debruijn-typed-elaboration where
   ... | PTHole , _ = PTHole
   ... | PTForall prec , _ = PTForall (⊑t-trans (⊑t-ana ana) prec)
   ⊑t-ana (EASubsume neq syn meet) = π1 (⊓-lb meet)
-  ⊑t-ana EAEHole = ⊑t-refl _
-  ⊑t-ana (EANEHole _) = ⊑t-refl _
 
   consist-ana : ∀{Γ e τ τ' d} →
     ⊢ Γ ctxwf → 
@@ -50,7 +48,7 @@ module debruijn.debruijn-typed-elaboration where
     typed-elaboration-syn : ∀{Γ e τ d} →
       (⊢ Γ ctxwf) → 
       (Γ ⊢ e ⇒ τ ~> d) →
-      ( Γ ⊢ d :: τ)
+      (Γ ⊢ d :: τ)
     typed-elaboration-syn ctxwf ESConst = TAConst
     typed-elaboration-syn ctxwf (ESVar x) = TAVar x
     typed-elaboration-syn ctxwf (ESLam x syn) = TALam x (typed-elaboration-syn (CtxWFVar x ctxwf) syn)
@@ -62,8 +60,8 @@ module debruijn.debruijn-typed-elaboration where
     typed-elaboration-syn ctxwf (ESTAp wf syn meet ana refl) = 
       let wf' = wf-⊓ meet (wf-syn ctxwf syn) (WFForall WFHole) in 
       TATAp wf (TACast (typed-elaboration-ana ctxwf wf' ana) wf' (consist-ana ctxwf wf' ana)) refl
-    typed-elaboration-syn ctxwf ESEHole = TAEHole WFHole
-    typed-elaboration-syn ctxwf (ESNEHole syn) = TANEHole WFHole (typed-elaboration-syn ctxwf syn)
+    typed-elaboration-syn ctxwf ESEHole = TAEHole
+    typed-elaboration-syn ctxwf (ESNEHole syn) = TANEHole (typed-elaboration-syn ctxwf syn)
     typed-elaboration-syn ctxwf (ESAsc wf ana) = TACast (typed-elaboration-ana ctxwf wf ana) wf (consist-ana ctxwf wf ana)
 
     typed-elaboration-ana : ∀{Γ e τ τ' d} →
@@ -71,8 +69,6 @@ module debruijn.debruijn-typed-elaboration where
       Γ ⊢ τ wf → 
       Γ ⊢ e ⇐ τ ~> d :: τ' →
       Γ ⊢ d :: τ'
-    typed-elaboration-ana ctxwf wf EAEHole = TAEHole wf
-    typed-elaboration-ana ctxwf wf (EANEHole x) = TANEHole wf (typed-elaboration-syn ctxwf x)
     typed-elaboration-ana ctxwf wf (EALam meet ana) with wf-⊓ meet wf (WFArr WFHole WFHole) 
     ... | WFArr wf1 wf2 = TALam wf1 (typed-elaboration-ana (CtxWFVar wf1 ctxwf) (weakening-wf-var wf2) ana)
     typed-elaboration-ana ctxwf wf (EATLam meet ana) with wf-⊓ meet wf (WFForall WFHole) 

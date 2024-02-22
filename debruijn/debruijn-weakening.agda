@@ -112,8 +112,8 @@ module debruijn.debruijn-weakening where
   weakening-wt (TATLam wt) = TATLam (weakening-wt wt)
   weakening-wt (TAAp wt wt₁) = TAAp (weakening-wt wt) (weakening-wt wt₁)
   weakening-wt (TATAp x wt x₁) = TATAp (weakening-wf x) (weakening-wt wt) x₁
-  weakening-wt (TAEHole x) = TAEHole (weakening-wf x)
-  weakening-wt (TANEHole x wt) = TANEHole (weakening-wf x) (weakening-wt wt)
+  weakening-wt TAEHole = TAEHole
+  weakening-wt (TANEHole wt) = TANEHole (weakening-wt wt)
   weakening-wt (TACast wt x x₁) = TACast (weakening-wt wt) (weakening-wf x) x₁
   weakening-wt (TAFailedCast wt x x₁ x₂) = TAFailedCast (weakening-wt wt) x x₁ x₂
 

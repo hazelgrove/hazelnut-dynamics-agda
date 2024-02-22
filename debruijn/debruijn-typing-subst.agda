@@ -88,8 +88,8 @@ module debruijn.debruijn-typing-subst where
   wt-TtSub-helper ctxwf ctxct wf TAConst = TAConst
   wt-TtSub-helper ctxwf ctxct wf (TAAp wt wt₁) = TAAp (wt-TtSub-helper ctxwf ctxct wf wt) (wt-TtSub-helper ctxwf ctxct wf wt₁)
   wt-TtSub-helper ctxwf ctxct wf (TATAp x wt x₁) = TATAp (convenient-wf-subst wf x) (wt-TtSub-helper ctxwf ctxct wf wt) {!   !}
-  wt-TtSub-helper ctxwf ctxct wf (TAEHole x) = TAEHole (convenient-wf-subst wf x)
-  wt-TtSub-helper ctxwf ctxct wf (TANEHole x wt) = TANEHole (convenient-wf-subst wf x) (wt-TtSub-helper ctxwf ctxct wf wt)
+  wt-TtSub-helper ctxwf ctxct wf TAEHole = TAEHole
+  wt-TtSub-helper ctxwf ctxct wf (TANEHole wt) = TANEHole (wt-TtSub-helper ctxwf ctxct wf wt)
   wt-TtSub-helper {m = m} ctxwf ctxct wf (TACast wt x x₁) = TACast (wt-TtSub-helper ctxwf ctxct wf wt) (convenient-wf-subst wf x) {!   !}
   wt-TtSub-helper ctxwf ctxct wf (TALam x wt) = TALam (convenient-wf-subst wf x) (wt-TtSub-helper (CtxWFVar x ctxwf) (CtxCtVar ctxct) wf wt)
   wt-TtSub-helper ctxwf ctxct wf (TATLam wt) = TATLam (wt-TtSub-helper (CtxWFTVar ctxwf) (CtxCtTVar ctxct) wf wt)
@@ -135,8 +135,8 @@ module debruijn.debruijn-typing-subst where
   no-fvs-lemma n m ctxwf ctxct (TATLam wt) rewrite no-fvs-lemma n m (CtxWFTVar ctxwf) (CtxCtTVar ctxct) wt = refl
   no-fvs-lemma n m ctxwf ctxct (TAAp wt wt₁) rewrite no-fvs-lemma n m ctxwf ctxct wt rewrite no-fvs-lemma n m ctxwf ctxct wt₁ = refl
   no-fvs-lemma n m ctxwf ctxct (TATAp x wt x₁) rewrite no-fvs-lemma-type m ctxct x rewrite no-fvs-lemma n m ctxwf ctxct wt = refl
-  no-fvs-lemma n m ctxwf ctxct (TAEHole x) rewrite no-fvs-lemma-type m ctxct x = refl
-  no-fvs-lemma n m ctxwf ctxct (TANEHole x wt) rewrite no-fvs-lemma-type m ctxct x rewrite no-fvs-lemma n m ctxwf ctxct wt = refl
+  no-fvs-lemma n m ctxwf ctxct TAEHole = refl
+  no-fvs-lemma n m ctxwf ctxct (TANEHole wt) rewrite no-fvs-lemma n m ctxwf ctxct wt = refl
   no-fvs-lemma n m ctxwf ctxct (TACast wt x x₁) rewrite no-fvs-lemma-type m ctxct x rewrite no-fvs-lemma-type m ctxct (wf-ta ctxwf wt) rewrite no-fvs-lemma n m ctxwf ctxct wt = refl
   no-fvs-lemma n m ctxwf ctxct (TAFailedCast wt x x₁ x₂) rewrite no-fvs-lemma n m ctxwf ctxct wt rewrite no-fvs-lemma-type m ctxct (wf-gnd x) rewrite no-fvs-lemma-type m ctxct (wf-gnd x₁) = refl
 
@@ -160,8 +160,8 @@ module debruijn.debruijn-typing-subst where
   wt-ttSub-helper ctxwf ctxct wt1 TAConst = TAConst
   wt-ttSub-helper ctxwf ctxct wt1 (TAAp wt2 wt3) = TAAp (wt-ttSub-helper ctxwf ctxct wt1 wt2) (wt-ttSub-helper ctxwf ctxct wt1 wt3)
   wt-ttSub-helper ctxwf ctxct wt1 (TATAp x wt2 x₁) = TATAp (strengthen-wf-var-reverse x) (wt-ttSub-helper ctxwf ctxct wt1 wt2) x₁
-  wt-ttSub-helper ctxwf ctxct wt1 (TAEHole x) = TAEHole (strengthen-wf-var-reverse x)
-  wt-ttSub-helper ctxwf ctxct wt1 (TANEHole x wt2) = TANEHole (strengthen-wf-var-reverse x) (wt-ttSub-helper ctxwf ctxct wt1 wt2)
+  wt-ttSub-helper ctxwf ctxct wt1 TAEHole = TAEHole 
+  wt-ttSub-helper ctxwf ctxct wt1 (TANEHole wt2) = TANEHole (wt-ttSub-helper ctxwf ctxct wt1 wt2)
   wt-ttSub-helper ctxwf ctxct wt1 (TACast wt2 x x₁) = TACast (wt-ttSub-helper ctxwf ctxct wt1 wt2) (strengthen-wf-var-reverse x) x₁
   wt-ttSub-helper ctxwf ctxct wt1 (TAFailedCast wt2 x x₁ x₂) = TAFailedCast (wt-ttSub-helper ctxwf ctxct wt1 wt2) x x₁ x₂
   wt-ttSub-helper {Γ} {n} {m} {d1} ctxwf ctxct wt1 (TALam {τ1 = τ} {d = d} x wt2) = TALam (strengthen-wf-var-reverse x) (wt-ttSub-helper {Γ = (τ , Γ)} (CtxWFVar (strengthen-wf-var-reverse x) ctxwf) (CtxCtVar ctxct) wt1 wt2)

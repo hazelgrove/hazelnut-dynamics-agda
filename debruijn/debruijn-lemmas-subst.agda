@@ -26,8 +26,8 @@ module debruijn.debruijn-lemmas-subst where
   TtSubCorrect : ∀{n τ d} → TtSub' n τ d == TtSub n τ d
   TtSubCorrect {n} {τ} {c} = refl
   TtSubCorrect {n} {τ} {X x} = refl
-  TtSubCorrect {n} {τ} {⦇-⦈⟨ x ⟩} rewrite TTSubCorrect {n} {τ} {x} = refl
-  TtSubCorrect {n} {τ} {⦇⌜ d ⌟⦈⟨ x ⟩} rewrite TTSubCorrect {n} {τ} {x} rewrite TtSubCorrect {n} {τ} {d} = refl
+  TtSubCorrect {n} {τ} {⦇-⦈} = refl
+  TtSubCorrect {n} {τ} {⦇⌜ d ⌟⦈} rewrite TtSubCorrect {n} {τ} {d} = refl
   TtSubCorrect {n} {τ} {d ∘ d₁} rewrite TtSubCorrect {n} {τ} {d} rewrite TtSubCorrect {n} {τ} {d₁} = refl
   TtSubCorrect {n} {τ} {d < x >} rewrite TTSubCorrect {n} {τ} {x} rewrite TtSubCorrect {n} {τ} {d} = refl
   TtSubCorrect {n} {τ} {d ⟨ x ⇒ x₁ ⟩} rewrite TTSubCorrect {n} {τ} {x} rewrite TTSubCorrect {n} {τ} {x₁} rewrite TtSubCorrect {n} {τ} {d} = refl
@@ -37,8 +37,8 @@ module debruijn.debruijn-lemmas-subst where
 
   ↑d'-correct : ∀{t1 n t2 m d} → ↑d' t1 n (↑td t2 m d) == ↑d t1 n t2 m d
   ↑d'-correct {t1} {n} {t2} {m} {c} = refl
-  ↑d'-correct {t1} {n} {t2} {m} {⦇-⦈⟨ x ⟩} = refl
-  ↑d'-correct {t1} {n} {t2} {m} {⦇⌜ d ⌟⦈⟨ x ⟩} rewrite ↑d'-correct {t1} {n} {t2} {m} {d} = refl
+  ↑d'-correct {t1} {n} {t2} {m} {⦇-⦈} = refl
+  ↑d'-correct {t1} {n} {t2} {m} {⦇⌜ d ⌟⦈} rewrite ↑d'-correct {t1} {n} {t2} {m} {d} = refl
   ↑d'-correct {t1} {n} {t2} {m} {d ∘ d₁} rewrite ↑d'-correct {t1} {n} {t2} {m} {d} rewrite ↑d'-correct {t1} {n} {t2} {m} {d₁} = refl
   ↑d'-correct {t1} {n} {t2} {m} {d < x >} rewrite ↑d'-correct {t1} {n} {t2} {m} {d} = refl
   ↑d'-correct {t1} {n} {t2} {m} {d ⟨ x ⇒ x₁ ⟩} rewrite ↑d'-correct {t1} {n} {t2} {m} {d} = refl
@@ -49,8 +49,8 @@ module debruijn.debruijn-lemmas-subst where
 
   ttSubCorrect : ∀{n m d1 d2} → ttSub' n m d1 d2 == ttSub n m d1 d2
   ttSubCorrect {n} {m} {d1} {c} = refl
-  ttSubCorrect {n} {m} {d1} {⦇-⦈⟨ x ⟩} = refl
-  ttSubCorrect {n} {m} {d1} {⦇⌜ d2 ⌟⦈⟨ x ⟩} rewrite ttSubCorrect {n} {m} {d1} {d2} = refl
+  ttSubCorrect {n} {m} {d1} {⦇-⦈} = refl
+  ttSubCorrect {n} {m} {d1} {⦇⌜ d2 ⌟⦈} rewrite ttSubCorrect {n} {m} {d1} {d2} = refl
   ttSubCorrect {n} {m} {d1} {d2 ∘ d3} rewrite ttSubCorrect {n} {m} {d1} {d2} rewrite ttSubCorrect {n} {m} {d1} {d3} = refl
   ttSubCorrect {n} {m} {d1} {d2 < x >} rewrite ttSubCorrect {n} {m} {d1} {d2} = refl
   ttSubCorrect {n} {m} {d1} {d2 ⟨ x ⇒ x₁ ⟩} rewrite ttSubCorrect {n} {m} {d1} {d2} = refl
