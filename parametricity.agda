@@ -494,13 +494,83 @@ module parametricity where
     with eq0-ctxout' eq4 eq3 ctx2 
   ... | d5 , eq5 , eq6 =  d5 , Step ctx3 step2 eq5 , eq6 
 
-  compl-complid-pres : ∀{d d' τ} →
+{-
+  -- This was an attempt to remove the necessity of being well-typed, but we get stuck in showing the alpha equivalence for dcompleteid.
+  -- It's probably avoidable but probably need to reformulate a few things for it to be so.
+
+  -- This is a stronger version of the complete preservation theorem that doesn't require well-typing.
+  -- These lemmas are mostly copy-pasted from complete-preservation
+  lem-proj' : {x : Nat} {d : ihexp} { τ : htyp} → (·λ_[_]_ x τ d) dcompleteid → Σ[ y ∈ Nat ] (y == x)
+  lem-proj' {x} (DCLam dc x₁) = x , refl
+
+  cp-subst' : ∀ {x d1 d2} →
+           d1 dcompleteid →
+           d2 dcompleteid →
+           ([ d2 / x ] d1) dcompleteid
+  cp-subst' {x = y} (DCVar {x = x}) dc2 with natEQ x y
+  cp-subst' DCVar dc2 | Inl refl = dc2
+  cp-subst' DCVar dc2 | Inr x₂ = DCVar
+  cp-subst' DCConst dc2 = DCConst
+  cp-subst' {x = x} (DCLam {x = y} dc1 x₂) dc2 with natEQ y x
+  cp-subst' (DCLam dc1 x₃) dc2 | Inl refl = DCLam dc1 x₃
+  cp-subst' (DCLam dc1 x₃) dc2 | Inr x₂ = DCLam (cp-subst' dc1 dc2) x₃
+  cp-subst' (DCAp dc1 dc2) dc3 = DCAp (cp-subst' dc1 dc3) (cp-subst' dc2 dc3)
+  cp-subst' (DCCast dc1 x₁ x₂ x₃) dc2 = DCCast (cp-subst' dc1 dc2) x₁ x₂ x₃
+  cp-subst' {d1 = ·Λ x₁ d1} (DCTLam x₂) x = DCTLam (cp-subst' x₂ x)
+  cp-subst' {d1 = d1 < x₁ >} (DCTAp x₂ x₃) x = DCTAp x₂ (cp-subst' x₃ x)
+
+  cp-typsubst' : ∀ {d t τ} →
+           d dcompleteid →
+           τ tcomplete →
+           (Ihexp[ τ / t ] d) dcompleteid
+  cp-typsubst' dc tc = {!   !}
+
+  tcomplete-subst : ∀{τ t τ'} →
+    τ tcomplete →
+    τ' tcomplete →
+    Typ[ τ' / t ] τ tcomplete
+  tcomplete-subst TCBase tc' = TCBase
+  tcomplete-subst {t = t} (TCVar {a = t'}) tc' with natEQ t t'
+  ... | Inl refl = tc'
+  ... | Inr neq = TCVar
+  tcomplete-subst (TCArr tc tc₁) tc' = TCArr (tcomplete-subst tc tc') (tcomplete-subst tc₁ tc')
+  tcomplete-subst {t = t} (TCForall {t = t'} tc) tc' with natEQ t t'
+  ... | Inl refl = TCForall tc
+  ... | Inr neq = TCForall (tcomplete-subst tc tc')
+
+  -- Being able to prove this weakens the condition from well-typing to just type binder disjointness
+  alpha-sub' : ∀{τ t1 τ1 t2 τ2} → τ τ1 tbinderstt-disjoint → τ τ2 tbinderstt-disjoint → ·∀ t1 τ1 =α ·∀ t2 τ2 → (Typ[ τ / t1 ] τ1) =α (Typ[ τ / t2 ] τ2)
+  alpha-sub' = ?
+
+  compl-complid-pres : ∀{d d'} →
+    d tbinders-unique →
     d dcompleteid → 
-    ∅ , ∅ , ∅ ⊢ d :: τ → 
     d ↦ d' →
     d' dcompleteid
-  compl-complid-pres compl wt step with complete-preservation {!   !} (complid-compl compl) wt step
-  ... | (wt' , compl') = compl-wt-complid compl' wt' 
+  compl-complid-pres DCConst (Step FHOuter () FHOuter)
+  compl-complid-pres DCVar (Step FHOuter () x₃)
+  compl-complid-pres (DCLam _ _) (Step FHOuter () FHOuter)
+  -- this case is a little more complicated than it feels like it ought to
+  -- be, just from horsing around with agda implicit variables.
+  compl-complid-pres (DCAp dc dc₁) (Step FHOuter ITLam FHOuter) with lem-proj' dc
+  compl-complid-pres (DCAp dc dc₁) (Step FHOuter ITLam FHOuter) | x , refl with cp-subst' {x = x} dc dc₁
+  ... | qq with natEQ x x
+  compl-complid-pres (DCAp dc dc₁) (Step FHOuter ITLam FHOuter) | x , refl | DCLam qq x₁ | Inl refl = cp-subst' qq dc₁
+  compl-complid-pres (DCAp dc dc₁) (Step FHOuter ITLam FHOuter) | x , refl | qq | Inr x₁ = abort (x₁ refl)
+  compl-complid-pres (DCAp (DCCast dc (TCArr ll lr) (TCArr rl rr) (AlphaArr alphal alphar)) dc₁) (Step FHOuter ITApCast FHOuter) = DCCast (DCAp dc (DCCast dc₁ rl ll (alpha-sym alphal))) lr rr alphar
+  compl-complid-pres (DCAp dc dc₁) (Step (FHAp1 x) x₁ (FHAp1 x₂)) = DCAp (compl-complid-pres dc (Step x x₁ x₂)) dc₁
+  compl-complid-pres (DCAp dc dc₁) (Step (FHAp2 x) x₁ (FHAp2 x₂)) = DCAp dc (compl-complid-pres dc₁ (Step x x₁ x₂))
+  compl-complid-pres (DCCast dc x x₁ alpha) (Step FHOuter (ITCastID alpha') FHOuter) = dc
+  compl-complid-pres (DCCast dc () x₁ alpha) (Step FHOuter (ITCastSucceed g1 g2 alpha') FHOuter)
+  compl-complid-pres (DCCast dc () x₁ alpha) (Step FHOuter (ITCastFail x₃ x₄ x₅) FHOuter)
+  compl-complid-pres (DCCast dc x () alpha) (Step FHOuter (ITGround x₃) FHOuter)
+  compl-complid-pres (DCCast dc () x₁ alpha) (Step FHOuter (ITExpand x₃) FHOuter)
+  compl-complid-pres (DCCast dc x x₁ alpha) (Step (FHCast x₃) x₄ (FHCast x₅)) = DCCast (compl-complid-pres dc (Step x₃ x₄ x₅)) x x₁ alpha
+  compl-complid-pres (DCTLam dc) (Step FHOuter () FHOuter)
+  compl-complid-pres (DCTAp dc (DCTLam x)) (Step FHOuter ITTLam FHOuter) = cp-typsubst' x dc
+  compl-complid-pres (DCTAp dc (DCCast x (TCForall x₁) (TCForall x₂) (AlphaForall x₃))) (Step FHOuter ITTApCast FHOuter) = DCCast (DCTAp dc x) (tcomplete-subst x₁ dc) (tcomplete-subst x₂ dc) {!   !}
+  compl-complid-pres (DCTAp dc x) (Step (FHTAp x₁) x₂ (FHTAp x₃)) = DCTAp dc (compl-complid-pres x (Step x₁ x₂ x₃))
+-}
 
   parametricity11_rec : 
     ∀ {τ τ' d1 d2 v1 } →
