@@ -44,7 +44,7 @@ module debruijn.debruijn-complete-elaboration where
     complete-elaboration-synth gc (ECAsc x ec) (ESAsc wf x₁)
       with complete-elaboration-ana gc ec x x₁
     ... | dc' , tc' = DCCast dc' tc' x , x
-    complete-elaboration-synth gc (ECTLam ec) (ESTLam elab) with complete-elaboration-synth (GCTVar gc) ec elab
+    complete-elaboration-synth gc (ECTLam ec) (ESTLam _ _ elab) with complete-elaboration-synth (GCTVar gc) ec elab
     ... | dc' , tc' = DCTLam dc' , TCForall tc'
     complete-elaboration-synth gc (ECTAp ec tc) (ESTAp wf syn meet ana refl) with meet-complete (comp-synth gc tc syn) meet 
     ... | TCForall tc'' with complete-elaboration-ana gc tc (TCForall tc'') ana 
@@ -62,6 +62,6 @@ module debruijn.debruijn-complete-elaboration where
     ... | dc' , tc' = DCLam dc' tc1 , TCArr tc1 tc'
     complete-elaboration-ana gc ec tc (EASubsume x syn meet) with complete-elaboration-synth gc ec syn | meet-complete tc meet 
     ... | dc' , tc' | tc'' = DCCast dc' tc' tc'' , tc''
-    complete-elaboration-ana x (ECTLam x₂) x₁ (EATLam x₃ x₄ meet ana) with meet-complete x₁ meet 
+    complete-elaboration-ana x (ECTLam x₂) x₁ (EATLam meet ana) with meet-complete x₁ meet 
     ... | TCForall tc with complete-elaboration-ana (GCTVar x) x₂ tc ana
     ... | dc , tc' = DCTLam dc , TCForall tc'

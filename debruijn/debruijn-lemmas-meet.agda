@@ -5,6 +5,16 @@ open import debruijn.debruijn-lemmas-prec
 
 module debruijn.debruijn-lemmas-meet where
 
+  ⊓-unicity : ∀{τ1 τ2 τ3 τ3'} → τ1 ⊓ τ2 == τ3 → τ1 ⊓ τ2 == τ3' → τ3 == τ3'
+  ⊓-unicity MeetHoleL MeetHoleL = refl
+  ⊓-unicity MeetHoleL MeetHoleR = refl
+  ⊓-unicity MeetHoleR MeetHoleL = refl
+  ⊓-unicity MeetHoleR MeetHoleR = refl
+  ⊓-unicity MeetBase MeetBase = refl
+  ⊓-unicity MeetVar MeetVar = refl
+  ⊓-unicity (MeetArr meet1 meet2) (MeetArr meet3 meet4) rewrite ⊓-unicity meet1 meet3 rewrite ⊓-unicity meet2 meet4 = refl
+  ⊓-unicity (MeetForall meet1) (MeetForall meet2) rewrite ⊓-unicity meet1 meet2 = refl
+
   ⊓-lb : ∀{τ1 τ2 τ3} → τ1 ⊓ τ2 == τ3 → (τ3 ⊑t τ1 × τ3 ⊑t τ2)
   ⊓-lb MeetHoleL = PTHole , ⊑t-refl _ 
   ⊓-lb MeetHoleR = ⊑t-refl _ , PTHole

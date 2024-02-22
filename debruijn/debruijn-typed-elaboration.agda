@@ -31,7 +31,7 @@ module debruijn.debruijn-typed-elaboration where
   ⊑t-ana (EALam meet ana) with ⊓-lb meet 
   ... | PTHole , _ = PTHole
   ... | PTArr prec1 prec2 , _ = PTArr prec1 (⊑t-trans (⊑t-ana ana) prec2)
-  ⊑t-ana (EATLam neq1 neq2 meet ana) with ⊓-lb meet 
+  ⊑t-ana (EATLam meet ana) with ⊓-lb meet 
   ... | PTHole , _ = PTHole
   ... | PTForall prec , _ = PTForall (⊑t-trans (⊑t-ana ana) prec)
   ⊑t-ana (EASubsume neq syn meet) = π1 (⊓-lb meet)
@@ -54,7 +54,7 @@ module debruijn.debruijn-typed-elaboration where
     typed-elaboration-syn ctxwf ESConst = TAConst
     typed-elaboration-syn ctxwf (ESVar x) = TAVar x
     typed-elaboration-syn ctxwf (ESLam x syn) = TALam x (typed-elaboration-syn (CtxWFVar x ctxwf) syn)
-    typed-elaboration-syn ctxwf (ESTLam syn) = TATLam (typed-elaboration-syn (CtxWFTVar ctxwf) syn)
+    typed-elaboration-syn ctxwf (ESTLam _ _ syn) = TATLam (typed-elaboration-syn (CtxWFTVar ctxwf) syn)
     typed-elaboration-syn ctxwf (ESAp syn meet ana1 ana2) with ⊓-lb meet | wf-⊓ meet (wf-syn ctxwf syn) (WFArr WFHole WFHole)
     ... | prec1 , prec2 | WFArr wf1 wf2 = 
       TAAp (TACast (typed-elaboration-ana ctxwf (WFArr wf1 wf2) ana1) (WFArr wf1 wf2) (consist-ana ctxwf (WFArr wf1 wf2) ana1)) 
@@ -75,7 +75,7 @@ module debruijn.debruijn-typed-elaboration where
     typed-elaboration-ana ctxwf wf (EANEHole x) = TANEHole wf (typed-elaboration-syn ctxwf x)
     typed-elaboration-ana ctxwf wf (EALam meet ana) with wf-⊓ meet wf (WFArr WFHole WFHole) 
     ... | WFArr wf1 wf2 = TALam wf1 (typed-elaboration-ana (CtxWFVar wf1 ctxwf) (weakening-wf-var wf2) ana)
-    typed-elaboration-ana ctxwf wf (EATLam neq1 neq2 meet ana) with wf-⊓ meet wf (WFForall WFHole) 
+    typed-elaboration-ana ctxwf wf (EATLam meet ana) with wf-⊓ meet wf (WFForall WFHole) 
     ... | WFForall wf' = TATLam (typed-elaboration-ana (CtxWFTVar ctxwf) wf' ana)
     typed-elaboration-ana ctxwf wf (EASubsume neq syn meet) = 
         TACast (typed-elaboration-syn ctxwf syn) (wf-⊓ meet wf (wf-elab-syn ctxwf syn)) (~sym (⊑t-consist (π2 (⊓-lb meet))))

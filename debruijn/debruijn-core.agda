@@ -78,6 +78,8 @@ module debruijn.debruijn-core where
         (τ1 , Γ) ⊢ e ⇒ τ2 ~> d →
         Γ ⊢ (·λ[ τ1 ] e) ⇒ (τ1 ==> τ2) ~> (·λ[ τ1 ] d)
       ESTLam : ∀{Γ e τ d} → 
+        (e ≠ ⦇-⦈) →
+        ((e' : hexp) → e ≠ ⦇⌜ e' ⌟⦈) →
         (TVar, Γ) ⊢ e ⇒ τ ~> d → 
         Γ ⊢ (·Λ e) ⇒ (·∀ τ) ~> (·Λ d)
       ESAp : ∀{Γ e1 τ τ1 τ1' τ2 τ2' d1  e2 d2 } →
@@ -110,8 +112,6 @@ module debruijn.debruijn-core where
         (τ1 , Γ) ⊢ e ⇐ τ2 ~> d :: τ2' →
         Γ ⊢ ·λ e ⇐ τ ~> ·λ[ τ1 ] d :: τ1 ==> τ2'
       EATLam : ∀{Γ e τ1 τ2 τ2' d} → 
-        e == e → --(e ≠ ⦇-⦈) →
-        e == e → --((e' : hexp) → e ≠ ⦇⌜ e' ⌟⦈) →
         τ1 ⊓ ·∀ ⦇-⦈ == (·∀ τ2) → 
         (TVar, Γ) ⊢ e ⇐ τ2 ~> d :: τ2' →
         Γ ⊢ (·Λ e) ⇐ τ1 ~> (·Λ d) :: (·∀ τ2')

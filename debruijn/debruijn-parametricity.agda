@@ -204,7 +204,7 @@ module debruijn.debruijn-parametricity where
     eq0-elab-syn (Eq0Asc eq0) (ESAsc x x₁) (ESAsc x₂ x₃) = Eq0Cast (eq0-elab-ana eq0 x₁ x₃)
     eq0-elab-syn Eq0EHole ESEHole ESEHole = Eq0EHole
     eq0-elab-syn (Eq0Lam eq0) (ESLam x elab1) (ESLam x₂ elab2) = Eq0Lam (eq0-elab-syn eq0 elab1 elab2)
-    eq0-elab-syn (Eq0TLam eq0) (ESTLam elab1) (ESTLam elab2) = Eq0TLam (eq0-elab-syn eq0 elab1 elab2)
+    eq0-elab-syn (Eq0TLam eq0) (ESTLam _ _ elab1) (ESTLam _ _ elab2) = Eq0TLam (eq0-elab-syn eq0 elab1 elab2)
     eq0-elab-syn (Eq0NEHole eq0) (ESNEHole elab1) (ESNEHole elab2) = Eq0NEHole (eq0-elab-syn eq0 elab1 elab2)
     eq0-elab-syn (Eq0Ap eq0 eq1) (ESAp x x₁ x₂ x₄) (ESAp x₆ x₇ x₈ x₁₀) = Eq0Ap (Eq0Cast (eq0-elab-ana eq0 x₂ x₈)) (Eq0Cast (eq0-elab-ana eq1 x₄ x₁₀))
     eq0-elab-syn (Eq0TAp eq0) (ESTAp x x₁ x₂ x₃ x₄) (ESTAp x₅ x₆ x₇ x₈ x₉) = Eq0TAp (Eq0Cast (eq0-elab-ana eq0 x₃ x₈))
@@ -216,15 +216,15 @@ module debruijn.debruijn-parametricity where
       d1 =0 d2
     eq0-elab-ana Eq0EHole EAEHole EAEHole = Eq0EHole
     eq0-elab-ana (Eq0ULam eq0) (EALam x elab1) (EALam x₂ elab2) = Eq0Lam (eq0-elab-ana eq0 elab1 elab2)
-    eq0-elab-ana (Eq0TLam eq0) (EATLam x x₁ x₂ elab1) (EATLam x₃ x₄ x₅ elab2) = Eq0TLam (eq0-elab-ana eq0 elab1 elab2)
+    eq0-elab-ana (Eq0TLam eq0) (EATLam x₂ elab1) (EATLam x₅ elab2) = Eq0TLam (eq0-elab-ana eq0 elab1 elab2)
     eq0-elab-ana (Eq0NEHole eq0) (EANEHole x) (EANEHole x₂) = Eq0NEHole (eq0-elab-syn eq0 x x₂)
     eq0-elab-ana eq0 (EASubsume x x₂ x₃) (EASubsume x₅ x₆ x₇) = Eq0Cast (eq0-elab-syn eq0 x₂ x₆)
     eq0-elab-ana Eq0EHole (EASubsume (Subsumable neq _ _) x₂ x₃) EAEHole = abort (neq refl)
     eq0-elab-ana (Eq0NEHole eq0) (EASubsume (Subsumable _ neq _) x₂ x₃) (EANEHole x₅) = abort (neq _ refl)
-    eq0-elab-ana (Eq0TLam eq0) (EASubsume (Subsumable _ _ neq) x₂ x₃) (EATLam x₅ x₆ x₇ ana) = abort (neq _ refl)
+    eq0-elab-ana (Eq0TLam eq0) (EASubsume (Subsumable _ _ neq) x₂ x₃) (EATLam x₇ ana) = abort (neq _ refl)
     eq0-elab-ana Eq0EHole EAEHole (EASubsume (Subsumable neq _ _) x₂ x₃) = abort (neq refl)
     eq0-elab-ana (Eq0NEHole eq0) (EANEHole x₁) (EASubsume (Subsumable _ neq _) x₂ x₃) = abort (neq _ refl)
-    eq0-elab-ana (Eq0TLam eq0) (EATLam x x₄ x₅ ana) (EASubsume (Subsumable _ _ neq) x₂ x₃) = abort (neq _ refl)
+    eq0-elab-ana (Eq0TLam eq0) (EATLam x₅ ana) (EASubsume (Subsumable _ _ neq) x₂ x₃) = abort (neq _ refl)
 
   consist-complete-eq : ∀{τ τ'} →
     τ tcomplete →
@@ -406,4 +406,4 @@ module debruijn.debruijn-parametricity where
     let d1c = (dcompleteid-elab ec elab1) in
     let d2c = (dcompleteid-elab ec' elab2) in
     let (v2 , v2eval , v2bv , eq0') = parametricity11_rec d1c d2c (typed-elaboration-syn CtxWFEmpty elab1) (typed-elaboration-syn CtxWFEmpty elab2) (eq0-eq0' d1c d2c (eq0-elab-syn eeq elab1 elab2)) eval bv in
-    (v2 , v2eval , v2bv , eq0'-eq0 eq0')    
+    (v2 , v2eval , v2bv , eq0'-eq0 eq0')     

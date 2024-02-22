@@ -75,7 +75,7 @@ module debruijn.debruijn-lemmas-wf where
   wf-elab-syn ctxwf ESConst = WFBase
   wf-elab-syn ctxwf (ESVar x) = wf-ctx-var ctxwf x
   wf-elab-syn ctxwf (ESLam x syn) = WFArr x (strengthen-wf-var (wf-elab-syn (CtxWFVar x ctxwf) syn))
-  wf-elab-syn ctxwf (ESTLam syn) = WFForall (wf-elab-syn (CtxWFTVar ctxwf) syn)
+  wf-elab-syn ctxwf (ESTLam _ _ syn) = WFForall (wf-elab-syn (CtxWFTVar ctxwf) syn)
   wf-elab-syn ctxwf (ESAp syn meet _ _) with wf-⊓ meet (wf-syn ctxwf syn) (WFArr WFHole WFHole)
   ... | WFArr _ wf = wf
   wf-elab-syn ctxwf (ESTAp wf syn meet _ refl) with wf-⊓ meet (wf-syn ctxwf syn) (WFForall WFHole) 

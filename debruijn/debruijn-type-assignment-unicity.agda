@@ -2,6 +2,7 @@ open import Nat
 open import Prelude
 open import debruijn.debruijn-core-type
 open import debruijn.debruijn-core
+open import debruijn.debruijn-lemmas-meet
 
 module debruijn.debruijn-type-assignment-unicity where
 
@@ -12,6 +13,22 @@ module debruijn.debruijn-type-assignment-unicity where
   context-unicity (InCtxSkip inctx1) (InCtxSkip inctx2) rewrite context-unicity inctx1 inctx2 = refl
   context-unicity InCtxZ InCtxZ = refl
   context-unicity (InCtx1+ inctx1) (InCtx1+ inctx2) = context-unicity inctx1 inctx2
+
+  synth-unicity : ∀{Γ d τ' τ} →
+    Γ ⊢ d => τ →
+    Γ ⊢ d => τ' →
+    τ == τ'
+  synth-unicity SConst SConst = refl
+  synth-unicity (SAsc x x₁) (SAsc x₂ x₃) = refl
+  synth-unicity (SVar x) (SVar x₁) = context-unicity x x₁
+  synth-unicity (SAp syn1 x x₁) (SAp syn2 x₂ x₃) rewrite synth-unicity syn1 syn2 with ⊓-unicity x x₂
+  ... | refl = refl
+  synth-unicity SEHole SEHole = refl
+  synth-unicity (SNEHole syn1) (SNEHole syn2) = refl
+  synth-unicity (SLam x syn1) (SLam x₁ syn2) rewrite synth-unicity syn1 syn2 = refl
+  synth-unicity (STLam syn1) (STLam syn2) rewrite synth-unicity syn1 syn2 = refl
+  synth-unicity (STAp x syn1 x₁ refl) (STAp x₃ syn2 x₄ refl) rewrite synth-unicity syn1 syn2 with ⊓-unicity x₁ x₄
+  ... | refl = refl
 
   -- type assignment only assigns one type
   type-assignment-unicity : ∀{Γ d τ' τ} →
