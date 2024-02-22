@@ -10,23 +10,6 @@ open import debruijn.debruijn-lemmas-meet
 
 module debruijn.debruijn-typed-elaboration where
 
-  -- ⊑t-ana : ∀{Γ e τ τ' d Θ} →
-  --   Θ ⊢ Γ ctxwf → 
-  --   Θ ⊢ τ wf → 
-  --   Θ , Γ ⊢ e ⇐ τ ~> d :: τ' →
-  --   τ' ⊑t τ
-  -- ⊑t-ana ctxwf wf (EALam meet ana) with ⊓-lb meet 
-  -- ... | PTHole , _ = PTHole
-  -- ... | PTArr prec1 prec2 , _ with wf-⊓ meet wf (WFArr WFHole WFHole)
-  -- ... | WFArr wf1 wf2 = PTArr prec1 (⊑t-trans (⊑t-ana (CtxWFExtend wf1 ctxwf) wf2 ana) prec2)
-  -- ⊑t-ana ctxwf wf (EATLam neq1 neq2 meet ana) with ⊓-lb meet 
-  -- ... | PTHole , _ = PTHole
-  -- ... | PTForall prec1 , _ with wf-⊓ meet wf (WFForall WFHole)
-  -- ... | WFForall wf1 = PTForall (⊑t-trans (⊑t-ana (weakening-ctx ctxwf) wf1 ana) prec1)
-  -- ⊑t-ana ctxwf wf (EASubsume neq1 neq2 xsyn meet) = π1 (⊓-lb meet)
-  -- ⊑t-ana ctxwf wf EAEHole = ⊑t-refl _
-  -- ⊑t-ana ctxwf wf (EANEHole x) = ⊑t-refl _
-
   ⊑t-ana : ∀{Γ e τ d τ'} → Γ ⊢ e ⇐ τ ~> d :: τ' → τ' ⊑t τ
   ⊑t-ana (EALam meet ana) with ⊓-lb meet 
   ... | PTHole , _ = PTHole
@@ -52,7 +35,7 @@ module debruijn.debruijn-typed-elaboration where
     typed-elaboration-syn ctxwf ESConst = TAConst
     typed-elaboration-syn ctxwf (ESVar x) = TAVar x
     typed-elaboration-syn ctxwf (ESLam x syn) = TALam x (typed-elaboration-syn (CtxWFVar x ctxwf) syn)
-    typed-elaboration-syn ctxwf (ESTLam _ _ syn) = TATLam (typed-elaboration-syn (CtxWFTVar ctxwf) syn)
+    typed-elaboration-syn ctxwf (ESTLam syn) = TATLam (typed-elaboration-syn (CtxWFTVar ctxwf) syn)
     typed-elaboration-syn ctxwf (ESAp syn meet ana1 ana2) with ⊓-lb meet | wf-⊓ meet (wf-syn ctxwf syn) (WFArr WFHole WFHole)
     ... | prec1 , prec2 | WFArr wf1 wf2 = 
       TAAp (TACast (typed-elaboration-ana ctxwf (WFArr wf1 wf2) ana1) (WFArr wf1 wf2) (consist-ana ctxwf (WFArr wf1 wf2) ana1)) 

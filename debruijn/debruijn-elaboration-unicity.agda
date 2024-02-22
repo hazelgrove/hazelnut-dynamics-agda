@@ -18,7 +18,7 @@ module debruijn.debruijn-elaboration-unicity where
     elaboration-unicity-synth (ESVar x) (ESVar x₁) = context-unicity x x₁ , refl
     elaboration-unicity-synth (ESLam x syn1) (ESLam x₁ syn2) with elaboration-unicity-synth syn1 syn2 
     ... | refl , refl = refl , refl
-    elaboration-unicity-synth (ESTLam x x₁ syn1) (ESTLam x₂ x₃ syn2) with elaboration-unicity-synth syn1 syn2 
+    elaboration-unicity-synth (ESTLam syn1) (ESTLam syn2) with elaboration-unicity-synth syn1 syn2 
     ... | refl , refl = refl , refl
     elaboration-unicity-synth (ESAp x x₁ x₂ x₃) (ESAp x₄ x₅ x₆ x₇) rewrite synth-unicity x x₄ with ⊓-unicity x₁ x₅
     ... | refl with elaboration-unicity-ana x₂ x₆ | elaboration-unicity-ana x₃ x₇  

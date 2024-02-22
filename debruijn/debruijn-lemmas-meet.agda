@@ -5,6 +5,24 @@ open import debruijn.debruijn-lemmas-prec
 
 module debruijn.debruijn-lemmas-meet where
 
+  ⊓-ability : ∀{τ1 τ2} → τ1 ~ τ2 → Σ[ τ3 ∈ htyp ] (τ1 ⊓ τ2 == τ3)  
+  ⊓-ability ConsistBase = b , MeetBase
+  ⊓-ability ConsistVar = T _ , MeetVar
+  ⊓-ability ConsistHole1 = _ , MeetHoleR
+  ⊓-ability ConsistHole2 = _ , MeetHoleL
+  ⊓-ability (ConsistArr con con₁) with ⊓-ability con | ⊓-ability con₁ 
+  ... | τ1 , meet1 | τ2 , meet2 = τ1 ==> τ2 , MeetArr meet1 meet2
+  ⊓-ability (ConsistForall con) with ⊓-ability con 
+  ... | τ , meet = ·∀ τ , MeetForall meet
+
+  ⊓-consist : ∀{τ1 τ2 τ3} → τ1 ⊓ τ2 == τ3 → τ1 ~ τ2
+  ⊓-consist MeetHoleL = ConsistHole2
+  ⊓-consist MeetHoleR = ConsistHole1
+  ⊓-consist MeetBase = ConsistBase
+  ⊓-consist MeetVar = ConsistVar
+  ⊓-consist (MeetArr meet meet₁) = ConsistArr (⊓-consist meet) (⊓-consist meet₁)
+  ⊓-consist (MeetForall meet) = ConsistForall (⊓-consist meet)
+
   ⊓-unicity : ∀{τ1 τ2 τ3 τ3'} → τ1 ⊓ τ2 == τ3 → τ1 ⊓ τ2 == τ3' → τ3 == τ3'
   ⊓-unicity MeetHoleL MeetHoleL = refl
   ⊓-unicity MeetHoleL MeetHoleR = refl
