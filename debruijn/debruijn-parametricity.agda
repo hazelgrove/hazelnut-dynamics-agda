@@ -204,7 +204,7 @@ module debruijn.debruijn-parametricity where
     eq0-elab-syn (Eq0Asc eq0) (ESAsc x x₁) (ESAsc x₂ x₃) = Eq0Cast (eq0-elab-ana eq0 x₁ x₃)
     eq0-elab-syn Eq0EHole ESEHole ESEHole = Eq0EHole
     eq0-elab-syn (Eq0Lam eq0) (ESLam x elab1) (ESLam x₂ elab2) = Eq0Lam (eq0-elab-syn eq0 elab1 elab2)
-    eq0-elab-syn (Eq0TLam eq0) (ESTLam _ _ elab1) (ESTLam _ _ elab2) = Eq0TLam (eq0-elab-syn eq0 elab1 elab2)
+    eq0-elab-syn (Eq0TLam eq0) (ESTLam elab1) (ESTLam elab2) = Eq0TLam (eq0-elab-syn eq0 elab1 elab2)
     eq0-elab-syn (Eq0NEHole eq0) (ESNEHole elab1) (ESNEHole elab2) = Eq0NEHole (eq0-elab-syn eq0 elab1 elab2)
     eq0-elab-syn (Eq0Ap eq0 eq1) (ESAp x x₁ x₂ x₄) (ESAp x₆ x₇ x₈ x₁₀) = Eq0Ap (Eq0Cast (eq0-elab-ana eq0 x₂ x₈)) (Eq0Cast (eq0-elab-ana eq1 x₄ x₁₀))
     eq0-elab-syn (Eq0TAp eq0) (ESTAp x x₁ x₂ x₃ x₄) (ESTAp x₅ x₆ x₇ x₈ x₉) = Eq0TAp (Eq0Cast (eq0-elab-ana eq0 x₃ x₈))
@@ -217,8 +217,8 @@ module debruijn.debruijn-parametricity where
     eq0-elab-ana (Eq0ULam eq0) (EALam x elab1) (EALam x₂ elab2) = Eq0Lam (eq0-elab-ana eq0 elab1 elab2)
     eq0-elab-ana (Eq0TLam eq0) (EATLam x₂ elab1) (EATLam x₅ elab2) = Eq0TLam (eq0-elab-ana eq0 elab1 elab2)
     eq0-elab-ana eq0 (EASubsume x x₂ x₃) (EASubsume x₅ x₆ x₇) = Eq0Cast (eq0-elab-syn eq0 x₂ x₆)
-    eq0-elab-ana (Eq0TLam eq0) (EASubsume (Subsumable _ _ neq) x₂ x₃) (EATLam x₇ ana) = abort (neq _ refl)
-    eq0-elab-ana (Eq0TLam eq0) (EATLam x₅ ana) (EASubsume (Subsumable _ _ neq) x₂ x₃) = abort (neq _ refl)
+    eq0-elab-ana (Eq0TLam eq0) (EASubsume (Subsumable neq) x₂ x₃) (EATLam x₇ ana) = abort (neq _ refl)
+    eq0-elab-ana (Eq0TLam eq0) (EATLam x₅ ana) (EASubsume (Subsumable neq) x₂ x₃) = abort (neq _ refl)
 
   consist-complete-eq : ∀{τ τ'} →
     τ tcomplete →
