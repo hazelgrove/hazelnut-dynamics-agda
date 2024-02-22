@@ -834,53 +834,45 @@ module parametricity where
 
 
   mutual
-    parametricity22-lemma-nocasts : ∀{d1 d2 τ τ' Δ d1' d2'} →
-      Δ , ∅ , ∅ ⊢ d1 :: τ →
-      Δ , ∅ , ∅ ⊢ d2 :: τ' →
+    parametricity22-lemma-nocasts : ∀{d1 d2 d1' d2'} →
       d1 =0''n d2 →
       d1 →> d1' →
       d2 →> d2' →
       d1' =0 d2'
-    parametricity22-lemma-nocasts wt wt' (Eq0Ap {d1 = ·λ _ [ _ ] d1} {d2 = d2} {d3 = ·λ _ [ _ ] d3} {d4 = d4} (Eq0Lam x) x₁) ITLam ITLam = eq0-subst d1 d3 x₁ x
-    parametricity22-lemma-nocasts wt wt' (Eq0Ap (Eq0Cast x) x₁) ITApCast ITApCast = (Eq0Cast (Eq0Ap x (Eq0Cast x₁)))
-    parametricity22-lemma-nocasts wt wt' (Eq0TAp {d1 = ·Λ _ d1} {d2 = ·Λ _ d2} (Eq0TLam x)) ITTLam ITTLam = eq0-typsubst d1 d2 x
-    parametricity22-lemma-nocasts wt wt' (Eq0TAp (Eq0Cast x)) ITTApCast ITTApCast = (Eq0Cast (Eq0TAp x))
+    parametricity22-lemma-nocasts (Eq0Ap {d1 = ·λ _ [ _ ] d1} {d2 = d2} {d3 = ·λ _ [ _ ] d3} {d4 = d4} (Eq0Lam x) x₁) ITLam ITLam = eq0-subst d1 d3 x₁ x
+    parametricity22-lemma-nocasts (Eq0Ap (Eq0Cast x) x₁) ITApCast ITApCast = (Eq0Cast (Eq0Ap x (Eq0Cast x₁)))
+    parametricity22-lemma-nocasts (Eq0TAp {d1 = ·Λ _ d1} {d2 = ·Λ _ d2} (Eq0TLam x)) ITTLam ITTLam = eq0-typsubst d1 d2 x
+    parametricity22-lemma-nocasts (Eq0TAp (Eq0Cast x)) ITTApCast ITTApCast = (Eq0Cast (Eq0TAp x))
 
-    parametricity22-lemma : ∀{d1 d2 τ τ' Δ d1' d2'} →
-      Δ , ∅ , ∅ ⊢ d1 :: τ →
-      Δ , ∅ , ∅ ⊢ d2 :: τ' →
+    parametricity22-lemma : ∀{d1 d2 d1' d2'} →
       d1 =0'' d2 →
       d1 →> d1' →
       d2 →> d2' →
       d1' =0'' d2' + d1 =0'' d2' + d1' =0'' d2
-    parametricity22-lemma wt wt' (Eq0CastL eq0) (ITCastID x) step' = Inr (Inr eq0)
-    parametricity22-lemma wt wt' (Eq0CastL (Eq0CastL eq0)) (ITCastSucceed x x₁ x₂) step' = Inr (Inr eq0)
-    parametricity22-lemma wt wt' (Eq0CastL (Eq0NoLeft x₃)) (ITCastSucceed x x₁ x₂) step' = abort (π1 (eq0castr-meaning x₃) refl)
-    parametricity22-lemma wt wt' (Eq0CastL (Eq0CastL eq0)) (ITCastFail x x₁ x₂) step' = Inr (Inr (Eq0FailedCastL eq0))
-    parametricity22-lemma wt wt' (Eq0CastL (Eq0NoLeft eq0)) (ITCastFail x x₁ x₂) step' = abort (π1 (eq0castr-meaning eq0) refl)
-    parametricity22-lemma wt wt' (Eq0CastL eq0) (ITGround x) step' = Inr (Inr (Eq0CastL (Eq0CastL eq0)))
-    parametricity22-lemma wt wt' (Eq0CastL eq0) (ITExpand x) step' = Inr (Inr (Eq0CastL (Eq0CastL eq0)))
-    parametricity22-lemma wt wt' (Eq0NoLeft (Eq0CastR x)) step (ITCastID x₁) = Inr (Inl (Eq0NoLeft x))
-    parametricity22-lemma wt wt' (Eq0NoLeft (Eq0CastR (Eq0CastR x))) step (ITCastSucceed x₁ x₂ x₃) = Inr (Inl (Eq0NoLeft x))
-    parametricity22-lemma wt wt' (Eq0NoLeft (Eq0CastR (Eq0CastR x))) step (ITCastFail x₁ x₂ x₃) = Inr (Inl (Eq0NoLeft (Eq0FailedCastR x)))
-    parametricity22-lemma wt wt' (Eq0NoLeft (Eq0CastR (Eq0NoCasts ()))) step (ITCastFail x₁ x₂ x₃)
-    parametricity22-lemma wt wt' (Eq0NoLeft (Eq0CastR x)) step (ITGround x₁) = Inr (Inl (Eq0NoLeft (Eq0CastR (Eq0CastR x))))
-    parametricity22-lemma wt wt' (Eq0NoLeft (Eq0CastR x)) step (ITExpand x₁) = Inr (Inl (Eq0NoLeft (Eq0CastR (Eq0CastR x))))
-    parametricity22-lemma wt wt' (Eq0NoLeft (Eq0NoCasts x)) step step' = Inl (eq0-eq0'' (parametricity22-lemma-nocasts wt wt' x step step'))
+    parametricity22-lemma (Eq0CastL eq0) (ITCastID x) step' = Inr (Inr eq0)
+    parametricity22-lemma (Eq0CastL (Eq0CastL eq0)) (ITCastSucceed x x₁ x₂) step' = Inr (Inr eq0)
+    parametricity22-lemma (Eq0CastL (Eq0NoLeft x₃)) (ITCastSucceed x x₁ x₂) step' = abort (π1 (eq0castr-meaning x₃) refl)
+    parametricity22-lemma (Eq0CastL (Eq0CastL eq0)) (ITCastFail x x₁ x₂) step' = Inr (Inr (Eq0FailedCastL eq0))
+    parametricity22-lemma (Eq0CastL (Eq0NoLeft eq0)) (ITCastFail x x₁ x₂) step' = abort (π1 (eq0castr-meaning eq0) refl)
+    parametricity22-lemma (Eq0CastL eq0) (ITGround x) step' = Inr (Inr (Eq0CastL (Eq0CastL eq0)))
+    parametricity22-lemma (Eq0CastL eq0) (ITExpand x) step' = Inr (Inr (Eq0CastL (Eq0CastL eq0)))
+    parametricity22-lemma (Eq0NoLeft (Eq0CastR x)) step (ITCastID x₁) = Inr (Inl (Eq0NoLeft x))
+    parametricity22-lemma (Eq0NoLeft (Eq0CastR (Eq0CastR x))) step (ITCastSucceed x₁ x₂ x₃) = Inr (Inl (Eq0NoLeft x))
+    parametricity22-lemma (Eq0NoLeft (Eq0CastR (Eq0CastR x))) step (ITCastFail x₁ x₂ x₃) = Inr (Inl (Eq0NoLeft (Eq0FailedCastR x)))
+    parametricity22-lemma (Eq0NoLeft (Eq0CastR (Eq0NoCasts ()))) step (ITCastFail x₁ x₂ x₃)
+    parametricity22-lemma (Eq0NoLeft (Eq0CastR x)) step (ITGround x₁) = Inr (Inl (Eq0NoLeft (Eq0CastR (Eq0CastR x))))
+    parametricity22-lemma (Eq0NoLeft (Eq0CastR x)) step (ITExpand x₁) = Inr (Inl (Eq0NoLeft (Eq0CastR (Eq0CastR x))))
+    parametricity22-lemma (Eq0NoLeft (Eq0NoCasts x)) step step' = Inl (eq0-eq0'' (parametricity22-lemma-nocasts x step step'))
 
-  parametricity22-lemma-ctx : ∀{d1 d2 τ τ' Δ d1' d2'} →
-      Δ , ∅ , ∅ ⊢ d1 :: τ →
-      Δ , ∅ , ∅ ⊢ d2 :: τ' →
+  parametricity22-lemma-ctx : ∀{d1 d2 d1' d2'} →
       d1 =0'' d2 →
       d1 ↦ d1' →
       d2 ↦ d2' →
       d1' =0'' d2' + d1 =0'' d2' + d1' =0'' d2
-  parametricity22-lemma-ctx wt wt' eq0 (Step x1 step x2) (Step x1' step' x2') 
+  parametricity22-lemma-ctx eq0 (Step x1 step x2) (Step x1' step' x2') 
     with eq0-ctxin'' eq0 x1 x1'
   ... | ( eq0' , ctxeq' )
-    with wt-env wt x1 | wt-env wt' {!   !}
-  ... | (_ , wt1') | (_ , wt2')
-    with parametricity22-lemma {!   !} {!   !} eq0' step step'
+    with parametricity22-lemma eq0' step step'
   ... | Inl both = Inl (eq0-ctxout'' both ctxeq' x2 x2')
   ... | Inr (Inl left) = Inr (Inl (eq0-ctxout'' left ctxeq' x1 x2'))
   ... | Inr (Inr right) = Inr (Inr (eq0-ctxout'' right ctxeq' x2 x1'))
@@ -967,25 +959,45 @@ module parametricity where
 --  parametricity22-incast (FHCast out) (FHCast out') (Eq0CastL eq0) bv (FHCast inn) (FHCast inn') step = Eq0CastL (parametricity22-incast out out' eq0 bv inn inn' step)
 -}
 
-  parametricity22 :
-    ∀{d1 d2 τ τ' Δ v1 v2} →
-    Δ , ∅ , ∅ ⊢ d1 :: τ →
-    Δ , ∅ , ∅ ⊢ d2 :: τ' →
+  -- We have to do some fiddling to make the termination checker happy.
+  tracelength : ∀{d d'} →
+    d ↦* d' → Nat
+  tracelength MSRefl = 0
+  tracelength (MSStep _ ms) = 1+ (tracelength ms)
+
+  parametricity22-gas :
+    ∀{d1 d2 v1 v2} →
     d1 =0'' d2 →
-    d1 ↦* v1 →
+    (ms : d1 ↦* v1) →
+    (ms' : d2 ↦* v2) →
     v1 boxedval →
-    d2 ↦* v2 →
+    v2 boxedval →
+    (n : Nat) →
+    ((tracelength ms) nat+ (tracelength ms')) < n →
+    v1 =0'' v2
+  parametricity22-gas _ _ _ _ _ 0 ()
+  parametricity22-gas eq0 MSRefl MSRefl bv bv' n term = eq0
+  parametricity22-gas eq0 MSRefl (MSStep step' ms') bv bv' (1+ n) (LTS term) rewrite ! (nat+Z (tracelength ms')) = eq0''-sym (parametricity22-gas (parametricity22-onesided (eq0''-sym eq0) bv step') ms' MSRefl bv' bv n term)
+  parametricity22-gas eq0 (MSStep step ms) MSRefl bv bv' (1+ n) (LTS term) = 
+    parametricity22-gas (parametricity22-onesided eq0 bv' step) ms MSRefl bv bv' n term
+  parametricity22-gas eq0 (MSStep step ms) (MSStep step' ms') bv bv' (1+ n) (LTS term) with parametricity22-lemma-ctx eq0 step step'
+  ... | Inr (Inl left) rewrite nat+1+ (tracelength ms) (tracelength ms') = parametricity22-gas left (MSStep step ms) ms' bv bv' n term
+  ... | Inr (Inr right) = parametricity22-gas right ms (MSStep step' ms') bv bv' n term
+  ... | Inl both with n
+  ...   | 1+ n' rewrite nat+1+ (tracelength ms) (tracelength ms') = parametricity22-gas both ms ms' bv bv' n' (lt-1+-inj term)
+  ...   | Z with term
+  ...     | ()
+
+  -- The version without the termination structure.
+  parametricity22 :
+    ∀{d1 d2 v1 v2} →
+    d1 =0'' d2 →
+    (ms : d1 ↦* v1) →
+    (ms' : d2 ↦* v2) →
+    v1 boxedval →
     v2 boxedval →
     v1 =0'' v2
-  parametricity22 wt wt' eq0 MSRefl bv MSRefl bv' = eq0
-  parametricity22 wt wt' eq0 MSRefl bv (MSStep step' ms') bv' = eq0''-sym (parametricity22 {!   !} {!   !} (parametricity22-onesided (eq0''-sym eq0) bv step') ms' bv' MSRefl bv)
-  parametricity22 wt wt' eq0 (MSStep step ms) bv MSRefl bv' = 
-    parametricity22 {!   !} {!   !} (parametricity22-onesided eq0 bv' step) ms bv MSRefl bv'
-  parametricity22 wt wt' eq0 (MSStep step ms) bv (MSStep step' ms') bv' with parametricity22-lemma-ctx {!   !} {!   !} eq0 step step'
-  ... | Inl both = parametricity22 {!   !} {!   !} both ms bv ms' bv'
-  ... | Inr (Inl left) = parametricity22 {!   !} {!   !} left (MSStep step ms) bv ms' bv'
-  ... | Inr (Inr right) = parametricity22 {!   !} {!   !} right ms bv (MSStep step' ms') bv'
-
+  parametricity22 eq0 ms ms' bv bv' = parametricity22-gas eq0 ms ms' bv bv' (1+ ((tracelength ms) nat+ (tracelength ms'))) lt-1+
 
 {-  parametricity11 complete wt eq MSRefl bv = _ , MSRefl , {! eq0-boxedval' eq bv !} , eq 
   parametricity11 complete wt eq (MSStep step steps) bv 
@@ -1015,4 +1027,4 @@ module parametricity where
   -- fill-hole-function : (d : ihexp) (ε : ectx) → ihexp
   -- fill-hole-function d ε with fill-hole d ε
   -- ... | d' , _ = d'
-              
+               
