@@ -73,3 +73,28 @@ module debruijn.debruijn-lemmas-complete where
   ttSub-complete dc1 (DCAp dc2 dc3) = DCAp (ttSub-complete dc1 dc2) (ttSub-complete dc1 dc3)
   ttSub-complete dc1 (DCTAp x dc2) = DCTAp x (ttSub-complete dc1 dc2)
   ttSub-complete dc1 (DCCast dc2 x x₁) = DCCast (ttSub-complete dc1 dc2) x x₁
+
+  complete-indet : ∀{d} → d dcomplete → d indet → ⊥
+  complete-indet DCVar ()
+  complete-indet DCConst ()
+  complete-indet (DCLam comp x₁) ()
+  complete-indet (DCAp comp comp₁) (IAp x ind x₁) = complete-indet comp ind
+  complete-indet (DCCast comp x x₁) (ICastArr x₂ ind) = complete-indet comp ind
+  complete-indet (DCCast comp x x₁) (ICastGroundHole x₂ ind) = complete-indet comp ind
+  complete-indet (DCCast comp x x₁) (ICastHoleGround x₂ ind x₃) = complete-indet comp ind
+  complete-indet {d < x₁ >} (DCTAp x₂ x₃) (ITAp x x₄) = complete-indet x₃ x₄
+  complete-indet {d ⟨ ·∀ x₁ ⇒ ·∀ τ2 ⟩} (DCCast x₂ x₃ x₄)
+    (ICastForall x₅ x₆) = complete-indet x₂ x₆
+
+  complete-consistency : ∀{τ1 τ2} → τ1 ~ τ2 → τ1 tcomplete → τ2 tcomplete → τ1 == τ2
+  complete-consistency ConsistBase TCBase TCBase = refl
+  complete-consistency ConsistVar TCVar TCVar = refl
+  complete-consistency ConsistHole1 TCBase ()
+  complete-consistency ConsistHole1 TCVar ()
+  complete-consistency ConsistHole1 (TCArr tc1 tc2) ()
+  complete-consistency ConsistHole1 (TCForall tc1) ()
+  complete-consistency ConsistHole2 () tc2
+  complete-consistency (ConsistArr con1 con2) (TCArr tc1 tc2) (TCArr tc3 tc4) 
+    rewrite complete-consistency con1 tc1 tc3 rewrite complete-consistency con2 tc2 tc4 = refl
+  complete-consistency (ConsistForall con) (TCForall tc1) (TCForall tc2) 
+    rewrite complete-consistency con tc1 tc2 = refl

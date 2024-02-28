@@ -63,7 +63,15 @@ module debruijn.debruijn-typing-subst where
   --   (Θ , TCtxSub Z τ1 Γ ⊢ TtSub Z τ1 d :: TTSub Z τ1 τ2)
   -- wt-TtSub ctxwf wf wt = wt-TtSub-helper ctxwf wf wt
 
-  -- sub-shift ↑ 0 1 (TTSub m τ1 τ) == TTSub (1+ m) τ1 (↑ 0 1 τ)
+  sub-shift : (t m : Nat) → (τ' τ : htyp) → ↑ t 1 (TTSub (t nat+ m) τ' τ) == TTSub (1+ (t nat+ m)) τ' (↑ t 1 τ)
+  sub-shift t m τ' b = refl
+  sub-shift t m τ' (T x) = {!   !}
+  -- with natEQ (t nat+ m) x 
+  -- ... | Inl refl = {!   !} 
+  -- ... | Inr neq = {!   !}
+  sub-shift t m τ' ⦇-⦈ = refl
+  sub-shift t m τ' (τ ==> τ₁) rewrite sub-shift t m τ' τ rewrite sub-shift t m τ' τ₁ = refl
+  sub-shift t m τ' (·∀ τ) rewrite sub-shift (1+ t) m τ' τ = refl
 
   -- note: not true as written. either induces a shift on tau1, or must assume tau1 has no fvs (which is true, where this lemmas is used)
   inctx-sub : ∀ {n m x Γ τ1 τ2} → 
@@ -75,6 +83,21 @@ module debruijn.debruijn-typing-subst where
   inctx-sub {.(1+ _)} {m} {.(1+ _)} {x₁ , Γ} (CtxCtVar ctxct) (InCtx1+ inctx) = InCtx1+ (inctx-sub ctxct inctx)
   inctx-sub {n} {(1+ m)} {x} {TVar, Γ} {τ1} (CtxCtTVar ctxct) (InCtxSkip inctx) with InCtxSkip (inctx-sub {n} {m} {x} {Γ} {τ1} ctxct inctx)
   ... | thing = {!  ?  !}
+
+  -- example-gamma : ctx
+  -- example-gamma = (TVar, (T 3 , (T 2 , (T 2 , (T 1 , (T Z , (TVar, (TVar, (TVar, (TVar, ∅))))))))))
+
+  -- example-gamma-wf : ⊢ example-gamma ctxwf
+  -- example-gamma-wf = CtxWFTVar (CtxWFVar (WFSkip  (WFSkip (WFSkip (WFSkip (WFVarS (WFVarS (WFVarS WFVarZ))))))) (CtxWFVar (WFSkip (WFSkip (WFSkip (WFVarS (WFVarS WFVarZ)))))  (CtxWFVar (WFSkip (WFSkip (WFVarS (WFVarS WFVarZ))))    (CtxWFVar (WFSkip (WFVarS WFVarZ))     (CtxWFVar WFVarZ      (CtxWFTVar (CtxWFTVar (CtxWFTVar (CtxWFTVar CtxWFEmpty)))))))))
+
+  -- example-gamma-ct : context-counter example-gamma 5 5 
+  -- example-gamma-ct = CtxCtTVar (CtxCtVar  (CtxCtVar   (CtxCtVar    (CtxCtVar     (CtxCtVar      (CtxCtTVar (CtxCtTVar (CtxCtTVar (CtxCtTVar CtxCtEmpty)))))))))
+
+  -- example-gamma-inctx : 3 , T 2 ∈ (example-gamma ctx+ (TVar, ∅))
+  -- example-gamma-inctx = InCtxSkip (InCtx1+ (InCtx1+ (InCtx1+ InCtxZ)))
+
+  -- example-gamma-inctx' : 3 , T 2 ∈ TCtxSub 5 b example-gamma 
+  -- example-gamma-inctx' = InCtxSkip (InCtx1+ (InCtx1+ (InCtx1+ InCtxZ)))
 
   convenient-wf-subst : ∀{Γ m τ1 τ2} → ∅ ⊢ τ1 wf → (Γ ctx+ (TVar, ∅)) ⊢ τ2 wf → TCtxSub m τ1 Γ ⊢ TTSub m τ1 τ2 wf
   convenient-wf-subst wf1 wf2 = {!   !} --wf-TCtxSub (wf-TTSub (weakening-wf wf1) (wf-swap-tvar {! wf2  !}))

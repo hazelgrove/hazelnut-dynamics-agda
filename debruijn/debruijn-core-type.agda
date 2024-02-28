@@ -95,6 +95,7 @@ module debruijn.debruijn-core-type where
     CtxWFVar : ∀{Γ τ} → Γ ⊢ τ wf → ⊢ Γ ctxwf → ⊢ τ , Γ ctxwf
     CtxWFTVar : ∀{Γ} → ⊢ Γ ctxwf → ⊢ (TVar, Γ) ctxwf
 
+  -- Not accurate: domains may not be equal
   data _⊑c_ : ctx → ctx → Set where 
     PCEmpty : ∅ ⊑c ∅ 
     PCVar : ∀{τ Γ τ' Γ'} → (τ ⊑t τ') → (Γ ⊑c Γ') → ((τ , Γ) ⊑c (τ' , Γ'))
