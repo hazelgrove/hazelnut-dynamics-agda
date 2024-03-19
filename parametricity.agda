@@ -87,6 +87,8 @@ module parametricity where
   eq0-sym (Eq0Cast eq0) = Eq0Cast (eq0-sym eq0)
   eq0-sym (Eq0FailedCast eq0) = Eq0FailedCast (eq0-sym eq0)
 
+  eq0-trans : ∀{d d' d'' : ihexp} → d =0 d' → d' =0 d'' → d =0 d''
+  eq0-trans = {!   !}
 
   eq0e-sym : ∀{e e' : hexp} → e =0e e' → e' =0e e
   eq0e-sym Eq0Const = Eq0Const
@@ -617,7 +619,7 @@ module parametricity where
 --  p22_lemma1 : 
 --    d1 ∘ d1' ↦ 
 
-  -- =0 but we ignore casts when checking equality.
+  -- =0 but we ignore outer casts when checking equality.
   mutual
     data _=0''_ : (d1 d2 : ihexp) → Set where 
       Eq0CastL : ∀{d1 d2 τ1 τ2} → d1 =0'' d2 → (d1 ⟨ τ1 ⇒ τ2 ⟩) =0'' d2
@@ -753,6 +755,13 @@ module parametricity where
     eq0''-sym (Eq0CastL eq0) = eq0castr-lemma (eq0''-sym eq0)
     eq0''-sym (Eq0FailedCastL eq0) = eq0failedcastr-lemma (eq0''-sym eq0)
     eq0''-sym (Eq0NoLeft x) = eq0''r-sym x
+
+  mutual
+    eq0''-trans : ∀{d d' d''} →
+      d =0'' d' →
+      d' =0'' d'' →
+      d =0'' d''
+    eq0''-trans = {!   !}
 {-
   eq0''-step-pres : ∀{d1 d2 τ τ' Δ d1' d2'} →
     Δ , ∅ , ∅ ⊢ d1 :: τ →
@@ -1094,6 +1103,42 @@ module parametricity where
   parametricity22 eq0 ms ms' bv bv' = parametricity22-gas eq0 ms ms' bv bv' (1+ ((tracelength ms) nat+ (tracelength ms'))) lt-1+
 
 
+
+  -- =0'' but we ignore casts *everywhere*.
+  mutual
+    data _=0'''_ : (d1 d2 : ihexp) → Set where 
+      Eq0CastL : ∀{d1 d2 τ1 τ2} → d1 =0''' d2 → (d1 ⟨ τ1 ⇒ τ2 ⟩) =0''' d2
+      Eq0FailedCastL : ∀{d1 d2 τ1 τ2} → d1 =0''' d2 → (d1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) =0''' d2
+      Eq0NoLeft : ∀{d1 d2} → d1 =0'''r d2 → d1 =0''' d2
+    
+    data _=0'''r_ : (d1 d2 : ihexp) → Set where
+      Eq0CastR : ∀{d1 d2 τ1 τ2} → d1 =0'''r d2 → d1 =0'''r (d2 ⟨ τ1 ⇒ τ2 ⟩)
+      Eq0FailedCastR : ∀{d1 d2 τ1 τ2} → d1 =0'''r d2 → d1 =0'''r (d2 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
+      Eq0NoCasts : ∀{d1 d2} → d1 =0'''n d2 → d1 =0'''r d2
+
+    data _=0'''n_ : (d1 d2 : ihexp) → Set where
+      Eq0Const : c =0'''n c
+      Eq0Var : ∀{x} → (X x) =0'''n (X x) 
+      Eq0EHole : ∀{u θ θ' σ σ'} → ⦇-⦈⟨ u , θ , σ ⟩ =0'''n ⦇-⦈⟨ u , θ' , σ' ⟩
+      Eq0Lam : ∀{x d1 d2 τ1 τ2} → d1 =0''' d2 → (·λ x [ τ1 ] d1) =0'''n (·λ x [ τ2 ] d2)
+      Eq0TLam : ∀{t d1 d2} → d1 =0''' d2 → (·Λ t d1) =0'''n (·Λ t d2)
+      Eq0NEHole : ∀{u d1 d2 θ θ' σ σ'} → d1 =0''' d2 →  (⦇⌜ d1 ⌟⦈⟨ u , θ , σ ⟩) =0'''n (⦇⌜ d2 ⌟⦈⟨ u , θ' , σ' ⟩)
+      Eq0Ap :  ∀{d1 d2 d3 d4} → d1 =0''' d3 →  d2 =0''' d4 →  (d1 ∘ d2) =0'''n (d3 ∘ d4)
+      Eq0TAp : ∀{d1 d2 τ1 τ2} → d1 =0''' d2 → (d1 < τ1 >) =0'''n (d2 < τ2 >)
+
+  eq0''-eq0''' : ∀{d d'} →
+    d =0'' d' → d =0''' d'
+  eq0''-eq0''' = {!   !}
+
+  eq0'''-eq0'' : ∀{d d'} →
+    d =0''' d' → d' boxedval → d =0'' d'
+  eq0'''-eq0'' eq0''' (BVVal VConst) = {!   !}
+  eq0'''-eq0'' eq0''' (BVVal VLam) = {!   !}
+  eq0'''-eq0'' eq0''' (BVVal VTLam) = {!   !}
+  eq0'''-eq0'' eq0''' (BVArrCast x bv) = {!   !}
+  eq0'''-eq0'' eq0''' (BVForallCast x bv) = {!   !}
+  eq0'''-eq0'' eq0''' (BVHoleCast x bv) = {!   !}
+
   final-det : ∀{d} →
     d final + ¬(d final)
   final-det {c} = Inl (FBoxedVal (BVVal VConst))
@@ -1107,20 +1152,20 @@ module parametricity where
   final-det {d ⟨ x ⇒ x₁ ⟩} = {!   !}
   final-det {d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} = {!   !}
 
-  eq0-ctxin''-real : 
+  eq0-ctxin''' : 
     ∀ {d1 d2 d1' ε1} →
-    d1 =0'' d2 →
+    d1 =0''' d2 →
     d1 == ε1 ⟦ d1' ⟧ →
-    Σ[ d2' ∈ ihexp ] Σ[ ε2 ∈ ectx ] ((d2 == ε2 ⟦ d2' ⟧) × (d1' =0'' d2') × (ε1 =0ε'' ε2))
-  eq0-ctxin''-real = {!   !}
+    Σ[ d2' ∈ ihexp ] Σ[ ε2 ∈ ectx ] ((d2 == ε2 ⟦ d2' ⟧) × (d1' =0''' d2') × (ε1 =0ε'' ε2))
+  eq0-ctxin''' = {!   !}
 
-  eq0-ctxout''-real : 
+  eq0-ctxout''' : 
     ∀ {d1 d1' d2' ε1 ε2} →
-    d1' =0'' d2' →
+    d1' =0''' d2' →
     ε1 =0ε'' ε2 →
     d1 == ε1 ⟦ d1' ⟧ →
-    Σ[ d2 ∈ ihexp ] ((d2 == ε2 ⟦ d2' ⟧) × (d1 =0'' d2))
-  eq0-ctxout''-real = {!   !}
+    Σ[ d2 ∈ ihexp ] ((d2 == ε2 ⟦ d2' ⟧) × (d1 =0''' d2))
+  eq0-ctxout''' = {!   !}
 
   mutual
     parametricity21-lemman : ∀{d1 d2 d1'} →
@@ -1142,37 +1187,68 @@ module parametricity where
 
     parametricity21-lemma : ∀{d1 d2 d1'} →
       ¬(d2 indet) →
-      d1 =0'' d2 →
+      d1 =0''' d2 →
       d1 →> d1' →
-      d1' =0'' d2 + Σ[ d2' ∈ ihexp ] (d2 →> d2' × d1' =0'' d2') + Σ[ d2' ∈ ihexp ] ( d2 →> d2' × d1 =0'' d2')
+      d1' =0''' d2 + Σ[ d2' ∈ ihexp ] (d2 →> d2' × d1' =0''' d2') + Σ[ d2' ∈ ihexp ] ( d2 →> d2' × d1 =0''' d2')
     parametricity21-lemma {d2 = d2} nindet eq0 steps with final-det {d2}
-    ... | Inl (FBoxedVal x) = Inl (parametricity22-onesided eq0 x (Step FHOuter steps FHOuter))
+    ... | Inl (FBoxedVal x) = Inl (eq0''-eq0''' (parametricity22-onesided {! eq0 !} x (Step FHOuter steps FHOuter)))
     ... | Inl (FIndet x) = abort (nindet x) 
     parametricity21-lemma {d2 = d2} nindet (Eq0CastL eq0) steps | Inr nfin = {!   !}
     parametricity21-lemma {d2 = d2} nindet (Eq0NoLeft x) steps | Inr nfin = {!   !}
 
-  eq0''-ctx : ∀{d1 d2 ε1 ε2} →
-    d1 == ε1 ⟦ d0 ⟧ →
-    d1' == ε1 ⟦ d0' ⟧ →
-    d2 == ε2 ⟦ d2' ⟧ → 
-    ε1 =0ε'' ε2 →
-    d0 =0'' d0' →
-    d1 =0'' d2 →
-    d1' =0'' d2
-  eq0''-ctx = ?
 
+  mutual
+    eq0'''n-ctx : ∀{d0 d0' d1 d1' d2 d2' ε1 ε2} →
+      d1 == ε1 ⟦ d0 ⟧ →
+      d1' == ε1 ⟦ d0' ⟧ →
+      d2 == ε2 ⟦ d2' ⟧ → 
+      ε1 =0ε'' ε2 →
+      d0 =0''' d0' →
+      d1 =0'''n d2 →
+      d1' =0''' d2
+    eq0'''n-ctx FHOuter FHOuter ctx2 eqe eqin eq0 = {!   !} -- eq0''-trans (eq0''-sym eqin) (Eq0NoLeft (Eq0NoCasts eq0))
+    eq0'''n-ctx (FHAp1 ctx1) (FHAp1 ctx1') (FHAp1 ctx2) (Eq0Ap1 eqe x₂) eqin (Eq0Ap x x₁) = 
+      Eq0NoLeft (Eq0NoCasts (Eq0Ap 
+        (eq0'''-ctx ctx1 ctx1' ctx2 eqe eqin x) x₁))
+    eq0'''n-ctx (FHAp2 ctx1) (FHAp2 ctx1') (FHAp2 ctx2) (Eq0Ap2 eqe x₂) eqin (Eq0Ap x x₁) = Eq0NoLeft (Eq0NoCasts (Eq0Ap x (eq0'''-ctx ctx1 ctx1' ctx2 eqe eqin x₁)))
+    eq0'''n-ctx (FHTAp ctx1) (FHTAp ctx1') (FHTAp ctx2) (Eq0TAp eqe) eqin (Eq0TAp x) = Eq0NoLeft (Eq0NoCasts (Eq0TAp (eq0'''-ctx ctx1 ctx1' ctx2 eqe eqin x)))
+    eq0'''n-ctx (FHNEHole ctx1) (FHNEHole ctx1') (FHNEHole ctx2) (Eq0NEHole eqe) eqin (Eq0NEHole x) = Eq0NoLeft (Eq0NoCasts (Eq0NEHole (eq0'''-ctx ctx1 ctx1' ctx2 eqe eqin x)))
+
+
+    eq0'''r-ctx : ∀{d0 d0' d1 d1' d2 d2' ε1 ε2} →
+      d1 == ε1 ⟦ d0 ⟧ →
+      d1' == ε1 ⟦ d0' ⟧ →
+      d2 == ε2 ⟦ d2' ⟧ → 
+      ε1 =0ε'' ε2 →
+      d0 =0''' d0' →
+      d1 =0'''r d2 →
+      d1' =0''' d2
+    eq0'''r-ctx ctx1 ctx1' ctx2 eqe eqin eq0 = {!   !}
+
+    eq0'''-ctx : ∀{d0 d0' d1 d1' d2 d2' ε1 ε2} →
+      d1 == ε1 ⟦ d0 ⟧ →
+      d1' == ε1 ⟦ d0' ⟧ →
+      d2 == ε2 ⟦ d2' ⟧ → 
+      ε1 =0ε'' ε2 →
+      d0 =0''' d0' →
+      d1 =0''' d2 →
+      d1' =0''' d2
+    eq0'''-ctx ctx1 ctx1' ctx2 eqe eqin eq0 = {!   !}
+
+  -- I think I need to remove the third branch. I think the statement of the conclusion should be
+  -- d1' =0''' d2 + Σ[ d2' ∈ ihexp ] (d2 ↦* d2' × d1' =0''' d2')
   parametricity21-lemma-ctx : ∀{Δ d1 d2 d1' τ1 τ2} →
     ¬(d2 indet) →
     Δ , ∅ , ∅ ⊢ d1 :: τ1 →
     Δ , ∅ , ∅ ⊢ d2 :: τ2 →
-    d1 =0'' d2 →
+    d1 =0''' d2 →
     d1 ↦ d1' →
-    d1' =0'' d2 + Σ[ d2' ∈ ihexp ] (d2 ↦ d2' × d1' =0'' d2') + Σ[ d2' ∈ ihexp ] ( d2 ↦ d2' × d1 =0'' d2')
-  parametricity21-lemma-ctx {d2 = d2} nindet wt1 wt2 eq0 (Step x x₁ x₂) with eq0-ctxin''-real eq0 x 
+    d1' =0''' d2 + Σ[ d2' ∈ ihexp ] (d2 ↦ d2' × d1' =0''' d2') + Σ[ d2' ∈ ihexp ] ( d2 ↦ d2' × d1 =0''' d2')
+  parametricity21-lemma-ctx {d2 = d2} nindet wt1 wt2 eq0 (Step x x₁ x₂) with eq0-ctxin''' eq0 x 
   ... | (d2' , ε2 , ctxeq2 , eq2 , eq2') with parametricity21-lemma {!   !} eq2 x₁
-  ...   | Inr (Inl (d2'' , step2 , eq)) = let (d2''' , ctxeq2' , eq3) = eq0-ctxout''-real eq eq2' x₂ in Inr (Inl (d2''' , (Step ctxeq2 step2 ctxeq2') , eq3))
-  ...   | Inr (Inr (d2'' , step2 , eq)) = let (d2''' , ctxeq2' , eq3) = eq0-ctxout''-real eq eq2' x in Inr (Inr (_ , Step ctxeq2 step2 ctxeq2' , eq3))
-  ...   | Inl eq = {!   !}
+  ...   | Inr (Inl (d2'' , step2 , eq)) = let (d2''' , ctxeq2' , eq3) = (eq0-ctxout''' eq eq2' x₂) in (Inr (Inl (d2''' , (Step ctxeq2 step2 ctxeq2') , eq3)))
+  ...   | Inr (Inr (d2'' , step2 , eq)) = let (d2''' , ctxeq2' , eq3) = eq0-ctxout''' eq eq2' x in (Inr (Inr (_ , (Step ctxeq2 step2 ctxeq2') , eq3)))
+  ...   | Inl eq = Inl {!   !}
 
   parametricity21 :
     ∀{d1 d2 v1} →
