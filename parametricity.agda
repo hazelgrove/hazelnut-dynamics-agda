@@ -10,6 +10,8 @@ open import complete-preservation
 open import typed-elaboration
 open import complete-elaboration
 open import preservation
+open import finality
+open import progress
 
 open import contexts
 
@@ -586,8 +588,8 @@ module parametricity where
   parametricity11_rec c1 c2 wt1 wt2 eq0 (MSStep x step) bv
     with eq0-step' c1 wt1 wt2 eq0 x
   ... | ( d2' , step2 , eq2 )
-    with complete-preservation {!   !} (complid-compl c1) wt1 x | complete-preservation {!   !} (complid-compl c2) wt2 step2
-  ... | (wt1' , c1') | (wt2' , c2')
+    with complete-preservation {!   !} {!   !} {!   !} {!   !} (complid-compl c1) wt1 x | complete-preservation {!   !} {!   !} {!   !} {!   !} (complid-compl c2) wt2 step2
+  ... | (_ , alpha1 , wt1' , c1') | (_ , alpha2 , wt2' , c2')
     with parametricity11_rec (compl-wt-complid c1' wt1') (compl-wt-complid c2' wt2') wt1' wt2' eq2 step bv
   ... | ( v2 , steps2 , bv2 , eq3 ) = v2 , MSStep step2 steps2  , bv2 , eq3
 
@@ -649,6 +651,8 @@ module parametricity where
     Eq0FailedCastL : ∀{ε1 ε2 τ1 τ2} → (ε1 =0ε'' ε2) → (ε1 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩) =0ε'' ε2
     Eq0FailedCastR : ∀{ε1 ε2 τ1 τ2} → (ε1 =0ε'' ε2) → ε1 =0ε'' (ε2 ⟨ τ1 ⇒⦇-⦈⇏ τ2 ⟩)
 
+  eq0ε-refl'' : ∀{ε : ectx} → ε =0ε'' ε
+  eq0ε-refl'' = {!   !}
 
   eq0castl-lemma : ∀{d τ τ' d'} → 
     d =0'' d' →
@@ -1088,6 +1092,95 @@ module parametricity where
     v2 boxedval →
     v1 =0'' v2
   parametricity22 eq0 ms ms' bv bv' = parametricity22-gas eq0 ms ms' bv bv' (1+ ((tracelength ms) nat+ (tracelength ms'))) lt-1+
+
+
+  final-det : ∀{d} →
+    d final + ¬(d final)
+  final-det {c} = Inl (FBoxedVal (BVVal VConst))
+  final-det {X x} = {!   !}
+  final-det {·λ x [ x₁ ] d} = {!   !}
+  final-det {·Λ x d} = {!   !}
+  final-det {⦇-⦈⟨ x ⟩} = {!   !}
+  final-det {⦇⌜ d ⌟⦈⟨ x ⟩} = {!   !}
+  final-det {d ∘ d₁} = {!   !}
+  final-det {d < x >} = {!   !}
+  final-det {d ⟨ x ⇒ x₁ ⟩} = {!   !}
+  final-det {d ⟨ x ⇒⦇-⦈⇏ x₁ ⟩} = {!   !}
+
+  eq0-ctxin''-real : 
+    ∀ {d1 d2 d1' ε1} →
+    d1 =0'' d2 →
+    d1 == ε1 ⟦ d1' ⟧ →
+    Σ[ d2' ∈ ihexp ] Σ[ ε2 ∈ ectx ] ((d2 == ε2 ⟦ d2' ⟧) × (d1' =0'' d2') × (ε1 =0ε'' ε2))
+  eq0-ctxin''-real = {!   !}
+
+  eq0-ctxout''-real : 
+    ∀ {d1 d1' d2' ε1 ε2} →
+    d1' =0'' d2' →
+    ε1 =0ε'' ε2 →
+    d1 == ε1 ⟦ d1' ⟧ →
+    Σ[ d2 ∈ ihexp ] ((d2 == ε2 ⟦ d2' ⟧) × (d1 =0'' d2))
+  eq0-ctxout''-real = {!   !}
+
+  mutual
+    parametricity21-lemman : ∀{d1 d2 d1'} →
+      ¬(d2 final) →
+      d1 =0''n d2 →
+      d1 →> d1' →
+      Σ[ d2' ∈ ihexp ] (d2 →> d2' × d1' =0'' d2') + Σ[ d2' ∈ ihexp ] ( d2 →> d2' × d1 =0'' d2')
+    parametricity21-lemman {d1 = (·λ x1 [ τ1 ] d1) ∘ d3} {d2 = (·λ x2 [ τ2 ] d2) ∘ d4} nfin (Eq0Ap (Eq0Lam x) x₁) ITLam = Inl ( [ d4 / x2 ] d2 , ITLam , (eq0-eq0'' (eq0-subst d1 d2 x₁ x)) )
+    parametricity21-lemman nfin (Eq0Ap x x₁) ITApCast = {!   !}
+    parametricity21-lemman nfin (Eq0TAp x) ITTLam = {!   !}
+    parametricity21-lemman nfin (Eq0TAp x) ITTApCast = {!   !}
+
+    parametricity21-lemmar : ∀{d1 d2 d1'} →
+      ¬(d2 final) →
+      d1 =0''r d2 →
+      d1 →> d1' →
+      Σ[ d2' ∈ ihexp ] (d2 →> d2' × d1' =0'' d2') + Σ[ d2' ∈ ihexp ] ( d2 →> d2' × d1 =0'' d2')
+    parametricity21-lemmar = {!   !}
+
+    parametricity21-lemma : ∀{d1 d2 d1'} →
+      ¬(d2 indet) →
+      d1 =0'' d2 →
+      d1 →> d1' →
+      d1' =0'' d2 + Σ[ d2' ∈ ihexp ] (d2 →> d2' × d1' =0'' d2') + Σ[ d2' ∈ ihexp ] ( d2 →> d2' × d1 =0'' d2')
+    parametricity21-lemma {d2 = d2} nindet eq0 steps with final-det {d2}
+    ... | Inl (FBoxedVal x) = Inl (parametricity22-onesided eq0 x (Step FHOuter steps FHOuter))
+    ... | Inl (FIndet x) = abort (nindet x) 
+    parametricity21-lemma {d2 = d2} nindet (Eq0CastL eq0) steps | Inr nfin = {!   !}
+    parametricity21-lemma {d2 = d2} nindet (Eq0NoLeft x) steps | Inr nfin = {!   !}
+
+  eq0''-ctx : ∀{d1 d2 ε1 ε2} →
+    d1 == ε1 ⟦ d0 ⟧ →
+    d1' == ε1 ⟦ d0' ⟧ →
+    d2 == ε2 ⟦ d2' ⟧ → 
+    ε1 =0ε'' ε2 →
+    d0 =0'' d0' →
+    d1 =0'' d2 →
+    d1' =0'' d2
+  eq0''-ctx = ?
+
+  parametricity21-lemma-ctx : ∀{Δ d1 d2 d1' τ1 τ2} →
+    ¬(d2 indet) →
+    Δ , ∅ , ∅ ⊢ d1 :: τ1 →
+    Δ , ∅ , ∅ ⊢ d2 :: τ2 →
+    d1 =0'' d2 →
+    d1 ↦ d1' →
+    d1' =0'' d2 + Σ[ d2' ∈ ihexp ] (d2 ↦ d2' × d1' =0'' d2') + Σ[ d2' ∈ ihexp ] ( d2 ↦ d2' × d1 =0'' d2')
+  parametricity21-lemma-ctx {d2 = d2} nindet wt1 wt2 eq0 (Step x x₁ x₂) with eq0-ctxin''-real eq0 x 
+  ... | (d2' , ε2 , ctxeq2 , eq2 , eq2') with parametricity21-lemma {!   !} eq2 x₁
+  ...   | Inr (Inl (d2'' , step2 , eq)) = let (d2''' , ctxeq2' , eq3) = eq0-ctxout''-real eq eq2' x₂ in Inr (Inl (d2''' , (Step ctxeq2 step2 ctxeq2') , eq3))
+  ...   | Inr (Inr (d2'' , step2 , eq)) = let (d2''' , ctxeq2' , eq3) = eq0-ctxout''-real eq eq2' x in Inr (Inr (_ , Step ctxeq2 step2 ctxeq2' , eq3))
+  ...   | Inl eq = {!   !}
+
+  parametricity21 :
+    ∀{d1 d2 v1} →
+    d1 =0'' d2 →
+    d1 ↦* v1 →
+    v1 boxedval →
+    Σ[ v2 ∈ ihexp ]( d2 ↦* v2 × ((v2 boxedval × v1 =0'' v2) + v2 indet ))
+  parametricity21 eq0 step bv = {!   !}
 
 {-
   test-lemma : ∀{d v} →

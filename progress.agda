@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 open import Nat
 open import Prelude
 open import core
@@ -136,7 +138,7 @@ module progress where
   progress hctxwf (TACast {τ1 = τ1} wt wf ConsistHole1 eq) | I x
     with τ1
   progress hctxwf (TACast wt wf ConsistHole1 eq) | I x | b = I (ICastGroundHole GBase x)
-  progress hctxwf (TACast wt wf ConsistHole1 eq) | I x | T n with wf-ta (CCtx (λ ())) hctxwf wt 
+  progress hctxwf (TACast wt wf ConsistHole1 eq) | I x | T n with wf-ta {!   !} (CCtx (λ ())) hctxwf wt 
   ... | WFVar ()
   progress hctxwf (TACast wt wf ConsistHole1 eq) | I x | ⦇-⦈ = S (_ , Step FHOuter (ITCastID AlphaHole) FHOuter)
   progress hctxwf (TACast wt wf ConsistHole1 eq) | I x | τ11 ==> τ12
@@ -213,7 +215,7 @@ module progress where
     with ground-decidable τ
   progress hctxwf (TACast wt wf ConsistHole1 eq) | BV x₁ | Inl g = BV (BVHoleCast g x₁)
   progress hctxwf (TACast wt wf (ConsistHole1 {τ = b}) eq) | BV x₁ | Inr x = abort (x GBase)
-  progress hctxwf (TACast wt wf (ConsistHole1 {τ = T n}) eq) | BV x₁ | Inr x with wf-ta (CCtx (λ ())) hctxwf wt 
+  progress hctxwf (TACast wt wf (ConsistHole1 {τ = T n}) eq) | BV x₁ | Inr x with wf-ta {!   !} (CCtx (λ ())) hctxwf wt 
   ... | WFVar ()
   progress hctxwf (TACast wt wf (ConsistHole1 {τ = ⦇-⦈}) eq) | BV x₁ | Inr x = S (_ , Step FHOuter (ITCastID AlphaHole) FHOuter)
   progress hctxwf (TACast wt wf (ConsistHole1 {τ = τ1 ==> τ2}) eq) | BV x₁ | Inr x
