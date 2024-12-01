@@ -1,100 +1,74 @@
-open import Nat
 open import Prelude
+open import core-type
 open import core
-open import contexts
 
 open import lemmas-consistency
-open import type-assignment-unicity
-open import binders-disjoint-checks
+open import lemmas-wf
+open import lemmas-subst
+open import typing-subst
 
-open import lemmas-subst-ta
+open import type-assignment-unicity
 
 module preservation where
-  -- if d and d' both result from filling the hole in ε with terms of the
-  -- same type, they too have the same type.
-  wt-different-fill : ∀{ Δ Γ d ε d1 d2 d' τ τ1 } →
-            d == ε ⟦ d1 ⟧ →
-            Δ , Γ ⊢ d :: τ →
-            Δ , Γ ⊢ d1 :: τ1 →
-            Δ , Γ ⊢ d2 :: τ1 →
-            d' == ε ⟦ d2 ⟧ →
-            Δ , Γ ⊢ d' :: τ
-  wt-different-fill FHOuter D1 D2 D3 FHOuter
-    with type-assignment-unicity D1 D2
-  ... | refl = D3
-  wt-different-fill (FHAp1 eps) (TAAp D1 D2) D3 D4 (FHAp1 D5) = TAAp (wt-different-fill eps D1 D3 D4 D5) D2
-  wt-different-fill (FHAp2 eps) (TAAp D1 D2) D3 D4 (FHAp2 D5) = TAAp D1 (wt-different-fill eps D2 D3 D4 D5)
-  wt-different-fill (FHNEHole eps) (TANEHole x D1 x₁) D2 D3 (FHNEHole D4) = TANEHole x (wt-different-fill eps D1 D2 D3 D4) x₁
-  wt-different-fill (FHCast eps) (TACast D1 x) D2 D3 (FHCast D4) = TACast (wt-different-fill eps D1 D2 D3 D4) x
-  wt-different-fill (FHFailedCast x) (TAFailedCast y x₁ x₂ x₃) D3 D4 (FHFailedCast eps) = TAFailedCast (wt-different-fill x y D3 D4 eps) x₁ x₂ x₃
 
-  -- if a well typed term results from filling the hole in ε, then the term
-  -- that filled the hole is also well typed
-  wt-filling : ∀{ ε Δ Γ d τ d' } →
-             Δ , Γ ⊢ d :: τ →
-             d == ε ⟦ d' ⟧ →
-             Σ[ τ' ∈ htyp ] (Δ , Γ ⊢ d' :: τ')
-  wt-filling TAConst FHOuter = _ , TAConst
-  wt-filling (TAVar x₁) FHOuter = _ , TAVar x₁
-  wt-filling (TALam f ta) FHOuter = _ , TALam f ta
+  wt-filling : ∀{ ε Γ d τ d' } →
+    Γ ⊢ d :: τ →
+    d == ε ⟦ d' ⟧ →
+    Σ[ τ' ∈ htyp ] (Γ ⊢ d' :: τ')
+  wt-filling wt FHOuter = _ , wt
+  wt-filling (TAAp wt _) (FHAp1 fill) = wt-filling wt fill 
+  wt-filling (TAAp _ wt) (FHAp2 fill) = wt-filling wt fill
+  wt-filling (TATAp _ wt _) (FHTAp fill) = wt-filling wt fill
+  wt-filling (TANEHole wt) (FHNEHole fill) = wt-filling wt fill
+  wt-filling (TACast wt _ _) (FHCast fill) = wt-filling wt fill
+  wt-filling (TAFailedCast wt _ _ _) (FHFailedCast fill) = wt-filling wt fill
 
-  wt-filling (TAAp ta ta₁) FHOuter = _ , TAAp ta ta₁
-  wt-filling (TAAp ta ta₁) (FHAp1 eps) = wt-filling ta eps
-  wt-filling (TAAp ta ta₁) (FHAp2 eps) = wt-filling ta₁ eps
-
-  wt-filling (TAEHole x x₁) FHOuter = _ , TAEHole x x₁
-  wt-filling (TANEHole x ta x₁) FHOuter = _ , TANEHole x ta x₁
-  wt-filling (TANEHole x ta x₁) (FHNEHole eps) = wt-filling ta eps
-  wt-filling (TACast ta x) FHOuter = _ , TACast ta x
-  wt-filling (TACast ta x) (FHCast eps) = wt-filling ta eps
-  wt-filling (TAFailedCast x y z w) FHOuter = _ , TAFailedCast x y z w
-  wt-filling (TAFailedCast x x₁ x₂ x₃) (FHFailedCast y) = wt-filling x y
+  wt-different-fill : ∀{ Γ d ε d1 d2 d' τ1 τ2} →
+    d == ε ⟦ d1 ⟧ →
+    d' == ε ⟦ d2 ⟧ →
+    Γ ⊢ d :: τ1 →
+    Γ ⊢ d1 :: τ2 →
+    Γ ⊢ d2 :: τ2 →
+    Γ ⊢ d' :: τ1
+  wt-different-fill FHOuter FHOuter wt wt2 wt3 rewrite type-assignment-unicity wt wt2 = wt3
+  wt-different-fill (FHAp1 fill1) (FHAp1 fill2) (TAAp wt wt1) wt2 wt3 = TAAp (wt-different-fill fill1 fill2 wt wt2 wt3) wt1
+  wt-different-fill (FHAp2 fill1) (FHAp2 fill2) (TAAp wt wt1) wt2 wt3 = TAAp wt (wt-different-fill fill1 fill2 wt1 wt2 wt3)
+  wt-different-fill (FHTAp fill1) (FHTAp fill2) (TATAp x wt sub) wt2 wt3 = TATAp x (wt-different-fill fill1 fill2 wt wt2 wt3) sub
+  wt-different-fill (FHNEHole fill1) (FHNEHole fill2) (TANEHole wt) wt2 wt3 = TANEHole (wt-different-fill fill1 fill2 wt wt2 wt3)
+  wt-different-fill (FHCast fill1) (FHCast fill2) (TACast wt wf con) wt2 wt3 = TACast (wt-different-fill fill1 fill2 wt wt2 wt3) wf con
+  wt-different-fill (FHFailedCast fill1) (FHFailedCast fill2) (TAFailedCast wt gnd1 gnd2 incon) wt2 wt3 = TAFailedCast (wt-different-fill fill1 fill2 wt wt2 wt3) gnd1 gnd2 incon
 
   -- instruction transitions preserve type
-  preserve-trans : ∀{ Δ Γ d τ d' } →
-            binders-unique d →
-            Δ , Γ ⊢ d :: τ →
-            d →> d' →
-            Δ , Γ ⊢ d' :: τ
-  preserve-trans bd TAConst ()
-  preserve-trans bd (TAVar x₁) ()
-  preserve-trans bd (TALam _ ta) ()
-  preserve-trans (BUAp (BULam bd x₁) bd₁ (BDLam x₂ x₃)) (TAAp (TALam apt ta) ta₁) ITLam = lem-subst apt x₂ bd₁ ta ta₁
-  preserve-trans bd (TAAp (TACast ta TCRefl) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ TCRefl)) TCRefl
-  preserve-trans bd (TAAp (TACast ta (TCArr x x₁)) ta₁) ITApCast = TACast (TAAp ta (TACast ta₁ (~sym x))) x₁
-  preserve-trans bd (TAEHole x x₁) ()
-  preserve-trans bd (TANEHole x ta x₁) ()
-  preserve-trans bd (TACast ta x) (ITCastID) = ta
-  preserve-trans bd (TACast (TACast ta x) x₁) (ITCastSucceed x₂) = ta
-  preserve-trans bd (TACast ta x) (ITGround (MGArr x₁)) = TACast (TACast ta (TCArr TCHole1 TCHole1)) TCHole1
-  preserve-trans bd (TACast ta TCHole2) (ITExpand (MGArr x₁)) = TACast (TACast ta TCHole2) (TCArr TCHole2 TCHole2)
-  preserve-trans bd (TACast (TACast ta x) x₁) (ITCastFail w y z) = TAFailedCast ta w y z
-  preserve-trans bd (TAFailedCast x y z q) ()
+  preserve-trans : ∀{ d d' τ } →
+    ∅ ⊢ d :: τ →
+    d →> d' →
+    ∅ ⊢ d' :: τ
+  preserve-trans TAConst ()
+  preserve-trans (TAVar x) ()
+  preserve-trans (TALam x wt) ()
+  preserve-trans (TATLam wt) ()
+  preserve-trans (TAAp (TALam wf wt1) wt2) ITLam = wt-ttSub wt2 wt1
+  preserve-trans (TAAp (TACast wt1 (WFArr _ wf1) (ConsistArr con1 con2)) wt2) ITApCast with wf-ta CtxWFEmpty wt1
+  ... | WFArr wf2 _ = TACast (TAAp wt1 (TACast wt2 wf2 (~sym con1))) wf1 con2
+  preserve-trans (TATAp wf (TATLam wt) refl) ITTLam = wt-TtSub wf wt
+  preserve-trans (TATAp wf1 (TACast wt (WFForall wf2) (ConsistForall con)) refl) ITTApCast with wf-ta CtxWFEmpty wt 
+  ... | WFForall wf3 = TACast (TATAp wf1 wt refl) (wf-TTSub wf1 wf2) (~TTSub wf3 wf2 con)
+  preserve-trans TAEHole () 
+  preserve-trans (TANEHole _) ()
+  preserve-trans (TACast wt _ _) ITCastID = wt
+  preserve-trans (TACast (TACast wt _ _) _ _) (ITCastSucceed gnd) = wt
+  preserve-trans (TACast (TACast wt _ _) _ _) (ITCastFail gnd1 gnd2 incon) = TAFailedCast wt gnd1 gnd2 incon
+  preserve-trans (TACast wt wf _) (ITGround (MGArr _)) = TACast (TACast wt (WFArr wf wf) (ConsistArr ConsistHole1 ConsistHole1)) wf ConsistHole1
+  preserve-trans (TACast wt wf _) (ITGround (MGForall _)) = TACast (TACast wt (WFForall WFHole) (ConsistForall ConsistHole1)) wf ConsistHole1
+  preserve-trans (TACast wt wf _) (ITExpand (MGArr _)) = TACast (TACast wt (WFArr WFHole WFHole) ConsistHole2) wf (ConsistArr ConsistHole2 ConsistHole2)
+  preserve-trans (TACast wt wf _) (ITExpand (MGForall _)) = TACast (TACast wt (WFForall WFHole) ConsistHole2) wf (ConsistForall ConsistHole2)
+  preserve-trans (TAFailedCast _ _ _ _) ()  
 
-  lem-bd-ε1 : ∀{ d ε d0} → d == ε ⟦ d0 ⟧ → binders-unique d → binders-unique d0
-  lem-bd-ε1 FHOuter bd = bd
-  lem-bd-ε1 (FHAp1 eps) (BUAp bd bd₁ x) = lem-bd-ε1 eps bd
-  lem-bd-ε1 (FHAp2 eps) (BUAp bd bd₁ x) = lem-bd-ε1 eps bd₁
-  lem-bd-ε1 (FHNEHole eps) (BUNEHole bd x) = lem-bd-ε1 eps bd
-  lem-bd-ε1 (FHCast eps) (BUCast bd) = lem-bd-ε1 eps bd
-  lem-bd-ε1 (FHFailedCast eps) (BUFailedCast bd) = lem-bd-ε1 eps bd
-
-  -- this is the main preservation theorem, gluing together the above
-  preservation : {Δ : hctx} {d d' : ihexp} {τ : htyp} {Γ : tctx} →
-             binders-unique d →
-             Δ , Γ ⊢ d :: τ →
-             d ↦ d' →
-             Δ , Γ ⊢ d' :: τ
-  preservation bd D (Step x x₁ x₂)
-    with wt-filling D x
-  ... | (_ , wt) = wt-different-fill x D wt (preserve-trans (lem-bd-ε1 x bd) wt x₁) x₂
-
-  -- note that the exact statement of preservation in the paper, where Γ is
-  -- empty indicating that the terms are closed, is an immediate corrolary
-  -- of the slightly more general statement above.
-  preservation' : {Δ : hctx} {d d' : ihexp} {τ : htyp} →
-             binders-unique d →
-             Δ , ∅ ⊢ d :: τ →
-             d ↦ d' →
-             Δ , ∅ ⊢ d' :: τ
-  preservation' = preservation
+  -- evaluation steps preserve type
+  preservation : ∀ { d d' τ } →  
+    ∅ ⊢ d :: τ →
+    d ↦ d' →
+    ∅ ⊢ d' :: τ
+  preservation wt (Step fill1 trans fill2) with wt-filling wt fill1       
+  ... | _ , wt' = wt-different-fill fill1 fill2 wt wt' (preserve-trans wt' trans) 
+ 

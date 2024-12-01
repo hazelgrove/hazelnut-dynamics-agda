@@ -8,6 +8,11 @@ module Prelude where
   abort : ∀ {C : Set} → ⊥ → C
   abort ()
 
+  -- negation 
+  open import Agda.Primitive using (Level)
+  ¬_ : ∀ {ℓ : Level} → Set ℓ → Set ℓ
+  ¬ A = A → ⊥
+
   -- unit
   data ⊤ : Set where
     <> : ⊤
@@ -43,7 +48,7 @@ module Prelude where
 
   -- disequality
   _≠_ : {l : Level} {A : Set l} → (a b : A) → Set l
-  a ≠ b = (a == b) → ⊥
+  a ≠ b = ¬ (a == b)
 
   {-# BUILTIN EQUALITY _==_ #-}
 
@@ -91,3 +96,11 @@ module Prelude where
   -- non-equality is commutative
   flip : {A : Set} {x y : A} → (x == y → ⊥) → (y == x → ⊥)
   flip neq eq = neq (! eq)
+
+    -- equality is symmetric
+  sym : {A : Set} {x y : A} → (x == y) → (y == x)
+  sym refl = refl
+
+  -- bi-implication
+  _↔_ : {l1 : Level} {l2 : Level} → (Set l1) → (Set l2) → Set (lmax l1 l2)
+  a ↔ b = (a → b) × (b → a)

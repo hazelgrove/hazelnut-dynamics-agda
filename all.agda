@@ -1,53 +1,41 @@
 open import Nat
 open import Prelude
 
-open import contexts
+open import core-type
+open import core-exp
+open import core-subst
 open import core
 
-open import lemmas-gcomplete
+open import weakening
+open import eq-dec
+open import ground-dec
 
-open import disjointness
-open import dom-eq
-open import holes-disjoint-checks
-open import lemmas-disjointness
-open import lemmas-freshness
-
-open import finality
-open import focus-formation
-open import ground-decidable
-open import grounding
-
-open import lemmas-subst-ta
-open import htype-decidable
+open import lemmas-index
 open import lemmas-consistency
+open import lemmas-prec
+open import lemmas-meet
 open import lemmas-ground
-open import lemmas-matching
-open import synth-unicity
+open import lemmas-ctx
+open import lemmas-wf
+open import lemmas-subst
+open import lemmas-complete
+
+open import typing-subst
 
 open import elaborability
 open import elaboration-generality
 open import elaboration-unicity
-open import type-assignment-unicity
 open import typed-elaboration
+open import type-assignment-unicity
 
-open import canonical-boxed-forms
-open import canonical-indeterminate-forms
-open import canonical-value-forms
-
-open import lemmas-progress-checks
 open import preservation
-open import progress
-open import progress-checks
+open import progress 
 
-open import cast-inert
 open import complete-elaboration
 open import complete-preservation
 open import complete-progress
-open import lemmas-complete
 
-open import contraction
-open import exchange
-open import weakening
+open import parametricity
+open import graduality
 
-open import binders-disjoint-checks
-open import continuity
+module all where

@@ -1,5 +1,6 @@
 open import Prelude
 open import core
+open import core-exp
 
 open import progress-checks
 

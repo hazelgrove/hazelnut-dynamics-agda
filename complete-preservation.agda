@@ -1,67 +1,63 @@
 open import Nat
 open import Prelude
+open import core-type
 open import core
-open import contexts
-open import preservation
+open import lemmas-consistency
+open import lemmas-wf
+open import lemmas-subst
+open import lemmas-complete
 
 module complete-preservation where
-  -- if you substitute a complete term into a complete term, the result is
-  -- still complete.
-  cp-subst : ∀ {x d1 d2} →
-           d1 dcomplete →
-           d2 dcomplete →
-           ([ d2 / x ] d1) dcomplete
-  cp-subst {x = y} (DCVar {x = x}) dc2 with natEQ x y
-  cp-subst DCVar dc2 | Inl refl = dc2
-  cp-subst DCVar dc2 | Inr x₂ = DCVar
-  cp-subst DCConst dc2 = DCConst
-  cp-subst {x = x} (DCLam {x = y} dc1 x₂) dc2 with natEQ y x
-  cp-subst (DCLam dc1 x₃) dc2 | Inl refl = DCLam dc1 x₃
-  cp-subst (DCLam dc1 x₃) dc2 | Inr x₂ = DCLam (cp-subst dc1 dc2) x₃
-  cp-subst (DCAp dc1 dc2) dc3 = DCAp (cp-subst dc1 dc3) (cp-subst dc2 dc3)
-  cp-subst (DCCast dc1 x₁ x₂) dc2 = DCCast (cp-subst dc1 dc2) x₁ x₂
 
-  -- this just lets me pull the particular x out of a derivation; it's not
-  -- bound in any of the constructors explicitly since it's only in the
-  -- lambda case; so below i have no idea how else to get a name for it,
-  -- instead of leaving it dotted in the context
-  lem-proj : {x : Nat} {d : ihexp} { τ : htyp} → (·λ_[_]_ x τ d) dcomplete → Σ[ y ∈ Nat ] (y == x)
-  lem-proj {x} (DCLam dc x₁) = x , refl
+  complete-wt-filling : ∀{ ε Γ d τ d' } →
+    d dcomplete →
+    Γ ⊢ d :: τ →
+    d == ε ⟦ d' ⟧ →
+    Σ[ τ' ∈ htyp ] (Γ ⊢ d' :: τ' × d' dcomplete)
+  complete-wt-filling dc wt FHOuter = _ , wt , dc
+  complete-wt-filling (DCAp dc _) (TAAp wt _) (FHAp1 fill) = complete-wt-filling dc wt fill
+  complete-wt-filling (DCAp _ dc) (TAAp _ wt) (FHAp2 fill) = complete-wt-filling dc wt fill
+  complete-wt-filling (DCTAp _ dc) (TATAp _ wt _) (FHTAp fill) = complete-wt-filling dc wt fill
+  complete-wt-filling (DCCast dc _ _) (TACast wt _ _) (FHCast fill) = complete-wt-filling dc wt fill
 
-  -- a complete well typed term steps to a complete term.
-  cp-rhs : ∀{d τ d' Δ} →
-             d dcomplete →
-             Δ , ∅ ⊢ d :: τ →
-             d ↦ d' →
-             d' dcomplete
-  cp-rhs dc TAConst (Step FHOuter () FHOuter)
-  cp-rhs dc (TAVar x₁) stp = abort (somenotnone (! x₁))
-  cp-rhs dc (TALam _ wt) (Step FHOuter () FHOuter)
-  -- this case is a little more complicated than it feels like it ought to
-  -- be, just from horsing around with agda implicit variables.
-  cp-rhs (DCAp dc dc₁) (TAAp wt wt₁) (Step FHOuter ITLam FHOuter) with lem-proj dc
-  cp-rhs (DCAp dc dc₁) (TAAp wt wt₁) (Step FHOuter ITLam FHOuter) | x , refl with cp-subst {x = x} dc dc₁
-  ... | qq with natEQ x x
-  cp-rhs (DCAp dc dc₁) (TAAp wt wt₁) (Step FHOuter ITLam FHOuter) | x , refl | DCLam qq x₁ | Inl refl = cp-subst qq dc₁
-  cp-rhs (DCAp dc dc₁) (TAAp wt wt₁) (Step FHOuter ITLam FHOuter) | x , refl | qq | Inr x₁ = abort (x₁ refl)
-  cp-rhs (DCAp (DCCast dc (TCArr x x₁) (TCArr x₂ x₃)) dc₁) (TAAp (TACast wt x₄) wt₁) (Step FHOuter ITApCast FHOuter) = DCCast (DCAp dc (DCCast dc₁ x₂ x)) x₁ x₃
-  cp-rhs (DCAp dc dc₁) (TAAp wt wt₁) (Step (FHAp1 x) x₁ (FHAp1 x₂)) = DCAp (cp-rhs dc wt (Step x x₁ x₂)) dc₁
-  cp-rhs (DCAp dc dc₁) (TAAp wt wt₁) (Step (FHAp2 x) x₁ (FHAp2 x₂)) = DCAp dc (cp-rhs dc₁ wt₁ (Step x x₁ x₂))
-  cp-rhs () (TAEHole x x₁) stp
-  cp-rhs () (TANEHole x wt x₁) stp
-  cp-rhs (DCCast dc x x₁) (TACast wt x₂) (Step FHOuter ITCastID FHOuter) = dc
-  cp-rhs (DCCast dc () x₁) (TACast wt x₂) (Step FHOuter (ITCastSucceed x₃) FHOuter)
-  cp-rhs (DCCast dc () x₁) (TACast wt x₂) (Step FHOuter (ITCastFail x₃ x₄ x₅) FHOuter)
-  cp-rhs (DCCast dc x ()) (TACast wt x₂) (Step FHOuter (ITGround x₃) FHOuter)
-  cp-rhs (DCCast dc () x₁) (TACast wt x₂) (Step FHOuter (ITExpand x₃) FHOuter)
-  cp-rhs (DCCast dc x x₁) (TACast wt x₂) (Step (FHCast x₃) x₄ (FHCast x₅)) = DCCast (cp-rhs dc wt (Step x₃ x₄ x₅)) x x₁
-  cp-rhs () (TAFailedCast wt x x₁ x₂) stp
+  complete-wt-different-fill : ∀{d ε d1 d2 d'} →
+    d dcomplete → 
+    d2 dcomplete → 
+    d == ε ⟦ d1 ⟧ →
+    d' == ε ⟦ d2 ⟧ →
+    d' dcomplete
+  complete-wt-different-fill dc1 dc2 FHOuter FHOuter = dc2
+  complete-wt-different-fill (DCAp dc1 dc3) dc2 (FHAp1 fill1) (FHAp1 fill2) = DCAp (complete-wt-different-fill dc1 dc2 fill1 fill2) dc3
+  complete-wt-different-fill (DCAp dc1 dc3) dc2 (FHAp2 fill1) (FHAp2 fill2) = DCAp dc1 (complete-wt-different-fill dc3 dc2 fill1 fill2)
+  complete-wt-different-fill (DCTAp tc dc1) dc2 (FHTAp fill1) (FHTAp fill2) = DCTAp tc (complete-wt-different-fill dc1 dc2 fill1 fill2)
+  complete-wt-different-fill (DCCast dc1 tc1 tc2) dc2 (FHCast fill1) (FHCast fill2) = DCCast (complete-wt-different-fill dc1 dc2 fill1 fill2) tc1 tc2
 
-  -- this is the main result of this file.
-  complete-preservation : ∀{d τ d' Δ} →
-             binders-unique d →
-             d dcomplete →
-             Δ , ∅ ⊢ d :: τ →
-             d ↦ d' →
-             (Δ , ∅ ⊢ d' :: τ) × (d' dcomplete)
-  complete-preservation bd dc wt stp = preservation bd wt stp , cp-rhs dc wt stp
+  complete-preservation-trans : ∀{d τ d'} →
+    d dcomplete →
+    ∅ ⊢ d :: τ →
+    d →> d' →
+    d' dcomplete
+  complete-preservation-trans _ TAConst ()
+  complete-preservation-trans _ TAEHole ()
+  complete-preservation-trans _ (TAVar _) ()
+  complete-preservation-trans _ (TALam _ _) ()
+  complete-preservation-trans _ (TATLam _) ()  
+  complete-preservation-trans _ (TANEHole _) ()
+  complete-preservation-trans (DCCast dc _ _) _ ITCastID = dc
+  complete-preservation-trans (DCCast _ () _) _ (ITCastSucceed _)
+  complete-preservation-trans (DCCast _ () _) _ (ITCastFail _ _ _) 
+  complete-preservation-trans (DCCast _ _ ()) _ (ITGround _)
+  complete-preservation-trans (DCCast _ () _) _ (ITExpand _)
+  complete-preservation-trans _ (TAFailedCast _ _ _ _) ()
+  complete-preservation-trans (DCTAp tc (DCTLam dc)) _ ITTLam = TtSub-complete tc dc
+  complete-preservation-trans (DCAp (DCLam dc1 _) dc2) _ ITLam = ttSub-complete dc2 dc1
+  complete-preservation-trans (DCAp (DCCast dc1 (TCArr tc1 tc2) (TCArr tc3 tc4)) dc2) _ ITApCast = DCCast (DCAp dc1 (DCCast dc2 tc3 tc1)) tc2 tc4
+  complete-preservation-trans (DCTAp tc1 (DCCast dc (TCForall tc2) (TCForall tc3))) _ ITTApCast = DCCast (DCTAp tc1 dc) (TTSub-complete tc1 tc2) (TTSub-complete tc1 tc3)
+
+  complete-preservation : ∀{d τ d'} →
+    d dcomplete →
+    ∅ ⊢ d :: τ → 
+    d ↦ d' → 
+    d' dcomplete
+  complete-preservation dc wt (Step fill1 trans fill2) with complete-wt-filling dc wt fill1       
+  ... | _ , wt' , dc' = complete-wt-different-fill dc (complete-preservation-trans dc' wt' trans) fill1 fill2

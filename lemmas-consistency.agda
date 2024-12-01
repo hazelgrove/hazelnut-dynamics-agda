@@ -1,39 +1,53 @@
+open import Nat
 open import Prelude
+open import core-type
 open import core
+open import lemmas-index
 
 module lemmas-consistency where
-  -- type consistency is symmetric
-  ~sym : {t1 t2 : htyp} → t1 ~ t2 → t2 ~ t1
-  ~sym TCRefl = TCRefl
-  ~sym TCHole1 = TCHole2
-  ~sym TCHole2 = TCHole1
-  ~sym (TCArr p1 p2) = TCArr (~sym p1) (~sym p2)
 
-  -- type consistency isn't transitive
-  not-trans : ((t1 t2 t3 : htyp) → t1 ~ t2 → t2 ~ t3 → t1 ~ t3) → ⊥
-  not-trans t with t (b ==> b) ⦇-⦈ b TCHole1 TCHole2
-  ... | ()
+  ~refl : {τ : htyp} → τ ~ τ
+  ~refl {τ = b} = ConsistBase
+  ~refl {τ = T x} = ConsistVar
+  ~refl {τ = ⦇-⦈} = ConsistHole1
+  ~refl {τ = τ ==> τ₁} = ConsistArr ~refl ~refl
+  ~refl {τ = ·∀ τ} = ConsistForall ~refl
+  
+  ~sym : {τ1 τ2 : htyp} → τ1 ~ τ2 → τ2 ~ τ1
+  ~sym ConsistBase = ConsistBase
+  ~sym ConsistVar = ConsistVar 
+  ~sym ConsistHole1 = ConsistHole2
+  ~sym ConsistHole2 = ConsistHole1
+  ~sym (ConsistArr con1 con2) = ConsistArr (~sym con1) (~sym con2)
+  ~sym (ConsistForall consist) = ConsistForall (~sym consist)
 
-  --  every pair of types is either consistent or not consistent
-  ~dec : (t1 t2 : htyp) → ((t1 ~ t2) + (t1 ~̸ t2))
-    -- this takes care of all hole cases, so we don't consider them below
-  ~dec _ ⦇-⦈ = Inl TCHole1
-  ~dec ⦇-⦈ _ = Inl TCHole2
-    -- num cases
-  ~dec b b = Inl TCRefl
-  ~dec b (t2 ==> t3) = Inr ICBaseArr1
-    -- arrow cases
-  ~dec (t1 ==> t2) b = Inr ICBaseArr2
-  ~dec (t1 ==> t2) (t3 ==> t4) with ~dec t1 t3 | ~dec t2 t4
-  ... | Inl x | Inl y = Inl (TCArr x y)
-  ... | Inl _ | Inr y = Inr (ICArr2 y)
-  ... | Inr x | _     = Inr (ICArr1 x)
+  ~dec : (τ1 τ2 : htyp) → (τ1 ~ τ2) + (τ1 ~̸ τ2)
+  ~dec _ ⦇-⦈ = Inl ConsistHole1
+  ~dec ⦇-⦈ _ = Inl ConsistHole2
+  ~dec b b = Inl ConsistBase
+  ~dec (T x) (T x₁) with natEQ x x₁
+  ... | Inl refl = Inl ConsistVar
+  ... | Inr neq = Inr (λ{ConsistVar -> neq refl})
+  ~dec (τ1 ==> τ2) (τ3 ==> τ4) with ~dec τ1 τ3 | ~dec τ2 τ4 
+  ... | Inl x | Inl y = Inl (ConsistArr x y)
+  ... | Inl _ | Inr y = Inr (\{(ConsistArr l r) -> y r})
+  ... | Inr x | _     = Inr (\{(ConsistArr l r) -> x l})
+  ~dec (·∀ τ1) (·∀ τ2) with ~dec τ1 τ2
+  ... | Inl yes = Inl (ConsistForall yes)
+  ... | Inr no = Inr (λ {(ConsistForall x) → no x})
+  ~dec b (T x) = Inr (λ ())
+  ~dec b (τ2 ==> τ3) = Inr (λ ())
+  ~dec b (·∀ τ2) = Inr (λ ())
+  ~dec (T x) b = Inr (λ ())
+  ~dec (T x) (τ2 ==> τ3) = Inr (λ ())
+  ~dec (T x) (·∀ τ2) = Inr (λ ())
+  ~dec (τ1 ==> τ2) b = Inr (λ ())
+  ~dec (τ1 ==> τ2) (T x) = Inr (λ ())
+  ~dec (τ1 ==> τ2) (·∀ τ3) = Inr (λ ())
+  ~dec (·∀ τ1) b = Inr (λ ())
+  ~dec (·∀ τ1) (T x) = Inr (λ ())
+  ~dec (·∀ τ1) (τ2 ==> τ3) = Inr (λ ())
 
-  -- no pair of types is both consistent and not consistent
-  ~apart : {t1 t2 : htyp} → (t1 ~̸ t2) → (t1 ~ t2) → ⊥
-  ~apart ICBaseArr1 ()
-  ~apart ICBaseArr2 ()
-  ~apart (ICArr1 x) TCRefl = ~apart x TCRefl
-  ~apart (ICArr1 x) (TCArr y y₁) = ~apart x y
-  ~apart (ICArr2 x) TCRefl = ~apart x TCRefl
-  ~apart (ICArr2 x) (TCArr y y₁) = ~apart x y₁
+  ~̸-≠ : ∀{τ1 τ2} → τ1 ~̸ τ2 → τ1 ≠ τ2
+  ~̸-≠ inconsis eq rewrite ! eq = abort (inconsis ~refl)
+ 

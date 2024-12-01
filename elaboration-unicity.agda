@@ -1,53 +1,48 @@
 open import Nat
 open import Prelude
+open import core-type
+open import core-exp
 open import core
-open import contexts
-open import synth-unicity
-open import lemmas-matching
+open import lemmas-meet
+open import type-assignment-unicity
 
 module elaboration-unicity where
-  mutual
-    elaboration-unicity-synth : {Γ : tctx} {e : hexp} {τ1 τ2 : htyp} {d1 d2 : ihexp} {Δ1 Δ2 : hctx} →
-                            Γ ⊢ e ⇒ τ1 ~> d1 ⊣ Δ1 →
-                            Γ ⊢ e ⇒ τ2 ~> d2 ⊣ Δ2 →
-                            τ1 == τ2 × d1 == d2 × Δ1 == Δ2
-    elaboration-unicity-synth ESConst ESConst = refl , refl , refl
-    elaboration-unicity-synth (ESVar {Γ = Γ} x₁) (ESVar x₂) = ctxunicity {Γ = Γ} x₁ x₂ , refl , refl
-    elaboration-unicity-synth (ESLam apt1 d1) (ESLam apt2 d2)
-      with elaboration-unicity-synth d1 d2
-    ... | ih1 , ih2 , ih3 = ap1 _ ih1  , ap1 _ ih2 , ih3
-    elaboration-unicity-synth (ESAp _ _ x x₁ x₂ x₃) (ESAp _ _ x₄ x₅ x₆ x₇)
-      with synthunicity x x₄
-    ... | refl with match-unicity x₁ x₅
-    ... | refl with elaboration-unicity-ana x₂ x₆
-    ... | refl , refl , refl with elaboration-unicity-ana x₃ x₇
-    ... | refl , refl , refl = refl , refl , refl
-    elaboration-unicity-synth ESEHole ESEHole = refl , refl , refl
-    elaboration-unicity-synth (ESNEHole _ d1) (ESNEHole _ d2)
-      with elaboration-unicity-synth d1 d2
-    ... | ih1 , ih2 , ih3 = refl , ap1 _ ih2 , ap1 _ ih3
-    elaboration-unicity-synth (ESAsc x) (ESAsc x₁)
-      with elaboration-unicity-ana x x₁
-    ... | refl , refl , refl = refl , refl , refl
 
-    elaboration-unicity-ana : {Γ : tctx} {e : hexp} {τ τ1 τ2 : htyp} {d1 d2 : ihexp} {Δ1 Δ2 : hctx} →
-                          Γ ⊢ e ⇐ τ ~> d1 :: τ1 ⊣ Δ1  →
-                          Γ ⊢ e ⇐ τ ~> d2 :: τ2 ⊣ Δ2 →
-                          d1 == d2 × τ1 == τ2 × Δ1 == Δ2
-    elaboration-unicity-ana (EALam x₁ m D1) (EALam x₂ m2 D2)
-      with match-unicity m m2
-    ... | refl with elaboration-unicity-ana D1 D2
-    ... | refl , refl , refl = refl , refl , refl
-    elaboration-unicity-ana (EALam x₁ m D1) (EASubsume x₂ x₃ () x₅)
-    elaboration-unicity-ana (EASubsume x₁ x₂ () x₄) (EALam x₅ m D2)
-    elaboration-unicity-ana (EASubsume x x₁ x₂ x₃) (EASubsume x₄ x₅ x₆ x₇)
-      with elaboration-unicity-synth x₂ x₆
-    ... | refl , refl , refl = refl , refl , refl
-    elaboration-unicity-ana (EASubsume x x₁ x₂ x₃) EAEHole = abort (x _ refl)
-    elaboration-unicity-ana (EASubsume x x₁ x₂ x₃) (EANEHole _ x₄) = abort (x₁ _ _ refl)
-    elaboration-unicity-ana EAEHole (EASubsume x x₁ x₂ x₃) = abort (x _ refl)
-    elaboration-unicity-ana EAEHole EAEHole = refl , refl , refl
-    elaboration-unicity-ana (EANEHole _ x) (EASubsume x₁ x₂ x₃ x₄) = abort (x₂ _ _ refl)
-    elaboration-unicity-ana (EANEHole _ x) (EANEHole _ x₁)
-      with elaboration-unicity-synth x x₁
-    ... | refl , refl , refl = refl , refl , refl
+  mutual
+
+    elaboration-unicity-synth : ∀{Γ e τ1 τ2 d1 d2} →
+      Γ ⊢ e ⇒ τ1 ~> d1 →
+      Γ ⊢ e ⇒ τ2 ~> d2 →
+      τ1 == τ2 × d1 == d2
+    elaboration-unicity-synth ESConst ESConst = refl , refl
+    elaboration-unicity-synth (ESVar x) (ESVar x₁) = context-unicity x x₁ , refl
+    elaboration-unicity-synth (ESLam x syn1) (ESLam x₁ syn2) with elaboration-unicity-synth syn1 syn2 
+    ... | refl , refl = refl , refl
+    elaboration-unicity-synth (ESTLam syn1) (ESTLam syn2) with elaboration-unicity-synth syn1 syn2 
+    ... | refl , refl = refl , refl
+    elaboration-unicity-synth (ESAp x x₁ x₂ x₃) (ESAp x₄ x₅ x₆ x₇) rewrite synth-unicity x x₄ with ⊓-unicity x₁ x₅
+    ... | refl with elaboration-unicity-ana x₂ x₆ | elaboration-unicity-ana x₃ x₇  
+    ... | refl , refl | refl , refl = refl , refl
+    elaboration-unicity-synth (ESTAp x x₁ x₂ x₃ refl) (ESTAp x₅ x₆ x₇ x₈ refl) rewrite synth-unicity x₁ x₆ with ⊓-unicity x₂ x₇ 
+    ... | refl with elaboration-unicity-ana x₃ x₈ 
+    ... | refl , refl = refl , refl
+    elaboration-unicity-synth ESEHole ESEHole = refl , refl
+    elaboration-unicity-synth (ESNEHole syn1) (ESNEHole syn2) with elaboration-unicity-synth syn1 syn2 
+    ... | refl , refl = refl , refl
+    elaboration-unicity-synth (ESAsc x x₁) (ESAsc x₂ x₃) with elaboration-unicity-ana x₁ x₃  
+    ... | refl , refl = refl , refl
+
+    elaboration-unicity-ana : ∀{Γ e τ τ1 τ2 d1 d2}  →
+      Γ ⊢ e ⇐ τ ~> d1 :: τ1  → 
+      Γ ⊢ e ⇐ τ ~> d2 :: τ2 →
+      d1 == d2 × τ1 == τ2
+    elaboration-unicity-ana (EALam x ana1) (EALam x₁ ana2) with ⊓-unicity x x₁
+    ... | refl with elaboration-unicity-ana ana1 ana2 
+    ... | refl , refl = refl , refl
+    elaboration-unicity-ana (EATLam x ana1) (EATLam x₁ ana2) with ⊓-unicity x x₁
+    ... | refl with elaboration-unicity-ana ana1 ana2 
+    ... | refl , refl = refl , refl
+    elaboration-unicity-ana (EATLam x ana1) (EASubsume (Subsumable neq) _ _) = abort (neq _ refl)
+    elaboration-unicity-ana (EASubsume (Subsumable neq) _ _) (EATLam x ana2) = abort (neq _ refl)
+    elaboration-unicity-ana (EASubsume x x₁ x₂) (EASubsume x₃ x₄ x₅) with elaboration-unicity-synth x₁ x₄ 
+    ... | refl , refl rewrite ⊓-unicity x₂ x₅ = refl , refl
